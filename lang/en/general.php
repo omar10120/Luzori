@@ -139,5 +139,13 @@ return [
     'enter_the_amount_of_the_wallet' => 'Enter the amount of the wallet ',
     'enter_the_invoiced_amount_of_the_wallet' => 'Enter the invoiced amount of the wallet',
     'select_the_start_date_of_the_wallet' =>'Select the start date of the wallet',
-    'select_the_end_date_of_the_wallet' => 'Select the end date of the wallet'
+    'select_the_end_date_of_the_wallet' => 'Select the end date of the wallet',
+    'enter_the_number_of_rooms_of_the_service' => 'Enter the number of rooms of the service',
+    'enter_the_number_of_free_books_of_the_service' => 'Enter the number of free books of the service',
+    'enter_the_price_of_the_service' => 'Enter the price of the service',
+    'select_if_the_service_is_top' => 'Select if the service is top',
+    'select_if_the_service_has_commission' => 'Select if the service has commission',
+    'enter_the_name_of_the_service' => 'Enter the name of the service',
+    'enter_the_description_of_the_service' => 'Enter the description of the service',
+    
     ];

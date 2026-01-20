@@ -140,5 +140,10 @@ return [
     'enter_the_invoiced_amount_of_the_wallet' => 'أدخل مبلغ الفاتورة',
     'select_the_start_date_of_the_wallet' => 'اختر تاريخ البدء للمحفظة',
     'select_the_end_date_of_the_wallet' => 'اختر تاريخ الانتهاء للمحفظة',
+    'enter_the_number_of_rooms_of_the_service' => 'أدخل عدد الغرف للخدمة',
+    'enter_the_number_of_free_books_of_the_service' => 'أدخل عدد الكتب المجانية للخدمة',
+    'enter_the_price_of_the_service' => 'أدخل سعر الخدمة',
+    'select_if_the_service_is_top' => 'اختر إذا كانت الخدمة هي الأعلى',
+    'select_if_the_service_has_commission' => 'اختر إذا كانت الخدمة لها عمولة',
 
 ];

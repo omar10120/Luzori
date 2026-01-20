@@ -26,7 +26,8 @@
                                     <div class="row">
                                         <div class="col-md-12">
                                             <div class="mb-1">
-                                                <label for="name" class="form-label">{{ __('field.name') }}</label>
+                                                <label for="name" class="form-label">{{ __('field.name') }} <span class="text-danger">*</span></label>
+                                                <small class="text-muted">{{__('general.enter_the_name_of_the_service')}}</small>
                                                 <input type="text" id="name_{{ $locale }}" class="form-control"
                                                     name="{{ $locale }}[name]"
                                                     placeholder="{{ __('field.name') }}"
@@ -35,10 +36,12 @@
                                         </div>
                                         <div class="col-md-12">
                                             <div class="mb-1">
-                                                <label for="description" class="form-label">{{ __('field.description') }}</label>
+                                                <label for="description" class="form-label">{{ __('field.description') }} <span class="text-danger">*</span></label>
+                                                <small class="text-muted">{{__('general.enter_the_description_of_the_service')}}</small>
                                                 <textarea id="description_{{ $locale }}" class="form-control"
                                                     name="{{ $locale }}[description]"
                                                     placeholder="{{ __('field.description') }}">{{ $item ? $item->translate($locale)->description : '' }}</textarea>
+                                                    
                                             </div>
                                         </div>
                                     </div>
@@ -48,7 +51,8 @@
                         <div class="row">
                             <div class="col-md-12 mb-2">
                                 <div class="mb-1">
-                                    <label for="rooms_no" class="form-label">{{ __('field.rooms_no') }} </label>
+                                    <label for="rooms_no" class="form-label">{{ __('field.rooms_no') }} <span class="text-danger">*</span> </label>
+                                    <small class="text-muted">{{__('general.enter_the_number_of_rooms_of_the_service')}}</small>
                                     <input type="number" id="rooms_no" class="form-control" name="rooms_no"
                                         placeholder="{{ __('field.rooms_no') }}"
                                         value="{{ $item ? $item->rooms_no : null }}" />
@@ -56,7 +60,8 @@
                             </div>
                             <div class="col-md-12 mb-2">
                                 <div class="mb-1">
-                                    <label for="free_book" class="form-label">{{ __('field.free_book') }} </label>
+                                    <label for="free_book" class="form-label">{{ __('field.free_book') }} <span class="text-danger">*</span></label>
+                                    <small class="text-muted">{{__('general.enter_the_number_of_free_books_of_the_service')}}</small>
                                     <input type="number" id="free_book" class="form-control" name="free_book"
                                         placeholder="{{ __('field.free_book') }}"
                                         value="{{ $item ? $item->free_book : null }}" />
@@ -64,7 +69,8 @@
                             </div>
                             <div class="col-md-12 mb-2">
                                 <div class="mb-1">
-                                    <label for="price" class="form-label">{{ __('field.price') }}</label>
+                                    <label for="price" class="form-label">{{ __('field.price') }} <span class="text-danger">*</span></label>
+                                    <small class="text-muted">{{__('general.enter_the_price_of_the_service')}}</small>
                                     <input type="number" id="price" class="form-control" name="price"
                                         placeholder="{{ __('field.price') }}"
                                         value="{{ $item ? $item->price : null }}" />
@@ -75,7 +81,8 @@
                                     <div class="form-check">
                                         <input class="form-check-input" type="checkbox" id="is_top" name="is_top"
                                             @checked($item?->is_top) />
-                                        <label class="form-check-label" for="is_top">{{ __('field.is_top') }}</label>
+                                        <label class="form-check-label" for="is_top">{{ __('field.is_top') }} <span class="text-danger">*</span></label>
+                                        <small class="text-muted">{{__('general.select_if_the_service_is_top')}}</small>
                                     </div>
                                 </div>
                             </div>
@@ -85,7 +92,9 @@
                                         <input class="form-check-input" type="checkbox" id="has_commission"
                                             name="has_commission" @checked($item?->has_commission) />
                                         <label class="form-check-label"
-                                            for="has_commission">{{ __('field.commission') }}</label>
+                                            for="has_commission">{{ __('field.commission') }} <span class="text-danger">*</span></label>
+                                        <small class="text-muted">{{__('general.select_if_the_service_has_commission')}}</small>
+                                    
                                     </div>
                                 </div>
                             </div>
