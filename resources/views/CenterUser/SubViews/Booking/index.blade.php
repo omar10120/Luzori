@@ -150,7 +150,7 @@
                                 <div class="bs-stepper-header">
                                     <div class="step" data-target="#first-step">
                                         <button type="button" class="step-trigger" disabled>
-                                            <span class="bs-stepper-label">{{ __('locale.services') }}</span>
+                                            <span class="bs-stepper-label">{{ __('locale.services') }} <span class="text-danger">*</span></span>
                                         </button>
                                     </div>
                                     <div class="line">
@@ -159,7 +159,7 @@
                                     <div class="step" data-target="#second-step">
                                         <button type="button" class="step-trigger" disabled>
                                             <span class="bs-stepper-icon">
-                                                <span class="bs-stepper-label">{{__('field.booking_details')}}</span>
+                                                <span class="bs-stepper-label">{{__('field.booking_details')}} <span class="text-danger">*</span></span>
                                         </button>
                                     </div>
                                     <div class="line">
@@ -167,7 +167,7 @@
                                     </div>
                                     <div class="step" data-target="#third-step">
                                         <button type="button" class="step-trigger" disabled>
-                                            <span class="bs-stepper-label">{{__('field.customers_details')}}</span>
+                                            <span class="bs-stepper-label">{{__('field.customers_details')}} <span class="text-danger">*</span></span>
                                         </button>
                                     </div>
                                     <div class="line">
@@ -175,7 +175,7 @@
                                     </div>
                                     <div class="step" data-target="#fourth-step">
                                         <button type="button" class="step-trigger" disabled>
-                                            <span class="bs-stepper-label">{{__('field.overview')}}</span>
+                                            <span class="bs-stepper-label">{{__('field.overview')}} <span class="text-danger">*</span></span>
                                         </button>
                                     </div>
                                 </div>
@@ -186,7 +186,8 @@
                                                 <div class="mb-1">
                                                     <div class="d-flex justify-content-between align-items-center mb-2">
                                                         <label for="services"
-                                                            class="form-label mb-0">{{ __('field.services') }}</label>
+                                                            class="form-label mb-0">{{ __('field.services') }} <span class="text-danger">*</span></label>
+                                                        <small class="text-muted">{{__('general.select_a_services_from_the_list')}}</small>
                                                         <button type="button" class="btn btn-sm btn-outline-primary" id="addServiceQuickBtn" data-bs-toggle="modal" data-bs-target="#addServiceModal">
                                                             <i class="ti ti-plus me-1"></i>
                                                             {{ __('general.add') }} {{ __('locale.services') }}
@@ -234,7 +235,8 @@
                                         <div class="row mb-4">
                                             <div class="col-md-5">
                                                 <div class="mb-1">
-                                                    <label for="name" class="form-label">{{ __('field.name') }}
+                                                    <label for="name" class="form-label">{{ __('field.name') }} <span class="text-danger">*</span></label>
+                                                    <small class="text-muted">{{__('general.enter_the_name_of_the_customer')}}</small>
                                                     </label>
                                                     <input type="text" id="name" class="form-control" name="full_name"
                                                         placeholder="{{ __('field.name') }}" />
@@ -242,7 +244,8 @@
                                             </div>
                                             <div class="col-md-5">
                                                 <div class="mb-1">
-                                                    <label for="mobile" class="form-label">{{ __('field.mobile') }}
+                                                    <label for="mobile" class="form-label">{{ __('field.mobile') }} <span class="text-danger">*</span></label>
+                                                    <small class="text-muted">{{__('general.enter_the_mobile_of_the_customer')}}</small>
                                                     </label>
                                                     <div class="d-flex">
                                                         <label class="p-2" style="background: #80808045">+971</label>
@@ -293,7 +296,8 @@
                                             <div class="col-md-12">
                                                 <div class="mb-1">
                                                     <label for="payment_type"
-                                                        class="form-label">{{ __('field.payment_method') }}</label>
+                                                        class="form-label">{{ __('field.payment_method') }} <span class="text-danger">*</span></label>
+                                                    <small class="text-muted">{{__('general.select_a_payment_method_from_the_list')}}</small>
                                                     <select name="payment_type" id="payment_type" class="form-control">
                                                         <option value="">{{ __('field.Choose Payment Method') }}</option>
                                                         @foreach($paymentMethods as $paymentMethod)

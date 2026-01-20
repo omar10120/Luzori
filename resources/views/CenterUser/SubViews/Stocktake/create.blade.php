@@ -53,6 +53,7 @@
                         <div class="row mb-3">
                             <div class="col-md-12">
                                 <label class="form-label">Stocktake name (Optional)</label>
+                                <small class="text-muted">{{__('general.enter_the_name_of_the_stocktake')}}</small>
                                 <input type="text" class="form-control" name="name" 
                                     placeholder="Stocktake name"
                                     value="{{ $item ? $item->name : '' }}" />
@@ -71,6 +72,7 @@
                         <div class="row mb-3">
                             <div class="col-md-12">
                                 <label class="form-label">Select Branches <span class="text-danger">*</span></label>
+                                <small class="text-muted">{{__('general.select_one_or_more_branches_to_count_stock_for')}}</small>
                                 <select class="form-control select2" name="branch_ids[]" id="branch_ids" 
                                     data-select="true" multiple required>
                                     @foreach($branches as $branch)
@@ -80,7 +82,6 @@
                                         </option>
                                     @endforeach
                                 </select>
-                                <small class="text-muted">Select one or more branches to count stock for</small>
                             </div>
                         </div>
                     </div>

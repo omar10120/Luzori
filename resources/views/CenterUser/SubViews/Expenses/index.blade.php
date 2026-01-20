@@ -46,7 +46,8 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-1">
-                                    <label class="form-label">{{ __('field.branch') }}</label>
+                                    <label class="form-label">{{ __('field.branch') }} <span class="text-danger">*</span></label>
+                                    <small class="text-muted">{{__('general.select_a_branch_from_the_list')}}</small>
                                     <select class="form-control" name="branch_id" id="branchSelect" data-select="true" required>    
                                         <option value="">{{ __('field.select_branch') }}</option>
                                         @foreach($branches as $branch)
@@ -88,7 +89,8 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-1">
-                                    <label class="form-label">{{ __('field.payee') }}</label>
+                                    <label class="form-label">{{ __('field.payee') }} <span class="text-danger">*</span></label>
+                                    <small class="text-muted">{{__('general.select_a_payee_from_the_list')}}</small>
                                     <select class="form-control" name="payee" id="payeeSelect" data-select="true" required>
                                         <option value="">{{ __('field.select_payee') }}</option>
                                     </select>
@@ -98,7 +100,8 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-1">
-                                    <label class="form-label">{{ __('field.date') }}</label>
+                                    <label class="form-label">{{ __('field.date') }} <span class="text-danger">*</span></label>
+                                    <small class="text-muted">{{__('general.select_a_date')}}</small>
                                     <input type="date" name="date" class="form-control"
                                         placeholder="{{ __('field.date') }}" value="{{ $item ? $item->date : '' }}" required />
                                 </div>
@@ -107,14 +110,16 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-1">
-                                    <label class="form-label">{{ __('field.start_date') }}</label>
+                                    <label class="form-label">{{ __('field.start_date') }} <span class="text-danger">*</span></label>
+                                    <small class="text-muted">{{__('general.select_a_start_date')}}</small>
                                     <input type="date" name="start_date" class="form-control"
                                         placeholder="{{ __('field.start_date') }}" value="{{ $item ? $item->start_date : '' }}" required />
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-1">
-                                    <label class="form-label">{{ __('field.end_date') }}</label>
+                                    <label class="form-label">{{ __('field.end_date') }} <span class="text-danger">*</span></label>
+                                    <small class="text-muted">{{__('general.select_a_end_date')}}</small>
                                     <input type="date" name="end_date" class="form-control"
                                         placeholder="{{ __('field.end_date') }}" value="{{ $item ? $item->end_date : '' }}" required />
                                 </div>
@@ -123,7 +128,8 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-1">
-                                    <label class="form-label">{{ __('field.amount') }}</label>
+                                    <label class="form-label">{{ __('field.amount') }} <span class="text-danger">*</span></label>
+                                    <small class="text-muted">{{__('general.enter_the_amount_of_the_expense')}}</small>
                                     <input type="number" name="amount" id="expenseAmount" class="form-control"
                                         placeholder="{{ __('field.amount') }} (e.g. 100.00)" value="{{ $item ? $item->amount : '' }}" 
                                         step="0.01" max="99999" required />
@@ -133,7 +139,8 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-1">
-                                    <label class="form-label">{{ __('field.receipt') }}</label>
+                                    <label class="form-label">{{ __('field.receipt') }} <span class="text-danger">*</span></label>
+                                    <small class="text-muted">{{__('general.select_a_receipt_from_the_list')}}</small>
                                     <input type="file" class="form-control" id="receiptImage" name="receipt_image" />
                                 </div>
                                 <img id="show_receipt" src="{{ $item ? $item->receipt_image_url : '' }}"
@@ -142,7 +149,8 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-1">
-                                    <label class="form-label">{{ __('field.notes') }}</label>
+                                    <label class="form-label">{{ __('field.notes') }} <span class="text-danger">*</span></label>
+                                    <small class="text-muted">{{__('general.enter_the_notes_of_the_expense')}}</small>
                                     <textarea name="notes" class="form-control" rows="4"
                                         placeholder="{{ __('field.notes') }}">{{ $item ? $item->notes : '' }}</textarea>
                                 </div>

@@ -20,7 +20,8 @@
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="mb-1">
-                                    <label for="name" class="form-label">{{ __('field.name') }}</label>
+                                    <label for="name" class="form-label">{{ __('field.name') }} <span class="text-danger">*</span></label>
+                                    <small class="text-muted">{{__('general.enter_the_name_of_the_shift')}}</small>
                                     <input type="text" id="name" class="form-control"
                                         name="name" placeholder="{{ __('field.name')}}"
                                         value="{{ $item ? $item->name : null }}" />
@@ -28,7 +29,8 @@
                             </div>
                             <div class="col-md-12">
                                 <div class="mb-1">
-                                    <label for="start_time" class="form-label">{{ __('field.start_time') }} </label>
+                                    <label for="start_time" class="form-label">{{ __('field.start_time') }} <span class="text-danger">*</span></label>
+                                    <small class="text-muted">{{__('general.enter_the_start_time_of_the_shift')}}</small>
                                     <input type="time" id="start_time" class="form-control"
                                         name="start_time" placeholder=""
                                         value="{{ $item ? $item->start_time : null }}" />
@@ -36,7 +38,8 @@
                             </div>
                             <div class="col-md-12">
                                 <div class="mb-1">
-                                    <label for="end_time" class="form-label">{{ __('field.end_time') }} </label>
+                                    <label for="end_time" class="form-label">{{ __('field.end_time') }} <span class="text-danger">*</span></label>
+                                    <small class="text-muted">{{__('general.enter_the_end_time_of_the_shift')}}</small>
                                     <input type="time" id="end_time" class="form-control"
                                         name="end_time" placeholder=""
                                         value="{{ $item ? $item->end_time : null }}" />
@@ -44,7 +47,8 @@
                             </div>
                             <div class="col-md-12">
                                 <div class="mb-1">
-                                    <label for="break_start" class="form-label">{{ __('field.break_start') }}</label>
+                                    <label for="break_start" class="form-label">{{ __('field.break_start') }} <span class="text-danger">*</span></label>
+                                    <small class="text-muted">{{__('general.enter_the_break_start_time_of_the_shift')}}</small>
                                     <input type="time" id="break_start" class="form-control"
                                         name="break_start" placeholder=""
                                         value="{{ $item ? $item->break_start : null }}" />
@@ -52,7 +56,8 @@
                             </div>
                             <div class="col-md-12">
                                 <div class="mb-1">
-                                    <label for="break_end" class="form-label">{{ __('field.break_end') }} </label>
+                                    <label for="break_end" class="form-label">{{ __('field.break_end') }} <span class="text-danger">*</span></label>
+                                    <small class="text-muted">{{__('general.enter_the_break_end_time_of_the_shift')}}</small>
                                     <input type="time" id="break_end" class="form-control"
                                         name="break_end" placeholder=""
                                         value="{{ $item ? $item->break_end : null }}" />

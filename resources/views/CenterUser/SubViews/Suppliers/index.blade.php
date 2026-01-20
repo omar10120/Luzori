@@ -54,14 +54,16 @@
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="mb-1">
-                                            <label class="form-label">{{ __('field.name') }}</label>
+                                            <label class="form-label">{{ __('field.name') }} <span class="text-danger">*</span></label>
+                                            <small class="text-muted">{{__('general.enter_the_name_of_the_supplier')}}</small>
                                             <input type="text" class="form-control" name="name"
                                                 placeholder="{{ __('field.name') }}" value="{{ $item ? $item->name : '' }}" required />
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="mb-1">
-                                            <label class="form-label">{{ __('field.email') }}</label>
+                                            <label class="form-label">{{ __('field.email') }} <span class="text-danger">*</span></label>
+                                            <small class="text-muted">{{__('general.enter_the_email_address_of_the_supplier')}}</small>
                                             <input type="email" class="form-control" name="email"
                                                 placeholder="{{ __('field.email') }}" value="{{ $item ? $item->email : '' }}" required />
                                         </div>
@@ -70,14 +72,16 @@
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="mb-1">
-                                            <label class="form-label">{{ __('field.phone_number') }}</label>
+                                            <label class="form-label">{{ __('field.phone_number') }} <span class="text-danger">*</span></label>
+                                            <small class="text-muted">{{__('general.enter_the_phone_number_of_the_supplier')}}</small>
                                             <input type="text" class="form-control" name="phone"
                                                 placeholder="{{ __('field.phone_number') }}" value="{{ $item ? $item->phone : '' }}" required />
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="mb-1">
-                                            <label class="form-label">{{ __('field.logo') }}</label>
+                                            <label class="form-label">{{ __('field.logo') }} <span class="text-danger">*</span></label>
+                                            <small class="text-muted">{{__('general.select_the_logo_of_the_supplier')}}</small>
                                             <input type="file" class="form-control" name="logo" accept="image/*" id="logoInput" />
                                             @if($item && $item->logo)
                                                 <div class="mt-2">
@@ -99,7 +103,8 @@
                                                 <div class="row">
                                                     <div class="col-12">
                                                         <div class="mb-1">
-                                                            <label class="form-label">{{ __('field.description') }} ({{ strtoupper($locale) }})</label>
+                                                            <label class="form-label">{{ __('field.description') }} ({{ strtoupper($locale) }}) <span class="text-danger">*</span></label>
+                                                            <small class="text-muted">{{__('general.enter_the_description_of_the_supplier')}}</small>
                                                             <textarea name="{{ $locale }}[description]" id="description_{{ $locale }}" class="form-control" rows="3"
                                                                 placeholder="{{ __('field.description') }}">{{ $item ? $item->translate($locale)->description : '' }}</textarea>
                                                         </div>
@@ -112,7 +117,7 @@
                                 <div class="row">
                                     <div class="col-12">
                                         <button type="submit" class="btn btn-primary submitFrom">
-                                            <i class="ti ti-check"></i> {{ __('general.save') }}
+                                            <i class="menu-icon tf-icons ti ti-check"></i> {{ __('general.save') }}
                                         </button>
                                         <a href="{{ route('center_user.suppliers.index') }}" class="btn btn-secondary">
                                             <i class="ti ti-arrow-left"></i> {{ __('general.back') }}

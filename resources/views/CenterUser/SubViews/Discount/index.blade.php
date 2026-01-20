@@ -20,7 +20,8 @@
                         <div class="row">
                             <div class="col-md-12 mb-2">
                                 <div class="mb-1">
-                                    <label for="type" class="form-label">{{ __('field.type') }}</label>
+                                    <label for="type" class="form-label">{{ __('field.type') }} <span class="text-danger">*</span></label>
+                                    <small class="text-muted">{{__('general.select_a_type_of_discount')}}</small>
                                     <select class="form-control" id="type" name="type">
                                         <option {{ $item ? ($item->type == 'fixed' ? 'selected' : null) : null }}
                                             value="fixed">
@@ -33,7 +34,8 @@
                             </div>
                             <div class="col-md-12 mb-2">
                                 <div class="mb-1">
-                                    <label for="using_type" class="form-label">{{ __('field.using_type') }} </label>
+                                    <label for="using_type" class="form-label">{{ __('field.using_type') }} <span class="text-danger">*</span></label>
+                                    <small class="text-muted">{{__('general.select_a_using_type_of_discount')}}</small>
                                     <select class="form-control" id="using_type" name="using_type">
                                         <option {{ $item ? ($item->using_type == 'single' ? 'selected' : null) : null }}
                                             value="single">{{ __('field.single') }}</option>
@@ -45,7 +47,8 @@
                             <div class="col-md-12 mb-2" id="benefit_numbers"
                                 {{ $item ? ($item->using_type != 'multi' ? 'style=display:none;' : null) : 'style=display:none;' }}>
                                 <div class="mb-1">
-                                    <label for="benefit_numbers" class="form-label">{{ __('field.benefit_numbers') }}
+                                    <label for="benefit_numbers" class="form-label">{{ __('field.benefit_numbers') }} <span class="text-danger">*</span></label>
+                                    <small class="text-muted">{{__('general.enter_the_benefit_numbers_of_the_discount')}}</small>
                                     </label>
                                     <input type="number" id="benefit_numbers" class="form-control" name="benefit_numbers"
                                         placeholder="{{ __('field.benefit_numbers') }}"
@@ -54,7 +57,8 @@
                             </div>
                             <div class="col-md-12 mb-2">
                                 <div class="mb-1">
-                                    <label for="amount" class="form-label">{{ __('field.amount') }} </label>
+                                    <label for="amount" class="form-label">{{ __('field.amount') }} <span class="text-danger">*</span></label>
+                                    <small class="text-muted">{{__('general.enter_the_amount_of_the_discount')}}</small>
                                     <input type="number" id="amount" class="form-control" name="amount"
                                         placeholder="{{ __('field.amount') }}"
                                         value="{{ $item ? $item->amount : null }}" />
@@ -74,7 +78,8 @@
                             @endphp
                             <div class="col-md-12 mb-2">
                                 <div class="mb-1">
-                                    <label for="start_at" class="form-label">{{ __('field.start_at') }} </label>
+                                    <label for="start_at" class="form-label">{{ __('field.start_at') }} <span class="text-danger">*</span></label>
+                                    <small class="text-muted">{{__('general.select_a_start_date_of_the_discount')}}</small>
                                     <input type="date" id="start_at" class="form-control" name="start_at"
                                         placeholder="{{ __('field.start_at') }}"
                                         value="{{ $item ? $item->start_at : null }}" />
@@ -82,7 +87,8 @@
                             </div>
                             <div class="col-md-12">
                                 <div class="mb-1">
-                                    <label for="end_at" class="form-label">{{ __('field.end_at') }} </label>
+                                    <label for="end_at" class="form-label">{{ __('field.end_at') }} <span class="text-danger">*</span></label>
+                                    <small class="text-muted">{{__('general.select_a_end_date_of_the_discount')}}</small>
                                     <input type="date" id="end_at" class="form-control" name="end_at"
                                         placeholder="{{ __('field.end_at') }}"
                                         value="{{ $item ? $item->end_at : null }}" />

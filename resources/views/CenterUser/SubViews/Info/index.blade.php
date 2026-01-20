@@ -24,7 +24,7 @@
                                 </div>
                                 <div class="col-md-4">
                                     <div class="mb-4">
-                                        <label class="form-label">{{__('field.phone')}} <span class="text-danger">*</span></label>
+                                        <label class="form-label">{{__('field.phone')}} <small class="text-muted">{{__('general.enter_the_phone_number')}}</small> <span class="text-danger">*</span></label>
                                         <input type="tel" class="form-control" name="phone" value="{{ $item->phone }}"
                                             placeholder="5XXXXXXX" 
                                             required
@@ -35,7 +35,7 @@
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-4">
-                                        <label class="form-label">{{__('field.email')}}</label>
+                                        <label class="form-label">{{__('field.email')}} <small class="text-muted">{{__('general.enter_the_email_address')}}</small> <span class="text-danger">*</span></label>
                                         <input type="text" class="form-control" name="email" value="{{ $item->email }}"
                                             placeholder="{{__('field.email')}}" />
                                     </div>
@@ -44,14 +44,14 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="mb-4">
-                                        <label class="form-label">{{__('field.facebook')}}</label>
+                                        <label class="form-label">{{__('field.facebook')}} <small class="text-muted">{{__('general.enter_the_facebook_url')}}</small> <span class="text-danger">*</span></label>
                                         <input type="text" class="form-control" name="facebook" value="{{ $item->facebook }}"
                                             placeholder="{{__('field.facebook')}}" />
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-4">
-                                        <label class="form-label">{{__('field.instagram')}}</label>
+                                        <label class="form-label">{{__('field.instagram')}} <small class="text-muted">{{__('general.enter_the_instagram_url')}}</small> <span class="text-danger">*</span></label>
                                         <input type="text" class="form-control" name="instagram" value="{{ $item->instagram }}"
                                             placeholder="{{__('field.instagram')}}" />
                                     </div>
@@ -60,14 +60,14 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="mb-4">
-                                        <label class="form-label">{{__('field.twitter')}}</label>
+                                        <label class="form-label">{{__('field.twitter')}} <small class="text-muted">{{__('general.enter_the_twitter_url')}}</small> <span class="text-danger">*</span></label>
                                         <input type="text" class="form-control" name="twitter" value="{{ $item->twitter }}"
                                             placeholder="{{__('field.twitter')}}" />
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-4">
-                                        <label class="form-label">{{__('field.whatsapp')}}</label>
+                                        <label class="form-label">{{__('field.whatsapp')}} <small class="text-muted">{{__('general.enter_the_whatsapp_url')}}</small> <span class="text-danger">*</span></label>
                                         <input type="text" class="form-control" name="whatsapp" value="{{ $item->whatsapp }}"
                                             placeholder="{{__('field.whatsapp')}}" />
                                     </div>
@@ -76,14 +76,14 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="mb-4">
-                                        <label class="form-label">{{__('field.youtube')}}</label>
+                                        <label class="form-label">{{__('field.youtube')}} <small class="text-muted">{{__('general.enter_the_youtube_url')}}</small> <span class="text-danger">*</span></label>
                                         <input type="text" class="form-control" name="youtube" value="{{ $item->youtube }}"
                                             placeholder="{{__('field.youtube')}}" />
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-4">
-                                        <label class="form-label">{{__('field.linkedin')}}</label>
+                                        <label class="form-label">{{__('field.linkedin')}} <small class="text-muted">{{__('general.enter_the_linkedin_url')}}</small> <span class="text-danger">*</span></label>
                                         <input type="text" class="form-control" name="linkedin" value="{{ $item->linkedin }}"
                                             placeholder="{{__('field.linkedin')}}" />
                                     </div>

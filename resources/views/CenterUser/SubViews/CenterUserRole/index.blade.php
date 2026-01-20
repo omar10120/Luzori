@@ -17,7 +17,8 @@
                     <div class="card-body">
                         <div class="row">
                             <div class="mb-4">
-                                <label class="form-label">{{__('field.name')}}</label>
+                                <label class="form-label">{{__('field.name')}} <span class="text-danger">*</span></label>
+                                <small class="text-muted">{{__('general.enter_the_name_of_the_role')}}</small>
                                 <input type="text" class="form-control" name="name" placeholder="{{__('field.name')}}"
                                     value="{{ $item ? $item->name : '' }}" />
                             </div>

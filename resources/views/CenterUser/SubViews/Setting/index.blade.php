@@ -34,7 +34,8 @@
                                         <div class="row">
                                             <div class="col-md-12 mb-4">
                                                 <div class="mb-1">
-                                                    <label class="form-label">{{ __('field.website_name') }}</label>
+                                                    <label class="form-label">{{ __('field.website_name') }} <span class="text-danger">*</span></label>
+                                                    <small class="text-muted">{{__('general.enter_the_name_of_the_website')}}</small>
                                                     <input type="text" class="form-control"
                                                         name="{{ $locale }}[{{ App\Enums\PageEnum::WebsiteName->value }}]"
                                                         placeholder="{{ __('field.website_name') }}"
@@ -43,7 +44,8 @@
                                             </div>
                                             <div class="col-md-12 mb-4">
                                                 <div class="mb-1">
-                                                    <label class="form-label">{{ __('field.website_title') }}</label>
+                                                    <label class="form-label">{{ __('field.website_title') }} <span class="text-danger">*</span></label>
+                                                    <small class="text-muted">{{__('general.enter_the_title_of_the_website')}}</small>
                                                     <input type="text" class="form-control"
                                                         name="{{ $locale }}[{{ App\Enums\PageEnum::WebsiteTitle->value }}]"
                                                         placeholder="{{ __('field.website_title') }}"
@@ -52,7 +54,8 @@
                                             </div>
                                             <div class="col-md-12 mb-4">
                                                 <div class="mb-1">
-                                                    <label class="form-label">{{ __('field.auther') }}</label>
+                                                    <label class="form-label">{{ __('field.auther') }} <span class="text-danger">*</span></label>
+                                                    <small class="text-muted">{{__('general.enter_the_name_of_the_author')}}</small>
                                                     <input type="text" class="form-control"
                                                         name="{{ $locale }}[{{ App\Enums\PageEnum::Auther->value }}]"
                                                         placeholder="{{ __('field.auther') }}"
@@ -61,21 +64,24 @@
                                             </div>
                                             <div class="col-md-12 mb-4">
                                                 <div class="mb-1">
-                                                    <label class="form-label">{{ __('field.website_description') }}</label>
+                                                    <label class="form-label">{{ __('field.website_description') }} <span class="text-danger">*</span></label>
+                                                    <small class="text-muted">{{__('general.enter_the_description_of_the_website')}}</small>
                                                     <textarea class="form-control" name="{{ $locale }}[{{ App\Enums\PageEnum::WebsiteDescription->value }}]"
                                                         placeholder="{{ __('field.website_description') }}" cols="30" rows="10">{{ $item['item']['WebsiteDescription']->translate($locale)->value }}</textarea>
                                                 </div>
                                             </div>
                                             <div class="col-md-12 mb-4">
                                                 <div class="mb-1">
-                                                    <label class="form-label">{{ __('field.address') }}</label>
+                                                    <label class="form-label">{{ __('field.address') }} <span class="text-danger">*</span></label>
+                                                    <small class="text-muted">{{__('general.enter_the_address_of_the_website')}}</small>
                                                     <textarea class="form-control" name="{{ $locale }}[{{ App\Enums\PageEnum::Address->value }}]" placeholder="{{ __('field.address') }}"
                                                         cols="30" rows="10">{{ $item['item']['Address']->translate($locale)->value }}</textarea>
                                                 </div>
                                             </div>
                                             <div class="col-md-12 mb-4">
                                                 <div class="mb-1">
-                                                    <label class="form-label">{{ __('field.footer_text') }}</label>
+                                                    <label class="form-label">{{ __('field.footer_text') }} <span class="text-danger">*</span></label>
+                                                    <small class="text-muted">{{__('general.enter_the_footer_text_of_the_website')}}</small>
                                                     <textarea class="form-control" name="{{ $locale }}[{{ App\Enums\PageEnum::FooterText->value }}]" placeholder="{{ __('field.footer_text') }}"
                                                         cols="30" rows="10">{{ $item['item']['FooterText']->translate($locale)->value }}</textarea>
                                                 </div>
@@ -83,6 +89,7 @@
                                         </div>
                                     </div>
                                 @endforeach
+                                
                             </div>
 
                             <div class="row">

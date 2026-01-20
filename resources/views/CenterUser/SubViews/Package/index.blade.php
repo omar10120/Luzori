@@ -27,7 +27,8 @@
                                     <div class="row">
                                         <div class="col-md-12">
                                             <div class="mb-1">
-                                                <label for="name" class="form-label">{{ __('field.name') }}</label>
+                                                <label for="name" class="form-label">{{ __('field.name') }} <span class="text-danger">*</span></label>
+                                                <small class="text-muted">{{__('general.enter_the_name_of_the_package')}}</small>
                                                 <input type="text" id="name_{{ $locale }}" class="form-control"
                                                     name="{{ $locale }}[name]" placeholder="{{ __('field.name') }}"
                                                     value="{{ $item ? $item->translate($locale)->name : '' }}" />
@@ -41,7 +42,8 @@
                         <div class="row">
                             <div class="col-md-12 mb-2">
                                 <div class="mb-1">
-                                    <label for="paid_services" class="form-label">{{ __('field.paid_services') }} </label>
+                                    <label for="paid_services" class="form-label">{{ __('field.paid_services') }} <span class="text-danger">*</span></label>
+                                    <small class="text-muted">{{__('general.select_a_paid_services_from_the_list')}}</small>
                                     <select class="select2 form-control" name="paid_services[]" id="paid_services" multiple>
                                         @foreach ($services as $service)
                                             <option
@@ -53,7 +55,8 @@
                             </div>
                             <div class="col-md-12 mb-2">
                                 <div class="mb-1">
-                                    <label for="free_services" class="form-label">{{ __('field.free_services') }} </label>
+                                        <label for="free_services" class="form-label">{{ __('field.free_services') }} <span class="text-danger">*</span></label>
+                                    <small class="text-muted">{{__('general.select_a_free_services_from_the_list')}}</small>
                                     <select class="select2 form-control" name="free_services[]" id="free_services" multiple>
                                         @foreach ($services as $service)
                                             <option

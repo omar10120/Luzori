@@ -21,7 +21,8 @@
                         <div class="row">
                             <div class="col-md-12 mb-2">
                                 <div class="mb-1">
-                                    <label for="user_id" class="form-label">{{ __('field.user') }}</label>
+                                    <label for="user_id" class="form-label">{{ __('field.user') }} <span class="text-danger">*</span></label>
+                                    <small class="text-muted">{{__('general.select_a_user_from_the_list')}}</small>
                                     <select class="select2 form-control" name="user_id">
                                         @foreach ($users as $user)
                                             <option {{ $item ? ($item->user_id == $user->id ? 'selected' : null) : null }}
@@ -33,7 +34,8 @@
                             </div>
                             <div class="col-md-12 mb-2">
                                 <div class="mb-1">
-                                    <label for="membership_no" class="form-label">{{ __('field.membership_no') }} </label>
+                                    <label for="membership_no" class="form-label">{{ __('field.membership_no') }} <span class="text-danger">*</span></label>
+                                    <small class="text-muted">{{__('general.enter_the_membership_number')}}</small>
                                     <input type="text" id="membership_no" class="form-control" name="membership_no"
                                         placeholder="{{ __('field.membership_no') }}"
                                         value="{{ $item ? $item->membership_no : null }}" />
@@ -41,7 +43,8 @@
                             </div>
                             <div class="col-md-12 mb-2">
                                 <div class="mb-1">
-                                    <label for="percent" class="form-label">{{ __('field.discount_percentage') }} </label>
+                                    <label for="percent" class="form-label">{{ __('field.discount_percentage') }} <span class="text-danger">*</span></label>
+                                    <small class="text-muted">{{__('general.enter_the_discount_percentage')}}</small>
                                     <input type="number" id="percent" class="form-control" name="percent"
                                         placeholder="{{ __('field.discount_percentage') }}"
                                         value="{{ $item ? $item->percent : null }}" />
@@ -61,14 +64,16 @@
                             @endphp
                             <div class="col-md-12 mb-2">
                                 <div class="mb-1">
-                                    <label for="start_at" class="form-label">{{ __('field.start_at') }} </label>
+                                    <label for="start_at" class="form-label">{{ __('field.start_at') }} <span class="text-danger">*</span></label>
+                                    <small class="text-muted">{{__('general.select_a_start_date_of_the_membership')}}</small>
                                     <input type="date" id="start_at" class="form-control" name="start_at"
                                         value="{{ $item ? $item->start_at : null }}" />
                                 </div>
                             </div>
                             <div class="col-md-12">
                                 <div class="mb-1">
-                                    <label for="end_at" class="form-label">{{ __('field.end_at') }} </label>
+                                    <label for="end_at" class="form-label">{{ __('field.end_at') }} <span class="text-danger">*</span></label>
+                                    <small class="text-muted">{{__('general.select_a_end_date_of_the_membership')}}</small>
                                     <input type="date" id="end_at" class="form-control" name="end_at"
                                         value="{{ $item ? $item->end_at : null }}" />
                                 </div>

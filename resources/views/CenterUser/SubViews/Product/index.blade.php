@@ -35,7 +35,8 @@
                                     <div class="row">
                                                 <div class="col-md-12 mb-3">
                                             <div class="mb-1">
-                                                        <label for="name_{{ $locale }}" class="form-label">{{ __('field.name') }}</label>
+                                                        <label for="name_{{ $locale }}" class="form-label">{{ __('field.name') }}  <span class="text-danger">*</span></label>
+                                                        <small class="text-muted">{{__('general.enter_the_name_of_the_product')}}</small>
                                                 <input type="text" id="name_{{ $locale }}" class="form-control"
                                                     name="{{ $locale }}[name]"
                                                     placeholder="{{ __('field.name') }}"
@@ -44,7 +45,8 @@
                                                 </div>
                                                 <div class="col-md-12 mb-3">
                                                     <div class="mb-1">
-                                                        <label for="text_{{ $locale }}" class="form-label">Product description</label>
+                                                        <label for="text_{{ $locale }}" class="form-label">Product description  <span class="text-danger">*</span></label>
+                                                        <small class="text-muted">{{__('general.enter_the_description_of_the_product')}}</small>
                                                         <textarea id="text_{{ $locale }}" class="form-control" rows="4"
                                                             name="{{ $locale }}[text]"
                                                             placeholder="Product description"
@@ -60,7 +62,8 @@
                                 <div class="row mb-3">
                                     <div class="col-md-12">
                                         <div class="mb-1">
-                                            <label for="barcode" class="form-label">{{ __('field.barcode') }} (Optional)</label>
+                                            <label for="barcode" class="form-label">{{ __('field.barcode') }} (Optional)  <span class="text-danger">*</span></label>
+                                            <small class="text-muted">{{__('general.enter_the_barcode_of_the_product')}}</small>
                                             <input type="text" id="barcode" class="form-control" name="barcode"
                                                 placeholder="UPC, EAN, GTIN"
                                                 value="{{ $item ? $item->barcode : '' }}" />
@@ -71,7 +74,8 @@
                                 <div class="row mb-3">
                                         <div class="col-md-12">
                                             <div class="mb-1">
-                                            <label for="brand_id" class="form-label">{{ __('field.brand') }}</label>
+                                            <label for="brand_id" class="form-label">{{ __('field.brand') }}  <span class="text-danger">*</span></label>
+                                            <small class="text-muted">{{__('general.select_a_brand_from_the_list')}}</small>
                                             <select class="form-control select2" name="brand_id" id="brand_id" data-select="true">
                                                 <option value="">{{ __('general.choose') }} {{ __('field.brand') }}</option>
                                                 @foreach($brands as $brand)
@@ -90,7 +94,8 @@
                                 <div class="row mb-3">
                                     <div class="col-md-6">
                                         <div class="mb-1">
-                                            <label for="measure_unit" class="form-label">Measure</label>
+                                            <label for="measure_unit" class="form-label">Measure  <span class="text-danger">*</span></label>
+                                            <small class="text-muted">{{__('general.select_a_measure_unit_from_the_list')}}</small>
                                             <select class="form-control select2" name="measure_unit" id="measure_unit" data-select="true">
                                                 <option value="">{{ __('general.choose') }} measure unit</option>
                                                 <option value="ml" {{ $item && $item->measure_unit == 'ml' ? 'selected' : '' }}>Milliliters (ml)</option>
@@ -110,7 +115,8 @@
                                     </div>
                                     <div class="col-md-6">
                                         <div class="mb-1">
-                                            <label for="measure_amount" class="form-label">Amount</label>
+                                            <label for="measure_amount" class="form-label">Amount  <span class="text-danger">*</span></label>
+                                            <small class="text-muted">{{__('general.enter_the_amount_of_the_product')}}</small>
                                             <input type="number" min="0.1" type="number"id="measure_amount" class="form-control" name="measure_amount"
                                                 placeholder="{{ $item && $item->measure_unit ? $item->measure_unit . ' 0.00' : '0.00' }}" step="0.01"
                                                 value="{{ $item ? $item->measure_amount : '' }}" />
@@ -121,7 +127,8 @@
                                 <div class="row mb-3">
                                     <div class="col-md-12">
                                         <div class="mb-1">
-                                            <label for="short_description" class="form-label">Short description</label>
+                                            <label for="short_description" class="form-label">Short description  <span class="text-danger">*</span></label>
+                                            <small class="text-muted">{{__('general.enter_the_short_description_of_the_product')}}</small>
                                             <textarea id="short_description" class="form-control" rows="2"
                                                 name="short_description"
                                                 placeholder="Short description"
@@ -134,7 +141,8 @@
                                 <div class="row mb-3">
                                     <div class="col-md-12">
                                         <div class="mb-1">
-                                            <label for="category_id" class="form-label">{{ __('field.category') }}</label>
+                                            <label for="category_id" class="form-label">{{ __('field.category') }}  <span class="text-danger">*</span></label>
+                                            <small class="text-muted">{{__('general.select_a_category_from_the_list')}}</small>
                                             <select class="form-control select2" name="category_id" id="category_id" data-select="true">
                                                 <option value="">{{ __('general.choose') }} {{ __('field.category') }}</option>
                                                 @foreach($categories as $category)
@@ -171,7 +179,8 @@
                         <div class="row mb-3">
                             <div class="col-md-12">
                                 <div class="mb-1">
-                                    <label for="supply_price" class="form-label">{{ __('field.supply_price') }}</label>
+                                    <label for="supply_price" class="form-label">{{ __('field.supply_price') }}  <span class="text-danger">*</span></label>
+                                    <small class="text-muted">{{__('general.enter_the_supply_price_of_the_product')}}</small>
                                     <div class="input-group">
                                         <span class="input-group-text">{{ trim(get_currency()) }}</span>
                                         <input type="number" id="supply_price" class="form-control" name="supply_price"
@@ -199,7 +208,8 @@
                             <div class="row mb-3">
                                 <div class="col-md-12">
                                     <div class="mb-1">
-                                        <label for="retail_price" class="form-label">{{ __('field.retail_price') }}</label>
+                                        <label for="retail_price" class="form-label">{{ __('field.retail_price') }}  <span class="text-danger">*</span></label>
+                                        <small class="text-muted">{{__('general.enter_the_retail_price_of_the_product')}}</small>
                                         <div class="input-group">
                                             <span class="input-group-text">{{ trim(get_currency()) }}</span>
                                             <input type="number" id="retail_price" class="form-control" name="retail_price"
@@ -213,7 +223,8 @@
                             <div class="row mb-3">
                                 <div class="col-md-12">
                                     <div class="mb-1">
-                                        <label for="markup" class="form-label">Markup</label>
+                                        <label for="markup" class="form-label">Markup  <span class="text-danger">*</span></label>
+                                        <small class="text-muted">{{__('general.enter_the_markup_of_the_product')}}</small>
                                         <div class="input-group">
                                             <span class="input-group-text">%</span>
                                             <input type="number" id="markup" class="form-control" name="markup"
@@ -232,7 +243,7 @@
                         <div class="row mb-3">
                             <div class="col-md-12">
                                 <div class="mb-1">
-                                    <label class="form-label">{{ __('field.sku') }} (Stock Keeping Unit)</label>
+                                    <label class="form-label">{{ __('field.sku') }} (Stock Keeping Unit) (Optional)</label>
                                     <div id="sku-container">
                                         @if($item && $item->skus && $item->skus->count() > 0)
                                             @foreach($item->skus as $index => $sku)
@@ -269,7 +280,8 @@
                         <div class="row mb-3">
                             <div class="col-md-12">
                                 <div class="mb-1">
-                                    <label for="product_supplier_id" class="form-label">Supplier</label>
+                                    <label for="product_supplier_id" class="form-label">Supplier  <span class="text-danger">*</span></label>
+                                    <small class="text-muted">{{__('general.select_a_supplier_from_the_list')}}</small>
                                     <select class="form-control select2" name="product_supplier_ids[]" id="product_supplier_id" data-select="true">
                                         <option value="">{{ __('general.choose') }} supplier</option>
                                         @foreach($productSuppliers as $supplier)
@@ -296,7 +308,8 @@
                                     <div class="product-branch-row mb-3 border rounded p-3" data-branch-index="{{ $index }}">
                                         <div class="row">
                                             <div class="col-md-6 mb-3">
-                                                <label class="form-label">Branch</label>
+                                                <label class="form-label">Branch  <span class="text-danger">*</span></label>
+                                                <small class="text-muted">{{__('general.select_a_branch_from_the_list')}}</small>
                                                 <select class="form-control select2 branch-select" 
                                                     name="product_branches[{{ $index }}][branch_id]" 
                                                     data-select="true" required>
@@ -310,7 +323,8 @@
                                                 </select>
                                             </div>
                                             <div class="col-md-5 mb-3 stock-quantity-wrapper" style="{{ $productBranch->branch_id ? '' : 'display:none;' }}">
-                                                <label class="form-label">Stock Quantity</label>
+                                                <label class="form-label">Stock Quantity  <span class="text-danger">*</span></label>
+                                                <small class="text-muted">{{__('general.enter_the_stock_quantity_of_the_product')}}</small>
                                                 <input type="number" class="form-control stock-quantity-input" 
                                                     name="product_branches[{{ $index }}][stock_quantity]" 
                                                     placeholder="0" min="0" 
@@ -331,7 +345,8 @@
                                 <div class="product-branch-row mb-3 border rounded p-3" data-branch-index="0">
                                     <div class="row">
                                         <div class="col-md-6 mb-3">
-                                            <label class="form-label">Branch</label>
+                                            <label class="form-label">Branch  <span class="text-danger">*</span></label>
+                                            <small class="text-muted">{{__('general.select_a_branch_from_the_list')}}</small>
                                             <select class="form-control select2 branch-select" 
                                                 name="product_branches[0][branch_id]" 
                                                 data-select="true">
@@ -538,7 +553,8 @@
                                 </select>
                             </div>
                             <div class="col-md-5 mb-3 stock-quantity-wrapper" style="display:none;">
-                                <label class="form-label">Stock Quantity</label>
+                                <label class="form-label">Stock Quantity  <span class="text-danger">*</span></label>
+                                <small class="text-muted">{{__('general.enter_the_stock_quantity_of_the_product')}}</small>
                                 <input type="number" class="form-control stock-quantity-input" 
                                     name="product_branches[${branchIndex}][stock_quantity]" 
                                     placeholder="0" min="0" 

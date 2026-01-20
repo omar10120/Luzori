@@ -34,7 +34,8 @@
                                         <div class="row">
                                             <div class="col-md-12">
                                                 <div class="mb-1">
-                                                    <label class="form-label">{{ __('field.about_us') }}</label>
+                                                    <label class="form-label">{{ __('field.about_us') }} <span class="text-danger">*</span></label>
+                                                    <small class="text-muted">{{__('general.enter_the_about_us')}}</small>
                                                     <input type="hidden" name="{{ $locale }}[about_us][key]"
                                                         value="{{ App\Enums\PageEnum::AboutUs->value }}">
                                                     <textarea class="summernote" name="{{ $locale }}[about_us][value]">{{ $item ? $item['about_us']->translate($locale)->value : null }}</textarea>
@@ -44,7 +45,8 @@
                                         <div class="row">
                                             <div class="col-md-12">
                                                 <div class="mb-1">
-                                                    <label class="form-label">{{ __('field.privacy_policy') }}</label>
+                                                    <label class="form-label">{{ __('field.privacy_policy') }} <span class="text-danger">*</span></label>
+                                                    <small class="text-muted">{{__('general.enter_the_privacy_policy')}}</small>
                                                     <input type="hidden" name="{{ $locale }}[privacy_policy][key]"
                                                         value="{{ App\Enums\PageEnum::PrivacyPolicy->value }}">
                                                     <textarea class="summernote" name="{{ $locale }}[privacy_policy][value]">{{ $item ? $item['privacy_policy']->translate($locale)->value : null }}</textarea>
@@ -54,7 +56,8 @@
                                         <div class="row">
                                             <div class="col-md-12">
                                                 <div class="mb-1">
-                                                    <label class="form-label">{{ __('field.terms_conditions') }}</label>
+                                                    <label class="form-label">{{ __('field.terms_conditions') }} <span class="text-danger">*</span></label>
+                                                    <small class="text-muted">{{__('general.enter_the_terms_conditions')}}</small>
                                                     <input type="hidden" name="{{ $locale }}[terms_conditions][key]"
                                                         value="{{ App\Enums\PageEnum::TermsConditions->value }}">
                                                     <textarea class="summernote" name="{{ $locale }}[terms_conditions][value]">{{ $item ? $item['terms_conditions']->translate($locale)->value : null }}</textarea>

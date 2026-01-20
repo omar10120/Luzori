@@ -22,7 +22,8 @@
                             <div class="row">
                                 <div class="col-md-6 mb-2">
                                     <div class="mb-1">
-                                        <label class="form-label">{{__('field.name')}}</label>
+                                        <label class="form-label">{{__('field.name')}} <span class="text-danger">*</span></label>
+                                        <small class="text-muted">{{__('general.enter_the_name_of_the_payment_method')}}</small>
                                         <input type="text" id="name" class="form-control"
                                             name="name" placeholder="{{__('field.name')}}"
                                             value="{{ $item ? $item->name : '' }}" />
@@ -47,7 +48,8 @@
                                 </div>
                                 <div class="col-md-6 mb-2">
                                     <div class="mb-1">
-                                        <label class="form-label">{{__('field.types')}}</label>
+                                        <label class="form-label">{{__('field.types')}} <span class="text-danger">*</span></label>
+                                        <small class="text-muted">{{__('general.select_a_types_of_the_payment_method')}}</small>
                                         <select class="select2 form-control" name="types[]" id="types" multiple>
                                             @foreach(\App\Models\PaymentMethod::getTypes() as $key => $value)
                                                 <option value="{{ $key }}" 

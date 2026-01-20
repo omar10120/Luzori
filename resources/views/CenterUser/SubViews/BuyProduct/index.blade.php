@@ -21,7 +21,8 @@
                         <div class="row">
                             <div class="col-md-12 mb-2">
                                 <div class="mb-1">
-                                    <label for="products" class="form-label">{{ __('locale.products') }}</label>
+                                    <label for="products" class="form-label">{{ __('locale.products') }} <span class="text-danger">*</span></label>
+                                    <small class="text-muted">{{__('general.select_a_product_from_the_list')}}</small>
                                     <select class="select2 form-control" name="products[]" id="products" multiple>
                                         <option value="">Select Products</option>
                                         @foreach ($products as $product)
@@ -32,7 +33,8 @@
                             </div>
                             <div class="col-md-12 mb-2">
                                 <div class="mb-1">
-                                    <label for="payment_type" class="form-label">{{ __('field.payment_method') }} </label>
+                                    <label for="payment_type" class="form-label">{{ __('field.payment_method') }} <span class="text-danger">*</span></label>
+                                    <small class="text-muted">{{__('general.select_a_payment_method_from_the_list')}}</small>
                                     <select name="payment_type" id="payment_type" class="form-control">
                                         <option value="">{{ __('field.Choose Payment Method') }}</option>
                                         @foreach($paymentMethods as $paymentMethod)
@@ -43,7 +45,8 @@
                             </div>
                             <div class="col-md-12 mb-2">
                                 <div class="mb-1">
-                                    <label for="discount" class="form-label">{{ __('field.discount_codes') }} </label>
+                                    <label for="discount" class="form-label">{{ __('field.discount_codes') }} <span class="text-danger">*</span></label>
+                                    <small class="text-muted">{{__('general.select_a_discount_code_from_the_list')}}</small>
                                     <select name="discount" id="discount" class="form-control">
                                         <option value="">{{ __('field.Choose Discount') }}</option>
                                         @for ($i = 1; $i <= 15; $i++)
@@ -54,7 +57,8 @@
                             </div>
                             <div class="col-md-12 mb-2">
                                 <div class="mb-1">
-                                    <label for="sales_worker" class="form-label">{{ __('field.sales_worker') }} </label>
+                                    <label for="sales_worker" class="form-label">{{ __('field.sales_worker') }} <span class="text-danger">*</span></label>
+                                    <small class="text-muted">{{__('general.select_a_sales_worker_from_the_list')}}</small>
                                     <select class="select2 form-control" name="sales_worker_id" id="sales_worker">
                                         <option value="">{{ __('field.Choose Sales Worker') }}</option>
                                         @foreach ($workers as $worker)
@@ -65,7 +69,8 @@
                             </div>
                             <div class="col-md-12 mb-2">
                                 <div class="mb-1">
-                                    <label for="worker" class="form-label">{{ __('field.worker') }} </label>
+                                    <label for="worker" class="form-label">{{ __('field.worker') }} <span class="text-danger">*</span></label>
+                                    <small class="text-muted">{{__('general.select_a_worker_from_the_list')}}</small>
                                     <select class="select2 form-control" name="worker_id" id="worker">
                                         <option value="">{{ __('field.Choose Worker') }}</option>
                                         @foreach ($workers as $worker)

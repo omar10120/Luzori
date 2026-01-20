@@ -21,7 +21,8 @@
                         <div class="row">
                             <div class="col-md-12 mb-2">
                                 <div class="mb-1">
-                                    <label for="branch_id" class="form-label">{{ __('field.branch') }}</label>
+                                    <label for="branch_id" class="form-label">{{ __('field.branch') }}  <span class="text-danger">*</span></label>
+                                    <small class="text-muted">{{__('general.select_a_branch_from_the_list')}}</small>
                                     <select class="select2 form-control" name="branch_id" id="branch_id">
                                         @foreach ($branches as $branch)
                                             <option
@@ -33,7 +34,8 @@
                             </div>
                             <div class="col-md-12 mb-2">
                                 <div class="mb-1">
-                                    <label for="services" class="form-label">{{ __('field.services') }}</label>
+                                    <label for="services" class="form-label">{{ __('field.services') }}  <span class="text-danger">*</span></label>
+                                    <small class="text-muted">{{__('general.select_a_service_from_the_list')}}</small>
                                     <select class="select2 form-control" name="services[]" id="services" multiple>
                                         @foreach ($services as $service)
                                             <option
@@ -45,7 +47,8 @@
                             </div>
                             <div class="col-md-12 mb-2">
                                 <div class="mb-1">
-                                    <label for="shift_id" class="form-label">{{ __('field.shift') }}</label>
+                                    <label for="shift_id" class="form-label">{{ __('field.shift') }}  <span class="text-danger">*</span></label>
+                                    <small class="text-muted">{{__('general.select_a_shift_from_the_list')}}</small>
                                     <select class="select2 form-control" name="shift_id" id="shift_id">
                                         @foreach ($shifts as $shift)
                                             <option
@@ -57,7 +60,8 @@
                             </div>
                             <div class="col-md-12 mb-2">
                                 <div class="mb-1">
-                                    <label for="name" class="form-label">{{ __('field.name') }} </label>
+                                    <label for="name" class="form-label">{{ __('field.name') }}  <span class="text-danger">*</span></label>
+                                    <small class="text-muted">{{__('general.enter_the_full_name_of_the_employee')}}</small>
                                     <input type="text" id="name" class="form-control" name="name"
                                         placeholder="{{ __('field.name') }}" value="{{ $item ? $item->name : null }}" />
                                     <small class="text-muted">Enter the full name of the employee.</small>
@@ -65,7 +69,8 @@
                             </div>
                             <div class="col-md-12 mb-2">
                                 <div class="mb-1">
-                                    <label for="email" class="form-label">{{ __('field.email') }} </label>
+                                    <label for="email" class="form-label">{{ __('field.email') }}  <span class="text-danger">*</span></label>
+                                    <small class="text-muted">{{__('general.enter_the_email_of_the_employee')}}</small>
                                     <input type="email" id="email" class="form-control" name="email"
                                         placeholder="{{ __('field.email') }}" value="{{ $item ? $item->email : null }}" />
                                     <small class="text-muted">Used for login and notifications.</small>
@@ -73,14 +78,15 @@
                             </div>
                             <div class="col-md-12 mb-2">
                                 <div class="mb-1">
-                                    <label for="phone" class="form-label">{{ __('field.phone') }} </label>
-                                    <div class="d-flex">
+                                    <label for="phone" class="form-label">{{ __('field.phone') }}  <span class="text-danger">*</span></label>
+                                    <small class="text-muted">{{__('general.enter_the_phone_number_of_the_employee')}}</small>
+                                        <div class="d-flex">
                                         <label class="p-2" style="background: #80808045">+971</label>
                                         <input style="border-radius:0 1px 1px 0" type="phone" id="phone"
                                             class="form-control" name="phone" placeholder="{{ __('field.phone') }}"
                                             value="{{ $item ? $item->phone : null }}" />
+                                            
                                     </div>
-                                    <small class="text-muted">Enter the number without the country code.</small>
                                 </div>
                             </div>
                             <div class="col-md-12">
