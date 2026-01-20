@@ -1,0 +1,557 @@
+{
+  "menu": [
+    {
+      "url": "center_user/cp",
+      "name": "statistics",
+      "icon": "home",
+      "slug": [
+        "cp"
+      ],
+      "permissions": [
+        "VIEW_USERS",
+        "VIEW_CENTERUSERROLES",
+        "VIEW_CENTERUSERS",
+        "VIEW_NOTIFICATIONS",
+        "VIEW_BRANCHES",
+        "VIEW_PAYMENT_METHODS",
+        "VIEW_WEEKSDAYS",
+        "VIEW_SHIFTS",
+        "VIEW_SERVICES",
+        "VIEW_WORKERS",
+        "VIEW_MEMBERSHIPS",
+        "VIEW_DISCOUNTS",
+        "VIEW_WALLETS",
+        "VIEW_PACKAGES",
+        "VIEW_BOOKINGS",
+        "VIEW_BOOKING_WITH_TIPS",
+        "VIEW_SALES",
+        "VIEW_PRODUCTS",
+        "VIEW_BUYPRODUCTS",
+        "VIEW_STOCKTAKES",
+        "VIEW_DAILY_REPORTS",
+        "VIEW_SALES_REPORTS",
+        "VIEW_STAFF_REPORTS",
+        "VIEW_COMMISSION_REPORTS",
+        "VIEW_TIPS_REPORTS",
+        "VIEW_INFOS",
+        "VIEW_PAGES",
+        "VIEW_SETTINGS",
+        "VIEW_EXPENSES"
+      ]
+    },
+    {
+      "name": "branches",
+      "external_icon": "branches",
+      "slug": [
+        "branches"
+      ],
+      "permissions": [
+        "VIEW_BRANCHES"
+      ],
+      "submenu": [
+        {
+          "url": "center_user/branches/index",
+          "name": "branches",
+          "external_icon": "branches",
+          "slug": [
+            "branches"
+          ],
+          "permissions": [
+            "VIEW_BRANCHES"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "services_management",
+      "external_icon": "weekdays",
+      "slug": [
+        "weeksdays",
+        "shifts",
+        "services",
+        "workers"
+      ],
+      "permissions": [
+        "VIEW_WEEKSDAYS",
+        "VIEW_SHIFTS",
+        "VIEW_SERVICES",
+        "VIEW_WORKERS"
+      ],
+      "submenu": [
+        {
+          "url": "center_user/weeksdays/index",
+          "name": "weeksdays",
+          "external_icon": "weekdays",
+          "slug": [
+            "weeksdays"
+          ],
+          "permissions": [
+            "VIEW_WEEKSDAYS"
+          ]
+        },
+        {
+          "url": "center_user/shifts/index",
+          "name": "shifts",
+          "external_icon": "shifts",
+          "slug": [
+            "shifts"
+          ],
+          "permissions": [
+            "VIEW_SHIFTS"
+          ]
+        },
+        {
+          "url": "center_user/services/index",
+          "name": "services",
+          "external_icon": "services",
+          "slug": [
+            "services"
+          ],
+          "permissions": [
+            "VIEW_SERVICES"
+          ]
+        },
+        {
+          "url": "center_user/workers/index",
+          "name": "workers",
+          "external_icon": "workers",
+          "slug": [
+            "workers"
+          ],
+          "permissions": [
+            "VIEW_WORKERS"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "payment_methods",
+      "external_icon": "payment",
+      "slug": [
+        "payment_methods"
+      ],
+      "permissions": [
+        "VIEW_PAYMENT_METHODS"
+      ],
+      "submenu": [
+        {
+          "url": "center_user/payment_methods/index",
+          "name": "payment_methods",
+          "icon": "credit-card",
+          "slug": [
+            "payment_methods"
+          ],
+          "permissions": [
+            "VIEW_PAYMENT_METHODS"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "bookings",
+      "external_icon": "bookings",
+      "slug": [
+        "bookings",
+        "booking_with_tips"
+      ],
+      "permissions": [
+        "VIEW_BOOKINGS",
+        "VIEW_BOOKING_WITH_TIPS"
+      ],
+      "submenu": [
+        {
+          "url": "center_user/bookings/index",
+          "name": "bookings",
+          "external_icon": "bookings",
+          "slug": [
+            "bookings"
+          ],
+          "permissions": [
+            "VIEW_BOOKINGS"
+          ]
+        },
+        {
+          "url": "center_user/booking_with_tips/index",
+          "name": "booking_with_tips",
+          "external_icon": "bookings",
+          "slug": [
+            "booking_with_tips"
+          ],
+          "permissions": [
+            "VIEW_BOOKING_WITH_TIPS"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "products",
+      "external_icon": "products",
+      "slug": [
+        "products",
+        "buyproducts",
+        "stocktakes"
+      ],
+      "permissions": [
+        "VIEW_PRODUCTS",
+        "VIEW_BUYPRODUCTS",
+        "VIEW_STOCKTAKES"
+      ],
+      "submenu": [
+        {
+          "url": "center_user/products/index",
+          "name": "products",
+          "external_icon": "products",
+          "slug": [
+            "products"
+          ],
+          "permissions": [
+            "VIEW_PRODUCTS"
+          ]
+        },
+        {
+          "url": "center_user/buyproducts/index",
+          "name": "buyproducts",
+          "external_icon": "buy_products",
+          "slug": [
+            "buyproducts"
+          ],
+          "permissions": [
+            "VIEW_BUYPRODUCTS"
+          ]
+        },
+        {
+          "url": "center_user/stocktakes/index",
+          "name": "stocktakes",
+          "external_icon": "stock",
+          "slug": [
+            "stocktakes"
+          ],
+          "permissions": [
+            "VIEW_STOCKTAKES"
+          ]
+        }
+      ]
+    },
+    {
+      "url": "center_user/sales/index",
+      "name": "sales",
+      "external_icon": "sales",
+      "slug": [
+        "sales"
+      ],
+      "permissions": [
+        "VIEW_SALES"
+      ]
+    },
+    {
+      "url": "center_user/expenses/index",
+      "name": "expenses",
+      "external_icon": "expenses",
+      "slug": [
+        "expenses"
+      ],
+      "permissions": [
+        "VIEW_EXPENSES"
+      ],
+      "submenu": [
+        {
+          "url": "center_user/expenses/providers",
+          "name": "expenses_providers",
+          "icon": "users",
+          "slug": [
+            "providers"
+          ]
+        },
+        {
+          "url": "center_user/suppliers/index",
+          "name": "suppliers",
+          "icon": "truck",
+          "slug": [
+            "suppliers"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "users",
+      "external_icon": "customer-service",
+      "slug": [
+        "users"
+      ],
+      "permissions": [
+        "VIEW_USERS"
+      ],
+      "submenu": [
+        {
+          "url": "center_user/users/index",
+          "name": "users",
+          "icon": "users",
+          "slug": [
+            "users"
+          ],
+          "permissions": [
+            "VIEW_USERS"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "roles_center_users",
+      "external_icon": "roles",
+      "slug": [
+        "centeruserroles",
+        "centerusers"
+      ],
+      "permissions": [
+        "VIEW_CENTERUSERROLES",
+        "VIEW_CENTERUSERS"
+      ],
+      "submenu": [
+        {
+          "url": "center_user/centeruserroles/index",
+          "name": "centeruserroles",
+          "external_icon": "roles",
+          "slug": [
+            "centeruserroles"
+          ],
+          "permissions": [
+            "VIEW_CENTERUSERROLES"
+          ]
+        },
+        {
+          "url": "center_user/centerusers/index",
+          "name": "centerusers",
+          "icon": "user-plus",
+          "slug": [
+            "centerusers"
+          ],
+          "permissions": [
+            "VIEW_CENTERUSERS"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "discount_customers",
+      "external_icon": "memberships",
+      "slug": [
+        "memberships",
+        "discounts",
+        "wallets",
+        "packages"
+      ],
+      "permissions": [
+        "VIEW_MEMBERSHIPS",
+        "VIEW_DISCOUNTS",
+        "VIEW_WALLETS",
+        "VIEW_PACKAGES"
+      ],
+      "submenu": [
+        {
+          "url": "center_user/memberships/index",
+          "name": "memberships",
+          "external_icon": "memberships",
+          "slug": [
+            "memberships"
+          ],
+          "permissions": [
+            "VIEW_MEMBERSHIPS"
+          ]
+        },
+        {
+          "url": "center_user/discounts/index",
+          "name": "discounts",
+          "external_icon": "discounts",
+          "slug": [
+            "discounts"
+          ],
+          "permissions": [
+            "VIEW_DISCOUNTS"
+          ]
+        },
+        {
+          "url": "center_user/wallets/index",
+          "name": "coupons",
+          "external_icon": "coupons",
+          "slug": [
+            "wallets"
+          ],
+          "permissions": [
+            "VIEW_WALLETS"
+          ]
+        },
+        {
+          "url": "center_user/packages/index",
+          "name": "packages",
+          "external_icon": "packages",
+          "slug": [
+            "packages"
+          ],
+          "permissions": [
+            "VIEW_PACKAGES"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "notifications",
+      "external_icon": "notifications",
+      "slug": [
+        "notifications"
+      ],
+      "permissions": [
+        "VIEW_NOTIFICATIONS"
+      ],
+      "submenu": [
+        {
+          "url": "center_user/notifications/index",
+          "name": "notifications",
+          "external_icon": "notifications",
+          "slug": [
+            "notifications"
+          ],
+          "permissions": [
+            "VIEW_NOTIFICATIONS"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "reports",
+      "external_icon": "daily-report",
+      "slug": [
+        "daily-report",
+        "sales-report",
+        "staff-report",
+        "commission-report",
+        "tips-report",
+        "expense-report"
+      ],
+      "permissions": [
+        "VIEW_DAILY_REPORTS",
+        "VIEW_SALES_REPORTS",
+        "VIEW_STAFF_REPORTS",
+        "VIEW_COMMISSION_REPORTS",
+        "VIEW_TIPS_REPORTS",
+        "VIEW_EXPENSE_REPORTS"
+      ],
+      "submenu": [
+        {
+          "url": "center_user/reports/daily-report",
+          "name": "daily_report",
+          "external_icon": "daily-report",
+          "slug": [
+            "daily-report"
+          ],
+          "permissions": [
+            "VIEW_DAILY_REPORTS"
+          ]
+        },
+        {
+          "url": "center_user/reports/sales-report",
+          "name": "sales_report",
+          "external_icon": "sales-report",
+          "slug": [
+            "sales-report"
+          ],
+          "permissions": [
+            "VIEW_SALES_REPORTS"
+          ]
+        },
+        {
+          "url": "center_user/reports/staff-report",
+          "name": "staff_report",
+          "external_icon": "staff-report",
+          "slug": [
+            "staff-report"
+          ],
+          "permissions": [
+            "VIEW_STAFF_REPORTS"
+          ]
+        },
+        {
+          "url": "center_user/reports/commission-report",
+          "name": "commission_report",
+          "external_icon": "commission-report",
+          "slug": [
+            "commission-report"
+          ],
+          "permissions": [
+            "VIEW_COMMISSION_REPORTS"
+          ]
+        },
+        {
+          "url": "center_user/reports/tips-report",
+          "name": "tips_report",
+          "external_icon": "tips-report",
+          "slug": [
+            "tips-report"
+          ],
+          "permissions": [
+            "VIEW_TIPS_REPORTS"
+          ]
+        },
+        {
+          "url": "center_user/reports/expense-report",
+          "name": "expense_report",
+          "external_icon": "expense-report",
+          "slug": [
+            "expense-report"
+          ],
+          "permissions": [
+            "VIEW_EXPENSE_REPORTS"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "settings",
+      "external_icon": "infos",
+      "slug": [
+        "infos",
+        "pages",
+        "settings"
+      ],
+      "permissions": [
+        "VIEW_INFOS",
+        "VIEW_PAGES",
+        "VIEW_SETTINGS"
+      ],
+      "submenu": [
+        {
+          "url": "center_user/infos/index",
+          "name": "infos",
+          "external_icon": "infos",
+          "slug": [
+            "infos"
+          ],
+          "permissions": [
+            "VIEW_INFOS"
+          ]
+        },
+        {
+          "url": "center_user/pages/index",
+          "name": "pages",
+          "icon": "book",
+          "slug": [
+            "pages"
+          ],
+          "permissions": [
+            "VIEW_PAGES"
+          ]
+        },
+        {
+          "url": "center_user/settings/index",
+          "name": "settings",
+          "icon": "settings",
+          "slug": [
+            "settings"
+          ],
+          "permissions": [
+            "VIEW_SETTINGS"
+          ]
+        }
+      ]
+    }
+  ]
+}

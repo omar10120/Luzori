@@ -1,0 +1,40 @@
+<?php
+
+return [
+
+    'loginSuccessfully'                             => 'تم تسجيل الدخول بنجاح',
+    'logoutSuccessfully'                            => 'تم تسجيل الخروج بنجاح',
+    'userIsBlocked'                                 => 'المستخدم غير فعال',
+    'centerIsBlocked'                               => 'الصالون غير فعال',
+    'centerUserIsBlocked'                           => 'مستخدم الصالون غير فعال',
+    'phoneAlreadyUsed'                              => 'رقم الهاتف مستخدم مسبقاً',
+    'unknownError'                                  => 'حدث خطأ غير معروف',
+    'noDataFound'                                   => 'لا يوجد بيانات',
+
+    'doneSuccessfully'                              => __('admin.operation_done_successfully'),
+    'addSuccessfully'                               => 'تمت الإضافة بنجاح',
+    'editSuccessfully'                              => 'تم التعديل بنجاح',
+    'deleteSuccessfully'                            => 'تم الحذف بنجاح',
+    'approveSuccessfully'                           => 'تم القبول بنجاح',
+    'rejectSuccessfully'                            => 'تم الرفض بنجاح',
+
+    'sendSMSSuccessfully'                           => 'تم إرسال رسالة محلية تحوي رمز التفعيل',
+    'sendEmailSuccessfully'                         => 'تم إرسال بريد إلكتروني يحوي رمز التفعيل',
+    'incorrectCode'                                 => 'الكود المدخل غير صحيح',
+    'passwordDontMatch'                             => 'كلمة المرور غير صحيحة',
+    'emailOrPasswordDontMatch'                      => 'البريد الإلكتروني أو كلمة المرور غير صحيحة',
+    'accountNotReady'                               => 'الحساب غير جاهز للإستعادة',
+    'updateInformationSuccessfully'                 => 'تم تعديل البيانات بنجاح',
+    'updateLanguageSuccessfully'                    => 'تم تعديل اللغة بنجاح',
+    'updatePasswordSuccessfully'                    => 'تم تعديل كلمة المرور بنجاح',
+    'currentPasswordDontMatch'                      => 'كلمة المرور الحالية غير مطابقة',
+    'userExists'                                    => 'معلومات المستخدم',
+    'centerExists'                                  => 'معلومات الصالون',
+    'centeruserExists'                              => 'معلومات مستخدم الصالون',
+    'notificationExists'                            => 'الإشعارات الموجودة',
+    'settingExists'                                 => 'الإعدادات الموجودة',
+    'pageExists'                                    => 'الصفحات الموجودة',
+    'infoExists'                                    => 'المعلومات الموجودة',
+    'domain_dont_exists'                            => 'الدومين غير موجود',
+    'userNotFound'                                  => 'المستخدم غير موجود',
+];

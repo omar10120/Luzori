@@ -1,0 +1,123 @@
+{
+    "menu": [
+        {
+            "url": "admin/cp",
+            "name": "statistics",
+            "icon": "home",
+            "slug": [
+                "cp"
+            ],
+            "permissions": [
+                "VIEW_CENTERROLES",
+                "VIEW_CENTERS",
+                "VIEW_ADMINROLES",
+                "VIEW_ADMINS",
+                "VIEW_INFOS",
+                "VIEW_PAGES",
+                "VIEW_SETTINGS"
+            ]
+        },
+        {
+            "menuHeader": "roles_centers",
+            "slug": [],
+            "permissions": [
+                "VIEW_CENTERROLES",
+                "VIEW_CENTERS"
+            ]
+        },
+        {
+            "url": "admin/centerroles/index",
+            "name": "centerroles",
+            "external_icon": "roles",
+            "slug": [
+                "centerroles"
+            ],
+            "permissions": [
+                "VIEW_CENTERROLES"
+            ]
+        },
+        {
+            "url": "admin/centers/index",
+            "name": "centers",
+            "external_icon": "centers",
+            "slug": [
+                "centers"
+            ],
+            "permissions": [
+                "VIEW_CENTERS"
+            ]
+        },
+        {
+            "menuHeader": "roles_admins",
+            "slug": [],
+            "permissions": [
+                "VIEW_ADMINROLES",
+                "VIEW_ADMINS"
+            ]
+        },
+        {
+            "url": "admin/adminroles/index",
+            "name": "adminroles",
+            "external_icon": "roles",
+            "slug": [
+                "adminroles"
+            ],
+            "permissions": [
+                "VIEW_ADMINROLES"
+            ]
+        },
+        {
+            "url": "admin/admins/index",
+            "name": "admins",
+            "icon": "user-plus",
+            "slug": [
+                "admins"
+            ],
+            "permissions": [
+                "VIEW_ADMINS"
+            ]
+        },
+        {
+            "menuHeader": "settings",
+            "slug": [],
+            "permissions": [
+                "VIEW_INFOS",
+                "VIEW_PAGES",
+                "VIEW_SETTINGS"
+            ]
+        },
+        {
+            "url": "admin/infos/index",
+            "name": "infos",
+            "external_icon": "infos",
+            "slug": [
+                "infos"
+            ],
+            "permissions": [
+                "VIEW_INFOS"
+            ]
+        },
+        {
+            "url": "admin/pages/index",
+            "name": "pages",
+            "icon": "book",
+            "slug": [
+                "pages"
+            ],
+            "permissions": [
+                "VIEW_PAGES"
+            ]
+        },
+        {
+            "url": "admin/settings/index",
+            "name": "settings",
+            "icon": "settings",
+            "slug": [
+                "settings"
+            ],
+            "permissions": [
+                "VIEW_SETTINGS"
+            ]
+        }
+    ]
+}

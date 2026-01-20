@@ -1,0 +1,26 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Document outline -->
+  <path d="M48 40C48 35.5817 51.5817 32 56 32H168L208 72V216C208 220.418 204.418 224 200 224H56C51.5817 224 48 220.418 48 216V40Z" fill="white" stroke="#225D5C" stroke-width="8"/>
+  
+  <!-- Document corner fold -->
+  <path d="M168 32V72H208L168 32Z" fill="#225D5C"/>
+  
+  <!-- Dollar sign -->
+  <path d="M128 64C128 67.3137 125.314 70 122 70C118.686 70 116 67.3137 116 64C116 60.6863 118.686 58 122 58C125.314 58 128 60.6863 128 64Z" fill="#225D5C"/>
+  <path d="M128 64V80M128 80C128 83.3137 125.314 86 122 86C118.686 86 116 83.3137 116 80M128 80V96M116 80V64M116 80V96" stroke="#225D5C" stroke-width="4"/>
+  
+  <!-- Receipt lines -->
+  <path d="M64 112H192" stroke="#225D5C" stroke-width="4"/>
+  <path d="M64 128H192" stroke="#225D5C" stroke-width="4"/>
+  <path d="M64 144H160" stroke="#225D5C" stroke-width="4"/>
+  <path d="M64 160H144" stroke="#225D5C" stroke-width="4"/>
+  <path d="M64 176H176" stroke="#225D5C" stroke-width="4"/>
+  
+  <!-- Calculator -->
+  <rect x="80" y="180" width="96" height="32" rx="4" fill="white" stroke="#225D5C" stroke-width="2"/>
+  <path d="M88 188H104M112 188H168M176 188H184" stroke="#225D5C" stroke-width="2"/>
+  <rect x="88" y="196" width="16" height="8" fill="#225D5C"/>
+  <rect x="112" y="196" width="16" height="8" fill="#225D5C"/>
+  <rect x="136" y="196" width="16" height="8" fill="#225D5C"/>
+  <rect x="160" y="196" width="16" height="8" fill="#225D5C"/>
+</svg>

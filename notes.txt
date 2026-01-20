@@ -1,0 +1,32 @@
+- in update workers the services dose not selected in select
+- roll to add controller and search for ::all() method to replace it with with get
+- redirect to index when add and edit
+- in admin when add phone number you should add code
+- eye icon in admin form for password not working
+- when dont gave permission dont show the button
+- when add reception add branch with him give dynamic fields depend on role
+- add column created at as date in all tables
+- show tow language fields in all tables
+- delete action weeks_days
+- if the day is off you should logout from the center dashboard and application in the that day
+- when export in all methods remove the action column from it
+- check search in datatables (workers)
+- add map in branches
+
+
+-- api notes
+- code for phone anywhere
+- apis for customers
+- super admin can see all
+- admin can see all either super admin
+- reception can see self
+
+
+- branches
+- packages
+- packages_services
+- products
+- services
+- shifts
+- system_settings
+- weeks_days

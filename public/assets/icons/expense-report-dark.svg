@@ -1,0 +1,17 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M48 40C48 35.5817 51.5817 32 56 32H168L208 72V216C208 220.418 204.418 224 200 224H56C51.5817 224 48 220.418 48 216V40Z" fill="black" stroke="#FFD6A8" stroke-width="8"/>
+<path d="M168 32V72H208L168 32Z" fill="#FFD6A8"/>
+<path d="M128 64C128 67.3137 125.314 70 122 70C118.686 70 116 67.3137 116 64C116 60.6863 118.686 58 122 58C125.314 58 128 60.6863 128 64Z" fill="#FFD6A8"/>
+<path d="M128 64V80M128 80C128 83.3137 125.314 86 122 86C118.686 86 116 83.3137 116 80M128 80V96M116 80V64M116 80V96" stroke="#FFD6A8" stroke-width="4"/>
+<path d="M64 112H192" stroke="#FFD6A8" stroke-width="4"/>
+<path d="M64 128H192" stroke="#FFD6A8" stroke-width="4"/>
+<path d="M64 144H160" stroke="#FFD6A8" stroke-width="4"/>
+<path d="M64 160H144" stroke="#FFD6A8" stroke-width="4"/>
+<path d="M64 176H176" stroke="#FFD6A8" stroke-width="4"/>
+<path d="M172 180H84C81.7909 180 80 181.791 80 184V208C80 210.209 81.7909 212 84 212H172C174.209 212 176 210.209 176 208V184C176 181.791 174.209 180 172 180Z" fill="black" stroke="#FFD6A8" stroke-width="2"/>
+<path d="M88 188H104M112 188H168M176 188H184" stroke="#FFD6A8" stroke-width="2"/>
+<path d="M104 196H88V204H104V196Z" fill="#FFD6A8"/>
+<path d="M128 196H112V204H128V196Z" fill="#FFD6A8"/>
+<path d="M152 196H136V204H152V196Z" fill="#FFD6A8"/>
+<path d="M176 196H160V204H176V196Z" fill="#FFD6A8"/>
+</svg>

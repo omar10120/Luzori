@@ -1,0 +1,40 @@
+<?php
+
+return [
+
+    'loginSuccessfully'                             => 'Login Successfully',
+    'logoutSuccessfully'                            => 'Logout Successfully',
+    'userIsBlocked'                                 => 'User Is Blocked',
+    'centerIsBlocked'                               => 'Center Is Blocked',
+    'centerUserIsBlocked'                           => 'Center User Is Blocked',
+    'phoneAlreadyUsed'                              => 'Phone Number Already Used',
+    'unknownError'                                  => 'Unknown Error',
+    'noDataFound'                                   => 'No Data Found',
+
+    'doneSuccessfully'                              => 'Done Successfully',
+    'addSuccessfully'                               => 'Add Successfully',
+    'editSuccessfully'                              => 'Edit Successfully',
+    'deleteSuccessfully'                            => 'Delete Successfully',
+    'approveSuccessfully'                           => 'Approve Successfully',
+    'rejectSuccessfully'                            => 'Reject Successfully',
+
+    'sendSMSSuccessfully'                           => 'Send SMS Successfully',
+    'sendEmailSuccessfully'                         => 'Send Email Successfully',
+    'incorrectCode'                                 => 'Incorrect Code',
+    'emailOrPasswordDontMatch'                      => 'Email Or Password Don\'t Match',
+    'passwordDontMatch'                             => 'InCorrect Password',
+    'accountNotReady'                               => 'Account Not Ready To Reset',
+    'updateInformationSuccessfully'                 => 'Update Information Successfully',
+    'updateLanguageSuccessfully'                    => 'Update Language Successfully',
+    'updatePasswordSuccessfully'                    => 'Update Password Successfully',
+    'currentPasswordDontMatch'                      => 'Current Password Don\'t Match',
+    'userExists'                                    => 'User Information Exists',
+    'centerExists'                                  => 'Center Information Exists',
+    'centeruserExists'                              => 'Center User Information Exists',
+    'notificationExists'                            => 'Notifications Exists',
+    'settingExists'                                 => 'Settings Exists',
+    'pageExists'                                    => 'Pages Exists',
+    'infoExists'                                    => 'Infos Exists',
+    'domain_dont_exists'                            => 'Domain Don\'t Exists',
+    'userNotFound'                                  => 'User Not Found',
+];

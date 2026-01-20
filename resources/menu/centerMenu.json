@@ -1,0 +1,378 @@
+{
+    "menu": [
+        {
+            "url": "center/cp",
+            "name": "statistics",
+            "icon": "home",
+            "slug": [
+                "cp"
+            ],
+            "permissions": [
+                "VIEW_USERS",
+                "VIEW_CENTERUSERROLES",
+                "VIEW_CENTERUSERS",
+                "VIEW_NOTIFICATIONS",
+                "VIEW_BRANCHES",
+                "VIEW_WEEKSDAYS",
+                "VIEW_SHIFTS",
+                "VIEW_SERVICES",
+                "VIEW_WORKERS",
+                "VIEW_MEMBERSHIPS",
+                "VIEW_DISCOUNTS",
+                "VIEW_WALLETS",
+                "VIEW_PACKAGES",
+                "VIEW_BOOKINGS",
+                "VIEW_BOOKING_WITH_TIPS",
+                "VIEW_PRODUCTS",
+                "VIEW_BUYPRODUCTS",
+                "VIEW_DAILY_REPORTS",
+                "VIEW_SALES_REPORTS",
+                "VIEW_STAFF_REPORTS",
+                "VIEW_COMMISSION_REPORTS",
+                "VIEW_TIPS_REPORTS"
+            ]
+        },
+        {
+            "menuHeader": "users",
+            "slug": [],
+            "permissions": [
+                "VIEW_USERS"
+            ]
+        },
+        {
+            "url": "center/users/index",
+            "name": "users",
+            "icon": "users",
+            "slug": [
+                "users"
+            ],
+            "permissions": [
+                "VIEW_USERS"
+            ]
+        },
+        {
+            "menuHeader": "roles_center_users",
+            "slug": [],
+            "permissions": [
+                "VIEW_CENTERUSERROLES",
+                "VIEW_CENTERUSERS"
+            ]
+        },
+        {
+            "url": "center/centeruserroles/index",
+            "name": "centeruserroles",
+            "external_icon": "roles",
+            "slug": [
+                "centeruserroles"
+            ],
+            "permissions": [
+                "VIEW_CENTERUSERROLES"
+            ]
+        },
+        {
+            "url": "center/centerusers/index",
+            "name": "centerusers",
+            "icon": "user-plus",
+            "slug": [
+                "centerusers"
+            ],
+            "permissions": [
+                "VIEW_CENTERUSERS"
+            ]
+        },
+        {
+            "menuHeader": "notifications",
+            "slug": [],
+            "permissions": [
+                "VIEW_NOTIFICATIONS"
+            ]
+        },
+        {
+            "url": "center/notifications/index",
+            "name": "notifications",
+            "icon": "bell",
+            "slug": [
+                "notifications"
+            ],
+            "permissions": [
+                "VIEW_NOTIFICATIONS"
+            ]
+        },
+        {
+            "menuHeader": "branches",
+            "slug": [],
+            "permissions": [
+                "VIEW_BRANCHES"
+            ]
+        },
+        {
+            "url": "center/branches/index",
+            "name": "branches",
+            "external_icon": "branches",
+            "slug": [
+                "branches"
+            ],
+            "permissions": [
+                "VIEW_BRANCHES"
+            ]
+        },
+        {
+            "menuHeader": "services_management",
+            "slug": [],
+            "permissions": [
+                "VIEW_WEEKSDAYS",
+                "VIEW_SHIFTS",
+                "VIEW_SERVICES",
+                "VIEW_WORKERS"
+            ]
+        },
+        {
+            "url": "center/weeks_days/index",
+            "name": "weeks_days",
+            "external_icon": "weekdays",
+            "slug": [
+                "weeks_days"
+            ],
+            "permissions": [
+                "VIEW_WEEKSDAYS"
+            ]
+        },
+        {
+            "url": "center/shifts/index",
+            "name": "shifts",
+            "external_icon": "shifts",
+            "slug": [
+                "shifts"
+            ],
+            "permissions": [
+                "VIEW_SHIFTS"
+            ]
+        },
+        {
+            "url": "center/services/index",
+            "name": "services",
+            "external_icon": "services",
+            "slug": [
+                "services"
+            ],
+            "permissions": [
+                "VIEW_SERVICES"
+            ]
+        },
+        {
+            "url": "center/workers/index",
+            "name": "workers",
+            "external_icon": "workers",
+            "slug": [
+                "workers"
+            ],
+            "permissions": [
+                "VIEW_WORKERS"
+            ]
+        },
+        {
+            "menuHeader": "discount_customers",
+            "slug": [],
+            "permissions": [
+                "VIEW_MEMBERSHIPS",
+                "VIEW_DISCOUNTS",
+                "VIEW_WALLETS",
+                "VIEW_PACKAGES"
+            ]
+        },
+        {
+            "url": "center/memberships/index",
+            "name": "memberships",
+            "external_icon": "memberships",
+            "slug": [
+                "memberships"
+            ],
+            "permissions": [
+                "VIEW_MEMBERSHIPS"
+            ]
+        },
+        {
+            "url": "center/discounts/index",
+            "name": "discounts",
+            "external_icon": "discounts",
+            "slug": [
+                "discounts"
+            ],
+            "permissions": [
+                "VIEW_DISCOUNTS"
+            ]
+        },
+        {
+            "url": "center/wallets/index",
+            "name": "coupons",
+            "external_icon": "coupons",
+            "slug": [
+                "wallets"
+            ],
+            "permissions": [
+                "VIEW_WALLETS"
+            ]
+        },
+        {
+            "url": "center/packages/index",
+            "name": "packages",
+            "external_icon": "packages",
+            "slug": [
+                "packages"
+            ],
+            "permissions": [
+                "VIEW_PACKAGES"
+            ]
+        },
+        {
+            "menuHeader": "bookings",
+            "slug": [],
+            "permissions": [
+                "VIEW_BOOKINGS"
+            ]
+        },
+        {
+            "url": "center/bookings/index",
+            "name": "bookings",
+            "external_icon": "bookings",
+            "slug": [
+                "bookings"
+            ],
+            "permissions": [
+                "VIEW_BOOKINGS"
+            ]
+        },
+        {
+            "menuHeader": "booking_with_tips",
+            "slug": [],
+            "permissions": [
+                "VIEW_BOOKING_WITH_TIPS"
+            ]
+        },
+        {
+            "url": "center/booking_with_tips/index",
+            "name": "booking_with_tips",
+            "external_icon": "bookings",
+            "slug": [
+                "booking_with_tips"
+            ],
+            "permissions": [
+                "VIEW_BOOKING_WITH_TIPS"
+            ]
+        },
+        {
+            "menuHeader": "products",
+            "slug": [],
+            "permissions": [
+                "VIEW_PRODUCTS"
+            ]
+        },
+        {
+            "url": "center/products/index",
+            "name": "products",
+            "external_icon": "products",
+            "slug": [
+                "products"
+            ],
+            "permissions": [
+                "VIEW_PRODUCTS"
+            ]
+        },
+        {
+            "menuHeader": "buyproducts",
+            "slug": [],
+            "permissions": [
+                "VIEW_BUYPRODUCTS"
+            ]
+        },
+        {
+            "url": "center/buyproducts/index",
+            "name": "buyproducts",
+            "external_icon": "buy_products",
+            "slug": [
+                "buyproducts"
+            ],
+            "permissions": [
+                "VIEW_BUYPRODUCTS"
+            ]
+        },
+        {
+            "menuHeader": "reports",
+            "slug": [],
+            "permissions": [
+                "VIEW_DAILY_REPORTS",
+                "VIEW_SALES_REPORTS",
+                "VIEW_STAFF_REPORTS",
+                "VIEW_COMMISSION_REPORTS",
+                "VIEW_TIPS_REPORTS",
+                "VIEW_EXPENSE_REPORTS"
+            ]
+        },
+        {
+            "url": "center/reports/daily-report",
+            "name": "daily_report",
+            "icon": "link",
+            "slug": [
+                "daily-report"
+            ],
+            "permissions": [
+                "VIEW_DAILY_REPORTS"
+            ]
+        },
+        {
+            "url": "center/reports/sales-report",
+            "name": "sales_report",
+            "icon": "link",
+            "slug": [
+                "sales-report"
+            ],
+            "permissions": [
+                "VIEW_SALES_REPORTS"
+            ]
+        },
+        {
+            "url": "center/reports/staff-report",
+            "name": "staff_report",
+            "icon": "link",
+            "slug": [
+                "staff-report"
+            ],
+            "permissions": [
+                "VIEW_STAFF_REPORTS"
+            ]
+        },
+        {
+            "url": "center/reports/commission-report",
+            "name": "commission_report",
+            "icon": "link",
+            "slug": [
+                "commission-report"
+            ],
+            "permissions": [
+                "VIEW_COMMISSION_REPORTS"
+            ]
+        },
+        {
+            "url": "center/reports/tips-report",
+            "name": "tips_report",
+            "icon": "link",
+            "slug": [
+                "tips-report"
+            ],
+            "permissions": [
+                "VIEW_TIPS_REPORTS"
+            ]
+        },
+        {
+            "url": "center/reports/expense-report",
+            "name": "expense_report",
+            "icon": "link",
+            "slug": [
+                "expense-report"
+            ],
+            "permissions": [
+                "VIEW_EXPENSE_REPORTS"
+            ]
+        }
+    ]
+}
