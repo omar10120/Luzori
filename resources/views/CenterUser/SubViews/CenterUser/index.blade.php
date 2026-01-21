@@ -56,11 +56,38 @@
                             <div class="col-md-2">
                                 @include('Admin.Components.country_code', ['item' => $item])
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-2" id="phone_prefix_container" style="display: {{ ($item && $item->country_code == '+971') ? 'block' : 'none' }};">
+                                <div class="mb-1">
+                                    <label class="form-label">Prefix</label>
+                                    <select class="form-control" name="phone_prefix" id="phone_prefix">
+                                        @php
+                                            $prefixes = ['50', '52', '54', '55', '56', '58'];
+                                            $currentPrefix = '';
+                                            $phoneWithoutPrefix = $item ? (string)$item->phone : '';
+                                            if ($item && $item->country_code == '+971' && $item->phone) {
+                                                $phoneStr = (string)$item->phone;
+                                                foreach ($prefixes as $prefix) {
+                                                    if (str_starts_with($phoneStr, $prefix)) {
+                                                        $currentPrefix = $prefix;
+                                                        $phoneWithoutPrefix = substr($phoneStr, strlen($prefix));
+                                                        break;
+                                                    }
+                                                }
+                                            }
+                                        @endphp
+                                        @foreach ($prefixes as $prefix)
+                                            <option value="{{ $prefix }}" {{ $currentPrefix == $prefix ? 'selected' : '' }}>
+                                                {{ $prefix }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-{{ ($item && $item->country_code == '+971') ? '2' : '4' }}" id="phone_input_container">
                                 <div class="mb-1">
                                     <label class="form-label">{{ __('field.phone') }} <span class="text-danger">*</span></label>
-                                    <input type="number" name="phone" class="form-control"
-                                        placeholder="{{ __('field.phone') }}" value="{{ $item ? $item->phone : '' }}" required />
+                                    <input type="number" maxlength="8" name="phone" id="phone" class="form-control"
+                                        placeholder="{{ __('field.phone') }}" value="{{ $phoneWithoutPrefix }}" required />
                                 </div>
                             </div>
                         </div>
@@ -140,6 +167,50 @@
                 show_image.src = URL.createObjectURL(file)
             }
         }
+
+        // Phone prefix toggle for UAE (+971)
+        document.addEventListener('DOMContentLoaded', function() {
+            const countryCodeSelect = document.querySelector('select[name="country_code"]');
+            const phonePrefixContainer = document.getElementById('phone_prefix_container');
+            const phoneInputContainer = document.getElementById('phone_input_container');
+            const phoneInput = document.getElementById('phone');
+            const phonePrefixSelect = document.getElementById('phone_prefix');
+
+            function togglePhonePrefix() {
+                if (countryCodeSelect && countryCodeSelect.value === '+971') {
+                    phonePrefixContainer.style.display = 'block';
+                    phoneInputContainer.classList.remove('col-md-4');
+                    phoneInputContainer.classList.add('col-md-2');
+                } else {
+                    phonePrefixContainer.style.display = 'none';
+                    phoneInputContainer.classList.remove('col-md-2');
+                    phoneInputContainer.classList.add('col-md-4');
+                }
+            }
+
+            // Initial check on page load
+            togglePhonePrefix();
+
+            // Listen for country code changes
+            if (countryCodeSelect) {
+                countryCodeSelect.addEventListener('change', togglePhonePrefix);
+            }
+
+            // Combine prefix with phone number on form submit
+            const form = document.getElementById('frmSubmit');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    if (countryCodeSelect && countryCodeSelect.value === '+971' && phonePrefixSelect && phoneInput) {
+                        const prefix = phonePrefixSelect.value;
+                        const phone = phoneInput.value;
+                        if (prefix && phone) {
+                            // Combine prefix with phone number
+                            phoneInput.value = prefix + phone;
+                        }
+                    }
+                });
+            }
+        });
     </script>
 
     @include('CenterUser.Components.submit-form-ajax')

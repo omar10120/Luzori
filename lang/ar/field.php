@@ -286,4 +286,5 @@ return [
     'sales_worker'                   => 'موظف المبيعات',
     'search_location'                => 'ابحث عن موقع (مثل دبي، برج خليفة)',
     'permissions_name'               => 'اسم الصلاحيات',
+    'active_workers'               => 'الموظفين النشطين',
 ];

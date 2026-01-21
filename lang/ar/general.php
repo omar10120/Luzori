@@ -27,7 +27,7 @@ return [
     'manage'                    => 'تحكم',
     'success'                   => 'نجاح',
     'error'                     => 'فشل',
-    'column_visibility'         => 'إظهار الأعمدة',
+    'column_visibility'         => ' الأعمدة',
     'export'                    => 'تصدير',
     'actions'                   => 'العمليات',
     'permissions'               => 'الصلاحيات',
@@ -145,5 +145,6 @@ return [
     'enter_the_price_of_the_service' => 'أدخل سعر الخدمة',
     'select_if_the_service_is_top' => 'اختر إذا كانت الخدمة هي الأعلى',
     'select_if_the_service_has_commission' => 'اختر إذا كانت الخدمة لها عمولة',
+    'select_a_supplier_from_the_list ' => 'اختر مورد من القائمة',
 
 ];

@@ -287,7 +287,7 @@ return [
     'sales_worker'                   => 'Sales Worker',
     'search_location'                => 'Search for location (e.g., Dubai, Burj Khalifa)',
     'permissions_name'                    => 'Permissions Name',
-    
+    'active_workers'               => 'Active Workers',
     
     
 
