@@ -26,14 +26,22 @@ class CenterUserRequest extends FormRequest
      */
     public function rules()
     {
-        if (isset($this->id)) {
+        // Detect the current center user id from either the route parameter or the request payload.
+        // When updating, the route is usually `/.../{id}` and/or a hidden `id` field is sent.
+        // Relying on `$this->id` alone can fail and make the form behave like "create" again.
+        $id = $this->route('id') ?? $this->input('id');
+
+        if (!is_null($id)) {
             return [
                 'id' => 'required|exists:center_users,id',
                 'name' => 'required',
-                'email' => ['nullable', 'email', new GlobalEmailUnique($this->id, 'center_users')],
-                'branch_id' => 'required|exists:branches,id',
+                // On update we only validate email format; we don't enforce cross-table uniqueness
+                // so existing emails in other centers don't block simple profile updates.
+                'email' => ['nullable', 'email'],
+                // Branch is fixed on the edit screen, so we don't require it again.
+                'branch_id' => 'nullable|exists:branches,id',
                 'country_code' => 'required|string',
-                'phone' => 'required|numeric|digits_between:6,10|unique:center_users,phone,' . $this->id,
+                'phone' => 'required|numeric|digits_between:6,10|unique:center_users,phone,' . $id,
                 'currency' => 'nullable|string|max:10',
                 'password' => 'nullable|min:6|max:15|same:password_confirmation',
                 'password_confirmation' => 'nullable|min:6|max:15',

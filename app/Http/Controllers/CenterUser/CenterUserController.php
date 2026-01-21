@@ -98,7 +98,8 @@ class CenterUserController extends Controller
 
         if ($item) {
             // return MyHelper::responseJSON(__('admin.operation_done_successfully'), $responseCode, $item);
-            return MyHelper::responseJSON('redirect_to_home', Response::HTTP_CREATED, route('center_user.center_users.index'));
+            // Redirect back to the center users index page on success
+            return MyHelper::responseJSON('redirect_to_home', Response::HTTP_CREATED, route($this->indexRoute));
         } else {
             return MyHelper::responseJSON(__('admin.an_error_occurred'), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
