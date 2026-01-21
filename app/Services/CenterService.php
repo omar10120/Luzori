@@ -27,6 +27,10 @@ class CenterService
         try {
             $request['database'] = $request['domain'];
             $center = Center::create($request);
+            if (isset($request['image'])) {
+                // Attach center logo if uploaded. If no image is provided, the UI falls back to a default logo.
+                $center->addMedia($request['image'])->toMediaCollection('Center');
+            }
             $center->assignRole($request['role']);
 
             $dbName = $center->database;
@@ -121,9 +125,6 @@ class CenterService
                 \log::info($configInfo);
                 \log::info($configReturnCode);
                 \log::info("dbName: ".$dbName);
-                
-                // Add media after database is set up
-                $center->addMedia($request['image'])->toMediaCollection('Center');
                 
                 // $centerUser->assignRole($request['role']);
             }
