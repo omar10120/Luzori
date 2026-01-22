@@ -36,7 +36,7 @@
                             <div class="col-md-4">
                                 <div class="mb-1">
                                     <label class="form-label">{{ __('field.mobile_number') }}</label>
-                                    <input type="number"  maxlength="8"  name="phone" class="form-control"
+                                    <input type="number"  maxlength="7"  name="phone" class="form-control"
                                         placeholder="{{ __('field.mobile_number') }}"
                                         value="{{ $item ? $item->phone : '' }}" />
                                 </div>

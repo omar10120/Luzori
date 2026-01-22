@@ -75,7 +75,7 @@
                             <div class="col-md-{{ ($item && $item->country_code == '+971') ? '2' : '4' }}" id="phone_input_container">
                                 <div class="mb-1">
                                     <label class="form-label">{{ __('field.mobile_number') }}</label>
-                                    <input type="number" maxlength="8" name="phone" id="phone" class="form-control"
+                                    <input type="number" maxlength="7" name="phone" id="phone" class="form-control"
                                         placeholder="{{ __('field.mobile_number') }}"
                                         value="{{ $phoneWithoutPrefix }}" />
                                 </div>

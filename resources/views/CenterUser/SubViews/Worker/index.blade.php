@@ -80,12 +80,41 @@
                                 <div class="mb-1">
                                     <label for="phone" class="form-label">{{ __('field.phone') }}  <span class="text-danger">*</span></label>
                                     <small class="text-muted">{{__('general.enter_the_phone_number_of_the_employee')}}</small>
-                                        <div class="d-flex">
-                                        <label class="p-2" style="background: #80808045">+971</label>
-                                        <input style="border-radius:0 1px 1px 0" type="phone" id="phone"
-                                            class="form-control" name="phone" placeholder="{{ __('field.phone') }}"
-                                            value="{{ $item ? $item->phone : null }}" />
-                                            
+                                    <div class="row">
+                                        <div class="col-md-2">
+                                            @include('Admin.Components.country_code', ['item' => $item])
+                                        </div>
+                                        <div class="col-md-2" id="phone_prefix_container" style="display: {{ ($item && $item->country_code == '+971') ? 'block' : 'none' }};">
+                                            <label class="form-label">Prefix</label>
+                                            <select class="form-control" name="phone_prefix" id="phone_prefix">
+                                                @php
+                                                    $prefixes = ['50', '52', '54', '55', '56', '58'];
+                                                    $currentPrefix = '';
+                                                    $phoneWithoutPrefix = $item ? (string)$item->phone : '';
+                                                    if ($item && $item->country_code == '+971' && $item->phone) {
+                                                        $phoneStr = (string)$item->phone;
+                                                        foreach ($prefixes as $prefix) {
+                                                            if (str_starts_with($phoneStr, $prefix)) {
+                                                                $currentPrefix = $prefix;
+                                                                $phoneWithoutPrefix = substr($phoneStr, strlen($prefix));
+                                                                break;
+                                                            }
+                                                        }
+                                                    }
+                                                @endphp
+                                                @foreach ($prefixes as $prefix)
+                                                    <option value="{{ $prefix }}" {{ $currentPrefix == $prefix ? 'selected' : '' }}>
+                                                        {{ $prefix }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="col-md-{{ ($item && $item->country_code == '+971') ? '8' : '10' }}" id="phone_input_container">
+                                            <label class="form-label">&nbsp;</label>
+                                            <input type="phone" id="phone" class="form-control" name="phone" 
+                                                placeholder="{{ __('field.phone') }}" maxlength="7"
+                                                value="{{ $phoneWithoutPrefix }}" required />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -116,6 +145,52 @@
 
 @section('page-script')
     @vite('resources/assets/js/forms-selects.js')
+
+    <script>
+        // Phone prefix toggle for UAE (+971)
+        document.addEventListener('DOMContentLoaded', function() {
+            const countryCodeSelect = document.querySelector('select[name="country_code"]');
+            const phonePrefixContainer = document.getElementById('phone_prefix_container');
+            const phoneInputContainer = document.getElementById('phone_input_container');
+            const phoneInput = document.getElementById('phone');
+            const phonePrefixSelect = document.getElementById('phone_prefix');
+
+            function togglePhonePrefix() {
+                if (countryCodeSelect && countryCodeSelect.value === '+971') {
+                    phonePrefixContainer.style.display = 'block';
+                    phoneInputContainer.classList.remove('col-md-10');
+                    phoneInputContainer.classList.add('col-md-8');
+                } else {
+                    phonePrefixContainer.style.display = 'none';
+                    phoneInputContainer.classList.remove('col-md-8');
+                    phoneInputContainer.classList.add('col-md-10');
+                }
+            }
+
+            // Initial check on page load
+            togglePhonePrefix();
+
+            // Listen for country code changes
+            if (countryCodeSelect) {
+                countryCodeSelect.addEventListener('change', togglePhonePrefix);
+            }
+
+            // Combine prefix with phone number on form submit
+            const form = document.getElementById('frmSubmit');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    if (countryCodeSelect && countryCodeSelect.value === '+971' && phonePrefixSelect && phoneInput) {
+                        const prefix = phonePrefixSelect.value;
+                        const phone = phoneInput.value;
+                        if (prefix && phone) {
+                            // Combine prefix with phone number
+                            phoneInput.value = prefix + phone;
+                        }
+                    }
+                });
+            }
+        });
+    </script>
 
     @include('CenterUser.Components.submit-form-ajax')
     @include('CenterUser.Components.image-js')

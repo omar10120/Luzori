@@ -588,11 +588,25 @@
                             <div class="col-md-2 mb-3">
                                 @include('Admin.Components.country_code', ['item' => null])
                             </div>
-                            <div class="col-md-4 mb-3">
+                            <div class="col-md-2 mb-3" id="quick_customer_phone_prefix_container" style="display: none;">
+                                <label for="quick_customer_phone_prefix" class="form-label">
+                                    Prefix
+                                </label>
+                                <select class="form-control" name="phone_prefix" id="quick_customer_phone_prefix">
+                                    @php
+                                        $prefixes = ['50', '52', '54', '55', '56', '58'];
+                                    @endphp
+                                    @foreach ($prefixes as $prefix)
+                                        <option value="{{ $prefix }}">{{ $prefix }}</option>
+                                    @endforeach
+                                </select>
+                                <div class="invalid-feedback"></div>
+                            </div>
+                            <div class="col-md-4 mb-3" id="quick_customer_phone_input_container">
                                 <label for="quick_customer_phone" class="form-label">
                                     {{ __('field.mobile_number') }} <span class="text-danger">*</span>
                                 </label>
-                                <input type="number"  maxlength="8"  id="quick_customer_phone" class="form-control" name="phone" required />
+                                <input type="number" maxlength="7" id="quick_customer_phone" class="form-control" name="phone" required />
                                 <div class="invalid-feedback"></div>
                             </div>
                         </div>
@@ -892,6 +906,47 @@
 
             // Initialize Select2
             $('#booking-services, #product-products, #product-sales_worker, #product-worker, #modal-wallet-user').select2();
+            
+            // Phone prefix toggle for UAE (+971) in Add Customer Modal
+            function toggleQuickCustomerPhonePrefix() {
+                const countryCodeSelect = $('#addCustomerModal').find('select[name="country_code"]');
+                const phonePrefixContainer = $('#quick_customer_phone_prefix_container');
+                const phoneInputContainer = $('#quick_customer_phone_input_container');
+                
+                if (countryCodeSelect.length && countryCodeSelect.val() === '+971') {
+                    phonePrefixContainer.show();
+                    phoneInputContainer.removeClass('col-md-4').addClass('col-md-2');
+                } else {
+                    phonePrefixContainer.hide();
+                    phoneInputContainer.removeClass('col-md-2').addClass('col-md-4');
+                }
+            }
+            
+            // Listen for country code changes in Add Customer Modal
+            $(document).on('change', '#addCustomerModal select[name="country_code"]', function() {
+                toggleQuickCustomerPhonePrefix();
+            });
+            
+            // Initial check when modal is opened
+            $('#addCustomerModal').on('shown.bs.modal', function() {
+                toggleQuickCustomerPhonePrefix();
+            });
+            
+            // Combine prefix with phone number on form submit in Add Customer Modal
+            $('#save-quick-customer-btn').on('click', function(e) {
+                const countryCodeSelect = $('#addCustomerModal').find('select[name="country_code"]');
+                const phonePrefixSelect = $('#quick_customer_phone_prefix');
+                const phoneInput = $('#quick_customer_phone');
+                
+                if (countryCodeSelect.length && countryCodeSelect.val() === '+971' && phonePrefixSelect.length && phoneInput.length) {
+                    const prefix = phonePrefixSelect.val();
+                    const phone = phoneInput.val();
+                    if (prefix && phone) {
+                        // Combine prefix with phone number
+                        phoneInput.val(prefix + phone);
+                    }
+                }
+            });
             
             // Initialize Select2 for customer dropdown in modal
             $('#select-customer-dropdown').select2({
