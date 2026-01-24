@@ -27,6 +27,7 @@ class CenterUser extends Authenticatable implements HasMedia
         HasMediaTrait,
         SoftDeletes;
 
+    protected $guard_name = 'center_api';
     protected $table = 'center_users';
     protected $fillable = [
         'name',

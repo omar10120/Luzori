@@ -26,12 +26,9 @@ class CenterUserService
             $centerUser->addMedia($request['image'])->toMediaCollection('CenterUser');
         }
         if (isset($request['role'])) {
-            DB::table('model_has_roles')->insert([
-                'role_id' => $request['role'],
-                'model_type' => get_class($centerUser),
-                'model_id' => $centerUser->id,
-            ]);
-            $centerUser->assignRole($request['role']);
+            // Get the role by ID to assign it properly
+            $role = \Spatie\Permission\Models\Role::findById($request['role'], 'center_api');
+            $centerUser->assignRole($role);
         }
         DB::commit();
         return $centerUser;
@@ -53,12 +50,9 @@ class CenterUserService
         $centerUser->update($request);
         if (isset($request['role'])) {
             $centerUser->roles()->detach();
-            DB::table('model_has_roles')->insert([
-                'role_id' => $request['role'],
-                'model_type' => get_class($centerUser),
-                'model_id' => $centerUser->id,
-            ]);
-            // $centerUser->assignRole($request['role']);
+            // Get the role by ID to assign it properly
+            $role = \Spatie\Permission\Models\Role::findById($request['role'], 'center_api');
+            $centerUser->assignRole($role);
         }
         DB::commit();
         return $centerUser;
