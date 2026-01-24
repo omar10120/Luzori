@@ -21,7 +21,6 @@ class Sale extends Model
         'tip',
         'total',
         'worker_id',
-        'payment_type',
         'client_id',
         'branch_id',
         'created_by',
