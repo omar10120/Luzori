@@ -45,18 +45,18 @@ class SalesDataTable extends DataTable
             ->editColumn('tip', function ($row) {
                 return $row->tip > 0 ? number_format($row->tip, 2) . ' ' . trim(get_currency()) : '-';
             })
-            ->editColumn('status', function ($row) {
-                $checked = $row->deleted_at ? '' : 'checked';
-                $operation = $row->deleted_at ? DeleteActionEnum::RESTORE_DELETED->value : DeleteActionEnum::SOFT_DELETE->value;
-                return '<label class="switch switch-square">
-                            <input onChange="changeStatus(\'' . $this->model . '\',\'' . $row->id . '\',\'' . $operation . '\')"
-                                type="checkbox" class="switch-input"' . $checked . '>
-                            <span class="switch-toggle-slider">
-                            <span class="switch-on"></span>
-                            <span class="switch-off"></span>
-                            </span>
-                        </label>';
-            })
+            // ->editColumn('status', function ($row) {
+            //     $checked = $row->deleted_at ? '' : 'checked';
+            //     $operation = $row->deleted_at ? DeleteActionEnum::RESTORE_DELETED->value : DeleteActionEnum::SOFT_DELETE->value;
+            //     return '<label class="switch switch-square">
+            //                 <input onChange="changeStatus(\'' . $this->model . '\',\'' . $row->id . '\',\'' . $operation . '\')"
+            //                     type="checkbox" class="switch-input"' . $checked . '>
+            //                 <span class="switch-toggle-slider">
+            //                 <span class="switch-on"></span>
+            //                 <span class="switch-off"></span>
+            //                 </span>
+            //             </label>';
+            // })
             ->editColumn('worker.name', function ($row) {
                 return \App\Helpers\MyHelper::truncateWithReadMore($row->worker?->name ?? '-');
             })
@@ -140,7 +140,7 @@ class SalesDataTable extends DataTable
             Column::computed('client.name')->searchable(true)->title(__('field.client')),
             Column::computed('total')->searchable(false)->title(__('field.total')),
             Column::computed('tip')->searchable(false)->title(__('field.tip')),
-            Column::computed('status')->searchable(false)->title(__('field.status')),
+            // Column::computed('status')->searchable(false)->title(__('field.status')),
             Column::make('created_at')->searchable(true)->title(__('field.created_at')),
         ];
     }

@@ -51,6 +51,11 @@
                                     <span class="d-inline d-sm-none">{{ __('general.add') }}</span>
                                 </button>
                                 @if(!empty($cart['client_id']))
+                                    <button type="button" class="btn btn-info w-100 w-sm-auto" id="editCustomerBtn" data-bs-toggle="modal" data-bs-target="#editCustomerModal">
+                                        <i class="ti ti-edit me-1"></i>
+                                        <span class="d-none d-sm-inline">{{ __('general.edit') }}</span>
+                                        <span class="d-inline d-sm-none">{{ __('general.edit') }}</span>
+                                    </button>
                                     <button type="button" class="btn btn-outline-danger w-100 w-sm-auto" id="removeCustomerBtn">
                                         <i class="ti ti-x me-1"></i>
                                         <span class="d-none d-sm-inline">{{ __('field.remove') }}</span>
@@ -635,6 +640,90 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('general.cancel') }}</button>
                     <button type="button" class="btn btn-primary" id="save-quick-customer-btn">
+                        <i class="ti ti-check me-1"></i>
+                        {{ __('general.save') }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Customer Modal -->
+    <div class="modal fade" id="editCustomerModal" tabindex="-1" aria-labelledby="editCustomerModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editCustomerModalLabel">{{ __('general.edit') }} {{ __('field.customer') }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="edit-customer-form">
+                        @csrf
+                        <input type="hidden" id="edit_customer_id" name="id" value="">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="edit_customer_first_name" class="form-label">
+                                    {{ __('field.first_name') }} <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" id="edit_customer_first_name" class="form-control" name="first_name" required />
+                                <div class="invalid-feedback"></div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="edit_customer_last_name" class="form-label">
+                                    {{ __('field.last_name') }} <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" id="edit_customer_last_name" class="form-control" name="last_name" required />
+                                <div class="invalid-feedback"></div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="edit_customer_email" class="form-label">
+                                    {{ __('field.email') }} <span class="text-danger">*</span>
+                                </label>
+                                <input type="email" id="edit_customer_email" class="form-control" name="email" required />
+                                <div class="invalid-feedback"></div>
+                            </div>
+                            <div class="col-md-2 mb-3">
+                                @include('Admin.Components.country_code', ['item' => null, 'id_prefix' => 'edit_customer_'])
+                            </div>
+                            <div class="col-md-2 mb-3" id="edit_customer_phone_prefix_container" style="display: none;">
+                                <label for="edit_customer_phone_prefix" class="form-label">
+                                    Prefix
+                                </label>
+                                <select class="form-control" name="phone_prefix" id="edit_customer_phone_prefix">
+                                    @php
+                                        $prefixes = ['50', '52', '54', '55', '56', '58'];
+                                    @endphp
+                                    @foreach ($prefixes as $prefix)
+                                        <option value="{{ $prefix }}">{{ $prefix }}</option>
+                                    @endforeach
+                                </select>
+                                <div class="invalid-feedback"></div>
+                            </div>
+                            <div class="col-md-4 mb-3" id="edit_customer_phone_input_container">
+                                <label for="edit_customer_phone" class="form-label">
+                                    {{ __('field.mobile_number') }} <span class="text-danger">*</span>
+                                </label>
+                                <input type="number" maxlength="7" id="edit_customer_phone" class="form-control" name="phone" required />
+                                <div class="invalid-feedback"></div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit_customer_image" class="form-label">
+                                {{ __('field.image') }}
+                            </label>
+                            <input type="file" id="edit_customer_image" class="form-control" name="image" accept="image/*" />
+                            <div class="invalid-feedback"></div>
+                            <div id="edit_customer_current_image" class="mt-2" style="display:none;">
+                                <img id="edit_customer_image_preview" src="" alt="Current image" style="max-width: 150px; max-height: 150px; border-radius: 8px;">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('general.cancel') }}</button>
+                    <button type="button" class="btn btn-primary" id="save-edit-customer-btn">
                         <i class="ti ti-check me-1"></i>
                         {{ __('general.save') }}
                     </button>
@@ -2285,6 +2374,11 @@
                                 <span class="d-none d-sm-inline">{{ __('general.add') }} {{ __('field.customer') }}</span>
                                 <span class="d-inline d-sm-none">{{ __('general.add') }}</span>
                             </button>
+                            <button type="button" class="btn btn-info w-100 w-sm-auto" id="editCustomerBtn" data-bs-toggle="modal" data-bs-target="#editCustomerModal">
+                                <i class="ti ti-edit me-1"></i>
+                                <span class="d-none d-sm-inline">{{ __('general.edit') }}</span>
+                                <span class="d-inline d-sm-none">{{ __('general.edit') }}</span>
+                            </button>
                             <button type="button" class="btn btn-outline-danger w-100 w-sm-auto" id="removeCustomerBtn">
                                 <i class="ti ti-x me-1"></i>
                                 {{ __('field.remove') }}
@@ -2301,6 +2395,183 @@
                 // Update continue button state based on customer and cart
                 $('#continueToPayment').prop('disabled', cart.length === 0 || !userId);
             }
+
+            // Edit Customer Modal - Load customer data when modal opens
+            $('#editCustomerModal').on('show.bs.modal', function() {
+                if (!selectedCustomerId) {
+                    return;
+                }
+                
+                // Find the customer data
+                const $selectedOption = $('#select-customer-dropdown').find(`option[value="${selectedCustomerId}"]`);
+                
+                if ($selectedOption.length) {
+                    const userName = $selectedOption.data('name') || '';
+                    const userEmail = $selectedOption.data('email') || '';
+                    const userPhone = $selectedOption.data('phone') || '';
+                    const userImage = $selectedOption.data('image') || '';
+                    
+                    // Split name into first and last name
+                    const nameParts = userName.split(' ');
+                    const firstName = nameParts[0] || '';
+                    const lastName = nameParts.slice(1).join(' ') || '';
+                    
+                    // Set form values
+                    $('#edit_customer_id').val(selectedCustomerId);
+                    $('#edit_customer_first_name').val(firstName);
+                    $('#edit_customer_last_name').val(lastName);
+                    $('#edit_customer_email').val(userEmail);
+                    
+                    // Get customer data via AJAX to get full details including country code
+                    $.ajax({
+                        url: '{{ route("center_user.users.create") }}',
+                        type: 'GET',
+                        data: { id: selectedCustomerId },
+                        success: function(response) {
+                            // Parse the HTML response to extract data
+                            const $response = $(response);
+                            const countryCode = $response.find('select[name="country_code"]').val() || '+971';
+                            
+                            // Set country code
+                            $('#editCustomerModal select[name="country_code"]').val(countryCode);
+                            
+                            // Handle phone prefix for +971
+                            if (countryCode === '+971') {
+                                const phoneStr = String(userPhone);
+                                let phonePrefix = '';
+                                let phoneWithoutPrefix = phoneStr;
+                                
+                                // Check if phone starts with a known prefix
+                                const prefixes = ['50', '52', '54', '55', '56', '58'];
+                                for (const prefix of prefixes) {
+                                    if (phoneStr.startsWith(prefix)) {
+                                        phonePrefix = prefix;
+                                        phoneWithoutPrefix = phoneStr.substring(prefix.length);
+                                        break;
+                                    }
+                                }
+                                
+                                $('#edit_customer_phone_prefix').val(phonePrefix || '50');
+                                $('#edit_customer_phone').val(phoneWithoutPrefix);
+                                $('#edit_customer_phone_prefix_container').show();
+                                $('#edit_customer_phone_input_container').removeClass('col-md-4').addClass('col-md-2');
+                            } else {
+                                $('#edit_customer_phone').val(userPhone);
+                                $('#edit_customer_phone_prefix_container').hide();
+                                $('#edit_customer_phone_input_container').removeClass('col-md-2').addClass('col-md-4');
+                            }
+                            
+                            // Show current image if exists
+                            if (userImage && userImage !== '{{ asset('assets/img/avatars/1.png') }}') {
+                                $('#edit_customer_image_preview').attr('src', userImage);
+                                $('#edit_customer_current_image').show();
+                            } else {
+                                $('#edit_customer_current_image').hide();
+                            }
+                        }
+                    });
+                }
+            });
+            
+            // Phone prefix toggle for UAE (+971) in Edit Customer Modal
+            function toggleEditCustomerPhonePrefix() {
+                const countryCodeSelect = $('#editCustomerModal').find('select[name="country_code"]');
+                const phonePrefixContainer = $('#edit_customer_phone_prefix_container');
+                const phoneInputContainer = $('#edit_customer_phone_input_container');
+                
+                if (countryCodeSelect.length && countryCodeSelect.val() === '+971') {
+                    phonePrefixContainer.show();
+                    phoneInputContainer.removeClass('col-md-4').addClass('col-md-2');
+                } else {
+                    phonePrefixContainer.hide();
+                    phoneInputContainer.removeClass('col-md-2').addClass('col-md-4');
+                }
+            }
+            
+            // Listen for country code changes in Edit Customer Modal
+            $(document).on('change', '#editCustomerModal select[name="country_code"]', function() {
+                toggleEditCustomerPhonePrefix();
+            });
+            
+            // Save edited customer
+            $('#save-edit-customer-btn').on('click', function(e) {
+                e.preventDefault();
+                const form = $('#edit-customer-form')[0];
+                const formData = new FormData(form);
+                
+                // Combine phone prefix if UAE
+                const countryCodeSelect = $('#editCustomerModal').find('select[name="country_code"]');
+                const phonePrefixSelect = $('#edit_customer_phone_prefix');
+                const phoneInput = $('#edit_customer_phone');
+                
+                if (countryCodeSelect.length && countryCodeSelect.val() === '+971' && phonePrefixSelect.length && phoneInput.length) {
+                    const prefix = phonePrefixSelect.val();
+                    const phone = phoneInput.val();
+                    if (prefix && phone) {
+                        // Replace phone in formData with combined value
+                        formData.set('phone', prefix + phone);
+                    }
+                }
+
+                const $btn = $(this);
+                const originalHtml = $btn.html();
+                $btn.prop('disabled', true).html('<i class="ti ti-loader-2 me-1"></i>{{ __('admin.sending') }}');
+
+                $.ajax({
+                    url: '{{ route("center_user.users.updateOrCreate") }}',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        if (response.message !== '{{ __('admin.an_error_occurred') }}') {
+                            const userData = response.data;
+                            if (!userData || typeof userData !== 'object') {
+                                location.reload();
+                                return;
+                            }
+
+                            const userName = userData.name || (userData.first_name + ' ' + (userData.last_name || ''));
+                            const userEmail = userData.email || '';
+                            const userPhone = userData.phone || userData.full_phone || '';
+                            const userImage = userData.image || '';
+
+                            // Update display
+                            selectedCustomerName = userName;
+                            selectedCustomerPhone = userPhone;
+                            updateCustomerDisplay(userData.id, userName, userEmail || userPhone, userImage, userPhone);
+                            
+                            // Update the dropdown option
+                            const $option = $('#select-customer-dropdown').find(`option[value="${userData.id}"]`);
+                            if ($option.length) {
+                                let label = userName;
+                                if (userPhone) label += ' - ' + userPhone;
+                                if (userEmail) label += ' - ' + userEmail;
+                                
+                                $option.text(label);
+                                $option.attr('data-name', userName);
+                                $option.attr('data-phone', userPhone);
+                                $option.attr('data-email', userEmail);
+                                $option.attr('data-image', userImage);
+                            }
+                            
+                            $('#editCustomerModal').modal('hide');
+                            $('#edit-customer-form')[0].reset();
+                            if (typeof toastr !== 'undefined') {
+                                toastr.success('{{ __('admin.operation_done_successfully') }}');
+                            }
+                        }
+                    },
+                    error: function(xhr) {
+                        if (typeof toastr !== 'undefined') {
+                            toastr.error(xhr.responseJSON?.message || '{{ __('admin.an_error_occurred') }}');
+                        }
+                    },
+                    complete: function() {
+                        $btn.prop('disabled', false).html(originalHtml);
+                    }
+                });
+            });
 
             // Quick add customer
             $('#save-quick-customer-btn').on('click', function(e) {
