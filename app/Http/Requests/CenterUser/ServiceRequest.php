@@ -80,7 +80,7 @@ class ServiceRequest extends FormRequest
                 'price' => 'required|numeric',
                 'is_top' => 'required|boolean',
                 'has_commission' => 'required|boolean',
-                'image' => 'required|image|max:4096|mimes:jpg,jpeg,png,gif|mimetypes:image/jpeg,image/png',
+                'image' => 'nullable|image|max:4096|mimes:jpg,jpeg,png,gif|mimetypes:image/jpeg,image/png',
             ];
         }
         return array_merge($locales, $validations);
