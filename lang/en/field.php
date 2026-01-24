@@ -286,8 +286,10 @@ return [
     'workers'                        => 'employee',
     'sales_worker'                   => 'Sales Worker',
     'search_location'                => 'Search for location (e.g., Dubai, Burj Khalifa)',
-    'permissions_name'                    => 'Permissions Name',
-    'active_workers'               => 'Active Workers',
+    'permissions_name'               => 'Permissions Name',
+    'active_workers'                 => 'Active Workers',
+    'tip_will_be_for_this_worker'    => 'Tip will be for this worker',
+    'no_mobile'                      => 'No mobile'
     
     
 
