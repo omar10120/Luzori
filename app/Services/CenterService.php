@@ -104,10 +104,10 @@ class CenterService
                     '--database'  => 'tenant',
                 ]);
                 
-                // Artisan::call('db:seed', [
-                //     '--class' => 'PaymentMethodSeeder',
-                //     '--database'  => 'tenant',
-                // ]);
+                Artisan::call('db:seed', [
+                    '--class' => 'PaymentMethodSeeder',
+                    '--database'  => 'tenant',
+                ]);
                 $centerUser = new CenterUser($request);
                 $centerUser->setConnection('tenant');
                 $centerUser->save();

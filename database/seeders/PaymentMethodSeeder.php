@@ -16,48 +16,48 @@ class PaymentMethodSeeder extends Seeder
         // Payment methods that can be used for both booking and products
         PaymentMethod::create([
             'name' => 'service_cash',
-            'types' => [PaymentMethod::TYPE_BOOKING, PaymentMethod::TYPE_PRODUCT]
+            'types' => [PaymentMethod::TYPE_GENERAL]
         ]);
         
         PaymentMethod::create([
             'name' => 'service_visa',
-            'types' => [PaymentMethod::TYPE_BOOKING, PaymentMethod::TYPE_PRODUCT]
+            'types' => [PaymentMethod::TYPE_GENERAL]
         ]);
         
         PaymentMethod::create([
             'name' => 'sales_cash',
-            'types' => [PaymentMethod::TYPE_BOOKING, PaymentMethod::TYPE_PRODUCT]
+            'types' => [PaymentMethod::TYPE_GENERAL]
         ]);
         
         PaymentMethod::create([
             'name' => 'sales_visa',
-            'types' => [PaymentMethod::TYPE_BOOKING, PaymentMethod::TYPE_PRODUCT]
+            'types' => [PaymentMethod::TYPE_GENERAL]
         ]);
         
         PaymentMethod::create([
             'name' => 'sales_cash_cp',
-            'types' => [PaymentMethod::TYPE_BOOKING, PaymentMethod::TYPE_PRODUCT]
+            'types' => [PaymentMethod::TYPE_GENERAL]
         ]);
         
         PaymentMethod::create([
             'name' => 'sales_visa_cp',
-            'types' => [PaymentMethod::TYPE_BOOKING, PaymentMethod::TYPE_PRODUCT]
+            'types' => [PaymentMethod::TYPE_GENERAL]
         ]);
         
         // Booking-only payment methods
         PaymentMethod::create([
             'name' => 'transfer_bank',
-            'types' => [PaymentMethod::TYPE_BOOKING]
+            'types' => [PaymentMethod::TYPE_GENERAL]
         ]);
         
         PaymentMethod::create([
             'name' => 'free',
-            'types' => [PaymentMethod::TYPE_BOOKING]
+            'types' => [PaymentMethod::TYPE_GENERAL]
         ]);
         
         PaymentMethod::create([
             'name' => 'tips_visa',
-            'types' => [PaymentMethod::TYPE_BOOKING]
+            'types' => [PaymentMethod::TYPE_GENERAL]
         ]);
         PaymentMethod::create([
             'name' => 'tips',
