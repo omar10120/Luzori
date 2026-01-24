@@ -265,7 +265,7 @@ class SalesController extends Controller
         }
 
         $request->validate([
-            'worker_id' => 'required|exists:workers,id',
+            'worker_id' => 'nullable|exists:workers,id',
             'tip' => 'nullable|numeric|min:0|max:200',
             'tax' => 'nullable|numeric|min:0',
         ]);

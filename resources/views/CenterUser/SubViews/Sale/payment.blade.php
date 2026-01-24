@@ -48,13 +48,13 @@
                                 <div class="col-md-12">
                                     <label for="worker_id" class="form-label">
                                         {{ __('field.worker') }}
-                                        <small class="text-muted">({{ __('field.tip_will_be_for_this_worker') }})</small>
+                                        <small class="text-muted">({{ __('field.optional') }} - {{ __('field.tip_will_be_for_this_worker') }})</small>
                                     </label>
-                                    <select class="select2 form-control" id="worker_id" name="worker_id" >
+                                    <select class="select2 form-control" id="worker_id" name="worker_id">
                                         <option value="">{{ __('field.Choose Worker') }}</option>
                                         @foreach ($workers as $worker)
                                             <option value="{{ $worker->id }}" 
-                                                {{ $cart['worker_id'] == $worker->id ? 'selected' : '' }}>
+                                                {{ isset($cart['worker_id']) && $cart['worker_id'] == $worker->id ? 'selected' : '' }}>
                                                 {{ $worker->name }}
                                             </option>
                                         @endforeach
@@ -213,13 +213,6 @@
 
             // Process Payment
             $('#processPaymentBtn').on('click', function() {
-                const form = $('#paymentForm')[0];
-                
-                if (!form.checkValidity()) {
-                    form.reportValidity();
-                    return;
-                }
-
                 const $btn = $(this);
                 const originalHtml = $btn.html();
                 $btn.prop('disabled', true).html('<i class="ti ti-loader-2 me-1"></i>{{ __('admin.sending') }}');
@@ -229,7 +222,7 @@
                     type: 'POST',
                     data: {
                         _token: '{{ csrf_token() }}',
-                        worker_id: $('#worker_id').val(),
+                        worker_id: $('#worker_id').val() || null,
                         tip: $('#tip').val() || 0,
                         tax: $('#tax').val() || 0
                     },
