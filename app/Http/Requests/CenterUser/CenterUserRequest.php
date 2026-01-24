@@ -58,7 +58,7 @@ class CenterUserRequest extends FormRequest
                 'currency' => 'nullable|string|max:10',
                 'password' => 'required|min:6|max:15|same:password_confirmation',
                 'role' => 'required',
-                'image' => 'required|image|max:4096|mimes:jpg,jpeg,png,gif|mimetypes:image/jpeg,image/png',
+                'image' => 'nullable|image|max:4096|mimes:jpg,jpeg,png,gif|mimetypes:image/jpeg,image/png',
             ];
         }
     }
