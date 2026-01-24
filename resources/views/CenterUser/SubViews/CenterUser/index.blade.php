@@ -132,7 +132,7 @@
                             <div class="col-md-6">
                                 <div class="mb-1">
                                     <label class="form-label">{{ __('field.image') }}@if(!$item) <span class="text-danger">*</span>@endif</label>
-                                    <input type="file" class="form-control" id="image" name="image" {{ !$item ? 'required' : '' }} />
+                                    <input type="file" class="form-control" id="image" name="image" />
                                 </div>
                                 <img id="show_image" src="{{ $item ? $item->image : '' }}"
                                     style="{{ $item ? '' : 'display:none;' }} width:200px;height:200px;margin:20px;"
