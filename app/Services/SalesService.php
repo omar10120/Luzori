@@ -24,6 +24,11 @@ class SalesService
     {
         DB::beginTransaction();
         try {
+            // Validate cart data
+            if (empty($cartData['items'])) {
+                throw new \Exception('Cart is empty');
+            }
+
             // Calculate totals
             $subtotal = $this->calculateSubtotal($cartData['items']);
             $tax = $cartData['tax'] ?? 0;
@@ -32,6 +37,10 @@ class SalesService
 
             // Get branch
             $branchId = auth('center_user')->user()->branch_id ?? Branch::first()->id ?? null;
+            
+            if (!$branchId) {
+                throw new \Exception('No branch found for this user');
+            }
 
             // Create Sale record
             $sale = Sale::create([
@@ -149,13 +158,24 @@ class SalesService
      */
     private function createBookingFromCartItem($item, $saleId, $branchId, $paymentType = null)
     {
+        // Validate required fields
+        if (empty($item['date'])) {
+            throw new \Exception('Booking date is required');
+        }
+        if (empty($item['worker_id'])) {
+            throw new \Exception('Worker is required for booking');
+        }
+        if (empty($item['from_time']) || empty($item['to_time'])) {
+            throw new \Exception('Booking time is required');
+        }
+
         $booking = Booking::create([
             'booking_date' => $item['date'],
             'full_name' => $item['client_name'] ?? 'Walk-in',
             'mobile' => $item['client_mobile'] ?? null,
-            'payment_type' => $paymentType, // Use payment type from payment section (sale payment_type)
+            'payment_type' => $paymentType ?? 'Cash', // Default to Cash if not specified
             'branch_id' => $branchId,
-            'user_id' => $item['client_id'] ?? null,
+            'user_id' => null, // User ID is stored at sale level, not booking level
             'sale_id' => $saleId,
             'created_by' => auth('center_user')->id() ?? auth('center_api')->id(),
         ]);
