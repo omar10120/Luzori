@@ -624,7 +624,7 @@
                                 <label for="quick_customer_phone" class="form-label">
                                     {{ __('field.mobile_number') }} <span class="text-danger">*</span>
                                 </label>
-                                <input type="number" max="7" id="quick_customer_phone" class="form-control" name="phone" required />
+                                <input type="phone" maxlength="7" id="quick_customer_phone" class="form-control" name="phone" required />
                                 <div class="invalid-feedback"></div>
                             </div>
                         </div>
