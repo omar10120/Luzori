@@ -47,7 +47,7 @@
                             <div class="row mb-3">
                                 <div class="col-md-12">
                                     <label for="worker_id" class="form-label">
-                                        {{ __('field.worker') }} <span class="text-danger">*</span>
+                                        {{ __('field.worker') }}
                                         <small class="text-muted">({{ __('field.tip_will_be_for_this_worker') }})</small>
                                     </label>
                                     <select class="select2 form-control" id="worker_id" name="worker_id" required>

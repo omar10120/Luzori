@@ -145,8 +145,8 @@ return [
     'enter_the_price_of_the_service' => 'أدخل سعر الخدمة',
     'select_if_the_service_is_top' => 'اختر إذا كانت الخدمة هي الأعلى',
     'select_if_the_service_has_commission' => 'اختر إذا كانت الخدمة لها عمولة',
-    'select_a_supplier_from_the_list ' => 'اختر مورد من القائمة',
-    'select_a_services_from_the_list ' => 'حدد خدمة من القائمة',
+    'select_a_supplier_from_the_list' => 'اختر مورد من القائمة',
+    'select_a_services_from_the_list' => 'حدد خدمة من القائمة',
     
 
 ];
