@@ -41,7 +41,7 @@
                             <div class="col-md-6">
                                 <div class="mb-1">
                                     <label for="branch_id" class="form-label">{{ __('field.branch') }} <span class="text-danger">*</span></label>
-                                    <select disabled class="select2 form-control" name="branch_id" required>
+                                    <select {{ $item ? 'disabled' : '' }} class="select2 form-control" name="branch_id" required>
                                         @foreach ($branches as $branch)
                                             <option {{ $item ? ($item->branch_id == $branch->id ? 'selected' : null) : null }}
                                                 value="{{ $branch->id }}">{{ $branch->name }}
@@ -117,7 +117,7 @@
                             <div class="col-md-6">
                                 <div class="mb-1">
                                     <label class="form-label">{{ __('field.role') }} <span class="text-danger">*</span></label>
-                                    <select disabled class="select2 form-control" name="role" required>
+                                    <select {{ $item ? 'disabled' : '' }} class="select2 form-control" name="role" required>
                                         @foreach ($roles as $role)
                                             <option
                                                 {{ $item ? ($item->roles()?->first()?->name == $role->name ? 'selected' : null) : null }}
