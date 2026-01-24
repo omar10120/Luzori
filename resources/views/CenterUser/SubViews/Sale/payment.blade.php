@@ -213,12 +213,24 @@
 
             // Process Payment
             $('#processPaymentBtn').on('click', function() {
+                console.log('=== PAYMENT PROCESS START ===');
+                
                 const form = $('#paymentForm')[0];
                 
                 if (!form.checkValidity()) {
+                    console.error('Form validation failed');
                     form.reportValidity();
                     return;
                 }
+
+                const paymentData = {
+                    _token: '{{ csrf_token() }}',
+                    worker_id: $('#worker_id').val(),
+                    tip: $('#tip').val() || 0,
+                    tax: $('#tax').val() || 0
+                };
+                
+                console.log('Payment data to send:', paymentData);
 
                 const $btn = $(this);
                 const originalHtml = $btn.html();
@@ -227,16 +239,15 @@
                 $.ajax({
                     url: '{{ route("center_user.sales.process-payment") }}',
                     type: 'POST',
-                    data: {
-                        _token: '{{ csrf_token() }}',
-                        worker_id: $('#worker_id').val(),
-                        tip: $('#tip').val() || 0,
-                        tax: $('#tax').val() || 0
-                    },
+                    data: paymentData,
                     success: function(response) {
+                        console.log('Payment response:', response);
+                        
                         if (response.message === 'redirect_to_home') {
+                            console.log('Redirecting to:', response.data);
                             window.location.href = response.data;
                         } else {
+                            console.error('Unexpected response:', response);
                             if (typeof toastr !== 'undefined') {
                                 toastr.error(response.message || '{{ __('admin.an_error_occurred') }}');
                             }
@@ -244,8 +255,17 @@
                         }
                     },
                     error: function(xhr) {
+                        console.error('Payment error:', {
+                            status: xhr.status,
+                            statusText: xhr.statusText,
+                            response: xhr.responseJSON,
+                            responseText: xhr.responseText
+                        });
+                        
                         if (typeof toastr !== 'undefined') {
                             toastr.error(xhr.responseJSON?.message || '{{ __('admin.an_error_occurred') }}');
+                        } else {
+                            alert('Error: ' + (xhr.responseJSON?.message || '{{ __('admin.an_error_occurred') }}'));
                         }
                         $btn.prop('disabled', false).html(originalHtml);
                     }

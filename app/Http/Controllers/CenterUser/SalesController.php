@@ -259,8 +259,12 @@ class SalesController extends Controller
      */
     public function processPayment(Request $request)
     {
+        \Log::info('=== SALES PAYMENT START ===');
+        \Log::info('Request data:', $request->all());
+        
         $can = 'CREATE_' . Str::upper($this->plural);
         if (!auth('center_user')->user()->can($can, 'center_api')) {
+            \Log::error('User does not have permission');
             return abort(401);
         }
 
@@ -271,8 +275,10 @@ class SalesController extends Controller
         ]);
 
         $cart = session('sales_cart', ['items' => []]);
+        \Log::info('Cart from session:', $cart);
 
         if (empty($cart['items'])) {
+            \Log::error('Cart is empty');
             return MyHelper::responseJSON('Cart is empty', Response::HTTP_BAD_REQUEST);
         }
 
@@ -282,14 +288,24 @@ class SalesController extends Controller
         $cart['tax'] = $request->tax ?? 0;
         // Payment type is now stored in each item, not at cart level
 
+        \Log::info('Updated cart with payment info:', $cart);
+
         try {
+            \Log::info('Calling salesService->processSale');
             $sale = $this->salesService->processSale($cart);
+            \Log::info('Sale created successfully', ['sale_id' => $sale->id]);
 
             // Clear cart
             session()->forget('sales_cart');
 
             return MyHelper::responseJSON('redirect_to_home', Response::HTTP_CREATED, route('center_user.sales.index'));
         } catch (\Exception $e) {
+            \Log::error('Error processing payment:', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return MyHelper::responseJSON($e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }

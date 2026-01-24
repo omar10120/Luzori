@@ -22,10 +22,14 @@ class SalesService
      */
     public function processSale($cartData)
     {
+        \Log::info('=== SALES SERVICE START ===');
+        \Log::info('Cart data received:', $cartData);
+        
         DB::beginTransaction();
         try {
             // Validate cart data
             if (empty($cartData['items'])) {
+                \Log::error('Cart items are empty');
                 throw new \Exception('Cart is empty');
             }
 
@@ -34,15 +38,26 @@ class SalesService
             $tax = $cartData['tax'] ?? 0;
             $tip = $cartData['tip'] ?? 0;
             $total = $subtotal + $tax + $tip;
+            
+            \Log::info('Calculated totals:', [
+                'subtotal' => $subtotal,
+                'tax' => $tax,
+                'tip' => $tip,
+                'total' => $total
+            ]);
 
             // Get branch
             $branchId = auth('center_user')->user()->branch_id ?? Branch::first()->id ?? null;
             
+            \Log::info('Branch ID:', ['branch_id' => $branchId]);
+            
             if (!$branchId) {
+                \Log::error('No branch found');
                 throw new \Exception('No branch found for this user');
             }
 
             // Create Sale record
+            \Log::info('Creating sale record');
             $sale = Sale::create([
                 'subtotal' => $subtotal,
                 'tax' => $tax,
@@ -54,6 +69,8 @@ class SalesService
                 'branch_id' => $branchId,
                 'created_by' => auth('center_user')->id() ?? auth('center_api')->id(),
             ]);
+            
+            \Log::info('Sale created successfully', ['sale_id' => $sale->id]);
 
             // Separate items by type
             $serviceItems = [];
@@ -73,19 +90,32 @@ class SalesService
             }
 
             // Process service items (create booking for each)
-            foreach ($serviceItems as $item) {
-                // Use payment_type from item (selected in booking wizard)
-                $booking = $this->createBookingFromCartItem($item, $sale->id, $branchId, $item['payment_type'] ?? null);
+            \Log::info('Processing service items', ['count' => count($serviceItems)]);
+            foreach ($serviceItems as $index => $item) {
+                \Log::info("Processing service item {$index}", $item);
                 
-                SaleItem::create([
-                    'sale_id' => $sale->id,
-                    'item_type' => 'booking',
-                    'itemable_id' => $booking->id,
-                    'itemable_type' => 'App\Models\Booking',
-                    'quantity' => 1,
-                    'price' => $item['price'],
-                    'subtotal' => $item['price'],
-                ]);
+                // Use payment_type from item (selected in booking wizard)
+                try {
+                    $booking = $this->createBookingFromCartItem($item, $sale->id, $branchId, $item['payment_type'] ?? null);
+                    \Log::info("Booking created", ['booking_id' => $booking->id]);
+                    
+                    SaleItem::create([
+                        'sale_id' => $sale->id,
+                        'item_type' => 'booking',
+                        'itemable_id' => $booking->id,
+                        'itemable_type' => 'App\Models\Booking',
+                        'quantity' => 1,
+                        'price' => $item['price'],
+                        'subtotal' => $item['price'],
+                    ]);
+                    \Log::info("SaleItem created for booking");
+                } catch (\Exception $e) {
+                    \Log::error("Error creating booking {$index}", [
+                        'message' => $e->getMessage(),
+                        'item' => $item
+                    ]);
+                    throw $e;
+                }
             }
 
             // Process product items (create one BuyProduct for all products)
@@ -158,18 +188,28 @@ class SalesService
      */
     private function createBookingFromCartItem($item, $saleId, $branchId, $paymentType = null)
     {
+        \Log::info('Creating booking from cart item', [
+            'sale_id' => $saleId,
+            'branch_id' => $branchId,
+            'payment_type' => $paymentType,
+            'item' => $item
+        ]);
+        
         // Validate required fields
         if (empty($item['date'])) {
+            \Log::error('Booking date is missing');
             throw new \Exception('Booking date is required');
         }
         if (empty($item['worker_id'])) {
+            \Log::error('Worker ID is missing');
             throw new \Exception('Worker is required for booking');
         }
         if (empty($item['from_time']) || empty($item['to_time'])) {
+            \Log::error('Booking time is missing');
             throw new \Exception('Booking time is required');
         }
 
-        $booking = Booking::create([
+        $bookingData = [
             'booking_date' => $item['date'],
             'full_name' => $item['client_name'] ?? 'Walk-in',
             'mobile' => $item['client_mobile'] ?? null,
@@ -178,11 +218,31 @@ class SalesService
             'user_id' => null, // User ID is stored at sale level, not booking level
             'sale_id' => $saleId,
             'created_by' => auth('center_user')->id() ?? auth('center_api')->id(),
-        ]);
+        ];
+        
+        \Log::info('Booking data to insert:', $bookingData);
+        
+        try {
+            $booking = Booking::create($bookingData);
+            \Log::info('Booking created successfully', ['booking_id' => $booking->id]);
+        } catch (\Exception $e) {
+            \Log::error('Error creating booking record', [
+                'message' => $e->getMessage(),
+                'data' => $bookingData
+            ]);
+            throw $e;
+        }
 
         // Create BookingDetail
+        \Log::info('Creating booking detail for service', ['service_id' => $item['id']]);
         $service = Service::find($item['id']);
-        BookingDetail::create([
+        
+        if (!$service) {
+            \Log::error('Service not found', ['service_id' => $item['id']]);
+            throw new \Exception('Service not found');
+        }
+        
+        $detailData = [
             'booking_id' => $booking->id,
             'service_id' => $service->id,
             'price' => $service->price,
@@ -192,7 +252,20 @@ class SalesService
             'to_time' => $item['to_time'],
             'commission' => $item['commission'] ?? null,
             'commission_type' => $item['commission_type'] ?? null,
-        ]);
+        ];
+        
+        \Log::info('Booking detail data to insert:', $detailData);
+        
+        try {
+            BookingDetail::create($detailData);
+            \Log::info('Booking detail created successfully');
+        } catch (\Exception $e) {
+            \Log::error('Error creating booking detail', [
+                'message' => $e->getMessage(),
+                'data' => $detailData
+            ]);
+            throw $e;
+        }
 
         return $booking;
     }
