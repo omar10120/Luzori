@@ -50,7 +50,7 @@
                                         {{ __('field.worker') }}
                                         <small class="text-muted">({{ __('field.tip_will_be_for_this_worker') }})</small>
                                     </label>
-                                    <select class="select2 form-control" id="worker_id" name="worker_id" required>
+                                    <select class="select2 form-control" id="worker_id" name="worker_id" >
                                         <option value="">{{ __('field.Choose Worker') }}</option>
                                         @foreach ($workers as $worker)
                                             <option value="{{ $worker->id }}" 
