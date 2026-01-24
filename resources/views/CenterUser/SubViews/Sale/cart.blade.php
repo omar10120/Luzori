@@ -242,7 +242,7 @@
                                                             <div class="mb-1">
                                                                 <label for="booking-payment_type" class="form-label">{{ __('field.payment_method') }}</label>
                                                                 <select name="payment_type" id="booking-payment_type" class="form-control">
-                                                                    <option value="">{{ __('field.Choose Payment Method') }}</option>
+                                                                    <option value="">{{ __('field.select_payment_method') }}</option>
                                                                     @foreach($paymentMethods as $paymentMethod)
                                                                         <option value="{{ $paymentMethod->name }}">{{ $paymentMethod->name }}</option>
                                                                     @endforeach
@@ -290,7 +290,7 @@
                                             <div class="mb-1">
                                                 <label for="product-products" class="form-label">{{ __('locale.products') }}</label>
                                                 <select class="select2 form-control" name="products[]" id="product-products" multiple>
-                                                    <option value="">{{ __('field.Select Products') }}</option>
+                                                    <option value="">{{ __('field.select_products') }}</option>
                                                     @foreach ($products as $product)
                                                         <option value="{{ $product->id }}">{{ $product->name }}</option>
                                                     @endforeach
@@ -301,7 +301,7 @@
                                             <div class="mb-1">
                                                 <label for="product-discount" class="form-label">{{ __('field.discount_codes') }}</label>
                                                 <select name="discount" id="product-discount" class="form-control">
-                                                    <option value="">{{ __('field.Choose Discount') }}</option>
+                                                    <option value="">{{ __('field.select_discount') }}</option>
                                                     @for ($i = 1; $i <= 15; $i++)
                                                         <option value="{{ $i }}">{{ $i . '%' }}</option>
                                                     @endfor
@@ -312,7 +312,7 @@
                                             <div class="mb-1">
                                                 <label for="product-sales_worker" class="form-label">{{ __('field.sales_worker') }}</label>
                                                 <select class="select2 form-control" name="sales_worker_id" id="product-sales_worker">
-                                                    <option value="">{{ __('field.Choose Sales Worker') }}</option>
+                                                    <option value="">{{ __('field.select_sales_worker') }}</option>
                                                     @foreach ($workers as $worker)
                                                         <option value="{{ $worker->id }}">{{ $worker->name }}</option>
                                                     @endforeach
@@ -323,7 +323,7 @@
                                             <div class="mb-1">
                                                 <label for="product-worker" class="form-label">{{ __('field.worker') }}</label>
                                                 <select class="select2 form-control" name="worker_id" id="product-worker">
-                                                    <option value="">{{ __('field.Choose Worker') }}</option>
+                                                    <option value="">{{ __('field.select_worker') }}</option>
                                                     @foreach ($workers as $worker)
                                                         <option value="{{ $worker->id }}">{{ $worker->name }}</option>
                                                     @endforeach
@@ -334,7 +334,7 @@
                                             <div class="mb-1">
                                                 <label for="product-commission" class="form-label">{{ __('field.commission') }} <span class="text-danger">*</span></label>
                                                 <select class="form-control" name="commission" id="product-commission" required>
-                                                    <option value="">{{ __('admin.Choose Commission') }}</option>
+                                                    <option value="">{{ __('field.select_commission') }}</option>
                                                     @for ($i = 1; $i <= 100; $i++)
                                                         <option value="{{ $i }}">{{ $i }}%</option>
                                                     @endfor
@@ -345,7 +345,7 @@
                                             <div class="mb-1">
                                                 <label for="product-payment_type" class="form-label">{{ __('field.payment_method') }}</label>
                                                 <select name="payment_type" id="product-payment_type" class="form-control">
-                                                    <option value="">{{ __('field.Choose Payment Method') }}</option>
+                                                    <option value="">{{ __('field.select_payment_method') }}</option>
                                                     @foreach($productPaymentMethods as $paymentMethod)
                                                         <option value="{{ $paymentMethod->name }}">{{ $paymentMethod->name }}</option>
                                                     @endforeach
@@ -933,7 +933,7 @@
                                 <div class="mb-1">
                                     <label for="modal-wallet-type" class="form-label">{{ __('field.type') }} <span class="text-danger">*</span></label>
                                     <select class="form-control" name="wallet_type" id="modal-wallet-type" required>
-                                        <option value="">{{ __('admin.Choose Type') }}</option>
+                                        <option value="">{{ __('field.select_type') }}</option>
                                         @foreach($walletPaymentMethods as $paymentMethod)
                                             <option value="{{ $paymentMethod->name }}">{{ $paymentMethod->name }}</option>
                                         @endforeach
@@ -944,7 +944,7 @@
                                 <div class="mb-1">
                                     <label for="modal-wallet-worker" class="form-label">{{ __('locale.workers') }}</label>
                                     <select class="form-control" name="worker_id" id="modal-wallet-worker">
-                                        <option value="">{{ __('admin.Choose Worker') }}</option>
+                                        <option value="">{{ __('field.select_worker') }}</option>
                                         @foreach ($workers as $worker)
                                             <option value="{{ $worker->id }}">{{ $worker->name }}
                                             </option>
@@ -956,7 +956,7 @@
                                 <div class="mb-1">
                                     <label for="modal-wallet-commission" class="form-label">{{ __('field.commission') }} <span class="text-danger">*</span></label>
                                     <select class="form-control" name="commission" id="modal-wallet-commission" required>
-                                        <option value="">{{ __('admin.Choose Commission') }}</option>
+                                        <option value="">{{ __('field.select_commission') }}</option>
                                         @for ($i = 1; $i <= 100; $i++)
                                             <option value="{{ $i }}">{{ $i }}%</option>
                                         @endfor
@@ -1157,7 +1157,7 @@
                         @if($allowedBookingType == 'percentage')
                         service_info += `
                                     <select class="form-control commission-percentage-select" name="service[${service.id}][commission]" id="booking-commission_percentage_${service.id}">
-                                        <option value="">{{ __('admin.Choose Commission') }}</option>`;
+                                        <option value="">{{ __('field.select_commission') }}</option>`;
                         for (let i = 1; i <= 100; i++) {
                             service_info += `<option value="${i}">${i}%</option>`;
                         }

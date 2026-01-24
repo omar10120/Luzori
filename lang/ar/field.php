@@ -288,5 +288,10 @@ return [
     'permissions_name'               => 'اسم الصلاحيات',
     'active_workers'                 => 'الموظفين النشطين',
     'tip_will_be_for_this_worker'    => 'ستكون البقشيش لهذا العامل',
-    'no_mobile'                      => 'رقم الموبايل'
+    'no_mobile'                      => 'رقم الموبايل',
+    'select_products'                 => 'اختر المنتجات',
+    'select_sales_worker'             => 'اختر موظف المبيعات',
+    'select_worker'                   => 'اختر العامل',
+    'select_commission'            => 'اختر العمولة',
+    'select_type'                     => 'اختر النوع'
 ];
