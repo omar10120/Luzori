@@ -228,6 +228,7 @@ return [
     'current_stock'                  => 'Current Stock',
     'continue_to_payment'            => 'Continue To Payment',
     'cart_is_empty'                  => 'Cart Is Empty',
+    'best_worker'                    => 'Best Worker',
     'cart'                           => 'Cart',
     'coupons'                        => 'Coupons',
     'wallets'                        => 'Wallets',

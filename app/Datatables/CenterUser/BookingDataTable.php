@@ -75,6 +75,17 @@ class BookingDataTable extends DataTable
         // Responsive button classes: smaller padding on mobile, normal on desktop
         $buttonClass = 'btn mx-1 mx-md-2 px-2 px-md-4 py-1 py-md-2 btn-sm';
         $addRoute = route('center_user.' . $this->plural . '.create');
+        
+        // Check if user has permission to create bookings
+        $canCreate = auth('center_user')->check() && auth('center_user')->user()->can('CREATE_BOOKINGS', 'center_api');
+        $canDelete = auth('center_user')->check() && auth('center_user')->user()->can('DELETE_BOOKINGS', 'center_api');
+        
+        // Build initComplete JavaScript - conditionally include add button
+        $initCompleteJs = 'function () {';
+        if ($canCreate) {
+            $initCompleteJs .= '$(".dt-action-buttons").append("<a href=\'' . $addRoute . '\' class=\"btn btn-primary btn-sm mx-1 mx-md-2 px-2 px-md-3 py-1 py-md-2\">' . __('general.add_new') . '<i class=\"ti ti-plus\"></i></a>");';
+        }
+        $initCompleteJs .= '}';
 
         return $this->builder()
             ->setTableId($this->plural . '-table')
@@ -114,9 +125,7 @@ class BookingDataTable extends DataTable
             ])
             ->language($this->getDataTableLanguageUrl())
             ->addTableClass('table table-bordered table-hover')
-            ->initComplete('function () {
-                $(".dt-action-buttons").append("<a href=' . $addRoute . ' class=\"btn btn-primary btn-sm mx-1 mx-md-2 px-2 px-md-3 py-1 py-md-2\">' . __('general.add_new') . '<i class=\"ti ti-plus\"></i></a>");
-            }')
+            ->initComplete($initCompleteJs)
             ->parameters([]);
     }
 
