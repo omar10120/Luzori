@@ -21,7 +21,7 @@ class DailyReportController extends Controller
     {
         $can = 'VIEW_DAILY_REPORTS';
         if (!auth('center_user')->user()->can($can, 'center_api')) {
-            return abort(401);
+            return abort(403);
         }
 
         $date = $request->date ?? now()->format('Y-m-d');

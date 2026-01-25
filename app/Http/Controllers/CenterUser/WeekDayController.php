@@ -19,7 +19,7 @@ class WeekDayController extends Controller
     {
         $can = 'VIEW_' . Str::upper($this->plural);
         if (!auth('center_user')->user()->can($can, 'center_api')) {
-            return abort(401);
+            return abort(403);
         }
 
         $title = __('locale.' . $this->plural);
@@ -30,7 +30,7 @@ class WeekDayController extends Controller
     {
         $can = 'VIEW_' . Str::upper($this->plural);
         if (!auth('center_user')->user()->can($can, 'center_api')) {
-            return abort(401);
+            return abort(403);
         }
 
         $weekday = WeekDay::find($request->id);

@@ -39,7 +39,7 @@ class SalesController extends Controller
     {
         $can = 'VIEW_' . Str::upper($this->plural);
         if (!auth('center_user')->user()->can($can, 'center_api')) {
-            return abort(401);
+            return abort(403);
         }
 
         $title = __('locale.' . $this->plural);
@@ -53,7 +53,7 @@ class SalesController extends Controller
     {
         $can = 'CREATE_' . Str::upper($this->plural);
         if (!auth('center_user')->user()->can($can, 'center_api')) {
-            return abort(401);
+            return abort(403);
         }
 
         $menu = __('locale.' . $this->plural);
@@ -228,7 +228,7 @@ class SalesController extends Controller
     {
         $can = 'CREATE_' . Str::upper($this->plural);
         if (!auth('center_user')->user()->can($can, 'center_api')) {
-            return abort(401);
+            return abort(403);
         }
 
         $cart = session('sales_cart', ['items' => []]);
@@ -261,7 +261,7 @@ class SalesController extends Controller
     {
         $can = 'CREATE_' . Str::upper($this->plural);
         if (!auth('center_user')->user()->can($can, 'center_api')) {
-            return abort(401);
+            return abort(403);
         }
 
         $request->validate([
@@ -300,7 +300,7 @@ class SalesController extends Controller
     {
         $can = 'SHOW_' . Str::upper($this->plural);
         if (!auth('center_user')->user()->can($can, 'center_api')) {
-            return abort(401);
+            return abort(403);
         }
 
         $sale = Sale::with([

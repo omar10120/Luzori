@@ -38,7 +38,7 @@ class WorkerController extends Controller
     {
         $can = 'VIEW_' . Str::upper($this->plural);
         if (!auth('center_user')->user()->can($can, 'center_api')) {
-            return abort(401);
+            return abort(403);
         }
         
         $title = __('locale.' . $this->plural);
@@ -53,7 +53,7 @@ class WorkerController extends Controller
             $can = 'CREATE_' . Str::upper($this->plural);
         }
         if (!auth('center_user')->user()->can($can, 'center_api')) {
-            return abort(401);
+            return abort(403);
         }
 
         $menu = __('locale.' . $this->plural);
@@ -90,7 +90,7 @@ class WorkerController extends Controller
             $can = 'CREATE_' . Str::upper($this->plural);
         }
         if (!auth('center_user')->user()->can($can, 'center_api')) {
-            return abort(401);
+            return abort(403);
         }
 
         $item = $this->crudService->updateOrCreate($this->model, $request->validated(), true);

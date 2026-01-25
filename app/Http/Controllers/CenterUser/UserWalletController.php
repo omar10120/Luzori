@@ -39,7 +39,7 @@ class UserWalletController extends Controller
     {
         $can = 'VIEW_' . Str::upper($this->plural);
         if (!auth('center_user')->user()->can($can, 'center_api')) {
-            return abort(401);
+            return abort(403);
         }
 
         $title = __('locale.show_users');
@@ -115,7 +115,7 @@ class UserWalletController extends Controller
         $responseCode = Response::HTTP_CREATED;
         $can = 'CREATE_' . Str::upper($this->plural);
         if (!auth('center_user')->user()->can($can, 'center_api')) {
-            return abort(401);
+            return abort(403);
         }
 
         if (!UserWallet::where('wallet_id', $request->wallet_id)->where('user_id', $request->user_id)->exists()) {

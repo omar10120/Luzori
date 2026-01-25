@@ -17,7 +17,7 @@ class StaffReportController extends Controller
     {
         $can = 'VIEW_STAFF_REPORTS';
         if (!auth('center_user')->user()->can($can, 'center_api')) {
-            return abort(401);
+            return abort(403);
         }
 
         $branch_id = $request->get('branch_id');

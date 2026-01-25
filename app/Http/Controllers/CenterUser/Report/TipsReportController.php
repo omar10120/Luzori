@@ -19,7 +19,7 @@ class TipsReportController extends Controller
     {
         $can = 'VIEW_TIPS_REPORTS';
         if (!auth('center_user')->user()->can($can, 'center_api')) {
-            return abort(401);
+            return abort(403);
         }
 
         $all_users = [];

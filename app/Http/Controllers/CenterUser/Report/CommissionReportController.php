@@ -18,7 +18,7 @@ class CommissionReportController extends Controller
     {
         $can = 'VIEW_COMMISSION_REPORTS';
         if (!auth('center_user')->user()->can($can, 'center_api')) {
-            return abort(401);
+            return abort(403);
         }
 
         $years = Booking::select(DB::raw('DISTINCT YEAR(booking_date) as year'))->get();

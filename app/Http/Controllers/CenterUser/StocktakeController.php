@@ -32,7 +32,7 @@ class StocktakeController extends Controller
     {
         $can = 'VIEW_' . Str::upper($this->plural);
         if (!auth('center_user')->user()->can($can, 'center_api')) {
-            return abort(401);
+            return abort(403);
         }
 
         $title = __('locale.' . $this->plural);
@@ -47,7 +47,7 @@ class StocktakeController extends Controller
             $can = 'CREATE_' . Str::upper($this->plural);
         }
         if (!auth('center_user')->user()->can($can, 'center_api')) {
-            return abort(401);
+            return abort(403);
         }
 
         $menu = __('locale.' . $this->plural);
@@ -83,7 +83,7 @@ class StocktakeController extends Controller
             $can = 'CREATE_' . Str::upper($this->plural);
         }
         if (!auth('center_user')->user()->can($can, 'center_api')) {
-            return abort(401);
+            return abort(403);
         }
 
         $newRequest = $request->only(
@@ -115,7 +115,7 @@ class StocktakeController extends Controller
     {
         $can = 'UPDATE_' . Str::upper($this->plural);
         if (!auth('center_user')->user()->can($can, 'center_api')) {
-            return abort(401);
+            return abort(403);
         }
 
         $stocktake = Stocktake::with(['branches', 'stocktakeProducts'])->findOrFail($id);
@@ -162,7 +162,7 @@ class StocktakeController extends Controller
     {
         $can = 'VIEW_' . Str::upper($this->plural);
         if (!auth('center_user')->user()->can($can, 'center_api')) {
-            return abort(401);
+            return abort(403);
         }
 
         $stocktake = Stocktake::with([
@@ -189,7 +189,7 @@ class StocktakeController extends Controller
     {
         $can = 'UPDATE_' . Str::upper($this->plural);
         if (!auth('center_user')->user()->can($can, 'center_api')) {
-            return abort(401);
+            return abort(403);
         }
 
         $request->validate([
@@ -227,7 +227,7 @@ class StocktakeController extends Controller
     {
         $can = 'UPDATE_' . Str::upper($this->plural);
         if (!auth('center_user')->user()->can($can, 'center_api')) {
-            return abort(401);
+            return abort(403);
         }
 
         $stocktake = Stocktake::findOrFail($id);
@@ -245,7 +245,7 @@ class StocktakeController extends Controller
     {
         $can = 'SHOW_' . Str::upper($this->plural);
         if (!auth('center_user')->user()->can($can, 'center_api')) {
-            return abort(401);
+            return abort(403);
         }
 
         $stocktake = Stocktake::with([
@@ -270,7 +270,7 @@ class StocktakeController extends Controller
     {
         $can = 'UPDATE_' . Str::upper($this->plural);
         if (!auth('center_user')->user()->can($can, 'center_api')) {
-            return abort(401);
+            return abort(403);
         }
 
         $request->validate([

@@ -18,7 +18,7 @@ class ExpenseReportController extends Controller
     {
         $can = 'VIEW_EXPENSE_REPORTS';
         if (!auth('center_user')->user()->can($can, 'center_api')) {
-            return abort(401);
+            return abort(403);
         }
 
         $start_date = $request->start_date ?? now()->format('Y-m-d');

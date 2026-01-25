@@ -41,7 +41,7 @@ class Handler extends ExceptionHandler
      */
     public function render($request, Throwable $e)
     {
-        // Handle 401 Unauthorized errors - redirect to login
+        // Handle 401 Unauthorized errors - redirect to login (authentication issue)
         if ($e instanceof HttpException && $e->getStatusCode() === 401) {
             if ($request->expectsJson()) {
                 return response()->json([
@@ -51,6 +51,19 @@ class Handler extends ExceptionHandler
             }
             
             return redirect($this->getLoginRoute($request));
+        }
+
+        // Handle 403 Forbidden errors - show error message, don't redirect (permission issue)
+        if ($e instanceof HttpException && $e->getStatusCode() === 403) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'You do not have permission to perform this action.',
+                    'error' => 'Forbidden'
+                ], 403);
+            }
+            
+            // For web requests, show error page instead of redirecting
+            return response()->view('errors.403', [], 403);
         }
 
         return parent::render($request, $e);

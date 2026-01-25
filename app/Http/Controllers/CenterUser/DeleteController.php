@@ -14,7 +14,7 @@ class DeleteController extends Controller
     {
         $can = 'DELETE_' . Str::upper(Str::plural($request->model));
         if (!auth('center_user')->user()->can($can, 'center_api')) {
-            return abort(401);
+            return abort(403);
         }
 
         if ($request->model == 'Role') {

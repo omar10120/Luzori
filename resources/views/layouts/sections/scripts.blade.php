@@ -60,9 +60,9 @@
         }
     });
 
-    // Global AJAX error handler for 401 Unauthorized - redirect to login
+    // Global AJAX error handler
     $(document).ajaxError(function(event, xhr, settings) {
-        // Only handle if it's a 401 error and not already handled by specific error callbacks
+        // Handle 401 Unauthorized - redirect to login (authentication issue)
         if (xhr.status === 401 && !settings._handled401) {
             var currentUrl = window.location.href;
             var loginUrl = '';
@@ -101,6 +101,28 @@
                     window.location.href = loginUrl;
                 }
             }, 1500);
+        }
+        
+        // Handle 403 Forbidden - show error message, don't redirect (permission issue)
+        if (xhr.status === 403 && !settings._handled403) {
+            var message = 'You do not have permission to perform this action.';
+            try {
+                var response = xhr.responseJSON;
+                if (response && response.message) {
+                    message = response.message;
+                }
+            } catch(e) {
+                // Use default message
+            }
+            
+            // Show error message but don't redirect
+            if (typeof toastr !== 'undefined') {
+                toastr.error(message);
+            } else if (typeof fireMessage !== 'undefined') {
+                fireMessage("{{ __('admin.ok') }}", message, "{{ __('admin.fire_message') }}", 'error');
+            } else {
+                alert(message);
+            }
         }
     });
 </script>

@@ -33,7 +33,7 @@ class VacationController extends Controller
     {
         $can = 'VIEW_' . Str::upper($this->plural);
         if (!auth('center_user')->user()->can($can, 'center_api')) {
-            return abort(401);
+            return abort(403);
         }
 
         $title = __('locale.add_vacation_to');
@@ -53,7 +53,7 @@ class VacationController extends Controller
     {
         $can = 'VIEW_' . Str::upper($this->plural);
         if (!auth('center_user')->user()->can($can, 'center_api')) {
-            return abort(401);
+            return abort(403);
         }
 
         $item = $this->crudService->updateOrCreate($this->model, $request->validated());
