@@ -117,7 +117,7 @@
                                                 <div class="mb-1">
                                                     <label class="form-label">{{__('field.address')}}  <span class="text-danger">*</span></label>
                                                     <small class="text-muted">Provide the physical location details.</small>
-                                                    <textarea id="address" name="{{ $locale }}[address]" id="address_{{ $locale }}" class="form-control" cols="25" 
+                                                    <textarea id="address_{{ $locale }}" name="{{ $locale }}[address]" class="form-control" cols="25" 
                                                         rows="10" placeholder="{{__('field.address')}}">{{ $item ? $item->translate($locale)->address : '' }}</textarea>
                                                     
                                                 </div>
@@ -363,15 +363,15 @@
                 debouncedTranslate($(this).val(), 'ar', 'en', 'name_en');
             });
 
-            // Listeners for City
-            $('#city_en').on('input', function() {
+            // Listeners for City (select element needs 'change' event)
+            $('#city_en').on('change', function() {
                 debouncedTranslate($(this).val(), 'en', 'ar', 'city_ar');
             });
-            $('#city_ar').on('input', function() {
+            $('#city_ar').on('change', function() {
                 debouncedTranslate($(this).val(), 'ar', 'en', 'city_en');
             });
 
-            // Listeners for Address
+            // Listeners for Address (textarea)
             $('#address_en').on('input', function() {
                 debouncedTranslate($(this).val(), 'en', 'ar', 'address_ar');
             });

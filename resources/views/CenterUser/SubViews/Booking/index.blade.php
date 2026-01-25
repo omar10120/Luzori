@@ -192,7 +192,7 @@
                                                             <i class="ti ti-plus me-1"></i>
                                                             {{ __('general.add') }} {{ __('locale.services') }}
                                                         </button>
-                                                    </div>
+                                                    </div>  
                                                     <select class="select2 form-control" name="services[]" id="services"
                                                         multiple>
                                                         @foreach ($services as $service)
