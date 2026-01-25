@@ -1,3 +1,12 @@
+<style>
+    .dark-style .dropdown-menu .dropdown-item {
+        color: rgba(255, 255, 255, 0.87) !important;
+    }
+    .dark-style .dropdown-menu .dropdown-item:hover {
+        color: rgba(255, 255, 255, 1) !important;
+        background-color: rgba(255, 255, 255, 0.08) !important;
+    }
+</style>
 <div class="dropdown">
     <button type="button" class="btn btn-sm dropdown-toggle hide-arrow py-0" data-bs-toggle="dropdown">
         <i class="fas fa-ellipsis-v"></i>
