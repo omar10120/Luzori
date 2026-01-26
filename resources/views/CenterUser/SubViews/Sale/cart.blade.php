@@ -1398,11 +1398,6 @@
                 if (!paymentType || paymentType === '') {
                     $paymentTypeField.addClass('is-invalid');
                     $paymentTypeField.siblings('.invalid-feedback').text('{{ __('field.payment_method') }} is required');
-                    if (typeof toastr !== 'undefined') {
-                        toastr.error('{{ __('field.please_select_payment_method') }}');
-                    } else {
-                        alert('{{ __('field.please_select_payment_method') }}');
-                    }
                     $paymentTypeField.focus();
                     return false;
                 } else {
@@ -1606,11 +1601,6 @@
                 if (!paymentType || paymentType === '') {
                     $paymentTypeField.addClass('is-invalid');
                     $paymentTypeField.siblings('.invalid-feedback').text('{{ __('field.payment_method') }} is required');
-                    if (typeof toastr !== 'undefined') {
-                        toastr.error('{{ __('field.please_select_payment_method') }}');
-                    } else {
-                        alert('{{ __('field.please_select_payment_method') }}');
-                    }
                     $paymentTypeField.focus();
                     return;
                 } else {
