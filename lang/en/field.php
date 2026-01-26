@@ -115,6 +115,7 @@ return [
     'country_code'                  => 'Country Code',
     'birthday_date'                 => 'Birthday Date',
     'mobile_number'                 => 'Mobile Number',
+    'phone_must_be_between_6_and_10_digits' => 'Phone must be between 6 and 10 digits',
     'fixed'                         => 'Fixed',
     'percentage'                    => 'Percentage',
     'single'                        => 'Single',

@@ -625,8 +625,9 @@
                                 <label for="quick_customer_phone" class="form-label">
                                     {{ __('field.mobile_number') }} <span class="text-danger">*</span>
                                 </label>
-                                <input type="phone" maxlength="7" id="quick_customer_phone" class="form-control" name="phone" required />
+                                <input type="tel" maxlength="7" id="quick_customer_phone" class="form-control" name="phone" required />
                                 <div class="invalid-feedback"></div>
+                                <small class="text-muted">{{ __('field.phone_must_be_between_6_and_10_digits') }}</small>
                             </div>
                         </div>
                         <div class="mb-3">
@@ -1034,22 +1035,7 @@
             $('#addCustomerModal').on('shown.bs.modal', function() {
                 toggleQuickCustomerPhonePrefix();
             });
-            
-            // Combine prefix with phone number on form submit in Add Customer Modal
-            $('#save-quick-customer-btn').on('click', function(e) {
-                const countryCodeSelect = $('#addCustomerModal').find('select[name="country_code"]');
-                const phonePrefixSelect = $('#quick_customer_phone_prefix');
-                const phoneInput = $('#quick_customer_phone');
-                
-                if (countryCodeSelect.length && countryCodeSelect.val() === '+971' && phonePrefixSelect.length && phoneInput.length) {
-                    const prefix = phonePrefixSelect.val();
-                    const phone = phoneInput.val();
-                    if (prefix && phone) {
-                        // Combine prefix with phone number
-                        phoneInput.val(prefix + phone);
-                    }
-                }
-            });
+
             
             // Initialize Select2 for customer dropdown in modal
             $('#select-customer-dropdown').select2({
@@ -1479,6 +1465,7 @@
                     });
                 });
 
+                saveCartToSession();
                 renderCart();
                 resetBookingWizard();
 
@@ -1650,6 +1637,7 @@
                     });
     
                     if (productsAdded > 0) {
+                        saveCartToSession();
                         renderCart();
                         // Reset form
                         $('#product-products').val(null).trigger('change');
@@ -1674,6 +1662,19 @@
             });
 
             // Cart Functions
+            function saveCartToSession() {
+                $.ajax({
+                    url: '{{ route("center_user.sales.cart") }}',
+                    type: 'POST',
+                    data: {
+                        _token: '{{ csrf_token() }}',
+                        cart: cart,
+                        client_id: selectedCustomerId
+                    },
+                    async: false
+                });
+            }
+
             function calculateTotals() {
                 let subtotal = 0;
                 cart.forEach(item => {
@@ -1808,6 +1809,7 @@
             $(document).on('click', '.remove-item', function() {
                 const index = $(this).data('index');
                 cart.splice(index, 1);
+                saveCartToSession();
                 renderCart();
                 if (typeof toastr !== 'undefined') {
                     toastr.success('{{ __('field.item_removed') }}');
@@ -2178,6 +2180,7 @@
                                 commission: commission
                             });
 
+                            saveCartToSession();
                             renderCart();
 
                             // Close modal and reset form
@@ -2637,6 +2640,107 @@
             $('#save-quick-customer-btn').on('click', function(e) {
                 e.preventDefault();
                 const form = $('#quick-add-customer-form')[0];
+                
+                // Clear previous errors
+                $('.invalid-feedback').text('');
+                $('.form-control').removeClass('is-invalid');
+                
+                // Client-side validation
+                let isValid = true;
+                let firstErrorField = null;
+                
+                // Validate first name
+                const firstName = $('#quick_customer_first_name').val().trim();
+                if (!firstName) {
+                    $('#quick_customer_first_name').addClass('is-invalid');
+                    $('#quick_customer_first_name').siblings('.invalid-feedback').text('{{ __('field.first_name') }} is required');
+                    isValid = false;
+                    if (!firstErrorField) firstErrorField = $('#quick_customer_first_name');
+                }
+                
+                // Validate last name
+                const lastName = $('#quick_customer_last_name').val().trim();
+                if (!lastName) {
+                    $('#quick_customer_last_name').addClass('is-invalid');
+                    $('#quick_customer_last_name').siblings('.invalid-feedback').text('{{ __('field.last_name') }} is required');
+                    isValid = false;
+                    if (!firstErrorField) firstErrorField = $('#quick_customer_last_name');
+                }
+                
+                // Validate email format (if provided)
+                const email = $('#quick_customer_email').val().trim();
+                if (email) {
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    if (!emailRegex.test(email)) {
+                        $('#quick_customer_email').addClass('is-invalid');
+                        $('#quick_customer_email').siblings('.invalid-feedback').text('{{ __('field.email') }} must be a valid email address');
+                        isValid = false;
+                        if (!firstErrorField) firstErrorField = $('#quick_customer_email');
+                    }
+                }
+                
+                // Validate phone
+                const countryCode = $('#addCustomerModal').find('select[name="country_code"]').val();
+                const phonePrefix = $('#quick_customer_phone_prefix').val() || '';
+                const phoneInput = $('#quick_customer_phone').val().trim();
+                
+                if (!phoneInput) {
+                    $('#quick_customer_phone').addClass('is-invalid');
+                    $('#quick_customer_phone').siblings('.invalid-feedback').text('{{ __('field.mobile_number') }} is required');
+                    isValid = false;
+                    if (!firstErrorField) firstErrorField = $('#quick_customer_phone');
+                } else {
+                    // Combine prefix with phone for validation
+                    let fullPhone = phoneInput;
+                    if (countryCode === '+971' && phonePrefix) {
+                        fullPhone = phonePrefix + phoneInput;
+                    }
+                    
+                    // Check if phone is numeric
+                    if (!/^\d+$/.test(fullPhone)) {
+                        $('#quick_customer_phone').addClass('is-invalid');
+                        $('#quick_customer_phone').siblings('.invalid-feedback').text('{{ __('field.mobile_number') }} must be numeric');
+                        isValid = false;
+                        if (!firstErrorField) firstErrorField = $('#quick_customer_phone');
+                    } else {
+                        // Check phone length (6-10 digits)
+                        const phoneLength = fullPhone.length;
+                        if (phoneLength < 6 || phoneLength > 10) {
+                            $('#quick_customer_phone').addClass('is-invalid');
+                            $('#quick_customer_phone').siblings('.invalid-feedback').text('{{ __('field.mobile_number') }} must be between 6 and 10 digits');
+                            isValid = false;
+                            if (!firstErrorField) firstErrorField = $('#quick_customer_phone');
+                        }
+                    }
+                }
+                
+                if (!isValid) {
+                    // Scroll to first error field
+                    if (firstErrorField) {
+                        $('html, body').animate({
+                            scrollTop: firstErrorField.offset().top - 100
+                        }, 500);
+                    }
+                    if (typeof toastr !== 'undefined') {
+                        toastr.error('Please fill all required fields correctly');
+                    }
+                    return false;
+                }
+                
+                // Combine prefix with phone number if UAE (+971)
+                const countryCodeSelect = $('#addCustomerModal').find('select[name="country_code"]');
+                const phonePrefixSelect = $('#quick_customer_phone_prefix');
+                const phoneInputField = $('#quick_customer_phone');
+                
+                if (countryCodeSelect.length && countryCodeSelect.val() === '+971' && phonePrefixSelect.length && phoneInputField.length) {
+                    const prefix = phonePrefixSelect.val();
+                    const phone = phoneInputField.val();
+                    if (prefix && phone) {
+                        // Combine prefix with phone number
+                        phoneInputField.val(prefix + phone);
+                    }
+                }
+                
                 const formData = new FormData(form);
 
                 const $btn = $(this);
@@ -2719,8 +2823,36 @@
                         }
                     },
                     error: function(xhr) {
-                        if (typeof toastr !== 'undefined') {
-                            toastr.error(xhr.responseJSON?.message || '{{ __('admin.an_error_occurred') }}');
+                        if (xhr.status === 422) {
+                            // Validation errors
+                            const errors = xhr.responseJSON.errors;
+                            let firstErrorField = null;
+                            
+                            $.each(errors, function(key, value) {
+                                const fieldId = 'quick_customer_' + key.replace(/_/g, '_');
+                                const $field = $('#' + fieldId);
+                                
+                                if ($field.length) {
+                                    $field.addClass('is-invalid');
+                                    $field.siblings('.invalid-feedback').text(value[0]);
+                                    if (!firstErrorField) firstErrorField = $field;
+                                }
+                            });
+                            
+                            // Scroll to first error field
+                            if (firstErrorField) {
+                                $('html, body').animate({
+                                    scrollTop: firstErrorField.offset().top - 100
+                                }, 500);
+                            }
+                            
+                            if (typeof toastr !== 'undefined') {
+                                toastr.error('Please fix the validation errors');
+                            }
+                        } else {
+                            if (typeof toastr !== 'undefined') {
+                                toastr.error(xhr.responseJSON?.message || '{{ __('admin.an_error_occurred') }}');
+                            }
                         }
                     },
                     complete: function() {
