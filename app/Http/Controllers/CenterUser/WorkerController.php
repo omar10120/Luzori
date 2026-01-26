@@ -108,7 +108,11 @@ class WorkerController extends Controller
 
     public function getWorkersByService(Request $request, WorkerService $workerService)
     {
-        $workers = $workerService->getByService($request->service_id);
+        $branch_id = null;
+        if (auth('center_user')->check()) {
+            $branch_id = auth('center_user')->user()->branch_id;
+        }
+        $workers = $workerService->getByService($request->service_id, $branch_id);
         return response()->json($workers);
     }
 }

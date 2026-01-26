@@ -147,8 +147,8 @@ return [
     'select_if_the_service_has_commission' => 'Select if the service has commission',
     'enter_the_name_of_the_service' => 'Enter the name of the service',
     'enter_the_description_of_the_service' => 'Enter the description of the service',
-    'select_a_supplier_from_the_list ' => 'Select a supplier from the list',
-    'select_a_services_from_the_list ' => 'Select a service from the list'
+    'select_a_supplier_from_the_list' => 'Select a supplier from the list',
+    'select_a_services_from_the_list' => 'Select a service from the list'
       
     
     ];
