@@ -98,11 +98,11 @@
                             @foreach($cart['items'] as $item)
                                 @php
                                     $itemName = $item['name'] ?? __('field.item');
-                                    if($item['type'] === 'wallet') {
-                                        $itemName = __('field.coupon') . ' / ' . __('locale.wallets');
+                                    if($item['type'] === 'user_wallet') {
+                                        $itemName = __('field.coupon');
                                     }
                                     
-                                    if($item['type'] === 'wallet') {
+                                    if($item['type'] === 'user_wallet') {
                                         $displayPrice = $item['amount'] ?? 0;
                                     } else {
                                         $price = $item['price'] ?? 0;
@@ -123,14 +123,18 @@
                                         <small class="text-muted">
                                             {{ __('field.quantity') }}: {{ $item['quantity'] }}
                                         </small>
-                                    @elseif($item['type'] === 'wallet')
+                                    @elseif($item['type'] === 'user_wallet')
                                         <small class="text-muted">
+                                            {{ __('field.code') }}: {{ $item['code'] ?? '' }}<br>
                                             {{ __('field.amount') }}: {{ $item['amount'] ?? 0 }} {{ get_currency() }}
-                                            @if(isset($item['start_at']))
-                                                <br>{{ __('field.start_at') }}: {{ $item['start_at'] }}
+                                            @if(isset($item['wallet_type']))
+                                                <br>{{ __('field.type') }}: {{ $item['wallet_type'] }}
                                             @endif
-                                            @if(isset($item['end_at']))
-                                                <br>{{ __('field.end_at') }}: {{ $item['end_at'] }}
+                                            @if(isset($item['worker_name']))
+                                                <br>{{ __('field.worker') }}: {{ $item['worker_name'] }}
+                                            @endif
+                                            @if(isset($item['commission']))
+                                                <br>{{ __('field.commission') }}: {{ $item['commission'] }}%
                                             @endif
                                         </small>
                                     @endif
@@ -143,8 +147,8 @@
                         @php
                             $subtotal = 0;
                             foreach($cart['items'] as $item) {
-                                if($item['type'] === 'wallet') {
-                                    // Include wallet/coupon amount in subtotal
+                                if($item['type'] === 'user_wallet') {
+                                    // Include coupon amount in subtotal
                                     $subtotal += $item['amount'] ?? 0;
                                 } else {
                                     $price = $item['price'] ?? 0;
