@@ -115,4 +115,16 @@ class WorkerController extends Controller
         $workers = $workerService->getByService($request->service_id, $branch_id);
         return response()->json($workers);
     }
+
+    public function getWorkersByBranch(Request $request)
+    {
+        $branch_id = $request->branch_id;
+        if (!$branch_id && auth('center_user')->check()) {
+            $branch_id = auth('center_user')->user()->branch_id;
+        }
+        $workers = Worker::when($branch_id, function($query) use ($branch_id) {
+            return $query->where('branch_id', $branch_id);
+        })->select('id', 'name')->get();
+        return response()->json($workers);
+    }
 }

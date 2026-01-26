@@ -519,7 +519,8 @@
                                     data-name="{{ $user->name }}"
                                     data-email="{{ $user->email ?? '' }}"
                                     data-phone="{{ $user->phone ?? $user->full_phone ?? '' }}"
-                                    data-image="{{ $user->image ?? '' }}">
+                                    data-image="{{ $user->image ?? '' }}"
+                                    data-branch-id="{{ $user->branch_id ?? '' }}">
                                     {{ $user->name }} 
                                     @if($user->phone || $user->full_phone)
                                         - {{ $user->phone ?? $user->full_phone }}
@@ -2289,6 +2290,11 @@
                     success: function() {
                         // Update display
                         updateCustomerDisplay(userId, userName, userEmail || userPhone, userImage , userPhone);
+                        
+                        // Update worker dropdowns based on customer's branch
+                        const branchId = $selectedOption.data('branch-id') || null;
+                        updateWorkersByBranch(branchId);
+                        
                         $('#selectCustomerModal').modal('hide');
                         
                         // Reset modal
@@ -2332,12 +2338,61 @@
                     },
                     success: function() {
                         updateCustomerDisplay(null, null, null, null, null);
+                        
+                        // Update worker dropdowns - use logged-in user's branch
+                        const branchId = {{ auth('center_user')->user()->branch_id ?? 'null' }};
+                        updateWorkersByBranch(branchId);
+                        
                         if (typeof toastr !== 'undefined') {
                             toastr.success('{{ __('field.customer_removed') }}');
                         }
                     }
                 });
             });
+
+            // Update worker dropdowns based on branch
+            function updateWorkersByBranch(branchId) {
+                $.ajax({
+                    url: '{{ route("center_user.workers.get-workers-by-branch") }}',
+                    type: 'GET',
+                    data: {
+                        _token: '{{ csrf_token() }}',
+                        branch_id: branchId
+                    },
+                    success: function(workers) {
+                        // Update product-sales_worker dropdown
+                        const $salesWorkerSelect = $('#product-sales_worker');
+                        const currentSalesWorker = $salesWorkerSelect.val();
+                        $salesWorkerSelect.empty().append('<option value="">{{ __('field.select_sales_worker') }}</option>');
+                        $.each(workers, function(index, worker) {
+                            const option = new Option(worker.name, worker.id, false, false);
+                            if (worker.id == currentSalesWorker) {
+                                option.selected = true;
+                            }
+                            $salesWorkerSelect.append(option);
+                        });
+                        $salesWorkerSelect.trigger('change');
+                        
+                        // Update product-worker dropdown
+                        const $workerSelect = $('#product-worker');
+                        const currentWorker = $workerSelect.val();
+                        $workerSelect.empty().append('<option value="">{{ __('field.select_worker') }}</option>');
+                        $.each(workers, function(index, worker) {
+                            const option = new Option(worker.name, worker.id, false, false);
+                            if (worker.id == currentWorker) {
+                                option.selected = true;
+                            }
+                            $workerSelect.append(option);
+                        });
+                        $workerSelect.trigger('change');
+                    },
+                    error: function() {
+                        if (typeof toastr !== 'undefined') {
+                            toastr.error('{{ __('admin.an_error_occurred') }}');
+                        }
+                    }
+                });
+            }
 
             // Update customer display
             function updateCustomerDisplay(userId, name, contact, image , phone) {
@@ -2541,6 +2596,10 @@
                             selectedCustomerPhone = userPhone;
                             updateCustomerDisplay(userData.id, userName, userEmail || userPhone, userImage, userPhone);
                             
+                            // Update worker dropdowns based on customer's branch
+                            const branchId = userData.branch_id || null;
+                            updateWorkersByBranch(branchId);
+                            
                             // Update the dropdown option
                             const $option = $('#select-customer-dropdown').find(`option[value="${userData.id}"]`);
                             if ($option.length) {
@@ -2553,6 +2612,7 @@
                                 $option.attr('data-phone', userPhone);
                                 $option.attr('data-email', userEmail);
                                 $option.attr('data-image', userImage);
+                                $option.attr('data-branch-id', userData.branch_id || '');
                             }
                             
                             $('#editCustomerModal').modal('hide');
@@ -2618,6 +2678,10 @@
                                     // Update display
                                     updateCustomerDisplay(userData.id, userName, userEmail || userPhone, userImage , userPhone);
                                     
+                                    // Update worker dropdowns based on customer's branch
+                                    const branchId = userData.branch_id || null;
+                                    updateWorkersByBranch(branchId);
+                                    
                                     // Add to selection dropdowns
                                     let label = userName;
                                     if (userPhone) label += ' - ' + userPhone;
@@ -2628,6 +2692,7 @@
                                     $(newOption).attr('data-phone', userPhone);
                                     $(newOption).attr('data-email', userEmail);
                                     $(newOption).attr('data-image', userImage);
+                                    $(newOption).attr('data-branch-id', userData.branch_id || '');
                                     
                                     $('#select-customer-dropdown').append(newOption);
                                     

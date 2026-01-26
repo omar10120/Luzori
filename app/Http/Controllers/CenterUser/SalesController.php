@@ -63,7 +63,6 @@ class SalesController extends Controller
         // Get services and products
         $services = Service::with(['translation'])->get();
         $products = Product::with(['translation', 'branches'])->get();
-        $workers = Worker::all();
         $discounts = \App\Models\Discount::all();
         $paymentMethods = \App\Models\PaymentMethod::forBooking()->orWhereJsonContains('types', 'general')->get();
         $productPaymentMethods = \App\Models\PaymentMethod::forProduct()->orWhereJsonContains('types', 'general')->get();
@@ -105,6 +104,25 @@ class SalesController extends Controller
             'tax' => 0,
             'payment_type' => null,
         ]);
+        
+        // Filter workers by selected customer's branch
+        $branchId = null;
+        if (!empty($cart['client_id'])) {
+            $selectedCustomer = User::find($cart['client_id']);
+            if ($selectedCustomer && $selectedCustomer->branch_id) {
+                $branchId = $selectedCustomer->branch_id;
+            }
+        }
+        
+        // If no customer branch, use logged-in user's branch
+        if (!$branchId) {
+            $branchId = auth('center_user')->user()->branch_id ?? null;
+        }
+        
+        // Filter workers by branch
+        $workers = Worker::when($branchId, function($query) use ($branchId) {
+            return $query->where('branch_id', $branchId);
+        })->get();
 
         $view = 'CenterUser.SubViews.' . $this->model . '.cart';
         return view($view, compact('services', 'products', 'workers', 'discounts', 'paymentMethods', 'productPaymentMethods', 'walletPaymentMethods', 'wallets', 'users', 'cart', 'title', 'menu', 'menu_link'));
@@ -236,14 +254,27 @@ class SalesController extends Controller
         $menu_link = route($this->indexRoute);
         $title = __('field.payment');
 
-        $workers = Worker::all();
         $paymentMethods = \App\Models\PaymentMethod::forBooking()->orWhereJsonContains('types', 'general')->get();
         
         // Get selected customer if exists
         $selectedCustomer = null;
+        $branchId = null;
         if (!empty($cart['client_id'])) {
             $selectedCustomer = User::with(['media'])->find($cart['client_id']);
+            if ($selectedCustomer && $selectedCustomer->branch_id) {
+                $branchId = $selectedCustomer->branch_id;
+            }
         }
+        
+        // If no customer branch, use logged-in user's branch
+        if (!$branchId) {
+            $branchId = auth('center_user')->user()->branch_id ?? null;
+        }
+        
+        // Filter workers by branch
+        $workers = Worker::when($branchId, function($query) use ($branchId) {
+            return $query->where('branch_id', $branchId);
+        })->get();
 
         $view = 'CenterUser.SubViews.' . $this->model . '.payment';
         return view($view, compact('cart', 'workers', 'paymentMethods', 'selectedCustomer', 'title', 'menu', 'menu_link'));

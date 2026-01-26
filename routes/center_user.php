@@ -151,6 +151,7 @@ Route::group(['middleware' => 'auth_center_user:center_user'], function () {
             Route::get('create', 'create')->name('create');
             Route::post('updateOrCreate', 'updateOrCreate')->name('updateOrCreate');
             Route::get('get-workers-by-service', 'getWorkersByService')->name('get-workers-by-service');
+            Route::get('get-workers-by-branch', 'getWorkersByBranch')->name('get-workers-by-branch');
             Route::get('info', 'info')->name('info');
         });
     });

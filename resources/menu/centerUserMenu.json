@@ -147,42 +147,7 @@
         }
       ]
     },
-    {
-      "name": "bookings",
-      "external_icon": "bookings",
-      "slug": [
-        "bookings",
-        "booking_with_tips"
-      ],
-      "permissions": [
-        "VIEW_BOOKINGS",
-        "VIEW_BOOKING_WITH_TIPS"
-      ],
-      "submenu": [
-        {
-          "url": "center_user/bookings/index",
-          "name": "bookings",
-          "external_icon": "bookings",
-          "slug": [
-            "bookings"
-          ],
-          "permissions": [
-            "VIEW_BOOKINGS"
-          ]
-        },
-        {
-          "url": "center_user/booking_with_tips/index",
-          "name": "booking_with_tips",
-          "external_icon": "bookings",
-          "slug": [
-            "booking_with_tips"
-          ],
-          "permissions": [
-            "VIEW_BOOKING_WITH_TIPS"
-          ]
-        }
-      ]
-    },
+   
     {
       "name": "products",
       "external_icon": "products",
@@ -208,17 +173,7 @@
             "VIEW_PRODUCTS"
           ]
         },
-        {
-          "url": "center_user/buyproducts/index",
-          "name": "buyproducts",
-          "external_icon": "buy_products",
-          "slug": [
-            "buyproducts"
-          ],
-          "permissions": [
-            "VIEW_BUYPRODUCTS"
-          ]
-        },
+      
         {
           "url": "center_user/stocktakes/index",
           "name": "stocktakes",
