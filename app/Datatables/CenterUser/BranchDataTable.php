@@ -65,7 +65,7 @@ class BranchDataTable extends DataTable
     {
         $buttonClass = 'btn mx-1 mx-md-2 px-2 px-md-4 py-1 py-md-2 btn-sm';
         $addRoute = route('center_user.' . $this->plural . '.create');
-        
+
         // Check if user has permission to create branches
         $canCreate = auth('center_user')->check() && auth('center_user')->user()->can('CREATE_BRANCHES', 'center_api');
         

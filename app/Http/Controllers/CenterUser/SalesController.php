@@ -75,13 +75,8 @@ class SalesController extends Controller
             ->orderBy('id', 'DESC')
             ->get();
         
-        // Get users (customers) for the current branch
-        $branchId = auth('center_user')->user()->branch_id ?? null;
-        $users = User::with(['media'])
-            ->when($branchId, function($query) use ($branchId) {
-                return $query->where('branch_id', $branchId);
-            })
-            ->get();
+        // Get all users (customers) - no branch filtering
+        $users = User::with(['media'])->get();
 
         // Save cart if posted (AJAX request)
         if ($request->isMethod('post') && $request->has('cart')) {
