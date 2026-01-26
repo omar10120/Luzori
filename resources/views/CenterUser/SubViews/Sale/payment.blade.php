@@ -146,18 +146,24 @@
 
                         @php
                             $subtotal = 0;
-                            foreach($cart['items'] as $item) {
-                                if($item['type'] === 'user_wallet') {
-                                    // Include coupon amount in subtotal
-                                    $subtotal += $item['amount'] ?? 0;
-                                } else {
-                                    $price = $item['price'] ?? 0;
-                                    $quantity = $item['quantity'] ?? 1;
-                                    $subtotal += $price * $quantity;
+                            if (!empty($cart['items']) && is_array($cart['items'])) {
+                                foreach($cart['items'] as $item) {
+                                    if (!is_array($item) || empty($item)) {
+                                        continue;
+                                    }
+                                    if(isset($item['type']) && $item['type'] === 'user_wallet') {
+                                        // Include coupon amount in subtotal
+                                        $amount = isset($item['amount']) ? (float)$item['amount'] : 0;
+                                        $subtotal += $amount;
+                                    } else {
+                                        $price = isset($item['price']) ? (float)$item['price'] : 0;
+                                        $quantity = isset($item['quantity']) ? (int)$item['quantity'] : 1;
+                                        $subtotal += $price * $quantity;
+                                    }
                                 }
                             }
-                            $tax = $cart['tax'] ?? 0;
-                            $tip = $cart['tip'] ?? 0;
+                            $tax = isset($cart['tax']) ? (float)$cart['tax'] : 0;
+                            $tip = isset($cart['tip']) ? (float)$cart['tip'] : 0;
                             $total = $subtotal + $tax + $tip;
                         @endphp
                         <div class="d-flex justify-content-between mb-2">
@@ -202,15 +208,19 @@
         $(document).ready(function() {
             // Calculate totals
             function calculateTotals() {
-                const subtotal = {{ $subtotal }};
+                let subtotal = {{ number_format($subtotal, 2, '.', '') }};
                 const tax = parseFloat($('#tax').val()) || 0;
                 const tip = parseFloat($('#tip').val()) || 0;
                 const total = subtotal + tax + tip;
 
+                $('#summary-subtotal').text(subtotal.toFixed(2) + ' {{ get_currency() }}');
                 $('#summary-tax').text(tax.toFixed(2) + ' {{ get_currency() }}');
                 $('#summary-tip').text(tip.toFixed(2) + ' {{ get_currency() }}');
                 $('#summary-total').text(total.toFixed(2) + ' {{ get_currency() }}');
             }
+            
+            // Initialize totals on page load
+            calculateTotals();
 
             // Update totals on change
             $('#tax, #tip').on('input', calculateTotals);

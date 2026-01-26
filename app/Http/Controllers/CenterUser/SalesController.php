@@ -87,12 +87,13 @@ class SalesController extends Controller
                 'tax' => 0,
                 'payment_type' => null,
             ]);
-            $cart['items'] = $request->cart;
+            // Filter out null/empty items and re-index
+            $cart['items'] = array_values(array_filter($request->cart));
             if ($request->has('client_id')) {
                 $cart['client_id'] = $request->client_id;
             }
             session(['sales_cart' => $cart]);
-            return MyHelper::responseJSON('Cart saved', Response::HTTP_OK);
+            return MyHelper::responseJSON('Cart saved', Response::HTTP_OK, ['items' => $cart['items']]);
         }
 
         // Get cart from session
@@ -244,7 +245,20 @@ class SalesController extends Controller
             return abort(403);
         }
 
-        $cart = session('sales_cart', ['items' => []]);
+        $cart = session('sales_cart', [
+            'items' => [],
+            'client_id' => null,
+            'worker_id' => null,
+            'tip' => 0,
+            'tax' => 0,
+            'payment_type' => null,
+        ]);
+
+        // Ensure items is an array and filter out null/empty items
+        if (!isset($cart['items']) || !is_array($cart['items'])) {
+            $cart['items'] = [];
+        }
+        $cart['items'] = array_values(array_filter($cart['items']));
 
         if (empty($cart['items'])) {
             return redirect()->route('center_user.sales.cart')->with('error', 'Cart is empty');

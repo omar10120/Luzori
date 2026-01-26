@@ -12,6 +12,8 @@ use App\Models\ProductBranch;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Service;
+use App\Models\User;
+use App\Models\UserWallet;
 use App\Models\Wallet;
 use Illuminate\Support\Facades\DB;
 
@@ -58,6 +60,7 @@ class SalesService
             $serviceItems = [];
             $productItems = [];
             $walletItems = [];
+            $userWalletItems = [];
 
             foreach ($cartData['items'] as $item) {
                 if ($item['type'] === 'service') {
@@ -68,6 +71,8 @@ class SalesService
                     $productItems[] = $item;
                 } elseif ($item['type'] === 'wallet') {
                     $walletItems[] = $item;
+                } elseif ($item['type'] === 'user_wallet') {
+                    $userWalletItems[] = $item;
                 }
             }
 
@@ -125,6 +130,22 @@ class SalesService
                 // But we can link them to the sale if needed
             }
 
+            // Process user_wallet items (assign existing wallet to user)
+            foreach ($userWalletItems as $item) {
+                $userWallet = $this->createUserWalletFromCartItem($item, $branchId);
+                
+                // Create SaleItem for UserWallet
+                SaleItem::create([
+                    'sale_id' => $sale->id,
+                    'item_type' => 'user_wallet',
+                    'itemable_id' => $userWallet->id,
+                    'itemable_type' => 'App\Models\UserWallet',
+                    'quantity' => 1,
+                    'price' => $item['amount'] ?? 0,
+                    'subtotal' => $item['amount'] ?? 0,
+                ]);
+            }
+
             DB::commit();
             return $sale;
         } catch (\Exception $e) {
@@ -144,7 +165,7 @@ class SalesService
                 $subtotal += $item['price'];
             } elseif ($item['type'] === 'product') {
                 $subtotal += $item['price'] * $item['quantity'];
-            } elseif ($item['type'] === 'wallet') {
+            } elseif ($item['type'] === 'wallet' || $item['type'] === 'user_wallet') {
                 // Include wallet/coupon amount in subtotal
                 $subtotal += $item['amount'] ?? 0;
             }
@@ -309,6 +330,70 @@ class SalesService
         ]);
 
         return $wallet;
+    }
+
+    /**
+     * Create or get UserWallet from cart item (assign existing wallet to user)
+     * Note: UserWallet may already exist if it was created when added to cart
+     */
+    private function createUserWalletFromCartItem($item, $branchId)
+    {
+        // Validate required fields
+        if (empty($item['wallet_id'])) {
+            throw new \Exception('Wallet ID is required for user wallet assignment');
+        }
+        if (empty($item['user_id'])) {
+            throw new \Exception('User ID is required for user wallet assignment');
+        }
+
+        // Check if wallet exists
+        $wallet = Wallet::find($item['wallet_id']);
+        if (!$wallet) {
+            throw new \Exception('Wallet not found');
+        }
+
+        // Check if user exists
+        $user = User::find($item['user_id']);
+        if (!$user) {
+            throw new \Exception('User not found');
+        }
+
+        // Check if this wallet is already assigned to this user
+        $existingUserWallet = UserWallet::where('wallet_id', $item['wallet_id'])
+            ->where('user_id', $item['user_id'])
+            ->first();
+
+        // If UserWallet already exists (created when added to cart), just return it
+        // No need to update wallet or user balance as it was already done
+        if ($existingUserWallet) {
+            return $existingUserWallet;
+        }
+
+        // Create UserWallet record if it doesn't exist
+        $userWallet = UserWallet::create([
+            'wallet_id' => $item['wallet_id'],
+            'user_id' => $item['user_id'],
+            'wallet_type' => $item['wallet_type'] ?? null,
+            'amount' => $item['amount'] ?? $wallet->amount,
+            'invoiced_amount' => $item['invoiced_amount'] ?? $wallet->invoiced_amount,
+            'commission' => $item['commission'] ?? null,
+            'worker_id' => $item['worker_id'] ?? null,
+            'branch_id' => $branchId,
+            'created_by' => auth('center_user')->id() ?? auth('center_api')->id(),
+        ]);
+
+        // Mark wallet as used (only if not already used)
+        if (!$wallet->used) {
+            $wallet->update(['used' => true]);
+        }
+
+        // Update user's wallet balance (only if UserWallet is newly created)
+        $user->refresh();
+        $user->update([
+            'wallet' => ($user->wallet ?? 0) + ($userWallet->amount ?? 0)
+        ]);
+
+        return $userWallet;
     }
 }
 
