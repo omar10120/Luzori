@@ -255,6 +255,7 @@ return [
     'search_customer'                => 'Search Customer',
     'no_customers_found'             => 'No Customers Found',
     'select_payment_method'          => 'Select Payment Method',
+    'please_select_payment_method'   => 'Please select payment method',
     'select_discount'                => 'Select Discount',
     'select_sales_employee'            => 'Select Sales Worker',
     'select_employee'                  => 'Select Worker',

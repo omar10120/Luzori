@@ -240,13 +240,14 @@
                                                     <div class="row mb-4">
                                                         <div class="col-md-12">
                                                             <div class="mb-1">
-                                                                <label for="booking-payment_type" class="form-label">{{ __('field.payment_method') }}</label>
-                                                                <select name="payment_type" id="booking-payment_type" class="form-control">
+                                                                <label for="booking-payment_type" class="form-label">{{ __('field.payment_method') }} <span class="text-danger">*</span></label>
+                                                                <select name="payment_type" id="booking-payment_type" class="form-control" required>
                                                                     <option value="">{{ __('field.select_payment_method') }}</option>
                                                                     @foreach($paymentMethods as $paymentMethod)
                                                                         <option value="{{ $paymentMethod->name }}">{{ $paymentMethod->name }}</option>
                                                                     @endforeach
                                                                 </select>
+                                                                <div class="invalid-feedback"></div>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -343,13 +344,14 @@
                                         </div>
                                         <div class="col-md-12 mb-2">
                                             <div class="mb-1">
-                                                <label for="product-payment_type" class="form-label">{{ __('field.payment_method') }}</label>
-                                                <select name="payment_type" id="product-payment_type" class="form-control">
+                                                <label for="product-payment_type" class="form-label">{{ __('field.payment_method') }} <span class="text-danger">*</span></label>
+                                                <select name="payment_type" id="product-payment_type" class="form-control" required>
                                                     <option value="">{{ __('field.select_payment_method') }}</option>
                                                     @foreach($productPaymentMethods as $paymentMethod)
                                                         <option value="{{ $paymentMethod->name }}">{{ $paymentMethod->name }}</option>
                                                     @endforeach
                                                 </select>
+                                                <div class="invalid-feedback"></div>
                                             </div>
                                         </div>
                                         <div class="col-md-12">
@@ -1011,6 +1013,11 @@
             // Initialize Select2
             $('#booking-services, #product-products, #product-sales_worker, #product-worker, #modal-wallet-user').select2();
             
+            // Clear invalid state when payment method is selected
+            $('#booking-payment_type, #product-payment_type').on('change', function() {
+                $(this).removeClass('is-invalid');
+            });
+            
             // Phone prefix toggle for UAE (+971) in Add Customer Modal
             function toggleQuickCustomerPhonePrefix() {
                 const countryCodeSelect = $('#addCustomerModal').find('select[name="country_code"]');
@@ -1375,6 +1382,7 @@
                 e.preventDefault();
                 // name and mobile are already in bookingWizardData from Step 2 transition
                 var paymentType = $('#booking-payment_type').val();
+                const $paymentTypeField = $('#booking-payment_type');
 
                 if (!bookingWizardData.name) {
                     alert('Customer information missing. Please select a customer.');
@@ -1384,6 +1392,21 @@
                 if (!bookingWizardData.services || bookingWizardData.services.length === 0) {
                     alert('Please complete step 2 (Booking Details) first.');
                     return false;
+                }
+
+                // Validate payment method
+                if (!paymentType || paymentType === '') {
+                    $paymentTypeField.addClass('is-invalid');
+                    $paymentTypeField.siblings('.invalid-feedback').text('{{ __('field.payment_method') }} is required');
+                    if (typeof toastr !== 'undefined') {
+                        toastr.error('{{ __('field.please_select_payment_method') }}');
+                    } else {
+                        alert('{{ __('field.please_select_payment_method') }}');
+                    }
+                    $paymentTypeField.focus();
+                    return false;
+                } else {
+                    $paymentTypeField.removeClass('is-invalid');
                 }
 
                 bookingWizardData.payment_type = paymentType;
@@ -1548,12 +1571,12 @@
 
             $('#addProductBtn').on('click', function() {
                 const selectedProducts = $('#product-products').val();
-                // Payment method will be selected in the payment section, not here
                 const discount = $('#product-discount').val();
                 const salesWorkerId = $('#product-sales_worker').val();
                 const workerId = $('#product-worker').val();
                 const commission = $('#product-commission').val();
                 const paymentType = $('#product-payment_type').val();
+                const $paymentTypeField = $('#product-payment_type');
 
                 // Validation
                 if (!selectedProducts || selectedProducts.length === 0) {
@@ -1577,6 +1600,21 @@
                     }
                     $('#product-commission').focus();
                     return;
+                }
+
+                // Validate payment method
+                if (!paymentType || paymentType === '') {
+                    $paymentTypeField.addClass('is-invalid');
+                    $paymentTypeField.siblings('.invalid-feedback').text('{{ __('field.payment_method') }} is required');
+                    if (typeof toastr !== 'undefined') {
+                        toastr.error('{{ __('field.please_select_payment_method') }}');
+                    } else {
+                        alert('{{ __('field.please_select_payment_method') }}');
+                    }
+                    $paymentTypeField.focus();
+                    return;
+                } else {
+                    $paymentTypeField.removeClass('is-invalid');
                 }
 
                 // Add loading state
