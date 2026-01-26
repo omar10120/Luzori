@@ -443,10 +443,10 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" id="cart-wallet-tab" data-bs-toggle="tab" href="#cart-wallet-pane" role="tab">
+                                <a class="nav-link" id="cart-user-wallet-tab" data-bs-toggle="tab" href="#cart-user-wallet-pane" role="tab">
                                     <i class="ti ti-wallet me-1"></i>
                                     <span class="d-none d-sm-inline">{{ __('field.coupons') }}</span>
-                                    <span class="badge rounded-pill bg-label-primary ms-1" id="cart-wallet-count" style="display:none">0</span>
+                                    <span class="badge rounded-pill bg-label-primary ms-1" id="cart-user-wallet-count" style="display:none">0</span>
                                 </a>
                             </li>
                         </ul>
@@ -468,10 +468,10 @@
                                 </div>
                             </div>
 
-                            <!-- Wallets Pane -->
-                            <div class="tab-pane fade" id="cart-wallet-pane" role="tabpanel">
-                                <div id="cart-items-wallet"></div>
-                                <div id="cart-empty-wallet" class="text-center text-muted py-3" style="display: none;">
+                            <!-- Coupons Pane -->
+                            <div class="tab-pane fade" id="cart-user-wallet-pane" role="tabpanel">
+                                <div id="cart-items-user-wallet"></div>
+                                <div id="cart-empty-user-wallet" class="text-center text-muted py-3" style="display: none;">
                                     {{ __('field.no_coupons_in_cart') }}
                                 </div>
                             </div>
@@ -1706,8 +1706,8 @@
             function calculateTotals() {
                 let subtotal = 0;
                 cart.forEach(item => {
-                    if (item.type === 'wallet') {
-                        // Include wallet/coupon amount in subtotal
+                    if (item.type === 'user_wallet') {
+                        // Include coupon amount in subtotal
                         subtotal += parseFloat(item.amount || 0);
                     } else {
                         const price = parseFloat(item.price || 0);
@@ -1726,15 +1726,17 @@
                 let serviceHtml = '';
                 let productHtml = '';
                 let walletHtml = '';
+                let userWalletHtml = '';
                 let serviceCount = 0;
                 let productCount = 0;
                 let walletCount = 0;
+                let userWalletCount = 0;
 
                 cart.forEach((item, index) => {
                     // Get item name
                     let itemName = item.name || '{{ __('field.item') }}';
-                    if (item.type === 'wallet') {
-                        itemName = '{{ __('field.coupon') }} / {{ __('locale.wallets') }}';
+                    if (item.type === 'user_wallet') {
+                        itemName = '{{ __('field.coupon') }}';
                     }
                     
                     let itemHtml = `<div class="cart-item mb-3 p-2 border rounded" data-index="${index}">
@@ -1762,21 +1764,25 @@
                             itemHtml += `<br>{{ __('field.commission') }}: ${item.commission}%`;
                         }
                         itemHtml += `</small>`;
-                    } else if (item.type === 'wallet') {
+                    } else if (item.type === 'user_wallet') {
                         itemHtml += `<small class="text-muted">
+                            {{ __('field.code') }}: ${item.code || ''}<br>
                             {{ __('field.amount') }}: ${item.amount || 0} {{ get_currency() }}`;
-                        if (item.start_at) {
-                            itemHtml += `<br>{{ __('field.start_at') }}: ${item.start_at}`;
+                        if (item.wallet_type) {
+                            itemHtml += `<br>{{ __('field.type') }}: ${item.wallet_type}`;
                         }
-                        if (item.end_at) {
-                            itemHtml += `<br>{{ __('field.end_at') }}: ${item.end_at}`;
+                        if (item.worker_name) {
+                            itemHtml += `<br>{{ __('field.worker') }}: ${item.worker_name}`;
+                        }
+                        if (item.commission) {
+                            itemHtml += `<br>{{ __('field.commission') }}: ${item.commission}%`;
                         }
                         itemHtml += `</small>`;
                     }
                     
                     // Calculate and display price
                     let displayPrice = 0;
-                    if (item.type === 'wallet') {
+                    if (item.type === 'user_wallet') {
                         displayPrice = parseFloat(item.amount || 0);
                     } else {
                         const price = parseFloat(item.price || 0);
@@ -1801,26 +1807,26 @@
                     } else if (item.type === 'product') {
                         productHtml += itemHtml;
                         productCount++;
-                    } else if (item.type === 'wallet') {
-                        walletHtml += itemHtml;
-                        walletCount++;
+                    } else if (item.type === 'user_wallet') {
+                        userWalletHtml += itemHtml;
+                        userWalletCount++;
                     }
                 });
 
                 // Update DOM
                 $('#cart-items-service').html(serviceHtml);
                 $('#cart-items-product').html(productHtml);
-                $('#cart-items-wallet').html(walletHtml);
+                $('#cart-items-user-wallet').html(userWalletHtml);
 
                 // Update Counts
                 updateTabCount('#cart-booking-count', serviceCount);
                 updateTabCount('#cart-products-count', productCount);
-                updateTabCount('#cart-wallet-count', walletCount);
+                updateTabCount('#cart-user-wallet-count', userWalletCount);
 
                 // Handle Empty States
                 $('#cart-empty-service').toggle(serviceCount === 0);
                 $('#cart-empty-product').toggle(productCount === 0);
-                $('#cart-empty-wallet').toggle(walletCount === 0);
+                $('#cart-empty-user-wallet').toggle(userWalletCount === 0);
                 
                 calculateTotals();
             }
@@ -2069,6 +2075,7 @@
             // Wallet Tab Functions
 
             // Handle Add User button from table - open modal with wallet data
+            // This ONLY associates a user with an EXISTING wallet, does NOT create new wallet
             $(document).on('click', '.add-wallet-user-btn', function() {
                 const walletId = $(this).data('wallet-id');
                 const walletCode = $(this).data('wallet-code');
@@ -2077,7 +2084,7 @@
                 const walletStart = $(this).data('wallet-start') || null;
                 const walletEnd = $(this).data('wallet-end') || null;
 
-                // Set wallet ID in hidden field
+                // Set wallet ID in hidden field - this is the EXISTING wallet ID
                 $('#modal-wallet-id').val(walletId);
                 
                 // Update modal title to show wallet code
@@ -2180,20 +2187,22 @@
                 const walletStart = $walletBtn.data('wallet-start') || null;
                 const walletEnd = $walletBtn.data('wallet-end') || null;
 
-                // Create user wallet via AJAX
+                // Assign existing wallet to user (creates UserWallet association, NOT a new Wallet)
                 $.ajax({
                     url: '{{ route("center_user.users_wallets.updateOrCreate") }}',
                     type: 'POST',
                     data: {
                         _token: '{{ csrf_token() }}',
-                        wallet_id: walletId,
+                        wallet_id: walletId, // Existing wallet ID - NOT creating new wallet
                         user_id: userId,
                         wallet_type: walletType,
                         worker_id: workerId || null,
                         commission: commission || null
                     },
                     success: function(response) {
-                        if (response.message === 'redirect_to_home') {
+                        // Check if user-wallet association was successful
+                        // This only creates UserWallet record, never creates new Wallet
+                        if (response.message === 'redirect_to_home' || response.message === '{{ __('admin.operation_done_successfully') }}') {
                             // Update selected customer if not already set
                             if (!selectedCustomerId && userId) {
                                 selectedCustomerId = userId;
@@ -2210,23 +2219,43 @@
                                 });
                             }
                             
-                            // Add wallet to cart after successful creation
-                            cart.push({
-                                type: 'wallet',
-                                wallet_id: walletId,
-                                code: walletCode,
-                                amount: walletAmount,
-                                invoiced_amount: walletInvoiced,
-                                start_at: walletStart,
-                                end_at: walletEnd,
-                                user_id: userId,
-                                wallet_type: walletType,
-                                worker_id: workerId,
-                                commission: commission
-                            });
+                            // Check if this user-wallet assignment is already in cart
+                            const existingWalletIndex = cart.findIndex(item => 
+                                item.type === 'user_wallet' && 
+                                item.wallet_id == walletId && 
+                                item.user_id == userId
+                            );
+                            
+                            // Only add to cart if not already there
+                            if (existingWalletIndex === -1) {
+                                // Get worker name if worker is selected
+                                let workerName = '';
+                                if (workerId) {
+                                    const worker = get_worker(workerId);
+                                    workerName = worker ? worker.name : '';
+                                }
+                                
+                                cart.push({
+                                    type: 'user_wallet', // Separate type for user-wallet assignments
+                                    wallet_id: walletId, // Existing wallet ID - NOT creating new wallet
+                                    code: walletCode,
+                                    amount: walletAmount,
+                                    invoiced_amount: walletInvoiced,
+                                    start_at: walletStart,
+                                    end_at: walletEnd,
+                                    user_id: userId,
+                                    wallet_type: walletType,
+                                    worker_id: workerId,
+                                    worker_name: workerName,
+                                    commission: commission
+                                });
 
-                            saveCartToSession();
-                            renderCart();
+                                saveCartToSession();
+                                renderCart();
+                            } else {
+                                // Wallet already in cart, just update the display
+                                renderCart();
+                            }
 
                             // Close modal and reset form
                             $('#addWalletUserModal').modal('hide');

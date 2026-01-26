@@ -289,6 +289,7 @@ return [
     'select_commission'            => 'Select Commission',
     'select_type'                     => 'Select Type',
     'no_coupons_in_cart'             => 'No Coupons In Cart',
+    'no_user_wallets_in_cart'        => 'No User Wallet Assignments In Cart',
     'no_products_in_cart'            => 'No Products In Cart',
     'no_services_in_cart'            => 'No Services In Cart',
     'workers'                        => 'employee',
