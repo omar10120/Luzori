@@ -64,13 +64,23 @@ class WorkerDataTable extends DataTable
 
     public function query(Worker $model): QueryBuilder
     {
-        return $model->query()->withTrashed()->with(['services' => function ($q) {
+        $user = auth('center_user')->user();
+        $branchId = $user->branch_id ?? null;
+        
+        $query = $model->query()->withTrashed()->with(['services' => function ($q) {
             return $q->with(['service' => function ($q) {
                 $q->with(['translation']);
             }]);
         }, 'branch' => function ($q) {
             $q->with(['translation']);
-        }])->orderBy($this->plural . '.id', 'DESC');
+        }]);
+        
+        // If center_user has a branch_id, filter workers by that branch
+        if ($branchId !== null) {
+            $query->where('branch_id', $branchId);
+        }
+        
+        return $query->orderBy($this->plural . '.id', 'DESC');
     }
 
     public function html(): HtmlBuilder

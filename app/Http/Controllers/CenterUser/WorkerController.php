@@ -73,7 +73,17 @@ class WorkerController extends Controller
             $requestUrl = route($this->updateOrCreateRoute, ['id' => $request->id]);
         }
 
-        $branches = Branch::with(['translation'])->get();
+        // Filter branches based on center_user's branch_id
+        $user = auth('center_user')->user();
+        $branchId = $user->branch_id ?? null;
+        
+        // If branch_id is NULL, show all branches; otherwise show only that branch
+        if ($branchId === null) {
+            $branches = Branch::with(['translation'])->get();
+        } else {
+            $branches = Branch::with(['translation'])->where('id', $branchId)->get();
+        }
+        
         $services = Service::with(['translation'])->get();
         $shifts = Shift::all();
 
@@ -93,7 +103,16 @@ class WorkerController extends Controller
             return abort(403);
         }
 
-        $item = $this->crudService->updateOrCreate($this->model, $request->validated(), true);
+        $user = auth('center_user')->user();
+        $branchId = $user->branch_id ?? null;
+        
+        // If user has a branch_id, enforce it (prevent assigning to other branches)
+        $validated = $request->validated();
+        if ($branchId !== null) {
+            $validated['branch_id'] = $branchId;
+        }
+
+        $item = $this->crudService->updateOrCreate($this->model, $validated, true);
         if ($item) {
             return MyHelper::responseJSON('redirect_to_home', Response::HTTP_CREATED, route('center_user.workers.index'));
         } else {
