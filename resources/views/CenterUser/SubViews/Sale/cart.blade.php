@@ -1689,7 +1689,8 @@
                 });
                 $('#cart-subtotal').text(subtotal.toFixed(2) + ' {{ get_currency() }}');
                 $('#cart-total').text(subtotal.toFixed(2) + ' {{ get_currency() }}');
-                // Disable button if cart is empty OR no customer is selected
+                // Enable button if cart has items (including wallets) AND customer is selected
+                // Allow proceeding with just coupons/wallets
                 $('#continueToPayment').prop('disabled', cart.length === 0 || !selectedCustomerId);
             }
 
@@ -2165,6 +2166,22 @@
                     },
                     success: function(response) {
                         if (response.message === 'redirect_to_home') {
+                            // Update selected customer if not already set
+                            if (!selectedCustomerId && userId) {
+                                selectedCustomerId = userId;
+                                // Save customer selection to session
+                                $.ajax({
+                                    url: '{{ route("center_user.sales.cart") }}',
+                                    type: 'POST',
+                                    data: {
+                                        _token: '{{ csrf_token() }}',
+                                        cart: cart,
+                                        client_id: userId
+                                    },
+                                    async: false
+                                });
+                            }
+                            
                             // Add wallet to cart after successful creation
                             cart.push({
                                 type: 'wallet',
@@ -2200,8 +2217,30 @@
                         }
                     },
                     error: function(xhr) {
-                        if (typeof toastr !== 'undefined') {
-                            toastr.error(xhr.responseJSON?.message || '{{ __('admin.an_error_occurred') }}');
+                        if (xhr.status === 403) {
+                            if (typeof toastr !== 'undefined') {
+                                toastr.error('{{ __('admin.you_do_not_have_permission_to_perform_this_action') }}');
+                            } else {
+                                alert('{{ __('admin.you_do_not_have_permission_to_perform_this_action') }}');
+                            }
+                        } else if (xhr.status === 422) {
+                            // Validation errors
+                            const errors = xhr.responseJSON.errors;
+                            let errorMessages = [];
+                            $.each(errors, function(key, value) {
+                                errorMessages.push(value[0]);
+                            });
+                            if (typeof toastr !== 'undefined') {
+                                toastr.error(errorMessages.join('<br>'));
+                            } else {
+                                alert(errorMessages.join('\n'));
+                            }
+                        } else {
+                            if (typeof toastr !== 'undefined') {
+                                toastr.error(xhr.responseJSON?.message || '{{ __('admin.an_error_occurred') }}');
+                            } else {
+                                alert(xhr.responseJSON?.message || '{{ __('admin.an_error_occurred') }}');
+                            }
                         }
                     },
                     complete: function() {
