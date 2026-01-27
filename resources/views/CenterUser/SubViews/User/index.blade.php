@@ -75,10 +75,11 @@
                                 <div class="mb-1">
                                     <label class="form-label">{{__('field.mobile_number')}} <span class="text-danger">*</span></label>
                                     <input type="tel" name="phone" id="phone" maxlength="7" class="form-control"
-                                        placeholder="{{__('field.mobile_number')}}" value="{{ $phoneWithoutPrefix }}" 
-                                        required 
-                                        pattern="[0-9]{7,15}"
-                                        title="Please enter a valid phone number (7-15 digits)" />
+                                        placeholder="{{__('field.mobile_number')}}" value="{{ $phoneWithoutPrefix }}"
+                                        required
+                                        pattern="[0-9]{7}"
+                                        title="{{ __('field.phone_must_be_7_digits') }}" />
+                                    <div class="invalid-feedback" id="phone-invalid-feedback"></div>
                                 </div>
                             </div>
                         </div>
@@ -139,39 +140,44 @@
                 countryCodeSelect.addEventListener('change', togglePhonePrefix);
             }
 
-            // Combine prefix with phone number on form submit
+            function validatePhone() {
+                if (!phoneInput) return true;
+                const value = (phoneInput.value || '').trim();
+                const isValid = value.length === 7 && /^[0-9]+$/.test(value);
+                const feedbackEl = document.getElementById('phone-invalid-feedback');
+                if (!isValid) {
+                    phoneInput.classList.add('is-invalid');
+                    if (feedbackEl) feedbackEl.textContent = value.length > 0 ? '{{ __('field.phone_must_be_7_digits') }}' : '';
+                } else {
+                    phoneInput.classList.remove('is-invalid');
+                    if (feedbackEl) feedbackEl.textContent = '';
+                }
+                return isValid;
+            }
+
+            if (phoneInput) {
+                phoneInput.addEventListener('input', validatePhone);
+                phoneInput.addEventListener('blur', validatePhone);
+            }
+
             const form = document.getElementById('frmSubmit');
             if (form) {
                 form.addEventListener('submit', function(e) {
+                    if (!validatePhone()) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        return false;
+                    }
                     if (countryCodeSelect && countryCodeSelect.value === '+971' && phonePrefixSelect && phoneInput) {
                         const prefix = phonePrefixSelect.value;
                         const phone = phoneInput.value;
                         if (prefix && phone) {
-                            // Combine prefix with phone number
                             phoneInput.value = prefix + phone;
                         }
                     }
                 });
             }
         });
-
-const phoneInput = document.getElementById('phone');
-
-function validatePhone() {
-    if (!phoneInput) {
-        return true;
-    }
-    const value = phoneInput.value.trim();
-    const isValid = value.length === 7 && /^[0-9]+$/.test(value);
-    if (!isValid) {
-        phoneInput.classList.add('is-invalid');
-        phoneInput.siblings('.invalid-feedback').text('{{ __('field.mobile_number') }} must be 7 digits');
-    } else {
-        phoneInput.classList.remove('is-invalid');
-        phoneInput.siblings('.invalid-feedback').text('');
-    }
-    return isValid;
-}
     </script>
 
     @include('CenterUser.Components.submit-form-ajax')

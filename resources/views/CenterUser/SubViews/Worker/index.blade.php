@@ -111,9 +111,10 @@
                                         </div>
                                         <div class="col-md-{{ ($item && $item->country_code == '+971') ? '8' : '10' }}" id="phone_input_container">
                                             <label class="form-label">&nbsp;</label>
-                                            <input type="phone" id="phone" class="form-control" name="phone" 
+                                            <input type="tel" id="phone" class="form-control" name="phone"
                                                 placeholder="{{ __('field.phone') }}" maxlength="7"
                                                 value="{{ $phoneWithoutPrefix }}" required />
+                                            <div class="invalid-feedback" id="phone-invalid-feedback"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -175,15 +176,35 @@
                 countryCodeSelect.addEventListener('change', togglePhonePrefix);
             }
 
-            // Combine prefix with phone number on form submit
-            const form = document.getElementById('frmSubmit');
+            function validatePhone() {
+                if (!phoneInput) return true;
+                const value = (phoneInput.value || '').trim();
+                const isValid = value.length === 7 && /^[0-9]+$/.test(value);
+                const feedbackEl = document.getElementById('phone-invalid-feedback');
+                if (!isValid) {
+                    phoneInput.classList.remove('is-valid');
+                    phoneInput.classList.add('is-invalid');
+                    if (feedbackEl) feedbackEl.textContent = value.length > 0 ? '{{ __('field.phone_must_be_7_digits') }}' : '';
+                } else {
+                    phoneInput.classList.remove('is-invalid');
+                    phoneInput.classList.add('is-valid');
+                    if (feedbackEl) feedbackEl.textContent = '';
+                }
+                return isValid;
+            }
+
+            if (phoneInput) {
+                phoneInput.addEventListener('input', validatePhone);
+                phoneInput.addEventListener('blur', validatePhone);
+            }
+
+            const form = document.getElementById('phone');
             if (form) {
                 form.addEventListener('submit', function(e) {
                     if (countryCodeSelect && countryCodeSelect.value === '+971' && phonePrefixSelect && phoneInput) {
                         const prefix = phonePrefixSelect.value;
                         const phone = phoneInput.value;
                         if (prefix && phone) {
-                            // Combine prefix with phone number
                             phoneInput.value = prefix + phone;
                         }
                     }
