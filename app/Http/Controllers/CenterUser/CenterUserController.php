@@ -45,13 +45,18 @@ class CenterUserController extends Controller
 
     public function create(Request $request)
     {
-        if (isset($request->id)) {
-            $can = 'UPDATE_' . Str::upper($this->plural);
-        } else {
-            $can = 'CREATE_' . Str::upper($this->plural);
-        }
-        if (!auth('center_user')->user()->can($can, 'center_api')) {
-            return abort(403);
+        $authUser = auth('center_user')->user();
+        $isOwnProfile = isset($request->id) && (int) $request->id === (int) $authUser->id;
+
+        if (!$isOwnProfile) {
+            if (isset($request->id)) {
+                $can = 'UPDATE_' . Str::upper($this->plural);
+            } else {
+                $can = 'CREATE_' . Str::upper($this->plural);
+            }
+            if (!$authUser->can($can, 'center_api')) {
+                return abort(403);
+            }
         }
 
         $menu = __('locale.' . $this->plural);
@@ -79,15 +84,20 @@ class CenterUserController extends Controller
 
     public function updateOrCreate(CenterUserRequest $request, CenterUserService $centerUserService)
     {
+        $authUser = auth('center_user')->user();
+        $isOwnProfile = isset($request->id) && (int) $request->id === (int) $authUser->id;
+
         $responseCode = Response::HTTP_OK;
-        if (isset($request->id)) {
-            $can = 'UPDATE_' . Str::upper($this->plural);
-        } else {
-            $responseCode = Response::HTTP_CREATED;
-            $can = 'CREATE_' . Str::upper($this->plural);
-        }
-        if (!auth('center_user')->user()->can($can, 'center_api')) {
-            return abort(403);
+        if (!$isOwnProfile) {
+            if (isset($request->id)) {
+                $can = 'UPDATE_' . Str::upper($this->plural);
+            } else {
+                $responseCode = Response::HTTP_CREATED;
+                $can = 'CREATE_' . Str::upper($this->plural);
+            }
+            if (!$authUser->can($can, 'center_api')) {
+                return abort(403);
+            }
         }
 
         if (isset($request->id)) {
