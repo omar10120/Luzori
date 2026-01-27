@@ -290,8 +290,29 @@ class SalesController extends Controller
             return $query->where('branch_id', $branchId);
         })->get();
 
+        // Extract employees/workers from cart items (bookings)
+        $cartEmployees = [];
+        if (!empty($cart['items']) && is_array($cart['items'])) {
+            foreach ($cart['items'] as $item) {
+                if (isset($item['type']) && $item['type'] === 'service') {
+                    if (!empty($item['services']) && is_array($item['services'])) {
+                        foreach ($item['services'] as $svc) {
+                            $workerName = $svc['worker_name'] ?? null;
+                            if ($workerName && !in_array($workerName, $cartEmployees, true)) {
+                                $cartEmployees[] = $workerName;
+                            }
+                        }
+                    } elseif (isset($item['worker_name'])) {
+                        if (!in_array($item['worker_name'], $cartEmployees, true)) {
+                            $cartEmployees[] = $item['worker_name'];
+                        }
+                    }
+                }
+            }
+        }
+
         $view = 'CenterUser.SubViews.' . $this->model . '.payment';
-        return view($view, compact('cart', 'workers', 'paymentMethods', 'selectedCustomer', 'title', 'menu', 'menu_link'));
+        return view($view, compact('cart', 'workers', 'cartEmployees', 'paymentMethods', 'selectedCustomer', 'title', 'menu', 'menu_link'));
     }
 
     /**

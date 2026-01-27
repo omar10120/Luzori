@@ -124,6 +124,7 @@ return [
     'privacy_policy'                => 'Privacy Policy',
     'terms_conditions'              => 'Terms Conditions',
     'service'                       => 'Service',
+    'product'                      => 'Product',
     'customer'                      => 'Customer',
     'receipt'                       => 'Receipt',
     'served_by'                     => 'Served By',

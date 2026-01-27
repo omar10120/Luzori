@@ -3,6 +3,7 @@
 return [
     'home'                      => 'Home',
     'show'                      => 'Show',
+    'view_details'              => 'View Details',
     'add'                       => 'Add',
     'edit'                      => 'Edit',
     'delete'                    => 'Delete',

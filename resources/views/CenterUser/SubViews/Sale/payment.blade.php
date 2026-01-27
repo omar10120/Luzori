@@ -43,6 +43,22 @@
                         <form id="paymentForm">
                             @csrf
                             
+                            <!-- Employees from Bookings -->
+                            @if(!empty($cartEmployees) && count($cartEmployees) > 0)
+                                <div class="row mb-3">
+                                    <div class="col-md-12">
+                                        <label class="form-label">{{ __('field.employees') }} ({{ __('locale.bookings') }})</label>
+                                        <div class="alert alert-info mb-0">
+                                            <div class="d-flex flex-wrap gap-2">
+                                                @foreach($cartEmployees as $employee)
+                                                    <span class="badge bg-label-primary">{{ $employee }}</span>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
+
                             <!-- Worker Selection (for tip) -->
                             <div class="row mb-3">
                                 <div class="col-md-12">
@@ -101,9 +117,18 @@
                                     if($item['type'] === 'user_wallet') {
                                         $itemName = __('field.coupon');
                                     }
-                                    
+                                    if($item['type'] === 'service' && !empty($item['services']) && is_array($item['services'])) {
+                                        $svcCount = count($item['services']);
+                                        $itemName = $svcCount === 1 ? ($item['services'][0]['name'] ?? __('locale.bookings')) : (__('locale.bookings') . ' (' . $svcCount . ' ' . __('locale.services') . ')');
+                                    }
+
                                     if($item['type'] === 'user_wallet') {
                                         $displayPrice = $item['amount'] ?? 0;
+                                    } elseif($item['type'] === 'service' && !empty($item['services']) && is_array($item['services'])) {
+                                        $displayPrice = 0;
+                                        foreach ($item['services'] as $svc) {
+                                            $displayPrice += (float)($svc['price'] ?? 0);
+                                        }
                                     } else {
                                         $price = $item['price'] ?? 0;
                                         $quantity = $item['quantity'] ?? 1;
@@ -116,9 +141,17 @@
                                         <strong>{{ number_format($displayPrice, 2) }} {{ get_currency() }}</strong>
                                     </div>
                                     @if($item['type'] === 'service')
-                                        <small class="text-muted">
-                                            {{ $item['date'] }} • {{ $item['from_time'] }} - {{ $item['to_time'] }}
-                                        </small>
+                                        @if(!empty($item['services']) && is_array($item['services']))
+                                            @foreach($item['services'] as $svc)
+                                                <small class="text-muted d-block">
+                                                    {{ $svc['name'] ?? '' }} • {{ $svc['date'] ?? '' }} {{ $svc['from_time'] ?? '' }} - {{ $svc['to_time'] ?? '' }}
+                                                </small>
+                                            @endforeach
+                                        @else
+                                            <small class="text-muted">
+                                                {{ $item['date'] ?? '' }} • {{ $item['from_time'] ?? '' }} - {{ $item['to_time'] ?? '' }}
+                                            </small>
+                                        @endif
                                     @elseif($item['type'] === 'product')
                                         <small class="text-muted">
                                             {{ __('field.quantity') }}: {{ $item['quantity'] }}
@@ -152,13 +185,16 @@
                                         continue;
                                     }
                                     if(isset($item['type']) && $item['type'] === 'user_wallet') {
-                                        // Include coupon amount in subtotal
                                         $amount = isset($item['amount']) ? (float)$item['amount'] : 0;
                                         $subtotal += $amount;
-                                } else {
+                                    } elseif(isset($item['type']) && $item['type'] === 'service' && !empty($item['services']) && is_array($item['services'])) {
+                                        foreach ($item['services'] as $svc) {
+                                            $subtotal += (float)($svc['price'] ?? 0);
+                                        }
+                                    } else {
                                         $price = isset($item['price']) ? (float)$item['price'] : 0;
                                         $quantity = isset($item['quantity']) ? (int)$item['quantity'] : 1;
-                                    $subtotal += $price * $quantity;
+                                        $subtotal += $price * $quantity;
                                     }
                                 }
                             }

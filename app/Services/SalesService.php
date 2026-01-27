@@ -76,19 +76,25 @@ class SalesService
                 }
             }
 
-            // Process service items (create booking for each)
+            // Process service items (one booking per item; each item can have multiple services)
             foreach ($serviceItems as $item) {
-                // Use payment_type from item (selected in booking wizard)
                 $booking = $this->createBookingFromCartItem($item, $sale->id, $branchId, $item['payment_type'] ?? null);
-                
+                $bookingSubtotal = 0;
+                if (!empty($item['services']) && is_array($item['services'])) {
+                    foreach ($item['services'] as $svc) {
+                        $bookingSubtotal += (float) ($svc['price'] ?? 0);
+                    }
+                } else {
+                    $bookingSubtotal = (float) ($item['price'] ?? 0);
+                }
                 SaleItem::create([
                     'sale_id' => $sale->id,
                     'item_type' => 'booking',
                     'itemable_id' => $booking->id,
                     'itemable_type' => 'App\Models\Booking',
                     'quantity' => 1,
-                    'price' => $item['price'],
-                    'subtotal' => $item['price'],
+                    'price' => $bookingSubtotal,
+                    'subtotal' => $bookingSubtotal,
                 ]);
             }
 
@@ -162,7 +168,13 @@ class SalesService
         $subtotal = 0;
         foreach ($items as $item) {
             if ($item['type'] === 'service') {
-                $subtotal += $item['price'];
+                if (!empty($item['services']) && is_array($item['services'])) {
+                    foreach ($item['services'] as $svc) {
+                        $subtotal += (float) ($svc['price'] ?? 0);
+                    }
+                } else {
+                    $subtotal += (float) ($item['price'] ?? 0);
+                }
             } elseif ($item['type'] === 'product') {
                 $subtotal += $item['price'] * $item['quantity'];
             } elseif ($item['type'] === 'wallet' || $item['type'] === 'user_wallet') {
@@ -174,23 +186,23 @@ class SalesService
     }
 
     /**
-     * Create Booking from cart item
+     * Create Booking from cart item (one booking with one or more services)
      */
     private function createBookingFromCartItem($item, $saleId, $branchId, $paymentType = null)
     {
-        // Validate required fields
-        if (empty($item['date'])) {
+        $services = $item['services'] ?? null;
+        if (!empty($services) && is_array($services)) {
+            $first = $services[0];
+            $bookingDate = $first['date'] ?? null;
+        } else {
+            $bookingDate = $item['date'] ?? null;
+        }
+        if (empty($bookingDate)) {
             throw new \Exception('Booking date is required');
-        }
-        if (empty($item['worker_id'])) {
-            throw new \Exception('Worker is required for booking');
-        }
-        if (empty($item['from_time']) || empty($item['to_time'])) {
-            throw new \Exception('Booking time is required');
         }
 
         $booking = Booking::create([
-            'booking_date' => $item['date'],
+            'booking_date' => $bookingDate,
             'full_name' => $item['client_name'] ?? 'Walk-in',
             'mobile' => $item['client_mobile'] ?? null,
             'payment_type' => $paymentType ?? 'Cash',
@@ -200,24 +212,47 @@ class SalesService
             'created_by' => auth('center_user')->id() ?? auth('center_api')->id(),
         ]);
 
-        // Create BookingDetail
-        $service = Service::find($item['id']);
-        
-        if (!$service) {
-            throw new \Exception('Service not found');
+        if (!empty($services) && is_array($services)) {
+            foreach ($services as $svc) {
+                if (empty($svc['worker_id']) || empty($svc['from_time']) || empty($svc['to_time'])) {
+                    throw new \Exception('Worker and time are required for each service');
+                }
+                $service = Service::find($svc['id'] ?? null);
+                if (!$service) {
+                    throw new \Exception('Service not found: ' . ($svc['id'] ?? ''));
+                }
+                BookingDetail::create([
+                    'booking_id' => $booking->id,
+                    'service_id' => $service->id,
+                    'price' => (float) ($svc['price'] ?? $service->price),
+                    '_date' => $svc['date'] ?? $bookingDate,
+                    'worker_id' => $svc['worker_id'],
+                    'from_time' => $svc['from_time'],
+                    'to_time' => $svc['to_time'],
+                    'commission' => $svc['commission'] ?? null,
+                    'commission_type' => $svc['commission_type'] ?? null,
+                ]);
+            }
+        } else {
+            if (empty($item['worker_id']) || empty($item['from_time']) || empty($item['to_time'])) {
+                throw new \Exception('Worker and booking time are required');
+            }
+            $service = Service::find($item['id'] ?? null);
+            if (!$service) {
+                throw new \Exception('Service not found');
+            }
+            BookingDetail::create([
+                'booking_id' => $booking->id,
+                'service_id' => $service->id,
+                'price' => (float) ($item['price'] ?? $service->price),
+                '_date' => $item['date'],
+                'worker_id' => $item['worker_id'],
+                'from_time' => $item['from_time'],
+                'to_time' => $item['to_time'],
+                'commission' => $item['commission'] ?? null,
+                'commission_type' => $item['commission_type'] ?? null,
+            ]);
         }
-        
-        BookingDetail::create([
-            'booking_id' => $booking->id,
-            'service_id' => $service->id,
-            'price' => $service->price,
-            '_date' => $item['date'],
-            'worker_id' => $item['worker_id'],
-            'from_time' => $item['from_time'],
-            'to_time' => $item['to_time'],
-            'commission' => $item['commission'] ?? null,
-            'commission_type' => $item['commission_type'] ?? null,
-        ]);
 
         return $booking;
     }

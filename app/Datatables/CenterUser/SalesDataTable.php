@@ -37,18 +37,105 @@ class SalesDataTable extends DataTable
                 return $row->branch?->translation?->name ?? '-';
             })
             ->editColumn('services', function ($row) {
-                $serviceNames = [];
+                $serviceDetails = [];
+                $count = 0;
 
-                foreach ($row->bookings as $booking) {
-                    foreach ($booking->details as $detail) {
-                        $name = $detail->service?->translation?->name ?? $detail->service?->name ?? null;
-                        if ($name && !in_array($name, $serviceNames, true)) {
-                            $serviceNames[] = $name;
+                foreach ($row->saleItems as $saleItem) {
+                    if ($saleItem->item_type === 'booking' && $saleItem->itemable) {
+                        $booking = $saleItem->itemable;
+                        foreach ($booking->details as $detail) {
+                            $count++;
+                            $serviceName = $detail->service?->translation?->name ?? $detail->service?->name ?? 'N/A';
+                            $workerName = $detail->worker?->name ?? '-';
+                            $date = $detail->_date ?? $booking->booking_date ?? '-';
+                            $time = ($detail->from_time ?? '') . '-' . ($detail->to_time ?? '');
+                            $price = number_format($detail->price ?? 0, 2) . ' ' . trim(get_currency());
+                            
+                            $serviceDetails[] = [
+                                'service' => $serviceName,
+                                'worker' => $workerName,
+                                'date' => $date,
+                                'time' => $time,
+                                'price' => $price
+                            ];
                         }
                     }
                 }
 
-                return empty($serviceNames) ? '-' : implode(', ', $serviceNames);
+                if (empty($serviceDetails)) {
+                    return '-';
+                }
+
+                $html = '<span class="badge bg-label-primary">' . $count . ' ' . __('locale.bookings') . '</span>';
+                $html .= ' <button type="button" class="btn btn-sm btn-outline-primary ms-2 view-booking-details" data-sale-id="' . $row->id . '" data-modal-title="' . e(__('field.booking_details')) . '" data-details="' . e(json_encode($serviceDetails)) . '">';
+                $html .= '<i class="ti ti-eye me-1"></i>' . __('general.view_details');
+                $html .= '</button>';
+
+                return $html;
+            })
+            ->addColumn('products', function ($row) {
+                $productDetails = [];
+                $count = 0;
+
+                foreach ($row->saleItems as $saleItem) {
+                    if ($saleItem->item_type === 'buy_product' && $saleItem->itemable) {
+                        $buyProduct = $saleItem->itemable;
+                        foreach ($buyProduct->details as $detail) {
+                            $count++;
+                            $productName = $detail->product?->translation?->name ?? $detail->product?->name ?? 'N/A';
+                            $price = number_format($detail->price ?? 0, 2) . ' ' . trim(get_currency());
+                            
+                            $productDetails[] = [
+                                'product' => $productName,
+                                'price' => $price
+                            ];
+                        }
+                    }
+                }
+
+                if (empty($productDetails)) {
+                    return '-';
+                }
+
+                $html = '<span class="badge bg-label-success">' . $count . ' ' . __('locale.products') . '</span>';
+                $html .= ' <button type="button" class="btn btn-sm btn-outline-success ms-2 view-product-details" data-sale-id="' . $row->id . '" data-modal-title="' . e(__('locale.products')) . ' ' . e(__('general.show')) . '" data-details="' . e(json_encode($productDetails)) . '">';
+                $html .= '<i class="ti ti-eye me-1"></i>' . __('general.view_details');
+                $html .= '</button>';
+
+                return $html;
+            })
+            ->addColumn('coupons', function ($row) {
+                $couponDetails = [];
+                $count = 0;
+
+                foreach ($row->saleItems as $saleItem) {
+                    if ($saleItem->item_type === 'user_wallet' && $saleItem->itemable) {
+                        $count++;
+                        $userWallet = $saleItem->itemable;
+                        $walletCode = $userWallet->wallet?->code ?? '-';
+                        $amount = number_format($userWallet->amount ?? 0, 2) . ' ' . trim(get_currency());
+                        $walletType = $userWallet->wallet_type ?? '-';
+                        $userName = $userWallet->user?->name ?? '-';
+                        
+                        $couponDetails[] = [
+                            'code' => $walletCode,
+                            'amount' => $amount,
+                            'type' => $walletType,
+                            'user' => $userName
+                        ];
+                    }
+                }
+
+                if (empty($couponDetails)) {
+                    return '-';
+                }
+
+                $html = '<span class="badge bg-label-warning">' . $count . ' ' . __('field.coupons') . '</span>';
+                $html .= ' <button type="button" class="btn btn-sm btn-outline-warning ms-2 view-coupon-details" data-sale-id="' . $row->id . '" data-modal-title="' . e(__('field.coupons')) . ' ' . e(__('general.show')) . '" data-details="' . e(json_encode($couponDetails)) . '">';
+                $html .= '<i class="ti ti-eye me-1"></i>' . __('general.view_details');
+                $html .= '</button>';
+
+                return $html;
             })
             ->editColumn('client.name', function ($row) {
                 return $row->client?->name ?? __('general.walk_in');
@@ -59,18 +146,43 @@ class SalesDataTable extends DataTable
                 }
                 return $row->client->full_phone ?? $row->client->phone ?? '-';
             })
-            ->addColumn('payment_type', function ($row) {
+            ->addColumn('booking_payment', function ($row) {
                 $types = [];
 
-                foreach ($row->bookings as $booking) {
-                    if ($booking->payment_type && !in_array($booking->payment_type, $types, true)) {
-                        $types[] = $booking->payment_type;
+                foreach ($row->saleItems as $saleItem) {
+                    if ($saleItem->item_type === 'booking' && $saleItem->itemable) {
+                        $booking = $saleItem->itemable;
+                        if ($booking->payment_type && !in_array($booking->payment_type, $types, true)) {
+                            $types[] = $booking->payment_type;
+                        }
                     }
                 }
 
-                foreach ($row->buyProducts as $buyProduct) {
-                    if ($buyProduct->payment_type && !in_array($buyProduct->payment_type, $types, true)) {
-                        $types[] = $buyProduct->payment_type;
+                return empty($types) ? '-' : implode(', ', $types);
+            })
+            ->addColumn('product_payment', function ($row) {
+                $types = [];
+
+                foreach ($row->saleItems as $saleItem) {
+                    if ($saleItem->item_type === 'buy_product' && $saleItem->itemable) {
+                        $buyProduct = $saleItem->itemable;
+                        if ($buyProduct->payment_type && !in_array($buyProduct->payment_type, $types, true)) {
+                            $types[] = $buyProduct->payment_type;
+                        }
+                    }
+                }
+
+                return empty($types) ? '-' : implode(', ', $types);
+            })
+            ->addColumn('coupon_payment', function ($row) {
+                $types = [];
+
+                foreach ($row->saleItems as $saleItem) {
+                    if ($saleItem->item_type === 'user_wallet' && $saleItem->itemable) {
+                        $userWallet = $saleItem->itemable;
+                        if ($userWallet->wallet_type && !in_array($userWallet->wallet_type, $types, true)) {
+                            $types[] = $userWallet->wallet_type;
+                        }
                     }
                 }
 
@@ -78,6 +190,52 @@ class SalesDataTable extends DataTable
             })
             ->editColumn('worker.name', function ($row) {
                 return \App\Helpers\MyHelper::truncateWithReadMore($row->worker?->name ?? '-');
+            })
+            ->addColumn('booking_employees', function ($row) {
+                $employees = [];
+
+                foreach ($row->saleItems as $saleItem) {
+                    if ($saleItem->item_type === 'booking' && $saleItem->itemable) {
+                        $booking = $saleItem->itemable;
+                        foreach ($booking->details as $detail) {
+                            if ($detail->worker && $detail->worker->name) {
+                                $workerName = $detail->worker->name;
+                                if (!in_array($workerName, $employees, true)) {
+                                    $employees[] = $workerName;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                return empty($employees) ? '-' : implode('<br>', $employees);
+            })
+            ->addColumn('product_employees', function ($row) {
+                $employees = [];
+
+                foreach ($row->saleItems as $saleItem) {
+                    if ($saleItem->item_type === 'buy_product' && $saleItem->itemable) {
+                        $buyProduct = $saleItem->itemable;
+                        
+                        // Add sales worker
+                        if ($buyProduct->sales_worker && $buyProduct->sales_worker->name) {
+                            $salesWorkerName = $buyProduct->sales_worker->name . ' (' . __('field.sales_worker') . ')';
+                            if (!in_array($salesWorkerName, $employees, true)) {
+                                $employees[] = $salesWorkerName;
+                            }
+                        }
+                        
+                        // Add worker
+                        if ($buyProduct->worker && $buyProduct->worker->name) {
+                            $workerName = $buyProduct->worker->name . ' (' . __('field.worker') . ')';
+                            if (!in_array($workerName, $employees, true)) {
+                                $employees[] = $workerName;
+                            }
+                        }
+                    }
+                }
+
+                return empty($employees) ? '-' : implode('<br>', $employees);
             })
             ->editColumn('client.name', function ($row) {
                 return \App\Helpers\MyHelper::truncateWithReadMore($row->client?->name ?? __('general.walk_in'));
@@ -100,7 +258,7 @@ class SalesDataTable extends DataTable
                             </span>
                         </label>';
             })
-            ->rawColumns(['status', 'worker.name', 'client.name'], true)
+            ->rawColumns(['status', 'worker.name', 'client.name', 'services', 'products', 'coupons', 'booking_employees', 'product_employees'], true)
             ->setRowId('id');
     }
 
@@ -109,13 +267,29 @@ class SalesDataTable extends DataTable
         $user = auth('center_user')->user();
         $branchId = $user->branch_id ?? null;
 
-        $query = $model->query()->with([
+            $query = $model->query()->with([
             'worker',
             'client',
             'branch.translation',
-            'saleItems',
+            'saleItems' => function($q) {
+                $q->with([
+                    'itemable' => function($q) {
+                        $model = $q->getModel();
+                        if ($model instanceof \App\Models\Booking) {
+                            $q->with(['details.service.translation', 'details.worker']);
+                        } elseif ($model instanceof \App\Models\BuyProduct) {
+                            $q->with(['details.product.translation', 'sales_worker', 'worker']);
+                        } elseif ($model instanceof \App\Models\UserWallet) {
+                            $q->with(['wallet', 'user', 'worker']);
+                        }
+                    }
+                ]);
+            },
             'bookings.details.service.translation',
-            'buyProducts',
+            'bookings.details.worker',
+            'buyProducts.details.product.translation',
+            'buyProducts.sales_worker',
+            'buyProducts.worker',
         ])->withTrashed();
 
         if ($branchId !== null) {
@@ -189,11 +363,17 @@ class SalesDataTable extends DataTable
         return [
             Column::make('id')->searchable(true)->title('#'),
             Column::computed('branch.translation.name')->searchable(true)->title(__('field.branch')),
-            Column::computed('services')->searchable(true)->title(__('field.services')),
+            Column::computed('services')->searchable(false)->title(__('field.services') . ' (' . __('locale.bookings') . ')'),
+            Column::computed('products')->searchable(false)->title(__('locale.products')),
+            Column::computed('coupons')->searchable(false)->title(__('field.coupons')),
             Column::computed('client.name')->searchable(true)->title(__('field.client')),
             Column::computed('client_mobile')->searchable(true)->title(__('field.phone')),
-            Column::computed('payment_type')->searchable(true)->title(__('field.payment_method')),
+            Column::computed('booking_payment')->searchable(true)->title(__('field.payment_method') . ' (' . __('locale.bookings') . ')'),
+            Column::computed('product_payment')->searchable(true)->title(__('field.payment_method') . ' (' . __('locale.products') . ')'),
+            Column::computed('coupon_payment')->searchable(true)->title(__('field.payment_method') . ' (' . __('field.coupons') . ')'),
             Column::make('created_at')->searchable(true)->title(__('field.created_at')),
+            Column::computed('booking_employees')->searchable(false)->title(__('field.employee') . ' (' . __('locale.bookings') . ')'),
+            Column::computed('product_employees')->searchable(false)->title(__('field.employee') . ' (' . __('locale.products') . ')'),
             Column::computed('worker.name')->searchable(true)->title(__('field.worker')),
             Column::computed('tip')->searchable(false)->title(__('field.tip')),
             Column::computed('total')->searchable(false)->title(__('field.total')),
@@ -206,4 +386,6 @@ class SalesDataTable extends DataTable
         return $this->plural . '_' . date('YmdHis');
     }
 }
+
+
 

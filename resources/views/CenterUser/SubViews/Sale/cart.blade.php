@@ -1468,25 +1468,18 @@
                 bookingStepper.next();
             });
 
-            // Booking Step 4: Add to Cart
+            // Booking Step 4: Add to Cart (one booking with all services)
             $('#addBookingToCart').on('click', function() {
                 if (!bookingWizardData.services || bookingWizardData.services.length === 0) {
                     alert('Please complete all steps first.');
                     return;
                 }
 
-                // Add each service to cart
-                bookingWizardData.services.forEach(service => {
-                    const worker = get_worker(service.worker_id);
-                    const serviceData = get_service(service.id);
-                    
-                    // Check if service already in cart
-                    if (cart.some(item => item.type === 'service' && item.id == service.id)) {
-                        return; // Skip if already in cart
-                    }
-
-                    cart.push({
-                        type: 'service',
+                var serviceRows = [];
+                bookingWizardData.services.forEach(function(service) {
+                    var worker = get_worker(service.worker_id);
+                    var serviceData = get_service(service.id);
+                    serviceRows.push({
                         id: service.id,
                         name: service.name,
                         price: serviceData ? serviceData.price : 0,
@@ -1496,11 +1489,16 @@
                         from_time: service.from_time,
                         to_time: service.to_time,
                         commission: service.commission || null,
-                        commission_type: service.commission_type || null,
-                        client_name: bookingWizardData.name,
-                        client_mobile: bookingWizardData.mobile,
-                        payment_type: bookingWizardData.payment_type || null
+                        commission_type: service.commission_type || null
                     });
+                });
+
+                cart.push({
+                    type: 'service',
+                    services: serviceRows,
+                    client_name: bookingWizardData.name,
+                    client_mobile: bookingWizardData.mobile,
+                    payment_type: bookingWizardData.payment_type || null
                 });
 
                 saveCartToSession();
@@ -1508,7 +1506,7 @@
                 resetBookingWizard();
 
                 if (typeof toastr !== 'undefined') {
-                    toastr.success('{{ __('locale.services') }} added to cart');
+                    toastr.success('{{ __('locale.bookings') }} added to cart');
                 }
             });
 
@@ -1727,8 +1725,11 @@
                 let subtotal = 0;
                 cart.forEach(item => {
                     if (item.type === 'user_wallet') {
-                        // Include coupon amount in subtotal
                         subtotal += parseFloat(item.amount || 0);
+                    } else if (item.type === 'service' && item.services && item.services.length) {
+                        item.services.forEach(function(svc) {
+                            subtotal += parseFloat(svc.price || 0);
+                        });
                     } else {
                         const price = parseFloat(item.price || 0);
                         const quantity = parseInt(item.quantity || 1);
@@ -1758,6 +1759,9 @@
                     if (item.type === 'user_wallet') {
                         itemName = '{{ __('field.coupon') }}';
                     }
+                    if (item.type === 'service' && item.services && item.services.length) {
+                        itemName = item.services.length === 1 ? (item.services[0].name || '{{ __('locale.bookings') }}') : ('{{ __('locale.bookings') }} (' + item.services.length + ' {{ __('locale.services') }})');
+                    }
                     
                     let itemHtml = `<div class="cart-item mb-3 p-2 border rounded" data-index="${index}">
                         <div class="d-flex justify-content-between align-items-start">
@@ -1765,11 +1769,20 @@
                                 <h6 class="mb-1">${itemName}</h6>`;
                     
                     if (item.type === 'service') {
-                        itemHtml += `<small class="text-muted">
-                            {{ __('field.worker') }}: ${item.worker_name || ''}<br>
-                            {{ __('field.date') }}: ${item.date}<br>
-                            ${item.from_time} - ${item.to_time}
-                        </small>`;
+                        if (item.services && item.services.length) {
+                            item.services.forEach(function(svc) {
+                                itemHtml += `<small class="text-muted d-block">
+                                    ${svc.name || ''} &ndash; {{ __('field.worker') }}: ${svc.worker_name || ''}<br>
+                                    {{ __('field.date') }}: ${svc.date || ''} &nbsp; ${(svc.from_time || '')} - ${(svc.to_time || '')} &nbsp; ${parseFloat(svc.price || 0).toFixed(2)} {{ get_currency() }}
+                                </small>`;
+                            });
+                        } else {
+                            itemHtml += `<small class="text-muted">
+                                {{ __('field.worker') }}: ${item.worker_name || ''}<br>
+                                {{ __('field.date') }}: ${item.date}<br>
+                                ${item.from_time} - ${item.to_time}
+                            </small>`;
+                        }
                     } else if (item.type === 'product') {
                         itemHtml += `<small class="text-muted">
                             {{ __('field.quantity') }}: ${item.quantity}`;
@@ -1804,6 +1817,10 @@
                     let displayPrice = 0;
                     if (item.type === 'user_wallet') {
                         displayPrice = parseFloat(item.amount || 0);
+                    } else if (item.type === 'service' && item.services && item.services.length) {
+                        item.services.forEach(function(svc) {
+                            displayPrice += parseFloat(svc.price || 0);
+                        });
                     } else {
                         const price = parseFloat(item.price || 0);
                         const quantity = parseInt(item.quantity || 1);
