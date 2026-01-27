@@ -10,6 +10,7 @@
     <div class="container">
         @include('CenterUser.Components.breadcrumbs')
 
+        
         <div class="row">
             <form class="pt-0" id="frmSubmit">
                 @csrf
@@ -114,7 +115,7 @@
                                             <input type="tel" id="phone" class="form-control" name="phone"
                                                 placeholder="{{ __('field.phone') }}" maxlength="7"
                                                 value="{{ $phoneWithoutPrefix }}" required />
-                                            <div class="invalid-feedback" id="phone-invalid-feedback"></div>
+                                            
                                         </div>
                                     </div>
                                 </div>
