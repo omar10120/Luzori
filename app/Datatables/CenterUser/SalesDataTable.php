@@ -69,12 +69,26 @@ class SalesDataTable extends DataTable
 
     public function query(Sale $model): QueryBuilder
     {
-        return $model->query()->with([
+        $user = auth('center_user')->user();
+        $branchId = $user->branch_id ?? null;
+
+        $query = $model->query()->with([
             'worker',
             'client',
             'branch.translation',
-            'saleItems'
-        ])->withTrashed()->orderBy($this->plural . '.id', 'DESC');
+            'saleItems',
+            'branch.translation'
+        ])->withTrashed();
+
+        if ($branchId !== null) {
+            $query->where('branch_id', $branchId);
+        }
+
+        $query->when(request()->has('branch_id'), function ($query) {
+            $query->where('branch_id', request()->input('branch_id'));
+        });
+
+        return $query->orderBy($this->plural . '.id', 'DESC');
     }
 
     public function html(): HtmlBuilder
@@ -141,6 +155,7 @@ class SalesDataTable extends DataTable
             Column::computed('total')->searchable(false)->title(__('field.total')),
             Column::computed('tip')->searchable(false)->title(__('field.tip')),
             // Column::computed('status')->searchable(false)->title(__('field.status')),
+            Column::computed('branch.translation.name')->searchable(true)->title(__('field.branch')),
             Column::make('created_at')->searchable(true)->title(__('field.created_at')),
         ];
     }
