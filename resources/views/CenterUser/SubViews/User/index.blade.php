@@ -155,7 +155,7 @@
             }
         });
 
-        const phoneInput = document.getElementById('phone');
+const phoneInput = document.getElementById('phone');
 
 function validatePhone() {
     if (!phoneInput) {

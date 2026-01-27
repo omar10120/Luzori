@@ -2235,23 +2235,23 @@
                                     workerName = worker ? worker.name : '';
                                 }
                                 
-                                cart.push({
+                            cart.push({
                                     type: 'user_wallet', // Separate type for user-wallet assignments
                                     wallet_id: walletId, // Existing wallet ID - NOT creating new wallet
-                                    code: walletCode,
-                                    amount: walletAmount,
-                                    invoiced_amount: walletInvoiced,
-                                    start_at: walletStart,
-                                    end_at: walletEnd,
-                                    user_id: userId,
-                                    wallet_type: walletType,
-                                    worker_id: workerId,
+                                code: walletCode,
+                                amount: walletAmount,
+                                invoiced_amount: walletInvoiced,
+                                start_at: walletStart,
+                                end_at: walletEnd,
+                                user_id: userId,
+                                wallet_type: walletType,
+                                worker_id: workerId,
                                     worker_name: workerName,
-                                    commission: commission
-                                });
+                                commission: commission
+                            });
 
                                 saveCartToSession();
-                                renderCart();
+                            renderCart();
                             } else {
                                 // Wallet already in cart, just update the display
                                 renderCart();
@@ -2293,8 +2293,8 @@
                                 alert(errorMessages.join('\n'));
                             }
                         } else {
-                            if (typeof toastr !== 'undefined') {
-                                toastr.error(xhr.responseJSON?.message || '{{ __('admin.an_error_occurred') }}');
+                        if (typeof toastr !== 'undefined') {
+                            toastr.error(xhr.responseJSON?.message || '{{ __('admin.an_error_occurred') }}');
                             } else {
                                 alert(xhr.responseJSON?.message || '{{ __('admin.an_error_occurred') }}');
                             }
@@ -2946,8 +2946,8 @@
                                 toastr.error('Please fix the validation errors');
                             }
                         } else {
-                            if (typeof toastr !== 'undefined') {
-                                toastr.error(xhr.responseJSON?.message || '{{ __('admin.an_error_occurred') }}');
+                        if (typeof toastr !== 'undefined') {
+                            toastr.error(xhr.responseJSON?.message || '{{ __('admin.an_error_occurred') }}');
                             }
                         }
                     },

@@ -147,7 +147,7 @@
                         @php
                             $subtotal = 0;
                             if (!empty($cart['items']) && is_array($cart['items'])) {
-                                foreach($cart['items'] as $item) {
+                            foreach($cart['items'] as $item) {
                                     if (!is_array($item) || empty($item)) {
                                         continue;
                                     }
@@ -155,10 +155,10 @@
                                         // Include coupon amount in subtotal
                                         $amount = isset($item['amount']) ? (float)$item['amount'] : 0;
                                         $subtotal += $amount;
-                                    } else {
+                                } else {
                                         $price = isset($item['price']) ? (float)$item['price'] : 0;
                                         $quantity = isset($item['quantity']) ? (int)$item['quantity'] : 1;
-                                        $subtotal += $price * $quantity;
+                                    $subtotal += $price * $quantity;
                                     }
                                 }
                             }

@@ -73,7 +73,14 @@ class WorkerController extends Controller
             $requestUrl = route($this->updateOrCreateRoute, ['id' => $request->id]);
         }
 
-        $branches = Branch::with(['translation'])->get();
+        $user = auth('center_user')->user();
+        $branchId = $user->branch_id ?? null;
+
+        if ($branchId === null) {
+            $branches = Branch::with(['translation'])->get();
+        } else {
+            $branches = Branch::with(['translation'])->where('id', $branchId)->get();
+        }
         $services = Service::with(['translation'])->get();
         $shifts = Shift::all();
 
