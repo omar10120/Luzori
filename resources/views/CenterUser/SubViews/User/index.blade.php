@@ -154,6 +154,24 @@
                 });
             }
         });
+
+        const phoneInput = document.getElementById('phone');
+
+function validatePhone() {
+    if (!phoneInput) {
+        return true;
+    }
+    const value = phoneInput.value.trim();
+    const isValid = value.length === 7 && /^[0-9]+$/.test(value);
+    if (!isValid) {
+        phoneInput.classList.add('is-invalid');
+        phoneInput.siblings('.invalid-feedback').text('{{ __('field.mobile_number') }} must be 7 digits');
+    } else {
+        phoneInput.classList.remove('is-invalid');
+        phoneInput.siblings('.invalid-feedback').text('');
+    }
+    return isValid;
+}
     </script>
 
     @include('CenterUser.Components.submit-form-ajax')

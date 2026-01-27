@@ -178,6 +178,21 @@
             const phoneInputContainer = document.getElementById('phone_input_container');
             const phoneInput = document.getElementById('phone');
             const phonePrefixSelect = document.getElementById('phone_prefix');
+            const form = document.getElementById('frmSubmit');
+
+            function validatePhone() {
+                if (!phoneInput) {
+                    return true;
+                }
+                const value = phoneInput.value.trim();
+                const isValid = value.length === 7 && /^[0-9]+$/.test(value);
+                if (!isValid) {
+                    phoneInput.classList.add('is-invalid');
+                } else {
+                    phoneInput.classList.remove('is-invalid');
+                }
+                return isValid;
+            }
 
             function togglePhonePrefix() {
                 if (countryCodeSelect && countryCodeSelect.value === '+971') {
@@ -199,19 +214,26 @@
                 countryCodeSelect.addEventListener('change', togglePhonePrefix);
             }
 
-            // Combine prefix with phone number on form submit
-            const form = document.getElementById('frmSubmit');
             if (form) {
                 form.addEventListener('submit', function(e) {
+                    if (!validatePhone()) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        return;
+                    }
                     if (countryCodeSelect && countryCodeSelect.value === '+971' && phonePrefixSelect && phoneInput) {
                         const prefix = phonePrefixSelect.value;
                         const phone = phoneInput.value;
                         if (prefix && phone) {
-                            // Combine prefix with phone number
                             phoneInput.value = prefix + phone;
                         }
                     }
                 });
+            }
+
+            if (phoneInput) {
+                phoneInput.addEventListener('input', validatePhone);
+                phoneInput.addEventListener('blur', validatePhone);
             }
         });
     </script>
