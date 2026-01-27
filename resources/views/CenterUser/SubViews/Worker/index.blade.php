@@ -196,12 +196,18 @@
 
             if (phoneInput) {
                 phoneInput.addEventListener('input', validatePhone);
+                phoneInput.addEventListener('keyup', validatePhone);
                 phoneInput.addEventListener('blur', validatePhone);
             }
 
-            const form = document.getElementById('phone');
+            const form = document.getElementById('frmSubmit');
             if (form) {
                 form.addEventListener('submit', function(e) {
+                    if (!validatePhone()) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        return false;
+                    }
                     if (countryCodeSelect && countryCodeSelect.value === '+971' && phonePrefixSelect && phoneInput) {
                         const prefix = phonePrefixSelect.value;
                         const phone = phoneInput.value;
