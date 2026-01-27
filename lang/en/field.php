@@ -298,7 +298,14 @@ return [
     'permissions_name'               => 'Permissions Name',
     'active_workers'                 => 'Active Workers',
     'tip_will_be_for_this_worker'    => 'Tip will be for this worker',
-    'no_mobile'                      => 'No mobile'
+    'no_mobile'                      => 'No mobile',
+    'created_by'                      => 'Created By',
+    'status'                          => 'Status',
+    'active'                          => 'Active',
+    'inactive'                        => 'Inactive'
+    
+    
+    
     
     
 

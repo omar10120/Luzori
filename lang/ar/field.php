@@ -293,5 +293,10 @@ return [
     'select_sales_worker'             => 'اختر موظف المبيعات',
     'select_worker'                   => 'اختر العامل',
     'select_commission'            => 'اختر العمولة',
-    'select_type'                     => 'اختر النوع'
+    'select_type'                     => 'اختر النوع',
+    'created_by'                      => 'انشئت عن طريق',
+    'status'                          => 'الحالة',
+    'active'                          => 'نشط',
+    'inactive'                        => 'غير نشط',
+
 ];

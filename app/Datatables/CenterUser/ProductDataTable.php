@@ -140,17 +140,17 @@ class ProductDataTable extends DataTable
     {
         return [
             Column::make('id')->searchable(true)->title('#'),
-            Column::computed('skus')->searchable(false)->title(__('field.sku')),
+            Column::make('created_at')->searchable(true)->title(__('field.created_at')),
             Column::computed('translation.name')->searchable(true)->title(__('field.name')),
-            Column::make('barcode')->searchable(true)->title(__('field.barcode')),
+            Column::computed('skus')->searchable(false)->title(__('field.sku')),
             Column::computed('brand.name')->searchable(true)->title(__('field.brand')),
             Column::computed('category.name')->searchable(true)->title(__('field.category')),
             Column::computed('productSuppliers')->searchable(false)->title(__('field.suppliers')),
-            Column::computed('translation.text')->searchable(true)->title(__('field.description')),
+            Column::make('barcode')->searchable(true)->title(__('field.barcode')),
             Column::make('supply_price')->searchable(true)->title(__('field.supply_price')),
             Column::make('retail_price')->searchable(true)->title(__('field.retail_price')),
+            Column::computed('translation.text')->searchable(true)->title(__('field.description')),
             Column::computed('image')->searchable(false)->title(__('field.image')),
-            Column::make('created_at')->searchable(true)->title(__('field.created_at')),
         ];
     }
 

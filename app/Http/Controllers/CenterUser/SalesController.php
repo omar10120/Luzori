@@ -69,8 +69,8 @@ class SalesController extends Controller
         $walletPaymentMethods = \App\Models\PaymentMethod::forWallet()->get();
         
         
-        $wallets = \App\Models\Wallet::
-             whereNull('deleted_at')
+        $wallets = \App\Models\Wallet::with(['created_by_user', 'users.user'])
+             ->whereNull('deleted_at')
             ->orderBy('id', 'DESC')
             ->get();
         

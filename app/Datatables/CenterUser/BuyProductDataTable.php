@@ -49,13 +49,22 @@ class BuyProductDataTable extends DataTable
             ->editColumn('sales_worker.name', function ($row) {
                 return \App\Helpers\MyHelper::truncateWithReadMore($row->sales_worker?->name ?? '-');
             })
+            ->editColumn('created_by_user.name', function ($row) {
+                return $row->created_by_user?->name ?? '-';
+            })
+            ->editColumn('commission', function ($row) {
+                return $row->commission ? $row->commission . '%' : '-';
+            })
             ->rawColumns(['details.product.translation.name', 'status', 'sales_worker.name'], true)
             ->setRowId('id');
     }
 
     public function query(BuyProduct $model): QueryBuilder
     {
-        return $model->query()->withTrashed()->with(['sales_worker', 'details' => function ($q) {
+        return $model->query()->withTrashed()->with([
+            'sales_worker',
+            'created_by_user',
+            'details' => function ($q) {
             $q->with(['product' => function ($q) {
                 $q->with(['translation']);
             }]);
@@ -121,11 +130,12 @@ class BuyProductDataTable extends DataTable
     {
         return [
             Column::make('id')->searchable(true)->title('#'),
-            Column::computed('details.product.translation.name')->searchable(true)->title(__('locale.products')),
-            Column::make('payment_type')->searchable(true)->title(__('field.payment_type')),
-            Column::computed('total')->searchable(false)->title(__('field.total')),
-            Column::computed('sales_worker.name')->searchable(true)->title(__('field.sales_worker')),
             Column::make('created_at')->searchable(true)->title(__('field.created_at')),
+            Column::computed('details.product.translation.name')->searchable(true)->title(__('locale.products')),
+            Column::computed('sales_worker.name')->searchable(true)->title(__('field.sales_worker')),
+            Column::computed('created_by_user.name')->searchable(true)->title(__('field.created_by')),
+            Column::computed('commission')->searchable(false)->title(__('field.commission')),
+            Column::computed('total')->searchable(false)->title(__('field.total')),
         ];
     }
 

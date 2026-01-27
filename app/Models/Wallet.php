@@ -27,4 +27,9 @@ class Wallet extends Model
     {
         return $this->hasMany(UserWallet::class);
     }
+
+    public function created_by_user(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
 }
