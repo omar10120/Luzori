@@ -66,8 +66,8 @@ class SalesDataTable extends DataTable
                     return '-';
                 }
 
-                $html = '<span class="badge bg-label-primary">' . $count . ' ' . __('locale.bookings') . '</span>';
-                $html .= ' <button type="button" class="btn btn-sm btn-outline-primary ms-2 view-booking-details" data-sale-id="' . $row->id . '" data-modal-title="' . e(__('field.booking_details')) . '" data-details="' . e(json_encode($serviceDetails)) . '">';
+                $html = '<span class="badge bg-label-danger">' . $count . ' ' . __('locale.bookings') . '</span>';
+                $html .= ' <button type="button" class="btn btn-sm btn-outline-danger ms-2 view-booking-details" data-sale-id="' . $row->id . '" data-modal-title="' . e(__('field.booking_details')) . '" data-details="' . e(json_encode($serviceDetails)) . '">';
                 $html .= '<i class="ti ti-eye me-1"></i>' . __('general.view_details');
                 $html .= '</button>';
 
@@ -168,9 +168,17 @@ class SalesDataTable extends DataTable
                       ->orWhereRaw('LOWER(phone) LIKE ?', [$like]);
                 });
             })
+            // Custom search for ID (ensure numeric search works correctly)
+            ->filterColumn('id', function ($query, $keyword) {
+                if (is_numeric($keyword)) {
+                    $query->where('sales.id', '=', (int)$keyword);
+                } else {
+                    $query->whereRaw('CAST(sales.id AS CHAR) LIKE ?', ['%' . $keyword . '%']);
+                }
+            })
             ->addColumn('booking_payment', function ($row) {
                 $types = [];
-
+                
                 foreach ($row->saleItems as $saleItem) {
                     if ($saleItem->item_type === 'booking' && $saleItem->itemable) {
                         $booking = $saleItem->itemable;
