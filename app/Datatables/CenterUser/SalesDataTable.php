@@ -146,6 +146,28 @@ class SalesDataTable extends DataTable
                 }
                 return $row->client->full_phone ?? $row->client->phone ?? '-';
             })
+            // Custom search for client name (users table has first_name/last_name, not name column)
+            ->filterColumn('client.name', function ($query, $keyword) {
+                $keyword = strtolower($keyword);
+                $like = '%' . $keyword . '%';
+
+                $query->whereHas('client', function ($q) use ($like) {
+                    $q->whereRaw('LOWER(first_name) LIKE ?', [$like])
+                      ->orWhereRaw('LOWER(last_name) LIKE ?', [$like])
+                      ->orWhereRaw('LOWER(CONCAT(first_name, " ", last_name)) LIKE ?', [$like]);
+                });
+            })
+            // Custom search for client mobile (search by full_phone and phone)
+            ->filterColumn('client_mobile', function ($query, $keyword) {
+                $keyword = strtolower($keyword);
+                $like = '%' . $keyword . '%';
+
+                $query->whereHas('client', function ($q) use ($like) {
+                    // country_code + phone
+                    $q->whereRaw('LOWER(CONCAT(country_code, phone)) LIKE ?', [$like])
+                      ->orWhereRaw('LOWER(phone) LIKE ?', [$like]);
+                });
+            })
             ->addColumn('booking_payment', function ($row) {
                 $types = [];
 
@@ -367,7 +389,7 @@ class SalesDataTable extends DataTable
             Column::computed('products')->searchable(false)->title(__('locale.products')),
             Column::computed('coupons')->searchable(false)->title(__('field.coupons')),
             Column::computed('client.name')->searchable(true)->title(__('field.client')),
-            Column::computed('client_mobile')->searchable(true)->title(__('field.phone')),
+            Column::make('client_mobile')->searchable(true)->title(__('field.phone')),
             Column::computed('booking_payment')->searchable(true)->title(__('field.payment_method') . ' (' . __('locale.bookings') . ')'),
             Column::computed('product_payment')->searchable(true)->title(__('field.payment_method') . ' (' . __('locale.products') . ')'),
             Column::computed('coupon_payment')->searchable(true)->title(__('field.payment_method') . ' (' . __('field.coupons') . ')'),
