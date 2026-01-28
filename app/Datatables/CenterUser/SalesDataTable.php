@@ -18,7 +18,64 @@ class SalesDataTable extends DataTable
 
     public function dataTable(QueryBuilder $query): EloquentDataTable
     {
-        return (new EloquentDataTable($query))
+        $dataTable = (new EloquentDataTable($query));
+        
+        $dataTable->filter(function ($query) {
+            $keyword = request()->input('search.value');
+            if (empty($keyword)) {
+                return;
+            }
+            
+            $keyword = trim($keyword);
+            $isNumeric = is_numeric($keyword);
+            $isShortNumeric = $isNumeric && strlen($keyword) <= 5;
+            
+            $like = '%' . strtolower($keyword) . '%';
+            $phoneLike = '%' . $keyword . '%';
+            $keywordWithoutPlus = ltrim($keyword, '+');
+            $phoneLikeWithoutPlus = '%' . $keywordWithoutPlus . '%';
+            
+            if ($isShortNumeric) {
+                $query->where('sales.id', '=', (int)$keyword);
+            } else {
+                $query->where(function ($q) use ($like, $phoneLike, $phoneLikeWithoutPlus, $isNumeric, $keyword, $keywordWithoutPlus) {
+                    if ($isNumeric) {
+                        $q->where('sales.id', '=', (int)$keyword)
+                          ->orWhereRaw('CAST(sales.id AS CHAR) LIKE ?', [$phoneLike]);
+                    } else {
+                        $q->whereRaw('LOWER(CAST(sales.id AS CHAR)) LIKE ?', [$like]);
+                    }
+                    
+                    $q->orWhereHas('client', function ($subQ) use ($like) {
+                        $subQ->whereRaw('LOWER(first_name) LIKE ?', [$like])
+                             ->orWhereRaw('LOWER(last_name) LIKE ?', [$like])
+                             ->orWhereRaw('LOWER(CONCAT(first_name, " ", last_name)) LIKE ?', [$like]);
+                    });
+                    
+                    $q->orWhereHas('client', function ($subQ) use ($phoneLike, $phoneLikeWithoutPlus, $keywordWithoutPlus) {
+                        $subQ->where(function ($phoneQ) use ($phoneLike, $phoneLikeWithoutPlus, $keywordWithoutPlus) {
+                            $phoneQ->whereRaw('CONCAT(country_code, phone) LIKE ?', [$phoneLike])
+                                   ->orWhereRaw('CONCAT(country_code, phone) LIKE ?', [$phoneLikeWithoutPlus])
+                                   ->orWhereRaw('phone LIKE ?', [$phoneLike])
+                                   ->orWhereRaw('phone LIKE ?', [$phoneLikeWithoutPlus])
+                                   ->orWhereRaw('CONCAT(REPLACE(country_code, "+", ""), phone) LIKE ?', ['%' . $keywordWithoutPlus . '%']);
+                        });
+                    });
+                    
+                    if (!$isNumeric) {
+                        $q->orWhereHas('branch.translation', function ($subQ) use ($like) {
+                            $subQ->whereRaw('LOWER(name) LIKE ?', [$like]);
+                        })
+                        ->orWhereHas('worker', function ($subQ) use ($like) {
+                            $subQ->whereRaw('LOWER(name) LIKE ?', [$like]);
+                        })
+                        ->orWhereRaw('LOWER(CAST(sales.created_at AS CHAR)) LIKE ?', [$like]);
+                    }
+                });
+            }
+        });
+        
+        return $dataTable
             ->editColumn('action', function ($item) {
                 $route = 'center_user.' . $this->plural;
                 $id = $item->id;
