@@ -1370,11 +1370,14 @@
                          alert('{{ __('field.customer_required') }}');
                      }
                      
+                     // Redirect to Step 1 (Services) - index 0
+                     bookingStepper.to(0);
+                     
                      // Highlight the customer card
                      $('html, body').animate({
                         scrollTop: $('.card-header:contains("{{ __('field.customer') }}")').offset().top - 100
                      }, 500);
-                     return;
+                     return false;
                 }
 
                 // Proceed to Step 3
@@ -1411,6 +1414,8 @@
 
                 if (!bookingWizardData.name) {
                     alert('Customer information missing. Please select a customer.');
+                    // Redirect to Step 1 (Services) - index 0
+                    bookingStepper.to(0);
                     return false;
                 }
 
