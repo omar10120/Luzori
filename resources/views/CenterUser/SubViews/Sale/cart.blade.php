@@ -220,15 +220,20 @@
                                                     </div>
                                                     <div>
                                                         <hr />
-                                                        <h5>{{ __('field.discount_codes') }}</h5>
-                                                        <div class="row mb-4">
+                                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                                            <h5 class="mb-0">{{ __('field.discount_codes') }}</h5>
+                                                            <button type="button" class="btn btn-sm btn-outline-secondary" id="clear-discount-selection" style="display: none;">
+                                                                <i class="ti ti-x me-1"></i>{{ __('general.clear') }}
+                                                            </button>
+                                                        </div>
+                                                        <div class="row g-2 mb-4">
                                                             @foreach ($discounts as $discount)
-                                                                <div class="col-md-3 mb-2">
-                                                                    <div class="form-check" style="width: 200px;padding: 10px;color: #fff;background-color: #428bca;border-color: #357ebd;text-align: center;display: flex;justify-content: space-between;font-size: 14px;">
-                                                                        <label class="form-check-label" for="booking-discounts{{ $discount->id }}">
+                                                                <div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-2">
+                                                                    <div class="form-check discount-item" style="padding: 10px;color: #fff;background-color: #428bca;border-color: #357ebd;border-radius: 4px;min-height: 50px;display: flex;align-items: center;justify-content: space-between;font-size: 14px;width: 100%;">
+                                                                        <label class="form-check-label flex-grow-1 text-start me-2" for="booking-discounts{{ $discount->id }}" style="word-break: break-word;white-space: normal;">
                                                                             {{ $discount->code . ' [' . $discount->amount . '%]' }}
                                                                         </label>
-                                                                        <input class="form-check-input" type="radio" name="discount_id" data-name="discount_id" value="{{ $discount->id }}" id="booking-discounts{{ $discount->id }}">
+                                                                        <input class="form-check-input flex-shrink-0 booking-discount-radio" type="radio" name="discount_id" data-name="discount_id" value="{{ $discount->id }}" id="booking-discounts{{ $discount->id }}" style="margin-top: 0;">
                                                                     </div>
                                                                 </div>
                                                             @endforeach
@@ -1984,20 +1989,27 @@
                         let walletsElement = ``;
                         $('#booking-walletsElement').html(walletsElement);
                         if (wallets.length != 0) {
-                            walletsElement += `<hr /><h5>Wallet</h5><div class="row">`;
+                            walletsElement += `<hr /><div class="d-flex justify-content-between align-items-center mb-2">
+                                <h5 class="mb-0">Wallet</h5>
+                                <button type="button" class="btn btn-sm btn-outline-secondary clear-wallet-selection" style="display: none;">
+                                    <i class="ti ti-x me-1"></i>{{ __('general.clear') }}
+                                </button>
+                            </div><div class="row g-2">`;
                             $.each(wallets, function(index, item) {
                                 var wallet = item.wallet;
-                                walletsElement += `<div class="col-md-4">
-                                    <div class="form-check" style="width: 200px;padding: 10px;color: #fff;background-color: #428bca;border-color: #357ebd;text-align: center;display: flex;justify-content: space-between;font-size: 14px;">
-                                        <label class="form-check-label" for="booking-wallets${wallet.id}">
+                                walletsElement += `<div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-2">
+                                    <div class="form-check wallet-item" style="padding: 10px;color: #fff;background-color: #428bca;border-color: #357ebd;border-radius: 4px;min-height: 50px;display: flex;align-items: center;justify-content: space-between;font-size: 14px;width: 100%;">
+                                        <label class="form-check-label flex-grow-1 text-start me-2" for="booking-wallets${wallet.id}" style="word-break: break-word;white-space: normal;">
                                             ${wallet.code + ' [' + wallet.amount + ' AED]'}
                                         </label>
-                                        <input class="form-check-input" type="radio" name="discount_id" data-name="discount_id" value="${wallet.id}" id="booking-wallets${wallet.id}">
+                                        <input class="form-check-input flex-shrink-0 booking-wallet-radio" type="radio" name="discount_id" data-name="discount_id" value="${wallet.id}" id="booking-wallets${wallet.id}" style="margin-top: 0;">
                                     </div>
                                 </div>`;
                             });
                             walletsElement += `</div>`;
                             $('#booking-walletsElement').html(walletsElement);
+                            // Attach event listeners for wallet radios
+                            attachRadioClearHandlers();
                         }
                     }
 
@@ -2006,25 +2018,75 @@
                         let membershipsElement = ``;
                         $('#booking-membershipsElement').html(membershipsElement);
                         if (memberships.length != 0) {
-                            membershipsElement += `<hr /><h5>MemberShip Cards</h5><div class="row">`;
+                            membershipsElement += `<hr /><div class="d-flex justify-content-between align-items-center mb-2">
+                                <h5 class="mb-0">MemberShip Cards</h5>
+                                <button type="button" class="btn btn-sm btn-outline-secondary clear-membership-selection" style="display: none;">
+                                    <i class="ti ti-x me-1"></i>{{ __('general.clear') }}
+                                </button>
+                            </div><div class="row g-2">`;
                             $.each(memberships, function(index, item) {
-                                membershipsElement += `<div class="col-md-4">
-                                    <div class="form-check" style="width: 200px;padding: 10px;color: #fff;background-color: #428bca;border-color: #357ebd;text-align: center;display: flex;justify-content: space-between;font-size: 14px;">
-                                        <label class="form-check-label" for="booking-memberships${item.id}">
+                                membershipsElement += `<div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-2">
+                                    <div class="form-check membership-item" style="padding: 10px;color: #fff;background-color: #428bca;border-color: #357ebd;border-radius: 4px;min-height: 50px;display: flex;align-items: center;justify-content: space-between;font-size: 14px;width: 100%;">
+                                        <label class="form-check-label flex-grow-1 text-start me-2" for="booking-memberships${item.id}" style="word-break: break-word;white-space: normal;">
                                             ${item.membership_no + ' [' + item.percent + '%]'}
                                         </label>
-                                        <input class="form-check-input" type="radio" name="discount_id" data-name="discount_id" value="${item.id}" id="booking-memberships${item.id}">
+                                        <input class="form-check-input flex-shrink-0 booking-membership-radio" type="radio" name="discount_id" data-name="discount_id" value="${item.id}" id="booking-memberships${item.id}" style="margin-top: 0;">
                                     </div>
                                 </div>`;
                             });
                             membershipsElement += `</div>`;
                             $('#booking-membershipsElement').html(membershipsElement);
+                            // Attach event listeners for membership radios
+                            attachRadioClearHandlers();
                         }
                     }
                 } else {
                     $('#booking-servicesTable, #booking-walletsElement, #booking-membershipsElement').html('');
                 }
             }
+
+            // Function to handle radio button clear functionality
+            function attachRadioClearHandlers() {
+                // Function to toggle clear button visibility based on selection
+                function toggleClearButtons() {
+                    var hasDiscountSelected = $('input[name="discount_id"].booking-discount-radio:checked').length > 0;
+                    var hasWalletSelected = $('input[name="discount_id"].booking-wallet-radio:checked').length > 0;
+                    var hasMembershipSelected = $('input[name="discount_id"].booking-membership-radio:checked').length > 0;
+                    
+                    $('#clear-discount-selection').toggle(hasDiscountSelected);
+                    $('.clear-wallet-selection').toggle(hasWalletSelected);
+                    $('.clear-membership-selection').toggle(hasMembershipSelected);
+                }
+
+                // Clear discount codes selection
+                $(document).off('click', '#clear-discount-selection').on('click', '#clear-discount-selection', function() {
+                    $('input[name="discount_id"].booking-discount-radio').prop('checked', false);
+                    toggleClearButtons();
+                });
+
+                // Clear wallet selection
+                $(document).off('click', '.clear-wallet-selection').on('click', '.clear-wallet-selection', function() {
+                    $('input[name="discount_id"].booking-wallet-radio').prop('checked', false);
+                    toggleClearButtons();
+                });
+
+                // Clear membership selection
+                $(document).off('click', '.clear-membership-selection').on('click', '.clear-membership-selection', function() {
+                    $('input[name="discount_id"].booking-membership-radio').prop('checked', false);
+                    toggleClearButtons();
+                });
+
+                // Listen for radio button changes
+                $(document).off('change', 'input[name="discount_id"]').on('change', 'input[name="discount_id"]', function() {
+                    toggleClearButtons();
+                });
+
+                // Initial check
+                toggleClearButtons();
+            }
+
+            // Attach handlers on page load
+            attachRadioClearHandlers();
 
             function get_services(user_phone) {
                 var services = [];
