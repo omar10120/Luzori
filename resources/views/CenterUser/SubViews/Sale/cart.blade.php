@@ -1725,7 +1725,7 @@
                 let subtotal = 0;
                 cart.forEach(item => {
                     if (item.type === 'user_wallet') {
-                        subtotal += parseFloat(item.amount || 0);
+                        subtotal += parseFloat(item.invoiced_amount || item.amount || 0);
                     } else if (item.type === 'service' && item.services && item.services.length) {
                         item.services.forEach(function(svc) {
                             subtotal += parseFloat(svc.price || 0);
@@ -1801,6 +1801,9 @@
                         itemHtml += `<small class="text-muted">
                             {{ __('field.code') }}: ${item.code || ''}<br>
                             {{ __('field.amount') }}: ${item.amount || 0} {{ get_currency() }}`;
+                        if (item.invoiced_amount) {
+                            itemHtml += `<br>{{ __('field.invoiced_amount') }}: ${item.invoiced_amount || 0} {{ get_currency() }}`;
+                        }
                         if (item.wallet_type) {
                             itemHtml += `<br>{{ __('field.type') }}: ${item.wallet_type}`;
                         }
@@ -1816,7 +1819,7 @@
                     // Calculate and display price
                     let displayPrice = 0;
                     if (item.type === 'user_wallet') {
-                        displayPrice = parseFloat(item.amount || 0);
+                        displayPrice = parseFloat(item.invoiced_amount || item.amount || 0);
                     } else if (item.type === 'service' && item.services && item.services.length) {
                         item.services.forEach(function(svc) {
                             displayPrice += parseFloat(svc.price || 0);

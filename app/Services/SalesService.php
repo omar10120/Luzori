@@ -147,8 +147,8 @@ class SalesService
                     'itemable_id' => $userWallet->id,
                     'itemable_type' => 'App\Models\UserWallet',
                     'quantity' => 1,
-                    'price' => $item['amount'] ?? 0,
-                    'subtotal' => $item['amount'] ?? 0,
+                    'price' => $item['invoiced_amount'] ?? ($item['amount'] ?? 0),
+                    'subtotal' => $item['invoiced_amount'] ?? ($item['amount'] ?? 0),
                 ]);
             }
 
@@ -166,22 +166,22 @@ class SalesService
     private function calculateSubtotal($items)
     {
         $subtotal = 0;
-        foreach ($items as $item) {
-            if ($item['type'] === 'service') {
-                if (!empty($item['services']) && is_array($item['services'])) {
-                    foreach ($item['services'] as $svc) {
-                        $subtotal += (float) ($svc['price'] ?? 0);
+            foreach ($items as $item) {
+                if ($item['type'] === 'service') {
+                    if (!empty($item['services']) && is_array($item['services'])) {
+                        foreach ($item['services'] as $svc) {
+                            $subtotal += (float) ($svc['price'] ?? 0);
+                        }
+                    } else {
+                        $subtotal += (float) ($item['price'] ?? 0);
                     }
-                } else {
-                    $subtotal += (float) ($item['price'] ?? 0);
+                } elseif ($item['type'] === 'product') {
+                    $subtotal += $item['price'] * $item['quantity'];
+                } elseif ($item['type'] === 'wallet' || $item['type'] === 'user_wallet') {
+                    // Include wallet/coupon invoiced amount in subtotal
+                    $subtotal += $item['invoiced_amount'] ?? ($item['amount'] ?? 0);
                 }
-            } elseif ($item['type'] === 'product') {
-                $subtotal += $item['price'] * $item['quantity'];
-            } elseif ($item['type'] === 'wallet' || $item['type'] === 'user_wallet') {
-                // Include wallet/coupon amount in subtotal
-                $subtotal += $item['amount'] ?? 0;
             }
-        }
         return $subtotal;
     }
 

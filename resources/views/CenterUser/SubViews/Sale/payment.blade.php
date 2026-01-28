@@ -123,7 +123,7 @@
                                     }
 
                                     if($item['type'] === 'user_wallet') {
-                                        $displayPrice = $item['amount'] ?? 0;
+                                        $displayPrice = $item['invoiced_amount'] ?? ($item['amount'] ?? 0);
                                     } elseif($item['type'] === 'service' && !empty($item['services']) && is_array($item['services'])) {
                                         $displayPrice = 0;
                                         foreach ($item['services'] as $svc) {
@@ -159,7 +159,8 @@
                                     @elseif($item['type'] === 'user_wallet')
                                         <small class="text-muted">
                                             {{ __('field.code') }}: {{ $item['code'] ?? '' }}<br>
-                                            {{ __('field.amount') }}: {{ $item['amount'] ?? 0 }} {{ get_currency() }}
+                                            {{ __('field.amount') }}: {{ $item['amount'] ?? 0 }} {{ get_currency() }}<br>
+                                            {{ __('field.invoiced_amount') }}: {{ $item['invoiced_amount'] ?? ($item['amount'] ?? 0) }} {{ get_currency() }}
                                             @if(isset($item['wallet_type']))
                                                 <br>{{ __('field.type') }}: {{ $item['wallet_type'] }}
                                             @endif
@@ -185,7 +186,9 @@
                                         continue;
                                     }
                                     if(isset($item['type']) && $item['type'] === 'user_wallet') {
-                                        $amount = isset($item['amount']) ? (float)$item['amount'] : 0;
+                                        $amount = isset($item['invoiced_amount'])
+                                            ? (float)$item['invoiced_amount']
+                                            : (isset($item['amount']) ? (float)$item['amount'] : 0);
                                         $subtotal += $amount;
                                     } elseif(isset($item['type']) && $item['type'] === 'service' && !empty($item['services']) && is_array($item['services'])) {
                                         foreach ($item['services'] as $svc) {
