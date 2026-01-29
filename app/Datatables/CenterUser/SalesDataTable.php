@@ -334,6 +334,13 @@ class SalesDataTable extends DataTable
                 return number_format($row->total, 2) . ' ' . trim(get_currency());
             })
      ->editColumn('status', function ($row) {
+                $user = auth('center_user')->user();
+                $canDelete = $user && $user->can('DELETE_SALES', 'center_api');
+                
+                if (!$canDelete) {
+                    return '-';
+                }
+                
                 $checked = $row->deleted_at ? '' : 'checked';
                 $operation = $row->deleted_at ? DeleteActionEnum::RESTORE_DELETED->value : DeleteActionEnum::SOFT_DELETE->value;
                 return '<label class="switch switch-square">
@@ -447,7 +454,10 @@ class SalesDataTable extends DataTable
 
     public function getColumns(): array
     {
-        return [
+        $user = auth('center_user')->user();
+        $canDelete = $user && $user->can('DELETE_SALES', 'center_api');
+        
+        $columns = [
             Column::make('id')->searchable(true)->title('#'),
             Column::computed('branch.translation.name')->searchable(true)->title(__('field.branch')),
             Column::computed('services')->searchable(false)->title(__('field.services') . ' (' . __('locale.bookings') . ')'),
@@ -464,8 +474,13 @@ class SalesDataTable extends DataTable
             Column::computed('worker.name')->searchable(true)->title(__('field.worker')),
             Column::computed('tip')->searchable(false)->title(__('field.tip')),
             Column::computed('total')->searchable(false)->title(__('field.total')),
-            Column::computed('status')->searchable(false)->title(__('field.status')),
         ];
+        
+        if ($canDelete) {
+            $columns[] = Column::computed('status')->searchable(false)->title(__('field.status'));
+        }
+        
+        return $columns;
     }
 
     protected function filename(): string
