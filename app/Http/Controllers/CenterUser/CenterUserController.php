@@ -68,7 +68,14 @@ class CenterUserController extends Controller
             $item = $this->crudService->find($this->model, $request->id, $relations);
         }
 
-        $branches = Branch::with(['translation'])->get();
+        $user = auth('center_user')->user();
+        $branchId = $user->branch_id ?? null;
+
+        if ($branchId === null) {
+            $branches = Branch::with(['translation'])->get();
+        } else {
+            $branches = Branch::with(['translation'])->where('id', $branchId)->get();
+        }
         $roles = Role::where('guard_name', 'center_api')->get();
         if (is_null($item)) {
             $title = __('general.add');

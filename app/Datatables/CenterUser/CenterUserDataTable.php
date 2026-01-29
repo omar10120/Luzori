@@ -70,7 +70,16 @@ class CenterUserDataTable extends DataTable
 
     public function query(CenterUser $model): QueryBuilder
     {
-        return $model->query()->withTrashed()->with(['media'])->orderBy('center_users.id', 'DESC');
+        $user = auth('center_user')->user();
+        $branchId = $user->branch_id ?? null;
+
+        $query = $model->query()->withTrashed()->with(['media']);
+
+        if ($branchId !== null) {
+            $query->where('branch_id', $branchId);
+        }
+
+        return $query->orderBy('center_users.id', 'DESC');
     }
 
     public function html(): HtmlBuilder
