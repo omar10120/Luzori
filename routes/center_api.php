@@ -28,6 +28,7 @@ use App\Http\Controllers\CenterAPI\UserWalletController;
 use App\Http\Controllers\CenterAPI\WalletController;
 use App\Http\Controllers\CenterAPI\WeekDayController;
 use App\Http\Controllers\CenterAPI\WorkerController;
+use App\Http\Controllers\SMSController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -47,6 +48,17 @@ Route::group(['prefix' => 'auth'], function () {
         Route::post('forget', 'forget');
         Route::post('check-code', 'checkCode');
         Route::post('reset', 'reset');
+    });
+});
+
+Route::group(['prefix' => 'sms'], function () {
+    Route::controller(SMSController::class)->group(function () {
+        Route::post('send', 'sendSMS');
+        Route::post('send-multiple', 'sendSMSMultiple');
+        Route::post('send-english', 'sendEnglishSMS');
+        Route::post('send-arabic', 'sendArabicSMS');
+        Route::post('send-unicode', 'sendUnicodeSMS');
+        Route::get('balance', 'checkBalance');
     });
 });
 
