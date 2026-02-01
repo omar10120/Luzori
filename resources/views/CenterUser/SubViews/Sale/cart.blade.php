@@ -229,11 +229,11 @@
                                                         <div class="row g-2 mb-4">
                                                             @foreach ($discounts as $discount)
                                                                 <div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-2">
-                                                                    <div class="form-check discount-item" style="padding: 10px;color: #fff;background-color: #428bca;border-color: #357ebd;border-radius: 4px;min-height: 50px;display: flex;align-items: center;justify-content: space-between;font-size: 14px;width: 100%;">
-                                                                        <label class="form-check-label flex-grow-1 text-start me-2" for="booking-discounts{{ $discount->id }}" style="word-break: break-word;white-space: normal;">
+                                                                    <div class="form-check discount-item" style="padding: 10px;color: #fff;background-color: #428bca;border-color: #357ebd;border-radius: 4px;min-height: 50px;display: flex;align-items: center;gap: 10px;font-size: 14px;width: 100%;">
+                                                                        <label class="form-check-label flex-grow-1 text-start" for="booking-discounts{{ $discount->id }}" style="word-break: break-word;white-space: normal;overflow: hidden;min-width: 0;margin: 0;">
                                                                             {{ $discount->code . ' [' . $discount->amount . '%]' }}
                                                                         </label>
-                                                                        <input class="form-check-input flex-shrink-0 booking-discount-radio" type="radio" name="discount_id" data-name="discount_id" value="{{ $discount->id }}" id="booking-discounts{{ $discount->id }}" style="margin-top: 0;">
+                                                                        <input class="form-check-input flex-shrink-0 booking-discount-radio" type="radio" name="discount_id" data-name="discount_id" value="{{ $discount->id }}" id="booking-discounts{{ $discount->id }}" style="margin-top: 0;width: 18px;height: 18px;flex-shrink: 0;">
                                                                     </div>
                                                                 </div>
                                                             @endforeach
@@ -2003,11 +2003,11 @@
                             $.each(wallets, function(index, item) {
                                 var wallet = item.wallet;
                                 walletsElement += `<div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-2">
-                                    <div class="form-check wallet-item" style="padding: 10px;color: #fff;background-color: #428bca;border-color: #357ebd;border-radius: 4px;min-height: 50px;display: flex;align-items: center;justify-content: space-between;font-size: 14px;width: 100%;">
-                                        <label class="form-check-label flex-grow-1 text-start me-2" for="booking-wallets${wallet.id}" style="word-break: break-word;white-space: normal;">
+                                    <div class="form-check wallet-item" style="padding: 10px;color: #fff;background-color: #428bca;border-color: #357ebd;border-radius: 4px;min-height: 50px;display: flex;align-items: center;gap: 10px;font-size: 10px;width: 100%;">
+                                        <label class="form-check-label flex-grow-1 text-start" for="booking-wallets${wallet.id}" style="word-break: break-word;white-space: normal;overflow: hidden;min-width: 0;margin: 0;">
                                             ${wallet.code + ' [' + wallet.amount + ' AED]'}
                                         </label>
-                                        <input class="form-check-input flex-shrink-0 booking-wallet-radio" type="radio" name="discount_id" data-name="discount_id" value="${wallet.id}" id="booking-wallets${wallet.id}" style="margin-top: 0;">
+                                        <input class="form-check-input flex-shrink-0 booking-wallet-radio" type="radio" name="discount_id" data-name="discount_id" value="${wallet.id}" id="booking-wallets${wallet.id}" style="margin-top: 0;width: 18px;height: 18px;flex-shrink: 0;">
                                     </div>
                                 </div>`;
                             });
@@ -2031,11 +2031,11 @@
                             </div><div class="row g-2">`;
                             $.each(memberships, function(index, item) {
                                 membershipsElement += `<div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-2">
-                                    <div class="form-check membership-item" style="padding: 10px;color: #fff;background-color: #428bca;border-color: #357ebd;border-radius: 4px;min-height: 50px;display: flex;align-items: center;justify-content: space-between;font-size: 14px;width: 100%;">
-                                        <label class="form-check-label flex-grow-1 text-start me-2" for="booking-memberships${item.id}" style="word-break: break-word;white-space: normal;">
+                                    <div class="form-check membership-item" style="padding: 10px;color: #fff;background-color: #428bca;border-color: #357ebd;border-radius: 4px;min-height: 50px;display: flex;align-items: center;gap: 10px;font-size: 14px;width: 100%;">
+                                        <label class="form-check-label flex-grow-1 text-start" for="booking-memberships${item.id}" style="word-break: break-word;white-space: normal;overflow: hidden;min-width: 0;margin: 0;">
                                             ${item.membership_no + ' [' + item.percent + '%]'}
                                         </label>
-                                        <input class="form-check-input flex-shrink-0 booking-membership-radio" type="radio" name="discount_id" data-name="discount_id" value="${item.id}" id="booking-memberships${item.id}" style="margin-top: 0;">
+                                        <input class="form-check-input flex-shrink-0 booking-membership-radio" type="radio" name="discount_id" data-name="discount_id" value="${item.id}" id="booking-memberships${item.id}" style="margin-top: 0;width: 18px;height: 18px;flex-shrink: 0;">
                                     </div>
                                 </div>`;
                             });

@@ -148,6 +148,7 @@ return [
     'select_a_supplier_from_the_list' => 'اختر مورد من القائمة',
     'select_a_services_from_the_list' => 'حدد خدمة من القائمة',
     'optional - Tip will be for this worker' => 'اختياري - سيتم تحديد الدرهم لهذا الموظف',
+    'sms_sale_confirmation' => 'شكراً لك {user_name}. عملية الشراء الفعالة من {salon_name}. رقم الفاتورة هو {bill_number}',
     
 
 ];

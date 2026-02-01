@@ -15,7 +15,9 @@ use App\Models\Service;
 use App\Models\User;
 use App\Models\UserWallet;
 use App\Models\Wallet;
+use App\Services\SMSGatewayService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class SalesService
 {
@@ -153,10 +155,82 @@ class SalesService
             }
 
             DB::commit();
+
+            $sale->load(['client', 'branch.translation']);
+            
+            try {
+                $this->sendSaleConfirmationSMS($sale);
+            } catch (\Exception $e) {
+                Log::error('SMS sending failed but sale was completed', [
+                    'sale_id' => $sale->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+
             return $sale;
         } catch (\Exception $e) {
             DB::rollBack();
             throw $e;
+        }
+    }
+
+    private function sendSaleConfirmationSMS(Sale $sale): void
+    {
+        try {
+            if (!$sale->client_id) {
+                return;
+            }
+
+            $client = $sale->client;
+            if (!$client || !$client->phone) {
+                return;
+            }
+
+            $branch = $sale->branch;
+            $salonName = $branch && $branch->translation ? $branch->translation->name : '';
+
+            $userName = trim(($client->first_name ?? '') . ' ' . ($client->last_name ?? ''));
+            if (empty($userName)) {
+                $userName = __('general.walk_in');
+            }
+
+            $locale = app()->getLocale();
+            
+            $template = trans('general.sms_sale_confirmation', [], $locale);
+
+            $fullPhone = ($client->country_code ?? '') . ($client->phone ?? '');
+            if (empty($fullPhone)) {
+                return;
+            }
+
+            $smsGateway = new SMSGatewayService();
+            $formattedPhone = $smsGateway->formatPhoneNumber($fullPhone);
+            
+            $result = $smsGateway->sendSMSWithTemplate(
+                $formattedPhone,
+                $template,
+                [
+                    'user_name' => $userName,
+                    'salon_name' => $salonName,
+                    'bill_number' => $sale->id,
+                ],
+                $locale
+            );
+
+            if (!$result['success']) {
+                Log::warning('Failed to send sale confirmation SMS', [
+                    'sale_id' => $sale->id,
+                    'client_id' => $client->id,
+                    'formatted_phone' => $formattedPhone,
+                    'result' => $result,
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error('Error sending sale confirmation SMS', [
+                'sale_id' => $sale->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
         }
     }
 

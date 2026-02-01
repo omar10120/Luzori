@@ -47,7 +47,7 @@
                             @if(!empty($cartEmployees) && count($cartEmployees) > 0)
                                 <div class="row mb-3">
                                     <div class="col-md-12">
-                                        <label class="form-label">{{ __('field.employees') }} ({{ __('locale.bookings') }})</label>
+                                        <label class="form-label">{{ __('field.employee') }} ({{ __('locale.bookings') }})</label>
                                         <div class="alert alert-info mb-0">
                                             <div class="d-flex flex-wrap gap-2">
                                                 @foreach($cartEmployees as $employee)

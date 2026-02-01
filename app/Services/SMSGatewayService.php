@@ -18,14 +18,23 @@ class SMSGatewayService
         $this->sender = config('services.sms_gateway.sender', 'TEST');
     }
 
+    public function formatPhoneNumber(string $mobile): string
+    {
+        $mobile = trim($mobile);
+        $mobile = str_replace('+', '', $mobile);
+        return $mobile;
+    }
+
     public function sendSMS(string $mobile, string $message, int $language = 1): array
     {
         try {
+            $formattedMobile = $this->formatPhoneNumber($mobile);
+            
             $response = Http::get($this->baseUrl . '/api/send.aspx', [
                 'apikey' => $this->apiKey,
                 'language' => $language,
                 'sender' => $this->sender,
-                'mobile' => $mobile,
+                'mobile' => $formattedMobile,
                 'message' => $message,
             ]);
 
@@ -38,7 +47,8 @@ class SMSGatewayService
 
             if (!$response->successful()) {
                 Log::error('SMS Gateway Error', [
-                    'mobile' => $mobile,
+                    'mobile' => $formattedMobile,
+                    'original_mobile' => $mobile,
                     'message' => $message,
                     'response' => $result,
                 ]);
@@ -47,7 +57,8 @@ class SMSGatewayService
             return $result;
         } catch (\Exception $e) {
             Log::error('SMS Gateway Exception', [
-                'mobile' => $mobile,
+                'mobile' => $this->formatPhoneNumber($mobile),
+                'original_mobile' => $mobile,
                 'message' => $message,
                 'error' => $e->getMessage(),
             ]);
@@ -78,6 +89,18 @@ class SMSGatewayService
     public function sendUnicodeSMS(string $mobile, string $message): array
     {
         return $this->sendSMS($mobile, $message, 3);
+    }
+
+    public function sendSMSWithTemplate(string $mobile, string $template, array $replacements, string $locale = 'en'): array
+    {
+        $message = $template;
+        foreach ($replacements as $key => $value) {
+            $message = str_replace('{' . $key . '}', $value, $message);
+        }
+
+        $formattedMobile = $this->formatPhoneNumber($mobile);
+        $language = $locale === 'ar' ? 2 : 1;
+        return $this->sendSMS($formattedMobile, $message, $language);
     }
 
     public function checkBalance(): array
