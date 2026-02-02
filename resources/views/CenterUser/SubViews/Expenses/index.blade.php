@@ -103,21 +103,21 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="row" id="dateRangeContainer" style="display: {{ ($item && $item->expense_name == 'suppliers') ? 'block' : 'none' }};">
+                        <div class="row" id="dateRangeContainer" style="display: {{ ($item && ($item->expense_name == 'suppliers' || $item->expense_name == 'salary' || $item->expense_name == 'Salary')) ? 'block' : 'none' }};">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label class="form-label">{{ __('field.start_date') }} <span class="text-danger">*</span></label>
+                                    <label class="form-label">{{ __('field.start_date') }}</label>
                                     <small class="text-muted d-block mb-2">{{__('general.select_a_start_date')}}</small>
                                     <input type="date" name="start_date" class="form-control"
-                                        placeholder="{{ __('field.start_date') }}" value="{{ $item ? $item->start_date : '' }}" required />
+                                        placeholder="{{ __('field.start_date') }}" value="{{ $item ? $item->start_date : '' }}" />
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label class="form-label">{{ __('field.end_date') }} <span class="text-danger">*</span></label>
+                                    <label class="form-label">{{ __('field.end_date') }}</label>
                                     <small class="text-muted d-block mb-2">{{__('general.select_a_end_date')}}</small>
                                     <input type="date" name="end_date" class="form-control"
-                                        placeholder="{{ __('field.end_date') }}" value="{{ $item ? $item->end_date : '' }}" required />
+                                        placeholder="{{ __('field.end_date') }}" value="{{ $item ? $item->end_date : '' }}" />
                                 </div>
                             </div>
                         </div>
@@ -248,11 +248,12 @@
                 const startDateInput = $('input[name="start_date"]');
                 const endDateInput = $('input[name="end_date"]');
                 
-                // Show date range only if expense type is "suppliers"
-                if (expenseType === 'suppliers') {
+                // Show date range if expense type is "suppliers" or "salary"
+                if (expenseType === 'suppliers' || expenseType === 'salary') {
                     dateRangeContainer.show();
-                    startDateInput.attr('required', 'required');
-                    endDateInput.attr('required', 'required');
+                    // Not required - fields are optional
+                    startDateInput.removeAttr('required');
+                    endDateInput.removeAttr('required');
                 } else {
                     dateRangeContainer.hide();
                     startDateInput.removeAttr('required');
