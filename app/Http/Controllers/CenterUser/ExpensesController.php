@@ -62,23 +62,20 @@ class ExpensesController extends Controller
      */
     public function updateOrCreate(Request $request)
     {
-        // Handle expense name validation based on salary checkbox
-        $expenseNameRule = 'nullable|string|max:255';
-        if (!$request->has('is_salary') || !$request->boolean('is_salary')) {
-            $expenseNameRule = 'required|string|max:255';
-        }
+        // Handle expense name validation - always required
+        $expenseNameRule = 'required|string|max:255';
 
-        // Handle supplier_id and payee validation based on fast expense checkbox
+        // Handle supplier_id and payee validation - make them optional
         $supplierIdRule = 'nullable|exists:suppliers,id';
         $payeeRule = 'nullable|string|max:255';
         
-        // If fast expense is NOT checked, make them required
-        if (!$request->has('is_fast_expense') || !$request->boolean('is_fast_expense')) {
-            // If not fast expense and not salary, require supplier
-            if (!$request->has('is_salary') || !$request->boolean('is_salary')) {
-                $supplierIdRule = 'required|exists:suppliers,id';
-            }
-            $payeeRule = 'required|string|max:255';
+        // Handle date validation - make them optional
+        $startDateRule = 'nullable|date';
+        $endDateRule = 'nullable|date';
+        
+        // If start_date is provided, end_date should be after or equal to start_date
+        if ($request->has('start_date') && $request->start_date) {
+            $endDateRule = 'nullable|date|after_or_equal:start_date';
         }
 
         $validator = Validator::make($request->all(), [
@@ -87,13 +84,11 @@ class ExpensesController extends Controller
             'expense_name' => $expenseNameRule,
             'payee' => $payeeRule,
             'amount' => 'required|numeric|min:0',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
+            'start_date' => $startDateRule,
+            'end_date' => $endDateRule,
             'date' => 'required|date',
             'notes' => 'nullable|string|max:1000',
             'receipt_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'is_salary' => 'nullable|boolean',
-            'is_fast_expense' => 'nullable|boolean',
         ]);
 
         if ($validator->fails()) {
@@ -103,25 +98,23 @@ class ExpensesController extends Controller
         }
 
         try {
-            $data = $request->only(['branch_id', 'supplier_id', 'payee', 'amount', 'start_date', 'end_date', 'date', 'notes']);
+            $data = $request->only(['branch_id', 'supplier_id', 'expense_name', 'payee', 'amount', 'start_date', 'end_date', 'date', 'notes']);
             
-            // Handle expense name logic
-            if ($request->boolean('is_salary')) {
-                $data['expense_name'] = 'Salary';
-                $data['supplier_id'] = null; // No supplier for salary expenses
-            } else {
-                $data['expense_name'] = $request->expense_name;
-                // supplier_id is already included from the request
+            // Handle nullable fields - convert empty strings to null
+            if (empty($data['supplier_id'])) {
+                $data['supplier_id'] = null;
             }
-            
-            // Handle fast expense - if checked, payee can be empty
-            if ($request->boolean('is_fast_expense')) {
-                if (empty($data['payee'])) {
-                    $data['payee'] = null;
-                }
-                if (empty($data['supplier_id'])) {
-                    $data['supplier_id'] = null;
-                }
+            if (empty($data['payee'])) {
+                $data['payee'] = null;
+            }
+            if (empty($data['start_date'])) {
+                $data['start_date'] = null;
+            }
+            if (empty($data['end_date'])) {
+                $data['end_date'] = null;
+            }
+            if (empty($data['notes'])) {
+                $data['notes'] = null;
             }
 
             // Handle receipt image upload
