@@ -127,7 +127,7 @@
                                 <div class="mb-3">
                                     <label class="form-label">{{ __('field.amount') }} <span class="text-danger">*</span></label>
                                     <small class="text-muted d-block mb-2">{{__('general.enter_the_amount_of_the_expense')}}</small>
-                                    <input type="number" name="amount" id="expenseAmount" class="form-control"
+                                    <input type="phone" name="amount" id="expenseAmount" class="form-control"
                                         placeholder="{{ __('field.amount') }} (e.g. 100.00)" value="{{ $item ? $item->amount : '' }}" 
                                         step="0.01" max="99999" required />
                                 </div>
