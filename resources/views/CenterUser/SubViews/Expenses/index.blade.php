@@ -67,37 +67,14 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-1">
-                                    <div class="d-flex inline gap-4">
-                                        <div class="form-check mb-2 ">
-                                            <input class="form-check-input" type="checkbox" id="salaryCheckbox" name="is_salary" value="1"
-                                                {{ $item && $item->expense_name == 'Salary' ? 'checked' : '' }}>
-                                            <label class="form-check-label" for="salaryCheckbox">
-                                                {{ __('field.salary') }}
-                                            </label>
-                                        </div>
-                                        <div class="form-check mb-2">
-                                            <input class="form-check-input" type="checkbox" id="fastExpenseCheckbox" name="is_fast_expense" value="1">
-                                            <label class="form-check-label" for="fastExpenseCheckbox">
-                                                {{ __('field.fast_expense') }}
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div id="expenseNameInput" style="{{ $item && $item->expense_name == 'Salary' ? 'display: none;' : '' }}">
-                                        <label class="form-label">{{ __('field.expense_name') }}</label>
-                                        <!-- <input type="text" name="expense_name" id="expenseNameField" class="form-control" 
-                                            placeholder="{{ __('field.expense_name') }}" 
-                                            value="{{ $item && $item->expense_name != 'Salary' ? $item->expense_name : '' }}" /> -->
-                                        <select name="expense_name" id="expenseNameField" class="form-control">
-                                            <option value="">{{ __('field.select_expense_name') }}</option>
-                                            <option value="utilities" {{ $item && $item->expense_name == 'utilities' ? 'selected' : '' }}>{{ __('field.utilities') }}</option>
-                                            <option value="no_supplier" {{ $item && $item->expense_name == 'no_supplier' ? 'selected' : '' }}>{{ __('field.no_supplier') }}</option>
-                                            <option value="salary" {{ $item && $item->expense_name == 'salary' ? 'selected' : '' }}>{{ __('field.salary') }}</option>
-                                            <option value="local" {{ $item && $item->expense_name == 'local' ? 'selected' : '' }}>{{ __('field.local') }}</option>
-                                            <option value="suppliers" {{ $item && $item->expense_name == 'suppliers' ? 'selected' : '' }}>{{ __('field.suppliers') }}</option>
-                                        </select>
-                                    </div>
-                                    <input type="hidden" name="expense_name_hidden" id="expenseNameHidden" 
-                                        value="{{ $item && $item->expense_name == 'Salary' ? 'Salary' : '' }}" />
+                                    <label class="form-label">{{ __('field.expense_name') }} <span class="text-danger">*</span></label>
+                                    <small class="text-muted">{{__('field.select_expense_name')}}</small>
+                                    <select name="expense_name" id="expenseNameField" class="form-control" required>
+                                        <option value="">{{ __('field.select_expense_name') }}</option>
+                                        <option value="local_utilities" {{ $item && ($item->expense_name == 'utilities' || $item->expense_name == 'local' || $item->expense_name == 'local_utilities') ? 'selected' : '' }}>{{ __('field.local') }} {{ __('field.utilities') }}</option>
+                                        <option value="salary" {{ $item && ($item->expense_name == 'salary' || $item->expense_name == 'Salary') ? 'selected' : '' }}>{{ __('field.salary') }}</option>
+                                        <option value="suppliers" {{ $item && $item->expense_name == 'suppliers' ? 'selected' : '' }}>{{ __('field.suppliers') }}</option>
+                                    </select>
                                 </div>
                             </div>
                         </div>
@@ -118,7 +95,7 @@
                                 <input type="hidden" name="date" value="{{ $item ? $item->date : date('Y-m-d') }}" required />
                             </div>
                         </div>
-                        <div class="row" id="dateRangeContainer" style="display: {{ ($item && ($item->expense_name == 'Salary' || $item->expense_name == 'suppliers')) ? 'block' : 'none' }};">
+                        <div class="row" id="dateRangeContainer" style="display: {{ ($item && $item->expense_name == 'suppliers') ? 'block' : 'none' }};">
                             <div class="col-md-6">
                                 <div class="mb-1">
                                     <label class="form-label">{{ __('field.start_date') }} <span class="text-danger">*</span></label>
@@ -265,14 +242,13 @@
             
             // Function to handle date range visibility
             function handleDateRangeVisibility() {
-                const isSalaryChecked = $('#salaryCheckbox').is(':checked');
                 const expenseType = $('#expenseNameField').val();
                 const dateRangeContainer = $('#dateRangeContainer');
                 const startDateInput = $('input[name="start_date"]');
                 const endDateInput = $('input[name="end_date"]');
                 
-                // Show date range if salary is checked OR expense type is "suppliers"
-                if (isSalaryChecked || expenseType === 'suppliers') {
+                // Show date range only if expense type is "suppliers"
+                if (expenseType === 'suppliers') {
                     dateRangeContainer.show();
                     startDateInput.attr('required', 'required');
                     endDateInput.attr('required', 'required');
@@ -283,50 +259,9 @@
                 }
             }
             
-            // Function to handle salary checkbox changes
-            function handleSalaryCheckbox() {
-                const isSalaryChecked = $('#salaryCheckbox').is(':checked');
-                const expenseNameInput = $('#expenseNameInput');
-                const expenseNameField = $('#expenseNameField');
-                const expenseNameHidden = $('#expenseNameHidden');
-                
-                
-                if (isSalaryChecked) {
-                    // Hide expense name input, set hidden value to "Salary"
-                    expenseNameInput.hide();
-                    expenseNameField.removeAttr('required');
-                    expenseNameHidden.val('Salary');
-                } else {
-                    // Show expense name input, make it required
-                    expenseNameInput.show();
-                    expenseNameField.attr('required', 'required');
-                    expenseNameHidden.val('');
-                }
-                
-                // Update payee options
-                updatePayeeOptions();
-                
-                // Update date range visibility
-                handleDateRangeVisibility();
-            }
-            
-            // Function to handle fast expense checkbox changes
-            function handleFastExpenseCheckbox() {
-                const isFastExpenseChecked = $('#fastExpenseCheckbox').is(':checked');
-                const payeeSelect = $('#payeeSelect');
-                
-                if (isFastExpenseChecked) {
-                    // If checked, remove required attribute
-                    payeeSelect.removeAttr('required');
-                } else {
-                    // If unchecked, make it required again
-                    payeeSelect.attr('required', 'required');
-                }
-            }
-            
-            // Function to populate payee options based on salary checkbox and branch
+            // Function to populate payee options based on expense type and branch
             function updatePayeeOptions() {
-                const isSalaryChecked = $('#salaryCheckbox').is(':checked');
+                const expenseType = $('#expenseNameField').val();
                 const branchId = $('#branchSelect').val();
                 const payeeSelect = $('#payeeSelect');
                 const currentPayee = '{{ $item ? $item->payee : "" }}';
@@ -334,10 +269,9 @@
                 // Clear existing options
                 payeeSelect.empty();
                 payeeSelect.append('<option value="">{{ __('field.select_payee') }}</option>');
-                payeeSelect.append('<option value="no_payee">{{ __('field.no_payee') }}</option>');
                 
-                if (isSalaryChecked) {
-                    // If salary is checked, show workers from selected branch
+                if (expenseType === 'salary') {
+                    // If salary is selected, show workers from selected branch with phone
                     if (branchId) {
                         const branchWorkers = workers.filter(worker => worker.branch_id == branchId);
                         
@@ -362,8 +296,8 @@
                             payeeSelect.append(option);
                         });
                     }
-                } else {
-                    // If salary is not checked, show all suppliers
+                } else if (expenseType === 'suppliers') {
+                    // If suppliers is selected, show suppliers list
                     suppliers.forEach(function(supplier) {
                         const option = $('<option></option>')
                             .attr('value', supplier.name)
@@ -378,58 +312,9 @@
                         
                         payeeSelect.append(option);
                     });
-                }
-                
-                // Select current payee if it's "no_payee"
-                if (currentPayee === 'no_payee') {
-                    payeeSelect.find('option[value="no_payee"]').attr('selected', 'selected');
-                }
-                
-                // Reinitialize Select2 with placeholder
-                try {
-                    payeeSelect.select2('destroy');
-                    payeeSelect.select2({
-                        placeholder: "{{ __('field.select_payee') }}",
-                        allowClear: true,
-                        dropdownParent: payeeSelect.parent()
-                    });
-                } catch (e) {
-                    // Select2 not available, using regular select
-                }
-            }
-            
-            // Initialize form state
-            handleSalaryCheckbox();
-            updatePayeeOptions();
-            handleFastExpenseCheckbox();
-            handleExpenseTypeChange();
-            handleDateRangeVisibility();
-            
-            // Listen for salary checkbox changes
-            $('#salaryCheckbox').on('change', function() {
-                handleSalaryCheckbox();
-            });
-            
-            // Listen for fast expense checkbox changes
-            $('#fastExpenseCheckbox').on('change', function() {
-                handleFastExpenseCheckbox();
-            });
-            
-            // Listen for branch changes
-            $('#branchSelect').on('change', function() {
-                updatePayeeOptions();
-            });
-            
-            // Function to handle expense type changes
-            function handleExpenseTypeChange() {
-                const expenseType = $('#expenseNameField').val();
-                const payeeSelect = $('#payeeSelect');
-                
-                if (expenseType === 'utilities' || expenseType === 'local') {
-                    // Ensure "no_payee" option exists
-                    if (payeeSelect.find('option[value="no_payee"]').length === 0) {
-                        payeeSelect.prepend('<option value="no_payee">{{ __('field.no_payee') }}</option>');
-                    }
+                } else if (expenseType === 'local_utilities' || expenseType === 'utilities' || expenseType === 'local') {
+                    // If local_utilities is selected, show only no_payee
+                    payeeSelect.append('<option value="no_payee">{{ __('field.no_payee') }}</option>');
                     
                     // Select "no_payee" and disable the payee dropdown
                     payeeSelect.val('no_payee').trigger('change');
@@ -451,48 +336,66 @@
                     } catch (e) {
                         // Select2 not available
                     }
-                } else {
-                    // Re-enable the payee dropdown
-                    payeeSelect.prop('disabled', false);
-                    payeeSelect.attr('required', 'required');
                     
-                    // Re-enable Select2 if it's initialized
-                    try {
-                        payeeSelect.select2('destroy');
-                        payeeSelect.select2({
-                            placeholder: "{{ __('field.select_payee') }}",
-                            allowClear: true,
-                            dropdownParent: payeeSelect.parent()
-                        });
-                        payeeSelect.next('.select2-container').css({
-                            'pointer-events': 'auto',
-                            'opacity': '1'
-                        });
-                    } catch (e) {
-                        // Select2 not available
-                    }
-                    
-                    // Update payee options when re-enabled (unless it's salary)
-                    if (!$('#salaryCheckbox').is(':checked')) {
-                        updatePayeeOptions();
-                    }
+                    // Reinitialize Select2 and return early
+                    return;
                 }
                 
-                // Update date range visibility
+                // Select current payee if it's "no_payee" (for other expense types)
+                if (currentPayee === 'no_payee') {
+                    payeeSelect.append('<option value="no_payee" selected>{{ __('field.no_payee') }}</option>');
+                }
+                
+                // Re-enable payee dropdown if it was disabled
+                payeeSelect.prop('disabled', false);
+                payeeSelect.attr('required', 'required');
+                
+                // Reinitialize Select2 with placeholder
+                try {
+                    payeeSelect.select2('destroy');
+                    payeeSelect.select2({
+                        placeholder: "{{ __('field.select_payee') }}",
+                        allowClear: true,
+                        dropdownParent: payeeSelect.parent()
+                    });
+                    payeeSelect.next('.select2-container').css({
+                        'pointer-events': 'auto',
+                        'opacity': '1'
+                    });
+                } catch (e) {
+                    // Select2 not available, using regular select
+                }
+            }
+            
+            // Function to handle expense type changes
+            function handleExpenseTypeChange() {
+                updatePayeeOptions();
                 handleDateRangeVisibility();
             }
+            
+            // Initialize form state
+            updatePayeeOptions();
+            handleDateRangeVisibility();
             
             // Listen for expense type changes
             $('#expenseNameField').on('change', function() {
                 handleExpenseTypeChange();
             });
             
-            // Initialize expense type handling on page load
-            handleExpenseTypeChange();
+            // Listen for branch changes (only update if salary is selected)
+            $('#branchSelect').on('change', function() {
+                const expenseType = $('#expenseNameField').val();
+                if (expenseType === 'salary') {
+                    updatePayeeOptions();
+                }
+            });
             
             // If branch is pre-selected and disabled, trigger updatePayeeOptions on load
             @if($userBranchId)
-                updatePayeeOptions();
+                const expenseTypeOnLoad = $('#expenseNameField').val();
+                if (expenseTypeOnLoad) {
+                    updatePayeeOptions();
+                }
             @endif
             
             // Listen for payee selection changes to update supplier_id
@@ -529,9 +432,7 @@
                     start_date: $('input[name="start_date"]').val(),
                     end_date: $('input[name="end_date"]').val(),
                     amount: $('#expenseAmount').val(),
-                    notes: $('textarea[name="notes"]').val(),
-                    is_salary: $('#salaryCheckbox').is(':checked'),
-                    is_fast_expense: $('#fastExpenseCheckbox').is(':checked')
+                    notes: $('textarea[name="notes"]').val()
                 };
                 localStorage.setItem(storageKey, JSON.stringify(formData));
             }
@@ -544,13 +445,9 @@
                         // Only load branch from localStorage if user doesn't have a fixed branch
                         if (data.branch_id) $('#branchSelect').val(data.branch_id).trigger('change');
                     @endif
-                    if (data.is_salary) {
-                        $('#salaryCheckbox').prop('checked', true).trigger('change');
+                    if (data.expense_name) {
+                        $('#expenseNameField').val(data.expense_name).trigger('change');
                     }
-                    if (data.is_fast_expense) {
-                        $('#fastExpenseCheckbox').prop('checked', true).trigger('change');
-                    }
-                    if (data.expense_name) $('#expenseNameField').val(data.expense_name);
                     if (data.date) $('input[name="date"]').val(data.date);
                     if (data.start_date) $('input[name="start_date"]').val(data.start_date);
                     if (data.end_date) $('input[name="end_date"]').val(data.end_date);
