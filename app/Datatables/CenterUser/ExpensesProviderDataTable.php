@@ -72,7 +72,7 @@ class ExpensesProviderDataTable extends DataTable
             ->addTableClass('dt-responsive')
             ->columns($this->getColumns())
             ->minifiedAjax()
-            ->orderBy(10, 'desc')
+            ->orderBy(0, 'desc')
             ->responsive(true)
             ->dom('
                 <"card-header border-bottom p-3 d-flex flex-column flex-md-row justify-content-between align-items-center"
@@ -290,7 +290,7 @@ class ExpensesProviderDataTable extends DataTable
 
     public function query(Expense $model): QueryBuilder
     {
-        return $model->newQuery()->with(['branch', 'supplier']);
+        return $model->newQuery()->with(['branch', 'supplier'])->orderBy('created_at', 'desc');
     }
 
     protected function filename(): string

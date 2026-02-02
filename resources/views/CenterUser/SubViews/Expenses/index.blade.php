@@ -43,11 +43,13 @@
                         <h2>{{ $title }}</h2>
                     </div>
                     <div class="card-body">
+                        <input type="hidden" name="date" value="{{ $item ? $item->date : date('Y-m-d') }}" required />
+                        
                         <div class="row">
                             <div class="col-md-6">
-                                <div class="mb-1">
+                                <div class="mb-3">
                                     <label class="form-label">{{ __('field.branch') }} <span class="text-danger">*</span></label>
-                                    <small class="text-muted">{{__('general.select_a_branch_from_the_list')}}</small>
+                                    <small class="text-muted d-block mb-2">{{__('general.select_a_branch_from_the_list')}}</small>
                                     @php
                                         $userBranchId = auth('center_user')->user()->branch_id;
                                         $selectedBranchId = $item ? $item->branch_id : $userBranchId;
@@ -66,9 +68,9 @@
                                 </div>
                             </div>
                             <div class="col-md-6">
-                                <div class="mb-1">
+                                <div class="mb-3">
                                     <label class="form-label">{{ __('field.expense_name') }} <span class="text-danger">*</span></label>
-                                    <small class="text-muted">{{__('field.select_expense_name')}}</small>
+                                    <small class="text-muted d-block mb-2">{{__('field.select_expense_name')}}</small>
                                     <select name="expense_name" id="expenseNameField" class="form-control" required>
                                         <option value="">{{ __('field.select_expense_name') }}</option>
                                         <option value="local_utilities" {{ $item && ($item->expense_name == 'utilities' || $item->expense_name == 'local' || $item->expense_name == 'local_utilities') ? 'selected' : '' }}>{{ __('field.local') }} {{ __('field.utilities') }}</option>
@@ -78,11 +80,12 @@
                                 </div>
                             </div>
                         </div>
+                        
                         <div class="row">
                             <div class="col-md-6">
-                                <div class="mb-1">
+                                <div class="mb-3">
                                     <label class="form-label">{{ __('field.payee') }} <span class="text-danger">*</span></label>
-                                    <small class="text-muted">{{__('general.select_a_payee_from_the_list')}}</small>
+                                    <small class="text-muted d-block mb-2">{{__('general.select_a_payee_from_the_list')}}</small>
                                     <select class="form-control" name="payee" id="payeeSelect" data-select="true" required>
                                         <option value="">{{ __('field.select_payee') }}</option>
                                         <option value="no_payee">{{ __('field.no_payee') }}</option>
@@ -92,55 +95,53 @@
                                 </div>
                             </div>
                             <div class="col-md-6">
-                                <input type="hidden" name="date" value="{{ $item ? $item->date : date('Y-m-d') }}" required />
+                                <div class="mb-3">
+                                    <label class="form-label">{{ __('field.notes') }}</label>
+                                    <small class="text-muted d-block mb-2">{{__('general.enter_the_notes_of_the_expense')}}</small>
+                                    <textarea name="notes" class="form-control" rows="4"
+                                        placeholder="{{ __('field.notes') }}">{{ $item ? $item->notes : '' }}</textarea>
+                                </div>
                             </div>
                         </div>
                         <div class="row" id="dateRangeContainer" style="display: {{ ($item && $item->expense_name == 'suppliers') ? 'block' : 'none' }};">
                             <div class="col-md-6">
-                                <div class="mb-1">
+                                <div class="mb-3">
                                     <label class="form-label">{{ __('field.start_date') }} <span class="text-danger">*</span></label>
-                                    <small class="text-muted">{{__('general.select_a_start_date')}}</small>
+                                    <small class="text-muted d-block mb-2">{{__('general.select_a_start_date')}}</small>
                                     <input type="date" name="start_date" class="form-control"
                                         placeholder="{{ __('field.start_date') }}" value="{{ $item ? $item->start_date : '' }}" required />
                                 </div>
                             </div>
                             <div class="col-md-6">
-                                <div class="mb-1">
+                                <div class="mb-3">
                                     <label class="form-label">{{ __('field.end_date') }} <span class="text-danger">*</span></label>
-                                    <small class="text-muted">{{__('general.select_a_end_date')}}</small>
+                                    <small class="text-muted d-block mb-2">{{__('general.select_a_end_date')}}</small>
                                     <input type="date" name="end_date" class="form-control"
                                         placeholder="{{ __('field.end_date') }}" value="{{ $item ? $item->end_date : '' }}" required />
                                 </div>
                             </div>
                         </div>
+                        
                         <div class="row">
                             <div class="col-md-6">
-                                <div class="mb-1">
+                                <div class="mb-3">
                                     <label class="form-label">{{ __('field.amount') }} <span class="text-danger">*</span></label>
-                                    <small class="text-muted">{{__('general.enter_the_amount_of_the_expense')}}</small>
+                                    <small class="text-muted d-block mb-2">{{__('general.enter_the_amount_of_the_expense')}}</small>
                                     <input type="number" name="amount" id="expenseAmount" class="form-control"
                                         placeholder="{{ __('field.amount') }} (e.g. 100.00)" value="{{ $item ? $item->amount : '' }}" 
                                         step="0.01" max="99999" required />
                                 </div>
                             </div>
-                        </div>
-                        <div class="row">
                             <div class="col-md-6">
-                                <div class="mb-1">
+                                <div class="mb-3">
                                     <label class="form-label">{{ __('field.receipt') }} <span class="text-danger">*</span></label>
-                                    <small class="text-muted">{{__('general.select_a_receipt_from_the_list')}}</small>
-                                    <input type="file" class="form-control" id="receiptImage" name="receipt_image" />
-                                </div>
-                                <img id="show_receipt" src="{{ $item ? $item->receipt_image_url : '' }}"
-                                    style="{{ $item ? '' : 'display:none;' }} width:200px;height:200px;margin:20px;"
-                                    alt="expense receipt" />
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-1">
-                                    <label class="form-label">{{ __('field.notes') }} <span class="text-danger">*</span></label>
-                                    <small class="text-muted">{{__('general.enter_the_notes_of_the_expense')}}</small>
-                                    <textarea name="notes" class="form-control" rows="4"
-                                        placeholder="{{ __('field.notes') }}">{{ $item ? $item->notes : '' }}</textarea>
+                                    <small class="text-muted d-block mb-2">{{__('general.select_a_receipt_from_the_list')}}</small>
+                                    <input type="file" class="form-control" id="receiptImage" name="receipt_image" accept="image/*" />
+                                    <div class="mt-2">
+                                        <img id="show_receipt" src="{{ $item ? $item->receipt_image_url : '' }}"
+                                            style="{{ $item ? '' : 'display:none;' }} max-width:100%; height:auto; max-height:200px; border-radius:8px; border:2px solid #e0e0e0;"
+                                            alt="expense receipt" />
+                                    </div>
                                 </div>
                             </div>
                         </div>
