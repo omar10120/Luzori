@@ -33,11 +33,8 @@ class SuppliersDataTable extends DataTable
                 return $html;
             })
             ->editColumn('logo', function ($row) {
-                if ($row->logo) {
-                    $logoUrl = $row->logo_url ?: asset('storage/' . $row->logo);
-                    return '<img src="' . $logoUrl . '" alt="Logo" class="img-thumbnail" style="width: 40px; height: 40px;">';
-                }
-                return '<img src="https://via.placeholder.com/40x40" alt="Logo" class="img-thumbnail" style="width: 40px; height: 40px;">';
+                $logoUrl = $row->logo_url;
+                return '<img src="' . $logoUrl . '" alt="Logo" class="img-thumbnail" style="width: 40px; height: 40px; object-fit: cover;">';
             })
             ->editColumn('description', function ($row) {
                 return \App\Helpers\MyHelper::truncateWithReadMore($row->description ?? '');

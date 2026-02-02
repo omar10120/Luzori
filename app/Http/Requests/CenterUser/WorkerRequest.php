@@ -32,6 +32,7 @@ class WorkerRequest extends FormRequest
                 'shift_id' => 'required|exists:shifts,id',
                 'name' => 'required|string',
                 'email' => 'nullable|email|unique:workers,email,' . $this->id,
+                'country_code' => 'required|string',
                 'phone' => 'required|numeric|digits_between:6,10|unique:workers,phone,' . $this->id,
                 'image' => 'nullable|image|max:4096|mimes:jpg,jpeg,png,gif|mimetypes:image/jpeg,image/png',
             ];
@@ -43,6 +44,7 @@ class WorkerRequest extends FormRequest
                 'shift_id' => 'required|exists:shifts,id',
                 'name' => 'required|string',
                 'email' => 'nullable|email|unique:workers,email',
+                'country_code' => 'required|string',
                 'phone' => 'required|numeric|digits_between:6,10|unique:workers,phone',
                 'image' => 'nullable|image|max:4096|mimes:jpg,jpeg,png,gif|mimetypes:image/jpeg,image/png',
             ];

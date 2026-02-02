@@ -304,7 +304,11 @@ return [
     'created_by'                      => 'Created By',
     'status'                          => 'Status',
     'active'                          => 'Active',
-    'inactive'                        => 'Inactive'
+    'inactive'                        => 'Inactive',
+    'utilities'                       => 'Utilities',
+    'no_supplier'                     => 'No Supplier',
+    'local'                           => 'Local',
+    'no_payee'                        => 'No Payee',
     
     
     

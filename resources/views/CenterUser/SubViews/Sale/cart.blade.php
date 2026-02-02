@@ -242,7 +242,7 @@
                                                     <div id="booking-walletsElement"></div>
                                                     <div id="booking-membershipsElement"></div>
                                                     <div id="booking-servicesTable"></div>
-                                                    <div class="row mb-4">
+                                                    <div class="row mb-4" id="booking-payment-method-container">
                                                         <div class="col-md-12">
                                                             <div class="mb-1">
                                                                 <label for="booking-payment_type" class="form-label">{{ __('field.payment_method') }} <span class="text-danger">*</span></label>
@@ -1424,17 +1424,42 @@
                     return false;
                 }
 
-                // Validate payment method
-                if (!paymentType || paymentType === '') {
-                    $paymentTypeField.addClass('is-invalid');
-                    $paymentTypeField.siblings('.invalid-feedback').text('{{ __('field.payment_method') }} is required');
-                    $paymentTypeField.focus();
-                    return false;
+                // Check if wallet or membership is selected
+                var hasWalletSelected = $('input[name="discount_id"].booking-wallet-radio:checked').length > 0;
+                var hasMembershipSelected = $('input[name="discount_id"].booking-membership-radio:checked').length > 0;
+                
+                // Validate payment method only if no wallet or membership is selected
+                if (!hasWalletSelected && !hasMembershipSelected) {
+                    if (!paymentType || paymentType === '') {
+                        $paymentTypeField.addClass('is-invalid');
+                        $paymentTypeField.siblings('.invalid-feedback').text('{{ __('field.payment_method') }} is required');
+                        $paymentTypeField.focus();
+                        return false;
+                    } else {
+                        $paymentTypeField.removeClass('is-invalid');
+                    }
                 } else {
+                    // Clear payment type if wallet/membership is selected
+                    paymentType = null;
                     $paymentTypeField.removeClass('is-invalid');
                 }
 
                 bookingWizardData.payment_type = paymentType;
+                
+                // Get selected wallet or membership info
+                var selectedWallet = $('input[name="discount_id"].booking-wallet-radio:checked');
+                var selectedMembership = $('input[name="discount_id"].booking-membership-radio:checked');
+                var paymentMethodDisplay = '';
+                
+                if (selectedWallet.length > 0) {
+                    var walletLabel = selectedWallet.closest('.wallet-item').find('label').text().trim();
+                    paymentMethodDisplay = 'Wallet: ' + walletLabel;
+                } else if (selectedMembership.length > 0) {
+                    var membershipLabel = selectedMembership.closest('.membership-item').find('label').text().trim();
+                    paymentMethodDisplay = 'Membership: ' + membershipLabel;
+                } else {
+                    paymentMethodDisplay = bookingWizardData.payment_type || '{{ __('field.not_selected') }}';
+                }
 
                 // Build review HTML
                 let reviewHtml = `<table class="table table-bordered">
@@ -1471,7 +1496,7 @@
                 </tr>
                 <tr>
                     <th class="fw-bolder" scope="row">{{__('field.payment_method')}}</th>
-                    <td colspan="5">${bookingWizardData.payment_type || '{{ __('field.not_selected') }}'}</td>
+                    <td colspan="5">${paymentMethodDisplay}</td>
                 </tr></tbody></table>`;
 
                 $('#booking-review-content').html(reviewHtml);
@@ -2073,21 +2098,51 @@
                 $(document).off('click', '.clear-wallet-selection').on('click', '.clear-wallet-selection', function() {
                     $('input[name="discount_id"].booking-wallet-radio').prop('checked', false);
                     toggleClearButtons();
+                    togglePaymentMethodVisibility();
                 });
 
                 // Clear membership selection
                 $(document).off('click', '.clear-membership-selection').on('click', '.clear-membership-selection', function() {
                     $('input[name="discount_id"].booking-membership-radio').prop('checked', false);
                     toggleClearButtons();
+                    togglePaymentMethodVisibility();
                 });
 
                 // Listen for radio button changes
                 $(document).off('change', 'input[name="discount_id"]').on('change', 'input[name="discount_id"]', function() {
                     toggleClearButtons();
+                    togglePaymentMethodVisibility();
+                });
+
+                // Function to toggle payment method visibility based on wallet/membership selection
+                function togglePaymentMethodVisibility() {
+                    var hasWalletSelected = $('input[name="discount_id"].booking-wallet-radio:checked').length > 0;
+                    var hasMembershipSelected = $('input[name="discount_id"].booking-membership-radio:checked').length > 0;
+                    var hasDiscountSelected = $('input[name="discount_id"].booking-discount-radio:checked').length > 0;
+                    
+                    if (hasWalletSelected || hasMembershipSelected) {
+                        $('#booking-payment-method-container').hide();
+                        $('#booking-payment_type').val('').removeClass('is-invalid');
+                        $('#booking-payment_type').prop('required', false);
+                    } else {
+                        $('#booking-payment-method-container').show();
+                        $('#booking-payment_type').prop('required', true);
+                    }
+                }
+
+                // Listen for payment method changes to clear wallet/membership selection
+                $(document).off('change', '#booking-payment_type').on('change', '#booking-payment_type', function() {
+                    if ($(this).val() && $(this).val() !== '') {
+                        $('input[name="discount_id"].booking-wallet-radio:checked').prop('checked', false);
+                        $('input[name="discount_id"].booking-membership-radio:checked').prop('checked', false);
+                        toggleClearButtons();
+                        togglePaymentMethodVisibility();
+                    }
                 });
 
                 // Initial check
                 toggleClearButtons();
+                togglePaymentMethodVisibility();
             }
 
             // Attach handlers on page load

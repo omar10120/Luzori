@@ -16,6 +16,7 @@ class Supplier extends Model
     protected $fillable = [
         'name',
         'email',
+        'country_code',
         'phone',
         'logo',
     ];
@@ -33,6 +34,6 @@ class Supplier extends Model
         if ($this->logo) {
             return asset('storage/' . $this->logo);
         }
-        return null;
+        return asset('assets/img/avatars/1.png');
     }
 }

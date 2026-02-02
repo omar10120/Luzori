@@ -27,7 +27,7 @@ class ExpensesController extends Controller
         // Get data for dropdowns
         $branches = Branch::all();
         $suppliers = Supplier::all();
-        $workers = Worker::all();
+        $workers = Worker::select('id', 'name', 'country_code', 'phone', 'branch_id')->get();
         
         return view('CenterUser.SubViews.Expenses.index', compact('title', 'item', 'requestUrl', 'branches', 'suppliers', 'workers'));
     }
@@ -52,7 +52,7 @@ class ExpensesController extends Controller
         // Get data for dropdowns
         $branches = Branch::all();
         $suppliers = Supplier::all();
-        $workers = Worker::all();
+        $workers = Worker::select('id', 'name', 'country_code', 'phone', 'branch_id')->get();
         
         return view('CenterUser.SubViews.Expenses.index', compact('title', 'item', 'requestUrl', 'branches', 'suppliers', 'workers'));
     }

@@ -298,5 +298,8 @@ return [
     'status'                          => 'الحالة',
     'active'                          => 'نشط',
     'inactive'                        => 'غير نشط',
-
+    'utilities'                       => 'Utilities',
+    'no_supplier'                     => 'بدون مورد',
+    'local'                           => 'محلي',
+    'no_payee'                        => 'بدون مدين',
 ];

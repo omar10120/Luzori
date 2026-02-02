@@ -41,7 +41,8 @@ class SuppliersController extends Controller
         $rules = [
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:suppliers,email,' . ($request->id ?? 'NULL'),
-            'phone' => 'required|string|max:20',
+            'country_code' => 'required|string',
+            'phone' => 'required|numeric|digits_between:6,10',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ];
 
@@ -58,7 +59,7 @@ class SuppliersController extends Controller
         }
 
         try {
-            $data = $request->only(['name', 'email', 'phone']);
+            $data = $request->only(['name', 'email', 'country_code', 'phone']);
             
             foreach (config('translatable.locales') as $locale) {
                 $data[$locale] = [
@@ -76,6 +77,9 @@ class SuppliersController extends Controller
                 // Keep existing logo if no new one uploaded
                 $existingSupplier = Supplier::find($request->id);
                 $data['logo'] = $existingSupplier->logo;
+            } else {
+                // For new suppliers, logo is optional (null)
+                $data['logo'] = null;
             }
 
             if ($request->id) {
