@@ -652,9 +652,8 @@
                                 <label for="quick_customer_phone" class="form-label">
                                     {{ __('field.mobile_number') }} <span class="text-danger">*</span>
                                 </label>
-                                <input type="tel" maxlength="7" id="quick_customer_phone" class="form-control" name="phone" required />
+                                <input type="tel" maxlength="7" id="quick_customer_phone" class="form-control" name="phone" required pattern="[0-9]{7}" title="{{ __('field.phone_must_be_7_digits') }}" />
                                 <div class="invalid-feedback"></div>
-                                <small class="text-muted">{{ __('field.phone_must_be_between_6_and_10_digits') }}</small>
                             </div>
                         </div>
                         <div class="mb-3">
@@ -1066,6 +1065,52 @@
             // Initial check when modal is opened
             $('#addCustomerModal').on('shown.bs.modal', function() {
                 toggleQuickCustomerPhonePrefix();
+            });
+            
+            // Real-time phone validation for quick add customer
+            function validateQuickCustomerPhone() {
+                const phoneInput = $('#quick_customer_phone');
+                const countryCode = $('#addCustomerModal').find('select[name="country_code"]').val();
+                const value = (phoneInput.val() || '').trim();
+                const feedbackEl = phoneInput.siblings('.invalid-feedback');
+                
+                if (!value) {
+                    phoneInput.removeClass('is-invalid is-valid');
+                    if (feedbackEl.length) feedbackEl.text('');
+                    return false;
+                }
+                
+                let isValid = false;
+                if (countryCode === '+971') {
+                    // For UAE, must be exactly 7 digits
+                    isValid = value.length === 7 && /^[0-9]+$/.test(value);
+                    
+                } else {
+                    // For other countries, 6-10 digits
+                    isValid = /^[0-9]+$/.test(value) && value.length >= 6 && value.length <= 10;
+                    if (!isValid && feedbackEl.length) {
+                        feedbackEl.text('{{ __('field.mobile_number') }} must be between 6 and 10 digits');
+                    }
+                }
+                
+                if (isValid) {
+                    phoneInput.removeClass('is-invalid').addClass('is-valid');
+                    if (feedbackEl.length) feedbackEl.text('');
+                } else {
+                    phoneInput.removeClass('is-valid').addClass('is-invalid');
+                }
+                
+                return isValid;
+            }
+            
+            // Attach real-time validation
+            $(document).on('input keyup blur', '#quick_customer_phone', function() {
+                validateQuickCustomerPhone();
+            });
+            
+            // Re-validate when country code changes
+            $(document).on('change', '#addCustomerModal select[name="country_code"]', function() {
+                validateQuickCustomerPhone();
             });
 
             
@@ -3109,7 +3154,8 @@
             // Quick add customer
             $('#save-quick-customer-btn').on('click', function(e) {
                 e.preventDefault();
-                const form = $('#quick-add-customer-form')[0];
+                const $form = $('#quick-add-customer-form');
+                const form = $form[0]; // DOM element for FormData
                 
                 // Clear previous errors
                 $('.invalid-feedback').text('');
@@ -3152,34 +3198,41 @@
                 // Validate phone
                 const countryCode = $('#addCustomerModal').find('select[name="country_code"]').val();
                 const phonePrefix = $('#quick_customer_phone_prefix').val() || '';
-                const phoneInput = $('#quick_customer_phone').val().trim();
+                const phoneInputValue = $('#quick_customer_phone').val().trim();
                 
-                if (!phoneInput) {
+                if (!phoneInputValue) {
                     $('#quick_customer_phone').addClass('is-invalid');
                     $('#quick_customer_phone').siblings('.invalid-feedback').text('{{ __('field.mobile_number') }} is required');
                     isValid = false;
                     if (!firstErrorField) firstErrorField = $('#quick_customer_phone');
                 } else {
-                    // Combine prefix with phone for validation
-                    let fullPhone = phoneInput;
-                    if (countryCode === '+971' && phonePrefix) {
-                        fullPhone = phonePrefix + phoneInput;
-                    }
-                    
-                    // Check if phone is numeric
-                    if (!/^\d+$/.test(fullPhone)) {
-                        $('#quick_customer_phone').addClass('is-invalid');
-                        $('#quick_customer_phone').siblings('.invalid-feedback').text('{{ __('field.mobile_number') }} must be numeric');
-                        isValid = false;
-                        if (!firstErrorField) firstErrorField = $('#quick_customer_phone');
-                    } else {
-                        // Check phone length (6-10 digits)
-                        const phoneLength = fullPhone.length;
-                        if (phoneLength < 6 || phoneLength > 10) {
+                    // For UAE (+971), phone must be exactly 7 digits (without prefix)
+                    if (countryCode === '+971') {
+                        if (!/^\d{7}$/.test(phoneInputValue)) {
                             $('#quick_customer_phone').addClass('is-invalid');
-                            $('#quick_customer_phone').siblings('.invalid-feedback').text('{{ __('field.mobile_number') }} must be between 6 and 10 digits');
+                            $('#quick_customer_phone').siblings('.invalid-feedback').text('{{ __('field.phone_must_be_7_digits') }}');
                             isValid = false;
                             if (!firstErrorField) firstErrorField = $('#quick_customer_phone');
+                        } else {
+                            $('#quick_customer_phone').removeClass('is-invalid');
+                        }
+                    } else {
+                        // For other countries, validate 6-10 digits
+                        if (!/^\d+$/.test(phoneInputValue)) {
+                            $('#quick_customer_phone').addClass('is-invalid');
+                            $('#quick_customer_phone').siblings('.invalid-feedback').text('{{ __('field.mobile_number') }} must be numeric');
+                            isValid = false;
+                            if (!firstErrorField) firstErrorField = $('#quick_customer_phone');
+                        } else {
+                            const phoneLength = phoneInputValue.length;
+                            if (phoneLength < 6 || phoneLength > 10) {
+                                $('#quick_customer_phone').addClass('is-invalid');
+                                $('#quick_customer_phone').siblings('.invalid-feedback').text('{{ __('field.mobile_number') }} must be between 6 and 10 digits');
+                                isValid = false;
+                                if (!firstErrorField) firstErrorField = $('#quick_customer_phone');
+                            } else {
+                                $('#quick_customer_phone').removeClass('is-invalid');
+                            }
                         }
                     }
                 }
@@ -3197,17 +3250,31 @@
                     return false;
                 }
                 
-                // Combine prefix with phone number if UAE (+971)
+                // Combine prefix with phone number if UAE (+971) - but don't modify visible input
                 const countryCodeSelect = $('#addCustomerModal').find('select[name="country_code"]');
                 const phonePrefixSelect = $('#quick_customer_phone_prefix');
                 const phoneInputField = $('#quick_customer_phone');
                 
                 if (countryCodeSelect.length && countryCodeSelect.val() === '+971' && phonePrefixSelect.length && phoneInputField.length) {
                     const prefix = phonePrefixSelect.val();
-                    const phone = phoneInputField.val();
+                    const phone = phoneInputField.val().trim();
                     if (prefix && phone) {
-                        // Combine prefix with phone number
-                        phoneInputField.val(prefix + phone);
+                        // Remove any existing hidden phone field
+                        const existingHidden = $form.find('input[name="phone"][type="hidden"]');
+                        if (existingHidden.length) {
+                            existingHidden.remove();
+                        }
+                        
+                        // Temporarily rename the visible input so it's not submitted
+                        phoneInputField.attr('name', 'phone_display_only');
+                        
+                        // Create hidden input with the full number (prefix + phone)
+                        const hiddenInput = $('<input>', {
+                            type: 'hidden',
+                            name: 'phone',
+                            value: prefix + phone
+                        });
+                        $form.append(hiddenInput);
                     }
                 }
                 
@@ -3283,6 +3350,16 @@
                                          loadCustomerServices(selectedCustomerPhone);
                                     }
                                     
+                                    // Clean up hidden phone field and restore input name before reset
+                                    const hiddenPhoneField = $('#quick-add-customer-form').find('input[name="phone"][type="hidden"]');
+                                    if (hiddenPhoneField.length) {
+                                        hiddenPhoneField.remove();
+                                    }
+                                    const phoneInput = $('#quick_customer_phone');
+                                    if (phoneInput.attr('name') === 'phone_display_only') {
+                                        phoneInput.attr('name', 'phone');
+                                    }
+                                    
                                     $('#addCustomerModal').modal('hide');
                                     $('#quick-add-customer-form')[0].reset();
                                     if (typeof toastr !== 'undefined') {
@@ -3293,6 +3370,16 @@
                         }
                     },
                     error: function(xhr) {
+                        // Clean up hidden phone field and restore input name on error
+                        const hiddenPhoneField = $('#quick-add-customer-form').find('input[name="phone"][type="hidden"]');
+                        if (hiddenPhoneField.length) {
+                            hiddenPhoneField.remove();
+                        }
+                        const phoneInput = $('#quick_customer_phone');
+                        if (phoneInput.attr('name') === 'phone_display_only') {
+                            phoneInput.attr('name', 'phone');
+                        }
+                        
                         if (xhr.status === 422) {
                             // Validation errors
                             const errors = xhr.responseJSON.errors;
@@ -3320,12 +3407,22 @@
                                 toastr.error('Please fix the validation errors');
                             }
                         } else {
-                        if (typeof toastr !== 'undefined') {
-                            toastr.error(xhr.responseJSON?.message || '{{ __('admin.an_error_occurred') }}');
+                            if (typeof toastr !== 'undefined') {
+                                toastr.error(xhr.responseJSON?.message || '{{ __('admin.an_error_occurred') }}');
                             }
                         }
                     },
                     complete: function() {
+                        // Clean up hidden phone field and restore input name in complete handler (in case of any issues)
+                        const hiddenPhoneField = $('#quick-add-customer-form').find('input[name="phone"][type="hidden"]');
+                        if (hiddenPhoneField.length) {
+                            hiddenPhoneField.remove();
+                        }
+                        const phoneInput = $('#quick_customer_phone');
+                        if (phoneInput.attr('name') === 'phone_display_only') {
+                            phoneInput.attr('name', 'phone');
+                        }
+                        
                         $btn.prop('disabled', false).html(originalHtml);
                     }
                 });

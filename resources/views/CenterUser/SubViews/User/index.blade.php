@@ -163,16 +163,44 @@
             const form = document.getElementById('frmSubmit');
             if (form) {
                 form.addEventListener('submit', function(e) {
+                    // Validate phone first (before modifying value)
                     if (!validatePhone()) {
                         e.preventDefault();
                         e.stopPropagation();
                         return false;
                     }
+                    
+                    // If validation passes and UAE country code is selected, combine prefix + phone
+                    // Use a hidden field to submit the full number, keeping visible input unchanged
                     if (countryCodeSelect && countryCodeSelect.value === '+971' && phonePrefixSelect && phoneInput) {
                         const prefix = phonePrefixSelect.value;
-                        const phone = phoneInput.value;
+                        const phone = phoneInput.value.trim();
                         if (prefix && phone) {
-                            phoneInput.value = prefix + phone;
+                            // Remove any existing hidden phone field
+                            const existingHidden = form.querySelector('input[name="phone"][type="hidden"]');
+                            if (existingHidden) {
+                                existingHidden.remove();
+                            }
+                            
+                            // Temporarily rename the visible input so it's not submitted
+                            const originalName = phoneInput.name;
+                            phoneInput.name = 'phone_display_only';
+                            
+                            // Create hidden input with the full number (prefix + phone)
+                            const hiddenInput = document.createElement('input');
+                            hiddenInput.type = 'hidden';
+                            hiddenInput.name = 'phone';
+                            hiddenInput.value = prefix + phone;
+                            form.appendChild(hiddenInput);
+                            
+                            // Restore the original name after form submission (in case of validation error)
+                            setTimeout(function() {
+                                phoneInput.name = originalName;
+                                const hiddenField = form.querySelector('input[name="phone"][type="hidden"]');
+                                if (hiddenField) {
+                                    hiddenField.remove();
+                                }
+                            }, 1000);
                         }
                     }
                 });
