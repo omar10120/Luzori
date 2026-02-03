@@ -13,6 +13,7 @@ use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Service;
 use App\Models\User;
+use App\Models\UserUsedWallet;
 use App\Models\UserWallet;
 use App\Models\Wallet;
 use App\Services\SMSGatewayService;
@@ -80,7 +81,7 @@ class SalesService
 
             // Process service items (one booking per item; each item can have multiple services)
             foreach ($serviceItems as $item) {
-                $booking = $this->createBookingFromCartItem($item, $sale->id, $branchId, $item['payment_type'] ?? null);
+                // Calculate booking subtotal before creating booking
                 $bookingSubtotal = 0;
                 if (!empty($item['services']) && is_array($item['services'])) {
                     foreach ($item['services'] as $svc) {
@@ -89,6 +90,17 @@ class SalesService
                 } else {
                     $bookingSubtotal = (float) ($item['price'] ?? 0);
                 }
+                
+                // Determine payment type (wallet/membership override payment_type)
+                $paymentType = $item['payment_type'] ?? null;
+                if (!empty($item['wallet_id'])) {
+                    $paymentType = 'Wallet';
+                } elseif (!empty($item['membership_id'])) {
+                    $paymentType = 'Membership';
+                }
+                
+                $booking = $this->createBookingFromCartItem($item, $sale->id, $branchId, $paymentType, $bookingSubtotal);
+                
                 SaleItem::create([
                     'sale_id' => $sale->id,
                     'item_type' => 'booking',
@@ -262,7 +274,7 @@ class SalesService
     /**
      * Create Booking from cart item (one booking with one or more services)
      */
-    private function createBookingFromCartItem($item, $saleId, $branchId, $paymentType = null)
+    private function createBookingFromCartItem($item, $saleId, $branchId, $paymentType = null, $bookingTotal = 0)
     {
         $services = $item['services'] ?? null;
         if (!empty($services) && is_array($services)) {
@@ -328,7 +340,61 @@ class SalesService
             ]);
         }
 
+        // Handle wallet payment - deduct booking amount from wallet balance
+        if (!empty($item['wallet_id'])) {
+            $this->deductWalletBalance($item['wallet_id'], $item['client_mobile'], $bookingTotal, $booking->id, $branchId);
+        }
+
+        // Handle membership payment - deduct booking amount from membership balance
+        if (!empty($item['membership_id'])) {
+            // Similar logic for membership if needed
+            // For now, membership might work differently - check requirements
+        }
+
         return $booking;
+    }
+
+    /**
+     * Deduct booking amount from wallet balance
+     */
+    private function deductWalletBalance($walletId, $clientMobile, $bookingAmount, $bookingId, $branchId)
+    {
+        $wallet = Wallet::find($walletId);
+        if (!$wallet) {
+            return; // Wallet not found, skip deduction
+        }
+
+        // Find user by phone number
+        if (empty($clientMobile)) {
+            return; // No mobile number, can't find user
+        }
+
+        $user = User::where('phone', $clientMobile)->first();
+        if (!$user) {
+            return; // User not found, skip deduction
+        }
+
+        // Create UserUsedWallet record to track wallet usage
+        UserUsedWallet::create([
+            'amount' => $bookingAmount, // Amount deducted from wallet
+            'user_id' => $user->id,
+            'branch_id' => $branchId,
+            'wallet_id' => $walletId,
+            'booking_id' => $bookingId,
+        ]);
+
+        // Deduct booking amount from user's wallet balance
+        $currentBalance = (float) ($user->wallet ?? 0);
+        $newBalance = max(0, $currentBalance - $bookingAmount); // Ensure balance doesn't go negative
+        
+        $user->update([
+            'wallet' => $newBalance
+        ]);
+
+        // Mark wallet as used if balance reaches zero or below
+        if ($newBalance <= 0 && !$wallet->used) {
+            $wallet->update(['used' => true]);
+        }
     }
 
     /**

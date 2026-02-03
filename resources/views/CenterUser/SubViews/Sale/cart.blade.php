@@ -1517,13 +1517,26 @@
                 var selectedDiscount = $('input[name="discount_id"].booking-discount-radio:checked');
                 var paymentMethodDisplay = '';
                 
+                // Store wallet/membership info if selected
                 if (selectedWallet.length > 0) {
                     var walletLabel = selectedWallet.closest('.wallet-item').find('label').text().trim();
                     paymentMethodDisplay = 'Wallet: ' + walletLabel;
-                } else if (selectedMembership.length > 0) {
-                    var membershipLabel = selectedMembership.closest('.membership-item').find('label').text().trim();
-                    paymentMethodDisplay = 'Membership: ' + membershipLabel;
+                    bookingWizardData.wallet_id = selectedWallet.val();
                 } else {
+                    bookingWizardData.wallet_id = null;
+                }
+                
+                if (selectedMembership.length > 0) {
+                    var membershipLabel = selectedMembership.closest('.membership-item').find('label').text().trim();
+                    if (!paymentMethodDisplay) {
+                        paymentMethodDisplay = 'Membership: ' + membershipLabel;
+                    }
+                    bookingWizardData.membership_id = selectedMembership.val();
+                } else {
+                    bookingWizardData.membership_id = null;
+                }
+                
+                if (!paymentMethodDisplay) {
                     paymentMethodDisplay = bookingWizardData.payment_type || '{{ __('field.not_selected') }}';
                 }
                 
@@ -1639,7 +1652,10 @@
                     services: serviceRows,
                     client_name: bookingWizardData.name,
                     client_mobile: bookingWizardData.mobile,
-                    payment_type: bookingWizardData.payment_type || null
+                    payment_type: bookingWizardData.payment_type || null,
+                    wallet_id: bookingWizardData.wallet_id || null,
+                    membership_id: bookingWizardData.membership_id || null,
+                    discount_id: bookingWizardData.discount_id || null
                 });
 
                 saveCartToSession();
@@ -2146,25 +2162,14 @@
                             $.each(wallets, function(index, item) {
                                 var wallet = item.wallet;
                                 var originalAmount = parseFloat(wallet.amount || 0);
-                                var displayedAmount = originalAmount;
                                 
-                                // Apply discount if selected (discount codes can reduce wallet amount)
-                                var selectedDiscount = $('input[name="discount_id"].booking-discount-radio:checked');
-                                if (selectedDiscount.length > 0) {
-                                    var discountAmount = parseFloat(selectedDiscount.data('discount-amount') || 0);
-                                    var discountType = selectedDiscount.data('discount-type') || 'percentage';
-                                    
-                                    if (discountType === 'percentage') {
-                                        displayedAmount = originalAmount * (1 - discountAmount / 100);
-                                    } else {
-                                        displayedAmount = Math.max(0, originalAmount - discountAmount);
-                                    }
-                                }
+                                // Wallet amount is displayed as-is (no discount applied to wallet display)
+                                // Discount codes don't affect wallet amount display - they only affect service prices
                                 
                                 walletsElement += `<div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-2">
                                     <div class="form-check wallet-item" style="padding: 10px;color: #fff;background-color: #428bca;border-color: #357ebd;border-radius: 4px;min-height: 50px;display: flex;align-items: center;gap: 10px;font-size: 10px;width: 100%;">
                                         <label class="form-check-label flex-grow-1 text-start" for="booking-wallets${wallet.id}" style="word-break: break-word;white-space: normal;overflow: hidden;min-width: 0;margin: 0;">
-                                            ${wallet.code + ' [' + displayedAmount.toFixed(2) + ' AED]'}
+                                            ${wallet.code + ' [' + originalAmount.toFixed(2) + ' AED]'}
                                         </label>
                                         <input class="form-check-input flex-shrink-0 booking-wallet-radio" type="radio" name="discount_id" data-name="discount_id" value="${wallet.id}" id="booking-wallets${wallet.id}" data-wallet-amount="${originalAmount}" style="margin-top: 0;width: 18px;height: 18px;flex-shrink: 0;">
                                     </div>
@@ -2210,6 +2215,8 @@
             }
 
             // Function to calculate discounted service price
+            // Note: Wallets and memberships are payment methods, not discounts - they don't reduce the price
+            // They deduct from wallet/membership balance on the backend
             function calculateDiscountedServicePrice(originalPrice) {
                 if (!originalPrice) {
                     return parseFloat(originalPrice || 0);
@@ -2217,7 +2224,7 @@
                 
                 var discountedPrice = parseFloat(originalPrice);
                 
-                // Check for discount code selection
+                // Check for discount code selection only (wallets/memberships don't affect price)
                 var selectedDiscount = $('input[name="discount_id"].booking-discount-radio:checked');
                 if (selectedDiscount.length > 0) {
                     var discountAmount = parseFloat(selectedDiscount.data('discount-amount') || 0);
@@ -2232,35 +2239,8 @@
                     }
                 }
                 
-                // Check for wallet selection (fixed amount deduction)
-                var selectedWallet = $('input[name="discount_id"].booking-wallet-radio:checked');
-                if (selectedWallet.length > 0) {
-                    // Get wallet amount from data attribute first, then fallback to label text
-                    var walletAmount = parseFloat(selectedWallet.data('wallet-amount') || 0);
-                    if (walletAmount === 0) {
-                        // Fallback: try to parse from label text
-                        var walletLabel = selectedWallet.closest('.wallet-item').find('label').text();
-                        var walletMatch = walletLabel.match(/\[([\d.]+)\s*AED\]/);
-                        if (walletMatch && walletMatch[1]) {
-                            walletAmount = parseFloat(walletMatch[1]);
-                        }
-                    }
-                    if (walletAmount > 0) {
-                        discountedPrice = Math.max(0, discountedPrice - walletAmount);
-                    }
-                }
-                
-                // Check for membership selection (percentage discount)
-                var selectedMembership = $('input[name="discount_id"].booking-membership-radio:checked');
-                if (selectedMembership.length > 0) {
-                    // Get membership percent from the label text or data attribute
-                    var membershipLabel = selectedMembership.closest('.membership-item').find('label').text();
-                    var membershipMatch = membershipLabel.match(/\[([\d.]+)%\]/);
-                    if (membershipMatch && membershipMatch[1]) {
-                        var membershipPercent = parseFloat(membershipMatch[1]);
-                        discountedPrice = discountedPrice * (1 - membershipPercent / 100);
-                    }
-                }
+                // Wallets and memberships are payment methods - they don't reduce the displayed price
+                // The backend will deduct the booking amount from wallet/membership balance
                 
                 return discountedPrice;
             }
@@ -2320,11 +2300,9 @@
                     $('input[name="discount_id"].booking-discount-radio').prop('checked', false);
                     toggleClearButtons();
                     togglePaymentMethodVisibility();
-                    // Reapply discount (will reset to original amounts since no discount selected)
-                    applyDiscountToWalletAndMembership();
-                    // Update service prices in review table
+                    // Update service prices in review table (remove discount)
                     updateBookingReviewServicePrices();
-                    // Re-render cart to update prices (reset to original, but wallet/membership may still apply)
+                    // Re-render cart to update prices (reset to original)
                     renderCart();
                     calculateTotals();
                 });
@@ -2334,9 +2312,7 @@
                     $('input[name="discount_id"].booking-wallet-radio').prop('checked', false);
                     toggleClearButtons();
                     togglePaymentMethodVisibility();
-                    // Re-render cart to update prices (remove wallet discount)
-                    renderCart();
-                    calculateTotals();
+                    // Wallet is a payment method, doesn't affect prices - no need to re-render cart
                 });
 
                 // Clear membership selection
@@ -2344,22 +2320,26 @@
                     $('input[name="discount_id"].booking-membership-radio').prop('checked', false);
                     toggleClearButtons();
                     togglePaymentMethodVisibility();
-                    // Re-render cart to update prices (remove membership discount)
-                    renderCart();
-                    calculateTotals();
+                    // Membership is a payment method, doesn't affect prices - no need to re-render cart
                 });
 
                 // Listen for radio button changes (discount, wallet, membership)
                 $(document).off('change', 'input[name="discount_id"]').on('change', 'input[name="discount_id"]', function() {
                     toggleClearButtons();
                     togglePaymentMethodVisibility();
-                    // Apply discount to wallets and memberships when discount code is selected/changed
-                    applyDiscountToWalletAndMembership();
-                    // Update service prices in review table if on step 4
-                    updateBookingReviewServicePrices();
-                    // Re-render cart to update prices with new discount/wallet/membership
-                    renderCart();
-                    calculateTotals();
+                    
+                    // Check if discount code is selected (wallets/memberships don't affect prices)
+                    var isDiscountCode = $(this).hasClass('booking-discount-radio');
+                    if (isDiscountCode) {
+                        // Update service prices in review table if discount code is selected/changed
+                        updateBookingReviewServicePrices();
+                        // Re-render cart to update prices with discount
+                        renderCart();
+                        calculateTotals();
+                    }
+                    // Wallets and memberships are payment methods - they don't change displayed prices
+                    // The backend will deduct the booking amount from wallet/membership balance
+                    
                     // Ensure Next button is enabled when discount/wallet/membership is selected
                     $('#booking-nextStep3').prop('disabled', false);
                 });
