@@ -233,7 +233,7 @@
                                                                         <label class="form-check-label flex-grow-1 text-start" for="booking-discounts{{ $discount->id }}" style="word-break: break-word;white-space: normal;overflow: hidden;min-width: 0;margin: 0;">
                                                                             {{ $discount->code . ' [' . $discount->amount . '%]' }}
                                                                         </label>
-                                                                        <input class="form-check-input flex-shrink-0 booking-discount-radio" type="radio" name="discount_id" data-name="discount_id" value="{{ $discount->id }}" id="booking-discounts{{ $discount->id }}" style="margin-top: 0;width: 18px;height: 18px;flex-shrink: 0;">
+                                                                        <input class="form-check-input flex-shrink-0 booking-discount-radio" type="radio" name="discount_id" data-name="discount_id" value="{{ $discount->id }}" id="booking-discounts{{ $discount->id }}" data-discount-amount="{{ $discount->amount }}" data-discount-type="{{ $discount->type }}" style="margin-top: 0;width: 18px;height: 18px;flex-shrink: 0;">
                                                                     </div>
                                                                 </div>
                                                             @endforeach
@@ -1361,7 +1361,9 @@
                 bookingWizardData.services = servicesArray;
                 
                 // Validate customer selection before proceeding to Step 3
-                if (!selectedCustomerId) {
+                // Note: This validation should not block if user is just selecting discount/wallet/membership
+                // Only redirect if truly no customer is selected
+                if (!selectedCustomerId && !selectedCustomerName) {
                      // Check if a customer is already selected in the UI but maybe logic didn't catch it (unlikely but safe)
                      // If really no customer, stop and alert
                      if (typeof toastr !== 'undefined') {
@@ -1409,14 +1411,27 @@
             $('#booking-nextStep3').on('click', function(e) {
                 e.preventDefault();
                 // name and mobile are already in bookingWizardData from Step 2 transition
+                // But if not set, try to get from global customer variables
+                if (!bookingWizardData.name && selectedCustomerName) {
+                    bookingWizardData.name = selectedCustomerName;
+                    bookingWizardData.mobile = selectedCustomerPhone;
+                }
+                
                 var paymentType = $('#booking-payment_type').val();
                 const $paymentTypeField = $('#booking-payment_type');
 
-                if (!bookingWizardData.name) {
+                // Check both bookingWizardData.name and selectedCustomerName/selectedCustomerId
+                if (!bookingWizardData.name && !selectedCustomerName && !selectedCustomerId) {
                     alert('Customer information missing. Please select a customer.');
                     // Redirect to Step 1 (Services) - index 0
                     bookingStepper.to(0);
                     return false;
+                }
+                
+                // Ensure bookingWizardData has customer info
+                if (!bookingWizardData.name && selectedCustomerName) {
+                    bookingWizardData.name = selectedCustomerName;
+                    bookingWizardData.mobile = selectedCustomerPhone;
                 }
 
                 if (!bookingWizardData.services || bookingWizardData.services.length === 0) {
@@ -1424,12 +1439,14 @@
                     return false;
                 }
 
-                // Check if wallet or membership is selected
+                // Check if wallet, membership, or discount code is selected
                 var hasWalletSelected = $('input[name="discount_id"].booking-wallet-radio:checked').length > 0;
                 var hasMembershipSelected = $('input[name="discount_id"].booking-membership-radio:checked').length > 0;
+                var hasDiscountSelected = $('input[name="discount_id"].booking-discount-radio:checked').length > 0;
                 
-                // Validate payment method only if no wallet or membership is selected
-                if (!hasWalletSelected && !hasMembershipSelected) {
+                // Validate payment method only if no wallet, membership, or discount code is selected
+                // Allow proceeding if any of these are selected (wallet/membership act as payment, discount allows proceeding)
+                if (!hasWalletSelected && !hasMembershipSelected && !hasDiscountSelected) {
                     if (!paymentType || paymentType === '') {
                         $paymentTypeField.addClass('is-invalid');
                         $paymentTypeField.siblings('.invalid-feedback').text('{{ __('field.payment_method') }} is required');
@@ -1439,16 +1456,20 @@
                         $paymentTypeField.removeClass('is-invalid');
                     }
                 } else {
-                    // Clear payment type if wallet/membership is selected
-                    paymentType = null;
+                    // Clear payment type if wallet/membership is selected (they act as payment methods)
+                    // For discount codes, allow proceeding without payment method requirement
+                    if (hasWalletSelected || hasMembershipSelected) {
+                        paymentType = null;
+                    }
                     $paymentTypeField.removeClass('is-invalid');
                 }
 
                 bookingWizardData.payment_type = paymentType;
                 
-                // Get selected wallet or membership info
+                // Get selected wallet, membership, or discount code info
                 var selectedWallet = $('input[name="discount_id"].booking-wallet-radio:checked');
                 var selectedMembership = $('input[name="discount_id"].booking-membership-radio:checked');
+                var selectedDiscount = $('input[name="discount_id"].booking-discount-radio:checked');
                 var paymentMethodDisplay = '';
                 
                 if (selectedWallet.length > 0) {
@@ -1459,6 +1480,16 @@
                     paymentMethodDisplay = 'Membership: ' + membershipLabel;
                 } else {
                     paymentMethodDisplay = bookingWizardData.payment_type || '{{ __('field.not_selected') }}';
+                }
+                
+                // Store discount code info if selected
+                if (selectedDiscount.length > 0) {
+                    var discountLabel = selectedDiscount.closest('.discount-item').find('label').text().trim();
+                    bookingWizardData.discount_code = discountLabel;
+                    bookingWizardData.discount_id = selectedDiscount.val();
+                } else {
+                    bookingWizardData.discount_code = null;
+                    bookingWizardData.discount_id = null;
                 }
 
                 // Build review HTML
@@ -1488,6 +1519,16 @@
                         <td>${item.to_time}</td>
                     </tr>`;
                 });
+                // Calculate total with discount
+                var totalAmount = 0;
+                $.each(bookingWizardData.services, function(index, item) {
+                    var serviceData = get_service(item.id);
+                    if (serviceData) {
+                        var discountedPrice = calculateDiscountedServicePrice(serviceData.price);
+                        totalAmount += discountedPrice;
+                    }
+                });
+                
                 reviewHtml += `<tr>
                     <th class="fw-bolder" scope="row">{{__('field.full_name')}}</th>
                     <td colspan="5">${bookingWizardData.name}</td>
@@ -1499,6 +1540,19 @@
                 <tr>
                     <th class="fw-bolder" scope="row">{{__('field.payment_method')}}</th>
                     <td colspan="5">${paymentMethodDisplay}</td>
+                </tr>`;
+                
+                // Show discount code if selected
+                if (bookingWizardData.discount_code) {
+                    reviewHtml += `<tr>
+                        <th class="fw-bolder" scope="row">{{__('field.discount_code')}}</th>
+                        <td colspan="5">${bookingWizardData.discount_code}</td>
+                    </tr>`;
+                }
+                
+                reviewHtml += `<tr class="table-active">
+                    <th class="fw-bolder" scope="row">{{__('field.subtotal')}}</th>
+                    <td colspan="5" class="fw-bolder" id="booking-review-subtotal">${totalAmount.toFixed(2)} {{ get_currency() }}</td>
                 </tr></tbody></table>`;
 
                 $('#booking-review-content').html(reviewHtml);
@@ -2171,6 +2225,8 @@
                 var reviewTable = $('#booking-review-content').find('table tbody');
                 if (reviewTable.length === 0) return;
                 
+                var totalAmount = 0;
+                
                 reviewTable.find('tr').each(function() {
                     var $row = $(this);
                     var $priceCell = $row.find('td').eq(1);
@@ -2187,11 +2243,18 @@
                                 if (serviceData) {
                                     var discountedPrice = calculateDiscountedServicePrice(serviceData.price);
                                     $priceCell.text(discountedPrice.toFixed(2) + ' {{ get_currency() }}');
+                                    totalAmount += discountedPrice;
                                 }
                             }
                         }
                     }
                 });
+                
+                // Update subtotal
+                var $subtotalCell = $('#booking-review-subtotal');
+                if ($subtotalCell.length) {
+                    $subtotalCell.text(totalAmount.toFixed(2) + ' {{ get_currency() }}');
+                }
             }
 
             // Function to handle radio button clear functionality
@@ -2252,18 +2315,27 @@
                     // Re-render cart to update prices with new discount/wallet/membership
                     renderCart();
                     calculateTotals();
+                    // Ensure Next button is enabled when discount/wallet/membership is selected
+                    $('#booking-nextStep3').prop('disabled', false);
                 });
 
-                // Function to toggle payment method visibility based on wallet/membership selection
+                // Function to toggle payment method visibility based on wallet/membership/discount selection
                 function togglePaymentMethodVisibility() {
                     var hasWalletSelected = $('input[name="discount_id"].booking-wallet-radio:checked').length > 0;
                     var hasMembershipSelected = $('input[name="discount_id"].booking-membership-radio:checked').length > 0;
                     var hasDiscountSelected = $('input[name="discount_id"].booking-discount-radio:checked').length > 0;
                     
+                    // Hide payment method if wallet or membership is selected (they act as payment methods)
+                    // For discount codes, keep payment method visible but make it optional to allow proceeding
                     if (hasWalletSelected || hasMembershipSelected) {
                         $('#booking-payment-method-container').hide();
                         $('#booking-payment_type').val('').removeClass('is-invalid');
                         $('#booking-payment_type').prop('required', false);
+                    } else if (hasDiscountSelected) {
+                        // Show payment method but make it optional when discount code is selected
+                        $('#booking-payment-method-container').show();
+                        $('#booking-payment_type').prop('required', false);
+                        $('#booking-payment_type').removeClass('is-invalid');
                     } else {
                         $('#booking-payment-method-container').show();
                         $('#booking-payment_type').prop('required', true);
