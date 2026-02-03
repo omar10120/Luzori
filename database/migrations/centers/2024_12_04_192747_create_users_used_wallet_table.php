@@ -19,6 +19,7 @@ return new class extends Migration
             $table->foreignId('wallet_id')->constrained('wallets')->onDelete('cascade');
             $table->foreignId('booking_id')->constrained('bookings')->onDelete('cascade');
             $table->timestamps();
+            $table->softDeletes(); // Add deleted_at column for SoftDeletes trait
         });
     }
 
