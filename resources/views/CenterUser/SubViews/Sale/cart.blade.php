@@ -1477,9 +1477,11 @@
                 $.each(bookingWizardData.services, function(index, item) {
                     worker = get_worker(item.worker_id);
                     service = get_service(item.id);
+                    var servicePrice = service ? service.price : 0;
+                    var discountedPrice = calculateDiscountedServicePrice(servicePrice);
                     reviewHtml += `<tr>
                         <td>${item.name.trim()}</td>
-                        <td>${service ? service.price : 'N/A'}</td>
+                        <td>${discountedPrice.toFixed(2)} {{ get_currency() }}</td>
                         <td>${item.date}</td>
                         <td>${worker ? worker.name : 'N/A'}</td>
                         <td>${item.from_time}</td>
@@ -1500,6 +1502,8 @@
                 </tr></tbody></table>`;
 
                 $('#booking-review-content').html(reviewHtml);
+                // Apply discount to service prices in review table
+                updateBookingReviewServicePrices();
                 bookingStepper.next();
             });
 
@@ -1514,10 +1518,13 @@
                 bookingWizardData.services.forEach(function(service) {
                     var worker = get_worker(service.worker_id);
                     var serviceData = get_service(service.id);
+                    var originalPrice = serviceData ? serviceData.price : 0;
+                    var discountedPrice = calculateDiscountedServicePrice(originalPrice);
                     serviceRows.push({
                         id: service.id,
                         name: service.name,
-                        price: serviceData ? serviceData.price : 0,
+                        price: discountedPrice,
+                        original_price: originalPrice,
                         worker_id: service.worker_id,
                         worker_name: worker ? worker.name : '',
                         date: service.date,
@@ -1763,7 +1770,11 @@
                         subtotal += parseFloat(item.invoiced_amount || item.amount || 0);
                     } else if (item.type === 'service' && item.services && item.services.length) {
                         item.services.forEach(function(svc) {
-                            subtotal += parseFloat(svc.price || 0);
+                            // Use original_price if available, otherwise use price
+                            var originalPrice = parseFloat(svc.original_price || svc.price || 0);
+                            // Recalculate discounted price based on current discount selection
+                            var discountedPrice = calculateDiscountedServicePrice(originalPrice);
+                            subtotal += discountedPrice;
                         });
                     } else {
                         const price = parseFloat(item.price || 0);
@@ -1806,9 +1817,13 @@
                     if (item.type === 'service') {
                         if (item.services && item.services.length) {
                             item.services.forEach(function(svc) {
+                                // Use original_price if available, otherwise use price
+                                var originalPrice = parseFloat(svc.original_price || svc.price || 0);
+                                // Recalculate discounted price based on current discount selection
+                                var servicePrice = calculateDiscountedServicePrice(originalPrice);
                                 itemHtml += `<small class="text-muted d-block">
                                     ${svc.name || ''} &ndash; {{ __('field.worker') }}: ${svc.worker_name || ''}<br>
-                                    {{ __('field.date') }}: ${svc.date || ''} &nbsp; ${(svc.from_time || '')} - ${(svc.to_time || '')} &nbsp; ${parseFloat(svc.price || 0).toFixed(2)} {{ get_currency() }}
+                                    {{ __('field.date') }}: ${svc.date || ''} &nbsp; ${(svc.from_time || '')} - ${(svc.to_time || '')} &nbsp; ${servicePrice.toFixed(2)} {{ get_currency() }}
                                 </small>`;
                             });
                         } else {
@@ -1857,7 +1872,11 @@
                         displayPrice = parseFloat(item.invoiced_amount || item.amount || 0);
                     } else if (item.type === 'service' && item.services && item.services.length) {
                         item.services.forEach(function(svc) {
-                            displayPrice += parseFloat(svc.price || 0);
+                            // Use original_price if available, otherwise use price
+                            var originalPrice = parseFloat(svc.original_price || svc.price || 0);
+                            // Recalculate discounted price based on current discount selection
+                            var discountedPrice = calculateDiscountedServicePrice(originalPrice);
+                            displayPrice += discountedPrice;
                         });
                     } else {
                         const price = parseFloat(item.price || 0);
@@ -2027,12 +2046,28 @@
                             </div><div class="row g-2">`;
                             $.each(wallets, function(index, item) {
                                 var wallet = item.wallet;
+                                var originalAmount = parseFloat(wallet.amount || 0);
+                                var displayedAmount = originalAmount;
+                                
+                                // Apply discount if selected (discount codes can reduce wallet amount)
+                                var selectedDiscount = $('input[name="discount_id"].booking-discount-radio:checked');
+                                if (selectedDiscount.length > 0) {
+                                    var discountAmount = parseFloat(selectedDiscount.data('discount-amount') || 0);
+                                    var discountType = selectedDiscount.data('discount-type') || 'percentage';
+                                    
+                                    if (discountType === 'percentage') {
+                                        displayedAmount = originalAmount * (1 - discountAmount / 100);
+                                    } else {
+                                        displayedAmount = Math.max(0, originalAmount - discountAmount);
+                                    }
+                                }
+                                
                                 walletsElement += `<div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-2">
                                     <div class="form-check wallet-item" style="padding: 10px;color: #fff;background-color: #428bca;border-color: #357ebd;border-radius: 4px;min-height: 50px;display: flex;align-items: center;gap: 10px;font-size: 10px;width: 100%;">
                                         <label class="form-check-label flex-grow-1 text-start" for="booking-wallets${wallet.id}" style="word-break: break-word;white-space: normal;overflow: hidden;min-width: 0;margin: 0;">
-                                            ${wallet.code + ' [' + wallet.amount + ' AED]'}
+                                            ${wallet.code + ' [' + displayedAmount.toFixed(2) + ' AED]'}
                                         </label>
-                                        <input class="form-check-input flex-shrink-0 booking-wallet-radio" type="radio" name="discount_id" data-name="discount_id" value="${wallet.id}" id="booking-wallets${wallet.id}" style="margin-top: 0;width: 18px;height: 18px;flex-shrink: 0;">
+                                        <input class="form-check-input flex-shrink-0 booking-wallet-radio" type="radio" name="discount_id" data-name="discount_id" value="${wallet.id}" id="booking-wallets${wallet.id}" data-wallet-amount="${originalAmount}" style="margin-top: 0;width: 18px;height: 18px;flex-shrink: 0;">
                                     </div>
                                 </div>`;
                             });
@@ -2075,6 +2110,90 @@
                 }
             }
 
+            // Function to calculate discounted service price
+            function calculateDiscountedServicePrice(originalPrice) {
+                if (!originalPrice) {
+                    return parseFloat(originalPrice || 0);
+                }
+                
+                var discountedPrice = parseFloat(originalPrice);
+                
+                // Check for discount code selection
+                var selectedDiscount = $('input[name="discount_id"].booking-discount-radio:checked');
+                if (selectedDiscount.length > 0) {
+                    var discountAmount = parseFloat(selectedDiscount.data('discount-amount') || 0);
+                    var discountType = selectedDiscount.data('discount-type') || 'percentage';
+                    
+                    if (discountAmount > 0) {
+                        if (discountType === 'percentage') {
+                            discountedPrice = discountedPrice * (1 - discountAmount / 100);
+                        } else {
+                            discountedPrice = Math.max(0, discountedPrice - discountAmount);
+                        }
+                    }
+                }
+                
+                // Check for wallet selection (fixed amount deduction)
+                var selectedWallet = $('input[name="discount_id"].booking-wallet-radio:checked');
+                if (selectedWallet.length > 0) {
+                    // Get wallet amount from data attribute first, then fallback to label text
+                    var walletAmount = parseFloat(selectedWallet.data('wallet-amount') || 0);
+                    if (walletAmount === 0) {
+                        // Fallback: try to parse from label text
+                        var walletLabel = selectedWallet.closest('.wallet-item').find('label').text();
+                        var walletMatch = walletLabel.match(/\[([\d.]+)\s*AED\]/);
+                        if (walletMatch && walletMatch[1]) {
+                            walletAmount = parseFloat(walletMatch[1]);
+                        }
+                    }
+                    if (walletAmount > 0) {
+                        discountedPrice = Math.max(0, discountedPrice - walletAmount);
+                    }
+                }
+                
+                // Check for membership selection (percentage discount)
+                var selectedMembership = $('input[name="discount_id"].booking-membership-radio:checked');
+                if (selectedMembership.length > 0) {
+                    // Get membership percent from the label text or data attribute
+                    var membershipLabel = selectedMembership.closest('.membership-item').find('label').text();
+                    var membershipMatch = membershipLabel.match(/\[([\d.]+)%\]/);
+                    if (membershipMatch && membershipMatch[1]) {
+                        var membershipPercent = parseFloat(membershipMatch[1]);
+                        discountedPrice = discountedPrice * (1 - membershipPercent / 100);
+                    }
+                }
+                
+                return discountedPrice;
+            }
+            
+            // Function to update service prices in booking review table
+            function updateBookingReviewServicePrices() {
+                var reviewTable = $('#booking-review-content').find('table tbody');
+                if (reviewTable.length === 0) return;
+                
+                reviewTable.find('tr').each(function() {
+                    var $row = $(this);
+                    var $priceCell = $row.find('td').eq(1);
+                    if ($priceCell.length && $row.find('th').length === 0) {
+                        // This is a service row, find the service ID from the name
+                        var serviceName = $row.find('td').first().text().trim();
+                        // Find matching service in bookingWizardData
+                        if (bookingWizardData.services && bookingWizardData.services.length > 0) {
+                            var matchingService = bookingWizardData.services.find(function(svc) {
+                                return svc.name.trim() === serviceName;
+                            });
+                            if (matchingService) {
+                                var serviceData = get_service(matchingService.id);
+                                if (serviceData) {
+                                    var discountedPrice = calculateDiscountedServicePrice(serviceData.price);
+                                    $priceCell.text(discountedPrice.toFixed(2) + ' {{ get_currency() }}');
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
             // Function to handle radio button clear functionality
             function attachRadioClearHandlers() {
                 // Function to toggle clear button visibility based on selection
@@ -2092,6 +2211,14 @@
                 $(document).off('click', '#clear-discount-selection').on('click', '#clear-discount-selection', function() {
                     $('input[name="discount_id"].booking-discount-radio').prop('checked', false);
                     toggleClearButtons();
+                    togglePaymentMethodVisibility();
+                    // Reapply discount (will reset to original amounts since no discount selected)
+                    applyDiscountToWalletAndMembership();
+                    // Update service prices in review table
+                    updateBookingReviewServicePrices();
+                    // Re-render cart to update prices (reset to original, but wallet/membership may still apply)
+                    renderCart();
+                    calculateTotals();
                 });
 
                 // Clear wallet selection
@@ -2099,6 +2226,9 @@
                     $('input[name="discount_id"].booking-wallet-radio').prop('checked', false);
                     toggleClearButtons();
                     togglePaymentMethodVisibility();
+                    // Re-render cart to update prices (remove wallet discount)
+                    renderCart();
+                    calculateTotals();
                 });
 
                 // Clear membership selection
@@ -2106,12 +2236,22 @@
                     $('input[name="discount_id"].booking-membership-radio').prop('checked', false);
                     toggleClearButtons();
                     togglePaymentMethodVisibility();
+                    // Re-render cart to update prices (remove membership discount)
+                    renderCart();
+                    calculateTotals();
                 });
 
-                // Listen for radio button changes
+                // Listen for radio button changes (discount, wallet, membership)
                 $(document).off('change', 'input[name="discount_id"]').on('change', 'input[name="discount_id"]', function() {
                     toggleClearButtons();
                     togglePaymentMethodVisibility();
+                    // Apply discount to wallets and memberships when discount code is selected/changed
+                    applyDiscountToWalletAndMembership();
+                    // Update service prices in review table if on step 4
+                    updateBookingReviewServicePrices();
+                    // Re-render cart to update prices with new discount/wallet/membership
+                    renderCart();
+                    calculateTotals();
                 });
 
                 // Function to toggle payment method visibility based on wallet/membership selection
