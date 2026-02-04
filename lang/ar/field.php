@@ -249,6 +249,7 @@ return [
     'optional_for_walk_ins'          => 'اختياري للعملاء الموجودين',
     'select_customer'                => 'اختر العميل',
     'change_customer'                => 'تغيير العميل',
+    'change'                => 'تغيير',
     'customer_selected'              => 'تم اختيار العميل',
     'customer_removed'               => 'تم إزالة العميل',
     'search_customer'                => 'بحث عن العميل',

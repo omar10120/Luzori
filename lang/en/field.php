@@ -252,6 +252,7 @@ return [
     'optional_for_walk_ins'          => 'Optional For Walk Ins',
     'select_customer'                => 'Select Customer',
     'change_customer'                => 'Change Customer',
+    'change'                         => 'Change',
     'customer_selected'              => 'Customer Selected',
     'customer_removed'               => 'Customer Removed',
     'search_customer'                => 'Search Customer',
