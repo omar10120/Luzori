@@ -1904,31 +1904,6 @@
                 $('#continueToPayment').prop('disabled', cart.length === 0 || !selectedCustomerId);
             }
 
-            // Function to update wallet balance display in cart
-            function updateWalletBalanceDisplay(totalBalance, walletDetails) {
-                if (totalBalance > 0 && walletDetails && walletDetails.length > 0) {
-                    $('#wallet-balance-total').text(totalBalance.toFixed(2) + ' {{ get_currency() }}');
-                    
-                    // Create detail text showing individual wallets
-                    var detailText = '';
-                    if (walletDetails.length === 1) {
-                        detailText = walletDetails[0].code + ': ' + walletDetails[0].amount.toFixed(2) + ' {{ get_currency() }}';
-                    } else {
-                        detailText = walletDetails.length + ' {{ __('field.wallets') }}: ';
-                        var walletCodes = walletDetails.map(function(w) {
-                            return w.code + ' (' + w.amount.toFixed(2) + ')';
-                        }).join(', ');
-                        detailText += walletCodes;
-                    }
-                    $('#wallet-balance-detail').text(detailText);
-                    $('#wallet-balance-section').show();
-                } else {
-                    $('#wallet-balance-section').hide();
-                    $('#wallet-balance-total').text('0 {{ get_currency() }}');
-                    $('#wallet-balance-detail').text('');
-                }
-            }
-
             function renderCart() {
                 let serviceHtml = '';
                 let productHtml = '';
@@ -2123,10 +2098,6 @@
             function loadCustomerServices(user_phone) {
                  if (!user_phone) {
                      $('#booking-servicesTable, #booking-walletsElement, #booking-membershipsElement').html('');
-                     // Hide wallet balance section when no customer
-                     $('#wallet-balance-section').hide();
-                     $('#wallet-balance-total').text('0 {{ get_currency() }}');
-                     $('#wallet-balance-detail').text('');
                      return;
                  }
 
@@ -2181,11 +2152,6 @@
                         var wallets = response.wallets;
                         let walletsElement = ``;
                         $('#booking-walletsElement').html(walletsElement);
-                        
-                        // Calculate total wallet balance
-                        var totalWalletBalance = 0;
-                        var walletDetails = [];
-                        
                         if (wallets.length != 0) {
                             walletsElement += `<hr /><div class="d-flex justify-content-between align-items-center mb-2">
                                 <h5 class="mb-0">Wallet</h5>
@@ -2195,39 +2161,17 @@
                             </div><div class="row g-2">`;
                             $.each(wallets, function(index, item) {
                                 var wallet = item.wallet;
+                                var originalAmount = parseFloat(wallet.amount || 0);
                                 
-                                // Skip if wallet doesn't exist
-                                if (!wallet) {
-                                    return;
-                                }
+                                // Wallet amount is displayed as-is (no discount applied to wallet display)
+                                // Discount codes don't affect wallet amount display - they only affect service prices
                                 
-                                var originalAmount = parseFloat(wallet.original_amount || wallet.amount || 0);
-                                // Use remaining_amount if available, otherwise fallback to original amount
-                                // Check if remaining_amount exists (could be null, undefined, or 0)
-                                var remainingAmount = (wallet.remaining_amount !== undefined && wallet.remaining_amount !== null) 
-                                    ? parseFloat(wallet.remaining_amount) 
-                                    : originalAmount;
-                                
-                                // Only show wallets with remaining balance > 0
-                                if (remainingAmount <= 0) {
-                                    return; // Skip wallets with zero or negative balance
-                                }
-                                
-                                // Add to total balance
-                                totalWalletBalance += remainingAmount;
-                                walletDetails.push({
-                                    code: wallet.code,
-                                    amount: remainingAmount,
-                                    original: originalAmount
-                                });
-                                
-                                // Wallet amount is displayed as remaining balance after deductions
                                 walletsElement += `<div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-2">
                                     <div class="form-check wallet-item" style="padding: 10px;color: #fff;background-color: #428bca;border-color: #357ebd;border-radius: 4px;min-height: 50px;display: flex;align-items: center;gap: 10px;font-size: 10px;width: 100%;">
                                         <label class="form-check-label flex-grow-1 text-start" for="booking-wallets${wallet.id}" style="word-break: break-word;white-space: normal;overflow: hidden;min-width: 0;margin: 0;">
-                                            ${wallet.code + ' [' + remainingAmount.toFixed(2) + ' AED]'}
+                                            ${wallet.code + ' [' + originalAmount.toFixed(2) + ' AED]'}
                                         </label>
-                                        <input class="form-check-input flex-shrink-0 booking-wallet-radio" type="radio" name="discount_id" data-name="discount_id" value="${wallet.id}" id="booking-wallets${wallet.id}" data-wallet-amount="${remainingAmount}" style="margin-top: 0;width: 18px;height: 18px;flex-shrink: 0;">
+                                        <input class="form-check-input flex-shrink-0 booking-wallet-radio" type="radio" name="discount_id" data-name="discount_id" value="${wallet.id}" id="booking-wallets${wallet.id}" data-wallet-amount="${originalAmount}" style="margin-top: 0;width: 18px;height: 18px;flex-shrink: 0;">
                                     </div>
                                 </div>`;
                             });
@@ -2236,14 +2180,6 @@
                             // Attach event listeners for wallet radios
                             attachRadioClearHandlers();
                         }
-                        
-                        // Update wallet balance display in cart
-                        updateWalletBalanceDisplay(totalWalletBalance, walletDetails);
-                    } else {
-                        // No wallets, hide the balance section
-                        $('#wallet-balance-section').hide();
-                        $('#wallet-balance-total').text('0 {{ get_currency() }}');
-                        $('#wallet-balance-detail').text('');
                     }
 
                     if (response.memberships) {
@@ -2962,16 +2898,6 @@
                 selectedCustomerId = userId;
                 selectedCustomerName = name;
                 selectedCustomerPhone = phone;
-                
-                // Reload wallet balance when customer changes
-                if (phone) {
-                    loadCustomerServices(phone);
-                } else {
-                    // No customer selected, hide wallet balance
-                    $('#wallet-balance-section').hide();
-                    $('#wallet-balance-total').text('0 {{ get_currency() }}');
-                    $('#wallet-balance-detail').text('');
-                }
 
                 if (userId && name ) {
                     $('#selected-customer-display').show();

@@ -10,7 +10,6 @@ use App\Http\Requests\CenterUser\BookingRequest;
 use App\Models\Discount;
 use App\Models\Worker;
 use App\Models\User;
-use App\Models\UserUsedWallet;
 use App\Models\Service;
 use App\Services\BookingService;
 use App\Services\CRUDService;
@@ -102,89 +101,14 @@ class BookingController extends Controller
 
         if ($user) {
             $services = $user->services->groupBy('service_id');
-            
-            // Get all wallets for this user via users_wallets table
-            $userWallets = $user->wallets()
-                ->with(['wallet' => function($query) {
-                    // Ensure wallet is loaded even if soft deleted
-                    $query->withTrashed();
-                }])
-                ->get();
-            
-            // Calculate remaining balance for each wallet after deductions from users_used_wallet
-            // Filter out wallets with zero or negative balance
-            $walletsWithBalance = $userWallets->map(function ($userWallet) use ($user) {
-                $wallet = $userWallet->wallet;
-                
-                // Skip if wallet doesn't exist
-                if (!$wallet) {
-                    return null;
-                }
-                
-                // Get original wallet amount
-                $originalAmount = (float) ($wallet->amount ?? 0);
-                
-                // Calculate total used amount from users_used_wallet table
-                // Sum all amounts where wallet_id matches AND user_id matches
-                $totalUsed = UserUsedWallet::where('wallet_id', $wallet->id)
-                    ->where('user_id', $user->id)
-                    ->sum('amount');
-                
-                // Calculate remaining balance: original amount minus total used
-                $remainingBalance = max(0, $originalAmount - (float) $totalUsed);
-                
-                // Add remaining balance to the wallet object
-                // Make sure these properties are visible in JSON response
-                $wallet->setAttribute('remaining_amount', $remainingBalance);
-                $wallet->setAttribute('original_amount', $originalAmount);
-                $wallet->makeVisible(['remaining_amount', 'original_amount']);
-                
-                return $userWallet;
-            })
-            ->filter(function ($userWallet) {
-                // Filter out null wallets
-                if (!$userWallet || !$userWallet->wallet) {
-                    return false;
-                }
-                // Only show wallets with remaining balance > 0
-                $remainingBalance = $userWallet->wallet->remaining_amount ?? 0;
-                // Allow wallets with balance greater than 0 (not equal to 0)
-                return $remainingBalance > 0;
-            })
-            ->values(); // Re-index the collection
-            
-            // Debug: Log wallets for troubleshooting
-            \Log::info('Wallets for user', [
-                'user_id' => $user->id,
-                'user_phone' => $request->user_phone,
-                'total_user_wallets' => $userWallets->count(),
-                'wallets_with_balance_count' => $walletsWithBalance->count(),
-                'wallets_detail' => $walletsWithBalance->map(function($uw) {
-                    return [
-                        'wallet_id' => $uw->wallet->id ?? null,
-                        'code' => $uw->wallet->code ?? null,
-                        'original_amount' => $uw->wallet->original_amount ?? null,
-                        'remaining_amount' => $uw->wallet->remaining_amount ?? null,
-                    ];
-                })->toArray(),
-                'all_user_wallets' => $userWallets->map(function($uw) {
-                    return [
-                        'user_wallet_id' => $uw->id ?? null,
-                        'wallet_id' => $uw->wallet_id ?? null,
-                        'wallet_loaded' => $uw->wallet ? true : false,
-                        'wallet_code' => $uw->wallet->code ?? null,
-                        'wallet_amount' => $uw->wallet->amount ?? null,
-                    ];
-                })->toArray()
-            ]);
-            
+            $wallets = $user->wallets()->with(['wallet'])->join('wallets', 'users_wallets.wallet_id', '=', 'wallets.id')->get();
             $memberships = $user->memberships()->get();
 
             return response()->json([
                 'status' => true,
                 'user' => $user,
                 'services' => $services,
-                'wallets' => $walletsWithBalance,
+                'wallets' => $wallets,
                 'memberships' => $memberships
             ]);
         } else {

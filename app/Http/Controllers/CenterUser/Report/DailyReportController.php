@@ -215,6 +215,14 @@ class DailyReportController extends Controller
                                     $payment_type_select = 'wallet';
                                 }
 
+                                // Ensure payment type exists in result array
+                                if (!isset($result[$detail->worker_id][$payment_type_select])) {
+                                    $result[$detail->worker_id][$payment_type_select] = 0;
+                                }
+                                if (!isset($payments_with_prices[$payment_type_select])) {
+                                    $payments_with_prices[$payment_type_select] = [];
+                                }
+
                                 $result[$detail->worker_id][$payment_type_select] += $price;
                                 array_push($users_with_prices[$detail->worker_id], $price);
 
@@ -251,6 +259,10 @@ class DailyReportController extends Controller
                                 $payments_with_prices[$payment_type_select][$detail->worker_id][] = $price - $free_price;
 
                                 if (isset($memberShipCardsUsers[$detail->worker_id]) && $value->id == $memberShipCardsUsers[$detail->worker_id]['booking_id'] && !in_array($detail->worker_id, $selected_memberShipCardsUsers)) {
+                                    // Ensure "free" key exists
+                                    if (!isset($payments_with_prices["free"])) {
+                                        $payments_with_prices["free"] = [];
+                                    }
                                     $temp = [];
                                     $temp['amount'] = $memberShipCardsUsers[$detail->worker_id]['amount'];
                                     $temp['details'] = $memberShipCardsUsers[$detail->worker_id]['amountArr'];
@@ -264,6 +276,10 @@ class DailyReportController extends Controller
                                 }
 
                                 if (isset($discountUsers[$detail->worker_id]) && $value->id == $discountUsers[$detail->worker_id]['booking_id'] && !in_array($detail->worker_id, $selected_discountUsers)) {
+                                    // Ensure "free" key exists
+                                    if (!isset($payments_with_prices["free"])) {
+                                        $payments_with_prices["free"] = [];
+                                    }
                                     $temp = [];
                                     $temp['amount'] = $discountUsers[$detail->worker_id]['amount'];
                                     $temp['type'] = "discount_code";
@@ -277,6 +293,10 @@ class DailyReportController extends Controller
                                 }
 
                                 if ($detail->is_free == 1) {
+                                    // Ensure "free" key exists
+                                    if (!isset($payments_with_prices["free"])) {
+                                        $payments_with_prices["free"] = [];
+                                    }
                                     $temp = [];
                                     $temp['amount'] = $detail->price;
                                     $temp['type'] = "free_service";
@@ -329,11 +349,17 @@ class DailyReportController extends Controller
                             $temp["products"][] = $detail;
                         }
 
-                        if (isset($result[$BuyProduct_item->sales_worker_id][$BuyProduct_item->payment_type])) {
-                            $result[$BuyProduct_item->sales_worker_id][$BuyProduct_item->payment_type] += $orderPrice;
-                            $temp["amount"] = $orderPrice;
-                            $payments_with_prices[$BuyProduct_item->payment_type][$BuyProduct_item->sales_worker_id][] = $temp;
+                        // Ensure payment type exists in result array
+                        if (!isset($result[$BuyProduct_item->sales_worker_id][$BuyProduct_item->payment_type])) {
+                            $result[$BuyProduct_item->sales_worker_id][$BuyProduct_item->payment_type] = 0;
                         }
+                        if (!isset($payments_with_prices[$BuyProduct_item->payment_type])) {
+                            $payments_with_prices[$BuyProduct_item->payment_type] = [];
+                        }
+
+                        $result[$BuyProduct_item->sales_worker_id][$BuyProduct_item->payment_type] += $orderPrice;
+                        $temp["amount"] = $orderPrice;
+                        $payments_with_prices[$BuyProduct_item->payment_type][$BuyProduct_item->sales_worker_id][] = $temp;
                     }
 
                     if (isset($users_with_commission[$BuyProduct_item->worker_id])) {
