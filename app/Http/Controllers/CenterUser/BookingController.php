@@ -96,7 +96,9 @@ class BookingController extends Controller
     public function getServicesByUser(Request $request)
     {
         $user = User::with(['memberships', 'wallets', 'services' => function ($q) {
-            $q->with('service');
+            $q->with(['service' => function($sq) {
+                $sq->with('category.translation');
+            }]);
         }])->where('phone', $request->user_phone)->first();
 
         if ($user) {

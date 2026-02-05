@@ -159,20 +159,34 @@
                                                 <div id="booking-first-step" class="content">
                                                     <div class="row mb-4">
                                                         <div class="col-md-12">
-                                                            <div class="mb-1">
-                                                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                                                    <label for="booking-services" class="form-label mb-0">{{ __('field.services') }}</label>
-                                                                    <button type="button" class="btn btn-sm btn-outline-primary" id="addServiceQuickBtn" data-bs-toggle="modal" data-bs-target="#addServiceModal">
-                                                                        <i class="ti ti-plus me-1"></i>
-                                                                        {{ __('general.add') }} {{ __('locale.services') }}
-                                                                    </button>
-                                                                </div>
-                                                                <select class="select2 form-control " name="services[]" id="booking-services" multiple>
-                                                                    @foreach ($services as $service)
-                                                                        <option value="{{ $service->id }}">{{ $service->name }}</option>
-                                                                    @endforeach
-                                                                </select>
-                                                            </div>
+                                                                    <div class="row align-items-end">
+                                                                        <div class="col-md-6">
+                                                                            @include('CenterUser.Components.category-tree-select', [
+                                                                                'categoriesJson' => $categoriesJson,
+                                                                                'selectedId' => null,
+                                                                                'selectedName' => null,
+                                                                                'name' => 'wizard_category_id',
+                                                                                'label' => __('field.category'),
+                                                                                'id' => 'wizard_category_tree'
+                                                                            ])
+                                                                        </div>
+                                                                        <div class="col-md-6" id="wizard-services-container" style="display: none;">
+                                                                            <div class="mb-1">
+                                                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                                                    <label for="booking-services" class="form-label mb-0">{{ __('field.services') }}</label>
+                                                                                    <button type="button" class="btn btn-sm btn-outline-primary" id="addServiceQuickBtn" data-bs-toggle="modal" data-bs-target="#addServiceModal">
+                                                                                        <i class="ti ti-plus me-1"></i>
+                                                                                        {{ __('general.add') }} {{ __('locale.services') }}
+                                                                                    </button>
+                                                                                </div>
+                                                                                <select class="select2 form-control " name="services[]" id="booking-services" multiple>
+                                                                                    @foreach ($services as $service)
+                                                                                        <option value="{{ $service->id }}" data-category-id="{{ $service->category_id }}">{{ $service->name }}</option>
+                                                                                    @endforeach
+                                                                                </select>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
                                                         </div>
                                                     </div>
                                                     <div class="col-12 d-flex justify-content-between">
@@ -1043,6 +1057,7 @@
                     id: {{ $service->id }},
                     name: '{{ addslashes($service->name) }}',
                     price: {{ $service->price ?? 0 }},
+                    category_id: {{ $service->category_id ?? 'null' }},
                     has_commission: {{ $service->has_commission ? 'true' : 'false' }}
                 };
             @endforeach
@@ -1145,9 +1160,61 @@
             // Initialize Booking Wizard Stepper
             const bookingStepper = new Stepper(document.querySelector('.bs-stepper'));
 
-            // Booking Step 1: Services Selection
+            // Store original services options for filtering
+            let $allServicesOptions = $('#booking-services').find('option').clone();
+
+            // Booking Step 1: Category Selection & Service Filtering
+            $('#wizard_category_tree_jstree').on("select_node.jstree", function (e, data) {
+                const selectedCategoryId = data.node.id;
+                filterWizardServices(selectedCategoryId);
+            });
+
+            function filterWizardServices(categoryId) {
+                const $servicesSelect = $('#booking-services');
+                const $servicesContainer = $('#wizard-services-container');
+                
+                if (categoryId && categoryId !== "") {
+                    $servicesContainer.show();
+                } else {
+                    $servicesContainer.hide();
+                    $servicesSelect.val(null).trigger('change');
+                    return;
+                }
+
+                // Clear existing selection and options
+                $servicesSelect.val(null).empty();
+                
+                // Filter and append options
+                $allServicesOptions.each(function() {
+                    const optionCategoryId = $(this).data('category-id');
+                    if (categoryId === "" || optionCategoryId == categoryId) {
+                        $servicesSelect.append($(this).clone());
+                    }
+                });
+                
+                // Re-initialize or refresh Select2 to reflect new options
+                $servicesSelect.trigger('change');
+            }
+
             $('#booking-services').on('change', function() {
-                $('#booking-nextStep1').prop('disabled', $(this).val().length === 0);
+                $('#booking-nextStep1').prop('disabled', (!$(this).val() || $(this).val().length === 0));
+            });
+
+            // Auto-select category in Quick Add modal based on wizard selection
+            $('#addServiceQuickBtn').on('click', function() {
+                const selectedWizardCategory = $('#wizard_category_tree_input').val();
+                if (selectedWizardCategory) {
+                    const tree = $('#quick_service_category_tree_jstree').jstree(true);
+                    if (tree) {
+                        tree.deselect_all();
+                        tree.select_node(selectedWizardCategory);
+                        const node = tree.get_node(selectedWizardCategory);
+                        if (node) {
+                            $('#quick_service_category_tree_selected_text').text(node.text);
+                            $('#quick_service_category_tree_input').val(selectedWizardCategory);
+                        }
+                    }
+                }
             });
 
             $('#booking-nextStep1').on('click', function(e) {
@@ -1721,6 +1788,13 @@
 
             function resetBookingWizard() {
                 $('#booking-services').val(null).trigger('change');
+                // Hide services container
+                $('#wizard-services-container').hide();
+                // Reset category tree
+                $('#wizard_category_tree_jstree').jstree("deselect_all");
+                $('#wizard_category_tree_selected_text').text('{{ __("general.choose") }}');
+                $('#wizard_category_tree_input').val('');
+
                 // Name/Mobile are reset, but if customer is still selected, next booking should use them again
                 // So we don't clear global selectedCustomer vars, just the wizard local usage
                 
@@ -2139,7 +2213,15 @@
                                     <tbody>`;
                             $.each(services, function(index, item) {
                                 var service = item[0].service;
-                                servicesTable += `<td>${service.name}</td>`;
+                                var categoryName = '';
+                                if (service.category) {
+                                    if (service.category.translation && service.category.translation.name) {
+                                        categoryName = service.category.translation.name;
+                                    } else {
+                                        categoryName = service.category.name || 'N/A';
+                                    }
+                                }
+                                servicesTable += `<td>${service.name} ${categoryName ? '(' + categoryName + ')' : ''}</td>`;
                                 if (item.length <= 5) {
                                     for (let i = 1; i <= item.length; i++) {
                                         servicesTable += `<td style='background: #2ff92f5e'>Yes</td>`;
@@ -2436,14 +2518,29 @@
                         if (response.message === 'redirect_to_home' || response.service) {
                             const serviceData = response.service || response.data;
                             const $servicesSelect = $('#booking-services');
+                            const selectedCategoryIdForNewService = formData.get('category_id');
+                            
                             const newOption = new Option(serviceData.name, serviceData.id, false, false);
-                            $servicesSelect.append(newOption).trigger('change');
+                            $(newOption).attr('data-category-id', selectedCategoryIdForNewService);
+                            
+                            // Add to the main select only if it matches current filter or no filter
+                            const currentWizardCategory = $('#wizard_category_tree_input').val();
+                            if (!currentWizardCategory || currentWizardCategory == selectedCategoryIdForNewService) {
+                                $servicesSelect.append(newOption).trigger('change');
+                            }
+
+                            // Update the global cache for future filtering
+                            const $newOptionClone = $(newOption).clone();
+                            if (typeof $allServicesOptions !== 'undefined') {
+                                $allServicesOptions = $allServicesOptions.add($newOptionClone);
+                            }
 
                             if (typeof servicesData !== 'undefined') {
                                 servicesData[serviceData.id] = {
                                     id: serviceData.id,
                                     name: serviceData.name,
                                     price: serviceData.price || 0,
+                                    category_id: selectedCategoryIdForNewService,
                                     has_commission: serviceData.has_commission || false
                                 };
                             }

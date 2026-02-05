@@ -81,6 +81,7 @@ class ServiceController extends Controller
         }
 
         $view = 'CenterUser.SubViews.' . $this->model . '.index';
+        return view($view, compact('item', 'title', 'requestUrl', 'menu', 'menu_link', 'categoriesJson', 'selectedId', 'selectedName'));
     }
 
     public function updateOrCreate(ServiceRequest $request)
