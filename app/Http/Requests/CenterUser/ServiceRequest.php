@@ -72,6 +72,7 @@ class ServiceRequest extends FormRequest
                 'is_top' => 'required|boolean',
                 'has_commission' => 'required|boolean',
                 'image' => 'nullable|image|max:4096|mimes:jpg,jpeg,png,gif|mimetypes:image/jpeg,image/png',
+                'category_id' => 'nullable|exists:categories_services,id',
             ];
         } else {
             $validations = [
@@ -81,6 +82,7 @@ class ServiceRequest extends FormRequest
                 'is_top' => 'required|boolean',
                 'has_commission' => 'required|boolean',
                 'image' => 'nullable|image|max:4096|mimes:jpg,jpeg,png,gif|mimetypes:image/jpeg,image/png',
+                'category_id' => 'nullable|exists:categories_services,id',
             ];
         }
         return array_merge($locales, $validations);

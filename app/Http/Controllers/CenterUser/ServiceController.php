@@ -57,7 +57,7 @@ class ServiceController extends Controller
 
         $item = null;
         if ($request->id) {
-            $relations = ['media', 'translation'];
+            $relations = ['media', 'translation', 'category.translation'];
             $item = $this->crudService->find($this->model, $request->id, $relations);
         }
 
@@ -69,8 +69,33 @@ class ServiceController extends Controller
             $requestUrl = route($this->updateOrCreateRoute, ['id' => $request->id]);
         }
 
+        $categories = \App\Models\CategoryService::with(['translation', 'children' => function($q) {
+            $q->with('translation');
+        }])->whereNull('parent_id')->get();
+
+        $categoriesJson = $this->formatCategoriesForJsTree($categories);
+        
+        $selectedId = $item?->category_id;
+        $selectedName = null;
+        if ($selectedId && isset($item->category)) {
+            $selectedName = $item->category->translate(app()->getLocale())->name ?? $item->category->name;
+        }
+
         $view = 'CenterUser.SubViews.' . $this->model . '.index';
-        return view($view, compact('item', 'requestUrl', 'title', 'menu', 'menu_link'));
+        return view($view, compact('item', 'requestUrl', 'title', 'menu', 'menu_link', 'categoriesJson', 'selectedId', 'selectedName'));
+    }
+
+    private function formatCategoriesForJsTree($cats) {
+        $data = [];
+        foreach ($cats as $cat) {
+            $name = $cat->translate(app()->getLocale())->name ?? $cat->name;
+            $data[] = [
+                'id' => (string)$cat->id,
+                'text' => $name,
+                'children' => isset($cat->children) ? $this->formatCategoriesForJsTree($cat->children) : []
+            ];
+        }
+        return $data;
     }
 
     public function updateOrCreate(ServiceRequest $request)
@@ -96,7 +121,7 @@ class ServiceController extends Controller
             'has_commission',
             'is_top',
             'image',
-            
+            'category_id',
         );
 
         $item = $this->crudService->updateOrCreate($this->model, $newRequest, true);

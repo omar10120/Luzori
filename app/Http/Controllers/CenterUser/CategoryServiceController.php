@@ -87,8 +87,33 @@ class CategoryServiceController extends Controller
             $this->loadChildrenRecursively($category, $excludeId);
         }
 
+        $categoriesJson = $this->formatCategoriesForJsTree($categories);
+
+        $selectedId = $item?->parent_id;
+        $selectedName = null;
+        if ($selectedId && isset($item->parent)) {
+            $parentNameEn = $item->parent->translate('en')->name ?? '';
+            $parentNameAr = $item->parent->translate('ar')->name ?? '';
+            $selectedName = trim($parentNameAr . ' / ' . $parentNameEn, ' / ');
+        }
+
         $view = 'CenterUser.SubViews.' . $this->model . '.index';
-        return view($view, compact('item', 'requestUrl', 'title', 'menu', 'menu_link', 'categories'));
+        return view($view, compact('item', 'requestUrl', 'title', 'menu', 'menu_link', 'categoriesJson', 'selectedId', 'selectedName'));
+    }
+
+    private function formatCategoriesForJsTree($cats) {
+        $data = [];
+        foreach ($cats as $cat) {
+            $nameEn = $cat->translate('en')->name ?? '';
+            $nameAr = $cat->translate('ar')->name ?? '';
+            $name = trim($nameAr . ' / ' . $nameEn, ' / ');
+            $data[] = [
+                'id' => (string)$cat->id,
+                'text' => $name,
+                'children' => isset($cat->children) ? $this->formatCategoriesForJsTree($cat->children) : []
+            ];
+        }
+        return $data;
     }
 
     public function updateOrCreate(CategoryRequest $request)

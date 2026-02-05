@@ -52,38 +52,14 @@
 
                             <div class="row mt-3">
                                 <div class="col-md-12 mb-2">
-                                    <div class="mb-1">
-                                        <label class="form-label">{{__('field.parent_category')}}</label>
-                                        <select id="parent_id" class="form-select select2" name="parent_id">
-                                            <option value="">{{__('general.select_parent_category')}}</option>
-                                            @if(!empty($categories))
-                                                @php
-                                                    function renderCategoryOptions($categories, $item, $level = 0) {
-                                                        $html = '';
-                                                        foreach ($categories as $category) {
-                                                            $selected = '';
-                                                            if ($item && $item->parent_id == $category->id) {
-                                                                $selected = 'selected=""';
-                                                            }
-                                                            $nameAr = $category->translate('ar')->name ?? '';
-                                                            $nameEn = $category->translate('en')->name ?? '';
-                                                            $displayName = trim($nameAr . ' / ' . $nameEn, ' / ');
-                                                            $indent = str_repeat('&nbsp;&nbsp;&nbsp;', $level);
-                                                            
-                                                            $html .= '<option ' . $selected . ' value="' . $category->id . '">' . $indent . $displayName . '</option>';
-                                                            
-                                                            if ($category->children && $category->children->count() > 0) {
-                                                                $html .= renderCategoryOptions($category->children, $item, $level + 1);
-                                                            }
-                                                        }
-                                                        return $html;
-                                                    }
-                                                @endphp
-                                                {!! renderCategoryOptions($categories, $item) !!}
-                                            @endif
-                                        </select>
-                                        <small class="text-muted">{{__('general.select_a_parent_category_if_this_is_a_subcategory')}}</small>
-                                    </div>
+                                    @include('CenterUser.Components.category-tree-select', [
+                                        'categoriesJson' => $categoriesJson,
+                                        'selectedId' => $selectedId,
+                                        'selectedName' => $selectedName,
+                                        'name' => 'parent_id',
+                                        'label' => __('field.parent_category')
+                                    ])
+                                    <small class="text-muted">{{__('general.select_a_parent_category_if_this_is_a_subcategory')}}</small>
                                 </div>
                             </div>
                         </div>
@@ -105,13 +81,6 @@
     @include('CenterUser.Components.translation-js')
     <script>
         $(document).ready(function() {
-            // Initialize Select2 for parent category dropdown
-            $('#parent_id').select2({
-                placeholder: "{{__('general.select_parent_category')}}",
-                allowClear: true,
-                width: '100%'
-            });
-
             // Listeners for Name
             $('#name_en').on('input', function() {
                 debouncedTranslate($(this).val(), 'en', 'ar', 'name_ar');

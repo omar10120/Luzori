@@ -49,6 +49,17 @@
                             @endforeach
                         </div>
                         <div class="row">
+                            <div class="col-md-12 mb-3">
+                                @include('CenterUser.Components.category-tree-select', [
+                                    'categoriesJson' => $categoriesJson,
+                                    'selectedId' => $selectedId,
+                                    'selectedName' => $selectedName,
+                                    'name' => 'category_id',
+                                    'label' => __('field.category')
+                                ])
+                            </div>
+                        </div>
+                        <div class="row">
                             <div class="col-md-12 mb-2">
                                 <div class="mb-1">
                                     <label for="rooms_no" class="form-label">{{ __('field.rooms_no') }} <span class="text-danger">*</span> </label>

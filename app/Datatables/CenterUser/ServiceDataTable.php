@@ -58,13 +58,16 @@ class ServiceDataTable extends DataTable
             ->editColumn('translation.description', function ($row) {
                 return \App\Helpers\MyHelper::truncateWithReadMore($row->translation->description ?? '');
             })
-            ->rawColumns(['image', 'status', 'translation.name', 'translation.description'], true)
+            ->editColumn('category', function ($row) {
+                return $row->category->translation->name ?? $row->category->name ?? __('general.none');
+            })
+            ->rawColumns(['image', 'status', 'translation.name', 'translation.description', 'category'], true)
             ->setRowId('id');
     }
 
     public function query(Service $model): QueryBuilder
     {
-        return $model->query()->withTrashed()->with(['translation'])->orderBy($this->plural . '.id', 'DESC');
+        return $model->query()->withTrashed()->with(['translation', 'category.translation'])->orderBy($this->plural . '.id', 'DESC');
     }
 
     public function html(): HtmlBuilder
@@ -136,6 +139,7 @@ class ServiceDataTable extends DataTable
             Column::make('id')->searchable(true)->title('#'),
             Column::computed('image')->searchable(false)->title(__('field.image')),
             Column::computed('translation.name')->searchable(true)->title(__('field.name')),
+            Column::computed('category')->searchable(false)->title(__('field.category')),
             Column::computed('translation.description')->searchable(true)->title(__('field.description')),
             Column::make('rooms_no')->searchable(true)->title(__('field.rooms_no')),
             Column::make('free_book')->searchable(true)->title(__('field.free_book')),
