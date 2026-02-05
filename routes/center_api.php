@@ -28,6 +28,7 @@ use App\Http\Controllers\CenterAPI\UserWalletController;
 use App\Http\Controllers\CenterAPI\WalletController;
 use App\Http\Controllers\CenterAPI\WeekDayController;
 use App\Http\Controllers\CenterAPI\WorkerController;
+use App\Http\Controllers\CenterAPI\CategoryServiceController;
 use App\Http\Controllers\SMSController;
 use Illuminate\Support\Facades\Route;
 
@@ -287,6 +288,15 @@ Route::group(['middleware' => 'auth:center_api'], function () {
             Route::get('get-workers-by-branch', 'getWorkersByBranch')->can('VIEW_TIPS_REPORTS');
             Route::get('tips-report', 'tips')->can('VIEW_TIPS_REPORTS');
             Route::get('print-invoice', 'printInvoice')->can('VIEW_TIPS_REPORTS');
+        });
+    });
+
+    Route::group(['prefix' => 'categories'], function () {
+        Route::controller(CategoryServiceController::class)->group(function () {
+            Route::get('all', 'all')->can('VIEW_CATEGORIES');
+            Route::post('add', 'add')->can('CREATE_CATEGORIES');
+            Route::post('edit', 'edit')->can('UPDATE_CATEGORIES');
+            Route::delete('delete', 'delete')->can('DELETE_CATEGORIES');
         });
     });
 

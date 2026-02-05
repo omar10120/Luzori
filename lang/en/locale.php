@@ -18,6 +18,7 @@ return [
     'settings'                          => 'Settings',
     'branches'                          => 'Branches',
     'services'                          => 'Services',
+    'categories'                        => 'Categories',
     'packages'                          => 'Packages',
     'products'                          => 'Products',
     'employees'                         => 'Workers',

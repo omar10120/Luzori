@@ -36,7 +36,8 @@
         "VIEW_INFOS",
         "VIEW_PAGES",
         "VIEW_SETTINGS",
-        "VIEW_EXPENSES"
+        "VIEW_EXPENSES",
+        "VIEW_CATEGORIES"
       ]
     },
     {
@@ -69,13 +70,15 @@
         "weeksdays",
         "shifts",
         "services",
-        "workers"
+        "workers",
+        "categories"
       ],
       "permissions": [
         "VIEW_WEEKSDAYS",
         "VIEW_SHIFTS",
         "VIEW_SERVICES",
-        "VIEW_WORKERS"
+        "VIEW_WORKERS",
+        "VIEW_CATEGORIES"
       ],
       "submenu": [
         {
@@ -121,9 +124,21 @@
           "permissions": [
             "VIEW_WORKERS"
           ]
+        },
+        {
+          "url": "center_user/categories/index",
+          "name": "categories",
+          "external_icon": "categories",
+          "slug": [
+            "categories"
+          ],
+          "permissions": [
+            "VIEW_CATEGORIES"
+          ]
         }
       ]
-    },
+    }
+    ,
     {
       "name": "payment_methods",
       "external_icon": "payment",

@@ -18,6 +18,7 @@ return [
     'settings'                          => 'الإعدادات',
     'branches'                          => 'الفروع',
     'services'                          => 'الخدمات',
+    'categories'                        => 'الفئات',
     'packages'                          => 'الباقات',
     'products'                          => 'المنتجات',
     'employees'                         => 'الموظفين',

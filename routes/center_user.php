@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\CenterUser\BranchController;
+use App\Http\Controllers\CenterUser\CategoryServiceController;
 use App\Http\Controllers\CenterUser\PaymentMethodController;
 use App\Http\Controllers\CenterUser\WalletController;
 use App\Http\Controllers\CenterUser\DeleteController;
@@ -107,6 +108,14 @@ Route::group(['middleware' => 'auth_center_user:center_user'], function () {
 
     Route::group(['prefix' => 'branches', 'as' => 'branches.'], function () {
         Route::controller(BranchController::class)->group(function () {
+            Route::get('index', 'index')->name('index');
+            Route::get('create', 'create')->name('create');
+            Route::post('updateOrCreate', 'updateOrCreate')->name('updateOrCreate');
+        });
+    });
+
+    Route::group(['prefix' => 'categories', 'as' => 'categories.'], function () {
+        Route::controller(CategoryServiceController::class)->group(function () {
             Route::get('index', 'index')->name('index');
             Route::get('create', 'create')->name('create');
             Route::post('updateOrCreate', 'updateOrCreate')->name('updateOrCreate');

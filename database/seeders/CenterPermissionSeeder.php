@@ -821,6 +821,33 @@ class CenterPermissionSeeder extends Seeder
             'guard_name' => 'center',
         ]);
         // END STOCKTAKES
-        
+
+        // START SERVICES CATEGORIES
+        Permission::create([
+            'name' => 'VIEW_SERVICES_CATEGORIES',
+            'name_ar' => 'عرض فئات الخدمات',
+            'group' => 'Services Categories',
+            'guard_name' => 'center',
+        ]);
+        // END SERVICES CATEGORIES
+        Permission::create([
+            'name' => 'CREATE_SERVICES_CATEGORIES',
+            'name_ar' => 'إضافة فئة خدمة',
+            'group' => 'Services Categories',
+            'guard_name' => 'center',
+        ]);
+        Permission::create([
+            'name' => 'UPDATE_SERVICES_CATEGORIES',
+            'name_ar' => 'تعديل فئة خدمة',
+            'group' => 'Services Categories',
+            'guard_name' => 'center',
+        ]);
+        Permission::create([
+            'name' => 'DELETE_SERVICES_CATEGORIES',
+            'name_ar' => 'حذف فئة خدمة',
+            'group' => 'Services Categories',
+            'guard_name' => 'center',
+        ]);
+        // END SERVICES CATEGORIES
     }
 }

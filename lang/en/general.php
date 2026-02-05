@@ -74,6 +74,8 @@ return [
     'enter_the_amount_of_the_product' => 'Enter the amount of the product',
     'enter_the_short_description_of_the_product' => 'Enter the short description of the product',
     'select_a_category_from_the_list' => 'Select a category from the list',
+    'select_parent_category' => 'Select Parent Category',
+    'select_a_parent_category_if_this_is_a_subcategory' => 'Select a parent category if this is a subcategory',
     'enter_the_supply_price_of_the_product' => 'Enter the supply price of the product',
     'select_a_product_from_the_list' => 'Select a product from the list',
     'select_a_payment_method_from_the_list' => 'Select a payment method from the list',

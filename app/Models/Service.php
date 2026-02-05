@@ -8,6 +8,7 @@ use App\Traits\UpdatedAtTrait;
 use Astrotomic\Translatable\Translatable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\MediaLibrary\HasMedia;
 
@@ -23,6 +24,7 @@ class Service extends Model implements HasMedia
 
     protected $hidden = ['translations'];
     protected $fillable = [
+        'category_id',
         'rooms_no',
         'free_book',
         'max_time',
@@ -37,4 +39,9 @@ class Service extends Model implements HasMedia
         'is_top' => 'boolean',
         'has_commission' => 'boolean'
     ];
+
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(CategoryService::class);
+    }
 }

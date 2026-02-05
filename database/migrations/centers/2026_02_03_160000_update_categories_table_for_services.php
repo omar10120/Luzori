@@ -11,9 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users_used_wallet', function (Blueprint $table) {
-            $table->softDeletes(); // Add deleted_at column for SoftDeletes trait
+        Schema::dropIfExists('categories_services');
+        Schema::create('categories_services', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('parent_id')->nullable()->onDelete('cascade');
+            $table->timestamps();
+            $table->softDeletes();
         });
+        
     }
 
     /**
@@ -21,8 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('users_used_wallet', function (Blueprint $table) {
-            $table->dropSoftDeletes(); // Remove deleted_at column
-        });
+        Schema::dropIfExists('categories_services');
     }
 };

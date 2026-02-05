@@ -73,6 +73,8 @@ return [
     'enter_the_amount_of_the_product' => 'أدخل الكمية للمنتج',
     'enter_the_short_description_of_the_product' => 'أدخل الوصف القصير للمنتج',
     'select_a_category_from_the_list' => 'اختر فئة من القائمة',
+    'select_parent_category' => 'اختر الفئة الرئيسية',
+    'select_a_parent_category_if_this_is_a_subcategory' => 'اختر فئة رئيسية إذا كانت هذه فئة فرعية',
     'enter_the_supply_price_of_the_product' => 'أدخل سعر التوريد للمنتج',
     'select_a_product_from_the_list' => 'اختر منتج من القائمة',
     'select_a_payment_method_from_the_list' => 'اختر طريقة الدفع من القائمة',

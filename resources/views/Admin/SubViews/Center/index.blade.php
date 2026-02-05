@@ -75,7 +75,7 @@
                             <div class="col-md-{{ ($item && $item->country_code == '+971') ? '2' : '4' }}" id="phone_input_container">
                                 <div class="mb-1">
                                     <label class="form-label">{{ __('field.mobile_number') }}</label>
-                                    <input type="number" maxlength="7" name="phone" id="phone" class="form-control"
+                                    <input type="number" maxlength="12" name="phone" id="phone" class="form-control"
                                         placeholder="{{ __('field.mobile_number') }}"
                                         value="{{ $phoneWithoutPrefix }}" />
                                 </div>
@@ -250,18 +250,18 @@
 
             // Combine prefix with phone number on form submit
             const form = document.getElementById('frmSubmit');
-            if (form) {
-                form.addEventListener('submit', function(e) {
-                    if (countryCodeSelect && countryCodeSelect.value === '+971' && phonePrefixSelect && phoneInput) {
-                        const prefix = phonePrefixSelect.value;
-                        const phone = phoneInput.value;
-                        if (prefix && phone) {
-                            // Combine prefix with phone number
-                            phoneInput.value = prefix + phone;
-                        }
-                    }
-                });
-            }
+            // if (form) {
+            //     form.addEventListener('submit', function(e) {
+            //         if (countryCodeSelect && countryCodeSelect.value === '+971' && phonePrefixSelect && phoneInput) {
+            //             const prefix = phonePrefixSelect.value;
+            //             const phone = phoneInput.value;
+            //             if (prefix && phone) {
+            //                 // Combine prefix with phone number
+            //                 phoneInput.value = prefix + phone;
+            //             }
+            //         }
+            //     });
+            // }
         });
     </script>
 
