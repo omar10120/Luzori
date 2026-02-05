@@ -852,6 +852,19 @@
                             </div>
                         </div>
 
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                @include('CenterUser.Components.category-tree-select', [
+                                    'categoriesJson' => $categoriesJson,
+                                    'selectedId' => null,
+                                    'selectedName' => null,
+                                    'name' => 'category_id',
+                                    'label' => __('field.category'),
+                                    'id' => 'quick_service_category_tree'
+                                ])
+                            </div>
+                        </div>
+
                         <div class="mb-3">
                             <label class="form-label">
                                 {{ __('field.image') }} <span class="text-danger">*</span>
@@ -2435,9 +2448,14 @@
                                 };
                             }
 
-                            $('#addServiceModal').modal('hide');
-                            $('#quick-add-service-form')[0].reset();
-                            if (typeof toastr !== 'undefined') {
+                             $('#addServiceModal').modal('hide');
+                             $('#quick-add-service-form')[0].reset();
+                             // Reset category tree
+                             $('#quick_service_category_tree_jstree').jstree("deselect_all");
+                             $('#quick_service_category_tree_selected_text').text('{{ __("general.choose") }}');
+                             $('#quick_service_category_tree_input').val('');
+
+                             if (typeof toastr !== 'undefined') {
                                 toastr.success('{{ __('admin.operation_done_successfully') }}');
                             }
                             $servicesSelect.val(serviceData.id).trigger('change');

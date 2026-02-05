@@ -11,9 +11,12 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Str;
 use App\Models\CategoryService;
+use App\Traits\CategoryTreeTrait;
 
 class CategoryServiceController extends Controller
 {
+    use CategoryTreeTrait;
+
     private CRUDService $crudService;
     private $model = 'CategoryService';
     private $plural = 'categories';
@@ -69,25 +72,8 @@ class CategoryServiceController extends Controller
             $requestUrl = route($this->updateOrCreateRoute, ['id' => $request->id]);
         }
 
-        // Get all categories for parent selection (excluding current item if editing)
-        // Load categories with their children recursively for hierarchical display
         $excludeId = $request->id ?? 0;
-        $categories = CategoryService::with(['translation'])
-            ->where('id', '!=', $excludeId)
-            ->whereNull('parent_id') // Only top-level categories
-            ->get();
-        
-        // Load children recursively for each category
-        $categories->load(['children' => function($query) use ($excludeId) {
-            $query->where('id', '!=', $excludeId)->with('translation');
-        }]);
-        
-        // Recursively load nested children
-        foreach ($categories as $category) {
-            $this->loadChildrenRecursively($category, $excludeId);
-        }
-
-        $categoriesJson = $this->formatCategoriesForJsTree($categories);
+        $categoriesJson = $this->getFormattedCategories($excludeId, true);
 
         $selectedId = $item?->parent_id;
         $selectedName = null;
@@ -99,21 +85,6 @@ class CategoryServiceController extends Controller
 
         $view = 'CenterUser.SubViews.' . $this->model . '.index';
         return view($view, compact('item', 'requestUrl', 'title', 'menu', 'menu_link', 'categoriesJson', 'selectedId', 'selectedName'));
-    }
-
-    private function formatCategoriesForJsTree($cats) {
-        $data = [];
-        foreach ($cats as $cat) {
-            $nameEn = $cat->translate('en')->name ?? '';
-            $nameAr = $cat->translate('ar')->name ?? '';
-            $name = trim($nameAr . ' / ' . $nameEn, ' / ');
-            $data[] = [
-                'id' => (string)$cat->id,
-                'text' => $name,
-                'children' => isset($cat->children) ? $this->formatCategoriesForJsTree($cat->children) : []
-            ];
-        }
-        return $data;
     }
 
     public function updateOrCreate(CategoryRequest $request)
@@ -140,21 +111,6 @@ class CategoryServiceController extends Controller
             return MyHelper::responseJSON('redirect_to_home', Response::HTTP_CREATED, route('center_user.categories.index'));
         } else {
             return MyHelper::responseJSON(__('admin.an_error_occurred'), Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    /**
-     * Recursively load children categories
-     */
-    private function loadChildrenRecursively($category, $excludeId)
-    {
-        if ($category->children) {
-            foreach ($category->children as $child) {
-                $child->load(['children' => function($query) use ($excludeId) {
-                    $query->where('id', '!=', $excludeId)->with('translation');
-                }]);
-                $this->loadChildrenRecursively($child, $excludeId);
-            }
         }
     }
 }

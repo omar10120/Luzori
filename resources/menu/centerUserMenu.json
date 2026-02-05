@@ -137,8 +137,7 @@
           ]
         }
       ]
-    }
-    ,
+    },
     {
       "name": "payment_methods",
       "external_icon": "payment",
@@ -162,7 +161,6 @@
         }
       ]
     },
-   
     {
       "name": "products",
       "external_icon": "products",
@@ -188,7 +186,6 @@
             "VIEW_PRODUCTS"
           ]
         },
-      
         {
           "url": "center_user/stocktakes/index",
           "name": "stocktakes",

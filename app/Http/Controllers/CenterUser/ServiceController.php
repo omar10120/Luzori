@@ -8,12 +8,15 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\CenterUser\ServiceRequest;
 use App\Models\Service;
 use App\Services\CRUDService;
+use App\Traits\CategoryTreeTrait;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Str;
 
 class ServiceController extends Controller
 {
+    use CategoryTreeTrait;
+
     private CRUDService $crudService;
     private $model = 'Service';
     private $plural = 'services';
@@ -69,11 +72,7 @@ class ServiceController extends Controller
             $requestUrl = route($this->updateOrCreateRoute, ['id' => $request->id]);
         }
 
-        $categories = \App\Models\CategoryService::with(['translation', 'children' => function($q) {
-            $q->with('translation');
-        }])->whereNull('parent_id')->get();
-
-        $categoriesJson = $this->formatCategoriesForJsTree($categories);
+        $categoriesJson = $this->getFormattedCategories();
         
         $selectedId = $item?->category_id;
         $selectedName = null;
@@ -82,20 +81,6 @@ class ServiceController extends Controller
         }
 
         $view = 'CenterUser.SubViews.' . $this->model . '.index';
-        return view($view, compact('item', 'requestUrl', 'title', 'menu', 'menu_link', 'categoriesJson', 'selectedId', 'selectedName'));
-    }
-
-    private function formatCategoriesForJsTree($cats) {
-        $data = [];
-        foreach ($cats as $cat) {
-            $name = $cat->translate(app()->getLocale())->name ?? $cat->name;
-            $data[] = [
-                'id' => (string)$cat->id,
-                'text' => $name,
-                'children' => isset($cat->children) ? $this->formatCategoriesForJsTree($cat->children) : []
-            ];
-        }
-        return $data;
     }
 
     public function updateOrCreate(ServiceRequest $request)

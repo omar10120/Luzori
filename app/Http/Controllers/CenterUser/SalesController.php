@@ -14,6 +14,7 @@ use App\Models\Sale;
 use App\Models\User;
 use App\Models\Worker;
 use App\Services\SalesService;
+use App\Traits\CategoryTreeTrait;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Str;
@@ -21,6 +22,8 @@ use niklasravnsborg\LaravelPdf\Facades\Pdf;
 
 class SalesController extends Controller
 {
+    use CategoryTreeTrait;
+
     private $model = 'Sale';
     private $plural = 'sales';
     private $indexRoute;
@@ -125,8 +128,10 @@ class SalesController extends Controller
             return $query->where('branch_id', $branchId);
         })->get();
 
+        $categoriesJson = $this->getFormattedCategories();
+
         $view = 'CenterUser.SubViews.' . $this->model . '.cart';
-        return view($view, compact('services', 'products', 'workers', 'discounts', 'paymentMethods', 'productPaymentMethods', 'walletPaymentMethods', 'wallets', 'users', 'cart', 'title', 'menu', 'menu_link'));
+        return view($view, compact('services', 'products', 'workers', 'discounts', 'paymentMethods', 'productPaymentMethods', 'walletPaymentMethods', 'wallets', 'users', 'cart', 'title', 'menu', 'menu_link', 'categoriesJson'));
     }
 
     /**
