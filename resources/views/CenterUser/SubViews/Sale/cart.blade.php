@@ -2256,17 +2256,14 @@
                             </div><div class="row g-2">`;
                             $.each(wallets, function(index, item) {
                                 var wallet = item.wallet;
-                                var originalAmount = parseFloat(wallet.amount || 0);
-                                
-                                // Wallet amount is displayed as-is (no discount applied to wallet display)
-                                // Discount codes don't affect wallet amount display - they only affect service prices
+                                var balance = parseFloat(item.remaining_balance || 0);
                                 
                                 walletsElement += `<div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-2">
                                     <div class="form-check wallet-item" style="padding: 10px;color: #fff;background-color: #428bca;border-color: #357ebd;border-radius: 4px;min-height: 50px;display: flex;align-items: center;gap: 10px;font-size: 10px;width: 100%;">
                                         <label class="form-check-label flex-grow-1 text-start" for="booking-wallets${wallet.id}" style="word-break: break-word;white-space: normal;overflow: hidden;min-width: 0;margin: 0;">
-                                            ${wallet.code + ' [' + originalAmount.toFixed(2) + ' AED]'}
+                                            ${wallet.code + ' [' + balance.toFixed(2) + ' AED]'}
                                         </label>
-                                        <input class="form-check-input flex-shrink-0 booking-wallet-radio" type="radio" name="discount_id" data-name="discount_id" value="${wallet.id}" id="booking-wallets${wallet.id}" data-wallet-amount="${originalAmount}" style="margin-top: 0;width: 18px;height: 18px;flex-shrink: 0;">
+                                        <input class="form-check-input flex-shrink-0 booking-wallet-radio" type="radio" name="discount_id" data-name="discount_id" value="${wallet.id}" id="booking-wallets${wallet.id}" data-wallet-amount="${balance}" style="margin-top: 0;width: 18px;height: 18px;flex-shrink: 0;">
                                     </div>
                                 </div>`;
                             });

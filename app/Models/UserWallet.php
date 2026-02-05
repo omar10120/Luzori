@@ -49,4 +49,10 @@ class UserWallet extends Model
     {
         return $this->belongsTo(User::class, 'created_by');
     }
+
+    public function used()
+    {
+        return $this->hasMany(UserUsedWallet::class, 'wallet_id', 'wallet_id')
+                    ->where('user_id', $this->user_id);
+    }
 }

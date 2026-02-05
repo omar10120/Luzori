@@ -18,6 +18,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Str;
 use App\Models\Booking;
 use App\Models\Setting;
+use App\Models\UserUsedWallet;
 use niklasravnsborg\LaravelPdf\Facades\Pdf;
 
 class BookingController extends Controller
@@ -103,7 +104,14 @@ class BookingController extends Controller
 
         if ($user) {
             $services = $user->services->groupBy('service_id');
-            $wallets = $user->wallets()->with(['wallet'])->join('wallets', 'users_wallets.wallet_id', '=', 'wallets.id')->get();
+            $wallets = $user->wallets()->with(['wallet'])->get()->map(function($userWallet) use ($user) {
+                $usedAmount = UserUsedWallet::where('user_id', $user->id)
+                    ->where('wallet_id', $userWallet->wallet_id)
+                    ->sum('amount');
+                
+                $userWallet->remaining_balance = $userWallet->amount - $usedAmount;
+                return $userWallet;
+            });
             $memberships = $user->memberships()->get();
 
             return response()->json([
