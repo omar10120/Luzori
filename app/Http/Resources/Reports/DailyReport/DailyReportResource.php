@@ -91,7 +91,7 @@ class DailyReportResource extends JsonResource
                 $total['free'] = $freeSum;
             }
         }
-        
+
         $total['total'] = array_sum($total);
         $res['total'] = $total;
         return $res;

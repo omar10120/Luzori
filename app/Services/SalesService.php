@@ -17,6 +17,7 @@ use App\Models\Discount;
 use App\Models\UserUsedDiscount;
 use App\Models\UserUsedWallet;
 use App\Models\UserUsedCard;
+use App\Models\Membership;
 use App\Models\UserWallet;
 use App\Models\Wallet;
 use App\Services\SMSGatewayService;
@@ -350,21 +351,24 @@ class SalesService
 
         // Handle membership payment - deduct booking amount from membership balance
         if (!empty($item['membership_id'])) {
-            $userId = null;
-            if (!empty($item['client_mobile'])) {
-                $user = User::where('phone', $item['client_mobile'])->first();
-                if ($user) {
-                    $userId = $user->id;
+            $membership = Membership::find($item['membership_id']);
+            if ($membership) {
+                $userId = null;
+                if (!empty($item['client_mobile'])) {
+                    $user = User::where('phone', $item['client_mobile'])->first();
+                    if ($user) {
+                        $userId = $user->id;
+                    }
                 }
-            }
 
-            UserUsedCard::create([
-                'code' => $item['membership_no'] ?? '',
-                'amount' => $item['membership_percent'] ?? 0,
-                'user_id' => $userId,
-                'membershipcards_id' => $item['membership_id'],
-                'booking_id' => $booking->id,
-            ]);
+                UserUsedCard::create([
+                    'code' => $membership->membership_no,
+                    'amount' => $membership->percent,
+                    'user_id' => $userId,
+                    'membershipcards_id' => $membership->id,
+                    'booking_id' => $booking->id,
+                ]);
+            }
         }
 
         // Handle discount code - create UserUsedDiscount record for daily report tracking

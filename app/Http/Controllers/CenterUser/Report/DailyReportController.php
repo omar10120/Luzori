@@ -277,7 +277,7 @@ class DailyReportController extends Controller
                                         $payments_with_prices["free"] = [];
                                     }
                                     $temp = [];
-                                    $temp['amount'] = $memberShipCardsUsers[$detail->worker_id]['amount'];
+                                    $temp['amount'] = ($price * $memberShipCard->amount) / 100; // Calculated discount amount
                                     $temp['details'] = $memberShipCardsUsers[$detail->worker_id]['amountArr'];
                                     $temp['detailsArr'] = $memberShipCardsUsers[$detail->worker_id]['detailsArr'];
                                     $temp['codesArr'] = $memberShipCardsUsers[$detail->worker_id]['codesArr'];
