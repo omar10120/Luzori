@@ -87,7 +87,7 @@
                                                     $productPaymentMethods = get_payment_method_names('product');
                                                     $isProductPayment = in_array($index, $productPaymentMethods);
                                                 @endphp
-                                                @if ($isProductPayment && is_array($with_price))
+                                                @if ($isProductPayment && is_array($with_price) && isset($with_price['products']))
                                                     @php
                                                         $user_total += $with_price['amount'];
                                                         if (isset($total_payments_types[$index])) {
@@ -331,7 +331,7 @@
                                                     $productPaymentMethods = get_payment_method_names('product');
                                                     $isProductPayment = in_array($index, $productPaymentMethods);
                                                 @endphp
-                                                @if ($isProductPayment)
+                                                @if ($isProductPayment && is_array($with_price) && isset($with_price['products']))
                                                         @php
                                                             $user_total += $with_price['amount'];
                                                             if (isset($total_payments_types[$index])) {
@@ -569,7 +569,7 @@
                                                     $productPaymentMethods = get_payment_method_names('product');
                                                     $isProductPayment = in_array($index, $productPaymentMethods);
                                                 @endphp
-                                                @if ($isProductPayment)
+                                                @if ($isProductPayment && is_array($with_price) && isset($with_price['products']))
                                                     @php
                                                         $user_total += $with_price['amount'];
                                                         if (isset($total_payments_types[$index])) {

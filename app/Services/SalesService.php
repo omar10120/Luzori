@@ -13,6 +13,8 @@ use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Service;
 use App\Models\User;
+use App\Models\Discount;
+use App\Models\UserUsedDiscount;
 use App\Models\UserUsedWallet;
 use App\Models\UserWallet;
 use App\Models\Wallet;
@@ -351,6 +353,11 @@ class SalesService
             // For now, membership might work differently - check requirements
         }
 
+        // Handle discount code - create UserUsedDiscount record for daily report tracking
+        if (!empty($item['discount_id'])) {
+            $this->recordDiscountUsage($item['discount_id'], $item['client_mobile'] ?? null, $booking->id);
+        }
+
         return $booking;
     }
 
@@ -395,6 +402,34 @@ class SalesService
         if ($newBalance <= 0 && !$wallet->used) {
             $wallet->update(['used' => true]);
         }
+    }
+
+    /**
+     * Record discount code usage for daily report tracking
+     */
+    private function recordDiscountUsage($discountId, $clientMobile, $bookingId)
+    {
+        $discount = Discount::find($discountId);
+        if (!$discount) {
+            return; // Discount not found, skip
+        }
+
+        $userId = null;
+        if (!empty($clientMobile)) {
+            $user = User::where('phone', $clientMobile)->first();
+            if ($user) {
+                $userId = $user->id;
+            }
+        }
+
+        UserUsedDiscount::create([
+            'code' => $discount->code,
+            'amount' => $discount->amount,
+            'type' => $discount->type,
+            'user_id' => $userId,
+            'discountcode_id' => $discount->id,
+            'booking_id' => $bookingId,
+        ]);
     }
 
     /**
