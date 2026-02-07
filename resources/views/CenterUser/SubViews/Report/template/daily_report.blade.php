@@ -743,7 +743,7 @@
                             }
                         @endphp
                         @php
-                            if ($getPaymentsType != 'free' && $getPaymentsType != 'wallet') {
+                            if ( $getPaymentsType == 'wallet') {
                                 $last_total += $total_payments_types[$getPaymentsType];
                             }
                         @endphp
