@@ -16,6 +16,7 @@ use App\Models\User;
 use App\Models\Discount;
 use App\Models\UserUsedDiscount;
 use App\Models\UserUsedWallet;
+use App\Models\UserUsedCard;
 use App\Models\UserWallet;
 use App\Models\Wallet;
 use App\Services\SMSGatewayService;
@@ -98,7 +99,7 @@ class SalesService
                 if (!empty($item['wallet_id'])) {
                     $paymentType = 'wallet';
                 } elseif (!empty($item['membership_id'])) {
-                    $paymentType = 'wallet';
+                    $paymentType = 'free';
                 }
                 
                 $booking = $this->createBookingFromCartItem($item, $sale->id, $branchId, $paymentType, $bookingSubtotal);
@@ -349,8 +350,21 @@ class SalesService
 
         // Handle membership payment - deduct booking amount from membership balance
         if (!empty($item['membership_id'])) {
-            // Similar logic for membership if needed
-            // For now, membership might work differently - check requirements
+            $userId = null;
+            if (!empty($item['client_mobile'])) {
+                $user = User::where('phone', $item['client_mobile'])->first();
+                if ($user) {
+                    $userId = $user->id;
+                }
+            }
+
+            UserUsedCard::create([
+                'code' => $item['membership_no'] ?? '',
+                'amount' => $item['membership_percent'] ?? 0,
+                'user_id' => $userId,
+                'membershipcards_id' => $item['membership_id'],
+                'booking_id' => $booking->id,
+            ]);
         }
 
         // Handle discount code - create UserUsedDiscount record for daily report tracking

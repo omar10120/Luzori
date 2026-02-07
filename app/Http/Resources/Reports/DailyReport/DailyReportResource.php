@@ -78,6 +78,19 @@ class DailyReportResource extends JsonResource
                 }
             }
         }
+
+        // Sum up "free" payments (memberships, discounts, etc.) for the report total
+        if (isset($this['payments_with_prices']['free'])) {
+            $freeSum = 0;
+            foreach ($this['payments_with_prices']['free'] as $workerItems) {
+                foreach ($workerItems as $item) {
+                    $freeSum += ($item['amount'] ?? 0);
+                }
+            }
+            if ($freeSum > 0) {
+                $total['free'] = $freeSum;
+            }
+        }
         
         $total['total'] = array_sum($total);
         $res['total'] = $total;

@@ -63,6 +63,11 @@ class DailyReportController extends Controller
             $report = $temp_report->get();
 
             $payments_type = get_payment_types();
+            // Add 'free' to payment types list if not already present
+            if (!isset($payments_type['free'])) {
+                $payments_type['free'] = __('field.free');
+            }
+
             $payments_type_list = [];
             $payments_with_prices = [];
             foreach ($payments_type as $index => $item) {
