@@ -323,8 +323,10 @@ class DailyReportController extends Controller
                         }
                     }
 
-                    if (isset($users_with_commission[$BuyProduct_item->worker_id])) {
-                        array_push($users_with_commission[$BuyProduct_item->worker_id], $BuyProduct_item->commission);
+                    if (isset($users_with_commission[$BuyProduct_item->worker_id]) && $BuyProduct_item->commission) {
+                        // Commission is stored as percentage, calculate actual amount
+                        $product_commission_amount = ($orderPrice * floatval($BuyProduct_item->commission)) / 100;
+                        array_push($users_with_commission[$BuyProduct_item->worker_id], $product_commission_amount);
                     }
 
                     if (isset($users_with_tips[$BuyProduct_item->worker_id])) {
@@ -345,13 +347,15 @@ class DailyReportController extends Controller
                     if (isset($wallet_details_prices[$get_wallet->wallet_type])) {
                         $wallet_details_prices[$get_wallet->wallet_type] += $get_wallet->invoiced_amount;
 
-                        if (isset($users_with_commission[$get_wallet->worker_id])) {
-                            array_push($users_with_commission[$get_wallet->worker_id], $get_wallet->commission);
-                        }
+                    if (isset($users_with_commission[$get_wallet->worker_id]) && $get_wallet->commission) {
+                        // Commission is stored as percentage, calculate actual amount
+                        $wallet_commission_amount = ($get_wallet->invoiced_amount * floatval($get_wallet->commission)) / 100;
+                        array_push($users_with_commission[$get_wallet->worker_id], $wallet_commission_amount);
+                    }
 
-                        if (isset($users_with_tips[$get_wallet->worker_id])) {
-                            array_push($users_with_tips[$get_wallet->worker_id], $get_wallet->tip);
-                        }
+                    if (isset($users_with_tips[$get_wallet->worker_id])) {
+                        array_push($users_with_tips[$get_wallet->worker_id], $get_wallet->tip);
+                    }
                     }
                 }
             }

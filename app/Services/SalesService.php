@@ -94,11 +94,11 @@ class SalesService
                 }
                 
                 // Determine payment type (wallet/membership override payment_type)
-                $paymentType = $item['payment_type'] ?? null;
+                $paymentType = !empty($item['payment_type']) ? $item['payment_type'] : null;
                 if (!empty($item['wallet_id'])) {
-                    $paymentType = 'Wallet';
+                    $paymentType = 'wallet';
                 } elseif (!empty($item['membership_id'])) {
-                    $paymentType = 'Membership';
+                    $paymentType = 'wallet';
                 }
                 
                 $booking = $this->createBookingFromCartItem($item, $sale->id, $branchId, $paymentType, $bookingSubtotal);
@@ -293,7 +293,7 @@ class SalesService
             'booking_date' => $bookingDate,
             'full_name' => $item['client_name'] ?? 'Walk-in',
             'mobile' => $item['client_mobile'] ?? null,
-            'payment_type' => $paymentType ?? 'Cash',
+            'payment_type' => !empty($paymentType) ? $paymentType : (\App\Models\PaymentMethod::forBooking()->first()->name ?? 'service_cash'),
             'branch_id' => $branchId,
             'user_id' => null,
             'sale_id' => $saleId,

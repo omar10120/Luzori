@@ -214,6 +214,14 @@ class DailyReportController extends Controller
                                 if (empty($value->payment_type)) {
                                     $payment_type_select = 'wallet';
                                 }
+                                // If payment type is not in the known payment types list,
+                                // map it to the first known general payment type (e.g., 'service_cash')
+                                if (!isset($payments_type[$payment_type_select]) && $payment_type_select !== 'wallet') {
+                                    $firstPaymentType = array_key_first($payments_type);
+                                    if ($firstPaymentType) {
+                                        $payment_type_select = $firstPaymentType;
+                                    }
+                                }
 
                                 // Ensure payment type exists in result array
                                 if (!isset($result[$detail->worker_id][$payment_type_select])) {
@@ -362,8 +370,10 @@ class DailyReportController extends Controller
                         $payments_with_prices[$BuyProduct_item->payment_type][$BuyProduct_item->sales_worker_id][] = $temp;
                     }
 
-                    if (isset($users_with_commission[$BuyProduct_item->worker_id])) {
-                        array_push($users_with_commission[$BuyProduct_item->worker_id], $BuyProduct_item->commission);
+                    if (isset($users_with_commission[$BuyProduct_item->worker_id]) && $BuyProduct_item->commission) {
+                        // Commission is stored as percentage, calculate actual amount
+                        $product_commission_amount = ($orderPrice * floatval($BuyProduct_item->commission)) / 100;
+                        array_push($users_with_commission[$BuyProduct_item->worker_id], $product_commission_amount);
                     }
 
                     if (isset($users_with_tips[$BuyProduct_item->worker_id])) {
@@ -387,8 +397,10 @@ class DailyReportController extends Controller
                     }
                     $wallet_details_prices[$get_wallet->wallet_type] += $get_wallet->invoiced_amount;
 
-                    if (isset($users_with_commission[$get_wallet->worker_id])) {
-                        array_push($users_with_commission[$get_wallet->worker_id], $get_wallet->commission);
+                    if (isset($users_with_commission[$get_wallet->worker_id]) && $get_wallet->commission) {
+                        // Commission is stored as percentage, calculate actual amount
+                        $wallet_commission_amount = ($get_wallet->invoiced_amount * floatval($get_wallet->commission)) / 100;
+                        array_push($users_with_commission[$get_wallet->worker_id], $wallet_commission_amount);
                     }
 
                     if (isset($users_with_tips[$get_wallet->worker_id])) {

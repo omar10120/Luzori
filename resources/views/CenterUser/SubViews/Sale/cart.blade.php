@@ -1569,9 +1569,15 @@
                 var hasMembershipSelected = $('input[name="discount_id"].booking-membership-radio:checked').length > 0;
                 var hasDiscountSelected = $('input[name="discount_id"].booking-discount-radio:checked').length > 0;
                 
-                // Validate payment method only if no wallet, membership, or discount code is selected
-                // Allow proceeding if any of these are selected (wallet/membership act as payment, discount allows proceeding)
-                if (!hasWalletSelected && !hasMembershipSelected && !hasDiscountSelected) {
+                // Validate payment method:
+                // - Wallet/Membership act as payment methods, so payment_type is not required
+                // - Discount codes only reduce the price, remaining amount still needs a payment method
+                if (hasWalletSelected || hasMembershipSelected) {
+                    // Wallet/Membership act as payment methods - no need for separate payment
+                    paymentType = null;
+                    $paymentTypeField.removeClass('is-invalid');
+                } else {
+                    // For discount codes or no selection - payment method IS required
                     if (!paymentType || paymentType === '') {
                         $paymentTypeField.addClass('is-invalid');
                         $paymentTypeField.siblings('.invalid-feedback').text('{{ __('field.payment_method') }} is required');
@@ -1580,13 +1586,6 @@
                     } else {
                         $paymentTypeField.removeClass('is-invalid');
                     }
-                } else {
-                    // Clear payment type if wallet/membership is selected (they act as payment methods)
-                    // For discount codes, allow proceeding without payment method requirement
-                    if (hasWalletSelected || hasMembershipSelected) {
-                        paymentType = null;
-                    }
-                    $paymentTypeField.removeClass('is-invalid');
                 }
 
                 bookingWizardData.payment_type = paymentType;
@@ -1612,8 +1611,12 @@
                         paymentMethodDisplay = 'Membership: ' + membershipLabel;
                     }
                     bookingWizardData.membership_id = selectedMembership.val();
+                    bookingWizardData.membership_percent = selectedMembership.data('membership-percent') || 0;
+                    bookingWizardData.membership_no = selectedMembership.data('membership-no') || '';
                 } else {
                     bookingWizardData.membership_id = null;
+                    bookingWizardData.membership_percent = null;
+                    bookingWizardData.membership_no = null;
                 }
                 
                 if (!paymentMethodDisplay) {
@@ -2291,7 +2294,7 @@
                                         <label class="form-check-label flex-grow-1 text-start" for="booking-memberships${item.id}" style="word-break: break-word;white-space: normal;overflow: hidden;min-width: 0;margin: 0;">
                                             ${item.membership_no + ' [' + item.percent + '%]'}
                                         </label>
-                                        <input class="form-check-input flex-shrink-0 booking-membership-radio" type="radio" name="discount_id" data-name="discount_id" value="${item.id}" id="booking-memberships${item.id}" style="margin-top: 0;width: 18px;height: 18px;flex-shrink: 0;">
+                                        <input class="form-check-input flex-shrink-0 booking-membership-radio" type="radio" name="discount_id" data-name="discount_id" value="${item.id}" data-membership-percent="${item.percent}" data-membership-no="${item.membership_no}" id="booking-memberships${item.id}" style="margin-top: 0;width: 18px;height: 18px;flex-shrink: 0;">
                                     </div>
                                 </div>`;
                             });
@@ -2316,7 +2319,6 @@
                 
                 var discountedPrice = parseFloat(originalPrice);
                 
-                // Check for discount code selection only (wallets/memberships don't affect price)
                 var selectedDiscount = $('input[name="discount_id"].booking-discount-radio:checked');
                 if (selectedDiscount.length > 0) {
                     var discountAmount = parseFloat(selectedDiscount.data('discount-amount') || 0);
@@ -2331,8 +2333,13 @@
                     }
                 }
                 
-                // Wallets and memberships are payment methods - they don't reduce the displayed price
-                // The backend will deduct the booking amount from wallet/membership balance
+                var selectedMembership = $('input[name="discount_id"].booking-membership-radio:checked');
+                if (selectedMembership.length > 0) {
+                    var membershipPercent = parseFloat(selectedMembership.data('membership-percent') || 0);
+                    if (membershipPercent > 0) {
+                        discountedPrice = discountedPrice * (1 - membershipPercent / 100);
+                    }
+                }
                 
                 return discountedPrice;
             }
@@ -2412,7 +2419,9 @@
                     $('input[name="discount_id"].booking-membership-radio').prop('checked', false);
                     toggleClearButtons();
                     togglePaymentMethodVisibility();
-                    // Membership is a payment method, doesn't affect prices - no need to re-render cart
+                    updateBookingReviewServicePrices();
+                    renderCart();
+                    calculateTotals();
                 });
 
                 // Listen for radio button changes (discount, wallet, membership)
@@ -2420,12 +2429,10 @@
                     toggleClearButtons();
                     togglePaymentMethodVisibility();
                     
-                    // Check if discount code is selected (wallets/memberships don't affect prices)
                     var isDiscountCode = $(this).hasClass('booking-discount-radio');
-                    if (isDiscountCode) {
-                        // Update service prices in review table if discount code is selected/changed
+                    var isMembership = $(this).hasClass('booking-membership-radio');
+                    if (isDiscountCode || isMembership) {
                         updateBookingReviewServicePrices();
-                        // Re-render cart to update prices with discount
                         renderCart();
                         calculateTotals();
                     }
