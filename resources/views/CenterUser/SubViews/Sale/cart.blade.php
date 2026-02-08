@@ -1572,9 +1572,9 @@
                 // Validate payment method:
                 // - Wallet/Membership act as payment methods, so payment_type is not required
                 // - Discount codes only reduce the price, remaining amount still needs a payment method
-                if (hasWalletSelected || hasMembershipSelected) {
+                if (hasWalletSelected) {
                     // Wallet/Membership act as payment methods - no need for separate payment
-                    paymentType = null;
+                    paymentType = nully;
                     $paymentTypeField.removeClass('is-invalid');
                 } else {
                     // For discount codes or no selection - payment method IS required
@@ -2451,7 +2451,7 @@
                     
                     // Hide payment method if wallet or membership is selected (they act as payment methods)
                     // For discount codes, keep payment method visible but make it optional to allow proceeding
-                    if (hasWalletSelected || hasMembershipSelected) {
+                    if (hasWalletSelected) {
                         $('#booking-payment-method-container').hide();
                         $('#booking-payment_type').val('').removeClass('is-invalid');
                         $('#booking-payment_type').prop('required', false);

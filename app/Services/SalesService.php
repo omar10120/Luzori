@@ -100,10 +100,11 @@ class SalesService
                 if (!empty($item['wallet_id'])) {
                     $paymentType = 'wallet';
                 } elseif (!empty($item['membership_id'])) {
-                    $paymentType = 'free';
+                    
+                    $paymentType = $item['payment_type'];
                 }
-                
-                $booking = $this->createBookingFromCartItem($item, $sale->id, $branchId, $paymentType, $bookingSubtotal);
+                $is_free = !empty($item['membership_id']) ? true : false;
+                $booking = $this->createBookingFromCartItem($item, $sale->id, $branchId, $paymentType, $bookingSubtotal, $is_free);
                 
                 SaleItem::create([
                     'sale_id' => $sale->id,
@@ -278,7 +279,8 @@ class SalesService
     /**
      * Create Booking from cart item (one booking with one or more services)
      */
-    private function createBookingFromCartItem($item, $saleId, $branchId, $paymentType = null, $bookingTotal = 0)
+    
+    private function createBookingFromCartItem($item, $saleId, $branchId, $paymentType = null, $bookingTotal = 0,$is_free)
     {
         $services = $item['services'] ?? null;
         if (!empty($services) && is_array($services)) {
@@ -317,6 +319,7 @@ class SalesService
                     'price' => (float) ($svc['price'] ?? $service->price),
                     '_date' => $svc['date'] ?? $bookingDate,
                     'worker_id' => $svc['worker_id'],
+                    // 'is_free' => $is_free,
                     'from_time' => $svc['from_time'],
                     'to_time' => $svc['to_time'],
                     'commission' => $svc['commission'] ?? null,
@@ -336,6 +339,7 @@ class SalesService
                 'service_id' => $service->id,
                 'price' => (float) ($item['price'] ?? $service->price),
                 '_date' => $item['date'],
+                // 'is_free' => $is_free,
                 'worker_id' => $item['worker_id'],
                 'from_time' => $item['from_time'],
                 'to_time' => $item['to_time'],

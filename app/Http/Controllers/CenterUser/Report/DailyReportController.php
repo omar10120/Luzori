@@ -63,11 +63,6 @@ class DailyReportController extends Controller
             $report = $temp_report->get();
 
             $payments_type = get_payment_types();
-            // Add 'free' to payment types list if not already present
-            if (!isset($payments_type['free'])) {
-                $payments_type['free'] = __('field.free');
-            }
-
             $payments_type_list = [];
             $payments_with_prices = [];
             foreach ($payments_type as $index => $item) {
@@ -219,22 +214,6 @@ class DailyReportController extends Controller
                                 if (empty($value->payment_type)) {
                                     $payment_type_select = 'wallet';
                                 }
-                                // If payment type is not in the known payment types list,
-                                // map it to the first known general payment type (e.g., 'service_cash')
-                                if (!isset($payments_type[$payment_type_select]) && $payment_type_select !== 'wallet') {
-                                    $firstPaymentType = array_key_first($payments_type);
-                                    if ($firstPaymentType) {
-                                        $payment_type_select = $firstPaymentType;
-                                    }
-                                }
-
-                                // Ensure payment type exists in result array
-                                if (!isset($result[$detail->worker_id][$payment_type_select])) {
-                                    $result[$detail->worker_id][$payment_type_select] = 0;
-                                }
-                                if (!isset($payments_with_prices[$payment_type_select])) {
-                                    $payments_with_prices[$payment_type_select] = [];
-                                }
 
                                 $result[$detail->worker_id][$payment_type_select] += $price;
                                 array_push($users_with_prices[$detail->worker_id], $price);
@@ -272,12 +251,8 @@ class DailyReportController extends Controller
                                 $payments_with_prices[$payment_type_select][$detail->worker_id][] = $price - $free_price;
 
                                 if (isset($memberShipCardsUsers[$detail->worker_id]) && $value->id == $memberShipCardsUsers[$detail->worker_id]['booking_id'] && !in_array($detail->worker_id, $selected_memberShipCardsUsers)) {
-                                    // Ensure "free" key exists
-                                    if (!isset($payments_with_prices["free"])) {
-                                        $payments_with_prices["free"] = [];
-                                    }
                                     $temp = [];
-                                    $temp['amount'] = ($price * $memberShipCard->amount) / 100; // Calculated discount amount
+                                    $temp['amount'] = $memberShipCardsUsers[$detail->worker_id]['amount'];
                                     $temp['details'] = $memberShipCardsUsers[$detail->worker_id]['amountArr'];
                                     $temp['detailsArr'] = $memberShipCardsUsers[$detail->worker_id]['detailsArr'];
                                     $temp['codesArr'] = $memberShipCardsUsers[$detail->worker_id]['codesArr'];
@@ -289,10 +264,6 @@ class DailyReportController extends Controller
                                 }
 
                                 if (isset($discountUsers[$detail->worker_id]) && $value->id == $discountUsers[$detail->worker_id]['booking_id'] && !in_array($detail->worker_id, $selected_discountUsers)) {
-                                    // Ensure "free" key exists
-                                    if (!isset($payments_with_prices["free"])) {
-                                        $payments_with_prices["free"] = [];
-                                    }
                                     $temp = [];
                                     $temp['amount'] = $discountUsers[$detail->worker_id]['amount'];
                                     $temp['type'] = "discount_code";
@@ -306,10 +277,6 @@ class DailyReportController extends Controller
                                 }
 
                                 if ($detail->is_free == 1) {
-                                    // Ensure "free" key exists
-                                    if (!isset($payments_with_prices["free"])) {
-                                        $payments_with_prices["free"] = [];
-                                    }
                                     $temp = [];
                                     $temp['amount'] = $detail->price;
                                     $temp['type'] = "free_service";
@@ -362,23 +329,15 @@ class DailyReportController extends Controller
                             $temp["products"][] = $detail;
                         }
 
-                        // Ensure payment type exists in result array
-                        if (!isset($result[$BuyProduct_item->sales_worker_id][$BuyProduct_item->payment_type])) {
-                            $result[$BuyProduct_item->sales_worker_id][$BuyProduct_item->payment_type] = 0;
+                        if (isset($result[$BuyProduct_item->sales_worker_id][$BuyProduct_item->payment_type])) {
+                            $result[$BuyProduct_item->sales_worker_id][$BuyProduct_item->payment_type] += $orderPrice;
+                            $temp["amount"] = $orderPrice;
+                            $payments_with_prices[$BuyProduct_item->payment_type][$BuyProduct_item->sales_worker_id][] = $temp;
                         }
-                        if (!isset($payments_with_prices[$BuyProduct_item->payment_type])) {
-                            $payments_with_prices[$BuyProduct_item->payment_type] = [];
-                        }
-
-                        $result[$BuyProduct_item->sales_worker_id][$BuyProduct_item->payment_type] += $orderPrice;
-                        $temp["amount"] = $orderPrice;
-                        $payments_with_prices[$BuyProduct_item->payment_type][$BuyProduct_item->sales_worker_id][] = $temp;
                     }
 
-                    if (isset($users_with_commission[$BuyProduct_item->worker_id]) && $BuyProduct_item->commission) {
-                        // Commission is stored as percentage, calculate actual amount
-                        $product_commission_amount = ($orderPrice * floatval($BuyProduct_item->commission)) / 100;
-                        array_push($users_with_commission[$BuyProduct_item->worker_id], $product_commission_amount);
+                    if (isset($users_with_commission[$BuyProduct_item->worker_id])) {
+                        array_push($users_with_commission[$BuyProduct_item->worker_id], $BuyProduct_item->commission);
                     }
 
                     if (isset($users_with_tips[$BuyProduct_item->worker_id])) {
@@ -402,10 +361,8 @@ class DailyReportController extends Controller
                     }
                     $wallet_details_prices[$get_wallet->wallet_type] += $get_wallet->invoiced_amount;
 
-                    if (isset($users_with_commission[$get_wallet->worker_id]) && $get_wallet->commission) {
-                        // Commission is stored as percentage, calculate actual amount
-                        $wallet_commission_amount = ($get_wallet->invoiced_amount * floatval($get_wallet->commission)) / 100;
-                        array_push($users_with_commission[$get_wallet->worker_id], $wallet_commission_amount);
+                    if (isset($users_with_commission[$get_wallet->worker_id])) {
+                        array_push($users_with_commission[$get_wallet->worker_id], $get_wallet->commission);
                     }
 
                     if (isset($users_with_tips[$get_wallet->worker_id])) {

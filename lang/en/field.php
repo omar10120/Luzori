@@ -313,6 +313,7 @@ return [
     'no_supplier'                     => 'No Supplier',
     'local'                           => 'Local',
     'no_payee'                        => 'No Payee',
+    'not_selected'                    => 'Not Selected',
     
     
     

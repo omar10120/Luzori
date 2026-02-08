@@ -743,9 +743,9 @@
                             }
                         @endphp
                         @php
-                            if ( $getPaymentsType == 'wallet') {
+                            //if ( $getPaymentsType == 'wallet') {
                                 $last_total += $total_payments_types[$getPaymentsType];
-                            }
+                           // }
                         @endphp
                         <td style="width: 50px;background-color: #666;color: #fff;text-align: center">
                             <strong>{{ $type }}</strong>
