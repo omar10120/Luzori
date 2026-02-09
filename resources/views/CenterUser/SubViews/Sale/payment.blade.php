@@ -122,30 +122,48 @@
                                         $itemName = $svcCount === 1 ? ($item['services'][0]['name'] ?? __('locale.bookings')) : (__('locale.bookings') . ' (' . $svcCount . ' ' . __('locale.services') . ')');
                                     }
 
+                                    $displayPrice = 0;
+                                    $originalPriceTotal = 0;
+
                                     if($item['type'] === 'user_wallet') {
                                         $displayPrice = $item['invoiced_amount'] ?? ($item['amount'] ?? 0);
+                                        $originalPriceTotal = $displayPrice;
                                     } elseif($item['type'] === 'service' && !empty($item['services']) && is_array($item['services'])) {
-                                        $displayPrice = 0;
                                         foreach ($item['services'] as $svc) {
                                             $displayPrice += (float)($svc['price'] ?? 0);
+                                            $originalPriceTotal += (float)($svc['original_price'] ?? $svc['price'] ?? 0);
                                         }
                                     } else {
                                         $price = $item['price'] ?? 0;
                                         $quantity = $item['quantity'] ?? 1;
                                         $displayPrice = $price * $quantity;
+                                        $originalPriceTotal = ($item['original_price'] ?? $price) * $quantity;
                                     }
                                 @endphp
                                 <div class="mb-2 pb-2 border-bottom">
-                                    <div class="d-flex justify-content-between">
-                                        <span>{{ $itemName }}</span>
-                                        <strong>{{ number_format($displayPrice, 2) }} {{ get_currency() }}</strong>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="fw-semibold">{{ $itemName }}</span>
+                                        <div>
+                                            @if($originalPriceTotal > $displayPrice)
+                                                <small class="text-muted text-decoration-line-through me-1">{{ number_format($originalPriceTotal, 2) }}</small>
+                                            @endif
+                                            <strong class="text-primary">{{ number_format($displayPrice, 2) }} {{ get_currency() }}</strong>
+                                        </div>
                                     </div>
                                     @if($item['type'] === 'service')
                                         @if(!empty($item['services']) && is_array($item['services']))
                                             @foreach($item['services'] as $svc)
-                                                <small class="text-muted d-block">
-                                                    {{ $svc['name'] ?? '' }} • {{ $svc['date'] ?? '' }} {{ $svc['from_time'] ?? '' }} - {{ $svc['to_time'] ?? '' }}
-                                                </small>
+                                                <div class="d-flex justify-content-between align-items-center mt-1">
+                                                    <small class="text-muted">
+                                                        {{ $svc['name'] ?? '' }} • {{ $svc['date'] ?? '' }} {{ $svc['from_time'] ?? '' }} - {{ $svc['to_time'] ?? '' }}
+                                                    </small>
+                                                    <small class="text-muted">
+                                                        @if(isset($svc['original_price']) && (float)$svc['original_price'] > (float)$svc['price'])
+                                                            <span class="text-decoration-line-through me-1">{{ number_format((float)$svc['original_price'], 2) }}</span>
+                                                        @endif
+                                                        <span>{{ number_format((float)$svc['price'], 2) }} {{ get_currency() }}</span>
+                                                    </small>
+                                                </div>
                                             @endforeach
                                         @else
                                             <small class="text-muted">
