@@ -316,7 +316,7 @@ class SalesService
                 BookingDetail::create([
                     'booking_id' => $booking->id,
                     'service_id' => $service->id,
-                    'price' => (float) ($svc['price'] ?? $service->price),
+                    'price' =>  $service->price,
                     '_date' => $svc['date'] ?? $bookingDate,
                     'worker_id' => $svc['worker_id'],
                     // 'is_free' => $is_free,
@@ -337,7 +337,7 @@ class SalesService
             BookingDetail::create([
                 'booking_id' => $booking->id,
                 'service_id' => $service->id,
-                'price' => (float) ($item['price'] ?? $service->price),
+                'price' =>  $service->price,
                 '_date' => $item['date'],
                 // 'is_free' => $is_free,
                 'worker_id' => $item['worker_id'],

@@ -1574,7 +1574,7 @@
                 // - Discount codes only reduce the price, remaining amount still needs a payment method
                 if (hasWalletSelected) {
                     // Wallet/Membership act as payment methods - no need for separate payment
-                    paymentType = nully;
+                    paymentType = null;
                     $paymentTypeField.removeClass('is-invalid');
                 } else {
                     // For discount codes or no selection - payment method IS required

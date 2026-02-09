@@ -252,7 +252,7 @@ class DailyReportController extends Controller
 
                                 if (isset($memberShipCardsUsers[$detail->worker_id]) && $value->id == $memberShipCardsUsers[$detail->worker_id]['booking_id'] && !in_array($detail->worker_id, $selected_memberShipCardsUsers)) {
                                     $temp = [];
-                                    $temp['amount'] = $memberShipCardsUsers[$detail->worker_id]['amount'];
+                                    // $temp['amount'] = $memberShipCardsUsers[$detail->worker_id]['amount'];
                                     $temp['details'] = $memberShipCardsUsers[$detail->worker_id]['amountArr'];
                                     $temp['detailsArr'] = $memberShipCardsUsers[$detail->worker_id]['detailsArr'];
                                     $temp['codesArr'] = $memberShipCardsUsers[$detail->worker_id]['codesArr'];
