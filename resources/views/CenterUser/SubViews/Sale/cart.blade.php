@@ -2466,11 +2466,10 @@
                     }
                 }
 
-                // Listen for payment method changes to clear wallet/membership selection
+                // Listen for payment method changes to clear wallet selection
                 $(document).off('change', '#booking-payment_type').on('change', '#booking-payment_type', function() {
                     if ($(this).val() && $(this).val() !== '') {
                         $('input[name="discount_id"].booking-wallet-radio:checked').prop('checked', false);
-                        $('input[name="discount_id"].booking-membership-radio:checked').prop('checked', false);
                         toggleClearButtons();
                         togglePaymentMethodVisibility();
                     }
