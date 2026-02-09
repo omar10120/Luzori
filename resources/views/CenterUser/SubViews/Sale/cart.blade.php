@@ -1181,19 +1181,36 @@
                     return;
                 }
 
-                // Clear existing selection and options
-                $servicesSelect.val(null).empty();
+                // Capture currently selected values
+                const currentSelections = $servicesSelect.val() || [];
                 
-                // Filter and append options
+                // Clear existing selection and options
+                $servicesSelect.empty();
+                
+                // Track which IDs we've added to avoid duplicates
+                const addedIds = new Set();
+
+                // 1. Add currently selected services (from any category)
                 $allServicesOptions.each(function() {
-                    const optionCategoryId = $(this).data('category-id');
-                    if (categoryId === "" || optionCategoryId == categoryId) {
+                    const optionId = $(this).val();
+                    if (currentSelections.includes(optionId)) {
                         $servicesSelect.append($(this).clone());
+                        addedIds.add(optionId);
                     }
                 });
                 
-                // Re-initialize or refresh Select2 to reflect new options
-                $servicesSelect.trigger('change');
+                // 2. Add all services from the selected category (if not already added)
+                $allServicesOptions.each(function() {
+                    const optionId = $(this).val();
+                    const optionCategoryId = $(this).data('category-id');
+                    if (!addedIds.has(optionId) && (categoryId === "" || optionCategoryId == categoryId)) {
+                        $servicesSelect.append($(this).clone());
+                        addedIds.add(optionId);
+                    }
+                });
+                
+                // Restore selection and refresh Select2
+                $servicesSelect.val(currentSelections).trigger('change');
             }
 
             $('#booking-services').on('change', function() {
