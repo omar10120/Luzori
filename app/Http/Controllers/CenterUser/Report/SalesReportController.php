@@ -187,7 +187,7 @@ class SalesReportController extends Controller
                                     $result[$static->booking->booking_date][$selected_payment_type] = 0;
                                 }
                                 
-                                $result[$static->booking->booking_date]['free'] += $user_amount;
+                                // $result[$static->booking->booking_date]['free'] += $user_amount;
                                 $result[$static->booking->booking_date][$selected_payment_type] -= $user_amount;
                             }
                         }

@@ -104,7 +104,7 @@ class SalesService
                     $paymentType = $item['payment_type'];
                 }
                 $is_free = !empty($item['membership_id']) ? true : false;
-                $booking = $this->createBookingFromCartItem($item, $sale->id, $branchId, $paymentType, $bookingSubtotal, $is_free);
+                $booking = $this->createBookingFromCartItem($item, $sale->id, $branchId, $paymentType, $bookingSubtotal, $is_free, $tip, $cartData['worker_id'] ?? null);
                 
                 SaleItem::create([
                     'sale_id' => $sale->id,
@@ -280,7 +280,7 @@ class SalesService
      * Create Booking from cart item (one booking with one or more services)
      */
     
-    private function createBookingFromCartItem($item, $saleId, $branchId, $paymentType = null, $bookingTotal = 0,$is_free)
+    private function createBookingFromCartItem($item, $saleId, $branchId, $paymentType = null, $bookingTotal = 0,$is_free, &$tip, $tipWorkerId = null)
     {
         $services = $item['services'] ?? null;
         if (!empty($services) && is_array($services)) {
@@ -313,6 +313,12 @@ class SalesService
                 if (!$service) {
                     throw new \Exception('Service not found: ' . ($svc['id'] ?? ''));
                 }
+                $current_tip = 0;
+                if ($tip > 0 && ($tipWorkerId == null || $tipWorkerId == $svc['worker_id'])) {
+                    $current_tip = $tip;
+                    $tip = 0; // Use tip only once
+                }
+
                 BookingDetail::create([
                     'booking_id' => $booking->id,
                     'service_id' => $service->id,
@@ -320,6 +326,7 @@ class SalesService
                     '_date' => $svc['date'] ?? $bookingDate,
                     'worker_id' => $svc['worker_id'],
                     // 'is_free' => $is_free,
+                    'tip' =>  $current_tip,
                     'from_time' => $svc['from_time'],
                     'to_time' => $svc['to_time'],
                     'commission' => $svc['commission'] ?? null,
@@ -334,12 +341,20 @@ class SalesService
             if (!$service) {
                 throw new \Exception('Service not found');
             }
+            $current_tip = 0;
+            if ($tip > 0 && ($tipWorkerId == null || $tipWorkerId == $item['worker_id'])) {
+                $current_tip = $tip;
+                $tip = 0; // Use tip only once
+            }
+
             BookingDetail::create([
                 'booking_id' => $booking->id,
                 'service_id' => $service->id,
                 'price' =>  $service->price,
                 '_date' => $item['date'],
+                'tip' =>  $current_tip,
                 // 'is_free' => $is_free,
+
                 'worker_id' => $item['worker_id'],
                 'from_time' => $item['from_time'],
                 'to_time' => $item['to_time'],

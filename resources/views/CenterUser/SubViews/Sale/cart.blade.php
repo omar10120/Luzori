@@ -1653,7 +1653,7 @@
                     var discountedPrice = calculateDiscountedServicePrice(servicePrice);
                     reviewHtml += `<tr>
                         <td>${item.name.trim()}</td>
-                        <td>${discountedPrice.toFixed(2)} {{ get_currency() }}</td>
+                        <td>${servicePrice.toFixed(2)} {{ get_currency() }}</td>
                         <td>${item.date}</td>
                         <td>${worker ? worker.name : 'N/A'}</td>
                         <td>${item.from_time}</td>
@@ -2366,7 +2366,7 @@
                                 var serviceData = get_service(matchingService.id);
                                 if (serviceData) {
                                     var discountedPrice = calculateDiscountedServicePrice(serviceData.price);
-                                    $priceCell.text(discountedPrice.toFixed(2) + ' {{ get_currency() }}');
+                                    $priceCell.text(serviceData.price.toFixed(2) + ' {{ get_currency() }}');
                                     totalAmount += discountedPrice;
                                 }
                             }
@@ -2841,6 +2841,7 @@
             // Handle customer selection from dropdown for PREVIEW (on change)
              $('#select-customer-dropdown').on('change', function() {
                 const userId = $(this).val();
+                console.log("userId"+ userId);
                 const $selectedOption = $(this).find('option:selected');
                 
                 // This logic only updates the modal preview, DOES NOT set global state yet until confirmed
