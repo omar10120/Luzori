@@ -126,7 +126,7 @@ class SalesController extends Controller
         // Filter workers by branch
         $workers = Worker::when($branchId, function($query) use ($branchId) {
             return $query->where('branch_id', $branchId);
-        })->get();
+        })->select('id', 'name', 'phone')->get();
 
         $categoriesJson = $this->getFormattedCategories();
         $centerUser = auth('center_user')->user();
@@ -294,7 +294,7 @@ class SalesController extends Controller
         // Filter workers by branch
         $workers = Worker::when($branchId, function($query) use ($branchId) {
             return $query->where('branch_id', $branchId);
-        })->get();
+        })->select('id', 'name', 'phone')->get();
 
         // Extract employees/workers from cart items (bookings)
         $cartEmployees = [];
@@ -317,8 +317,9 @@ class SalesController extends Controller
             }
         }
 
+        $centerUser = auth('center_user')->user();
         $view = 'CenterUser.SubViews.' . $this->model . '.payment';
-        return view($view, compact('cart', 'workers', 'cartEmployees', 'paymentMethods', 'selectedCustomer', 'title', 'menu', 'menu_link'));
+        return view($view, compact('cart', 'workers', 'cartEmployees', 'paymentMethods', 'selectedCustomer', 'title', 'menu', 'menu_link', 'centerUser'));
     }
 
     /**

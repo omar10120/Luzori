@@ -51,7 +51,7 @@
                                         <div class="alert alert-info mb-0">
                                             <div class="d-flex flex-wrap gap-2">
                                                 @foreach($cartEmployees as $employee)
-                                                    <span class="badge bg-label-primary">{{ $employee }}</span>
+                                                    <span class="badge bg-label-primary">{{ $employee }} ({{$centerUser->name ?? ''}} - reception )</span>
                                                 @endforeach
                                             </div>
                                         </div>
@@ -71,7 +71,7 @@
                                         @foreach ($workers as $worker)
                                             <option value="{{ $worker->id }}" 
                                                 {{ isset($cart['worker_id']) && $cart['worker_id'] == $worker->id ? 'selected' : '' }}>
-                                                {{ $worker->name }}
+                                                {{ $worker->name }} - {{ $worker->phone }} ({{$centerUser->name ?? ''}} - reception )
                                             </option>
                                         @endforeach
                                     </select>
@@ -128,7 +128,7 @@
                                     if($item['type'] === 'user_wallet') {
                                         $displayPrice = $item['invoiced_amount'] ?? ($item['amount'] ?? 0);
                                         $originalPriceTotal = $displayPrice;
-                                    } elseif($item['type'] === 'service' && !empty($item['services']) && is_array($item['services'])) {
+                                    } elseif($item['type'] === 'service' && !empty($item['services']) && is_array($item['services'])    ) {
                                         foreach ($item['services'] as $svc) {
                                             $displayPrice += (float)($svc['price'] ?? 0);
                                             $originalPriceTotal += (float)($svc['original_price'] ?? $svc['price'] ?? 0);
@@ -183,7 +183,7 @@
                                                 <br>{{ __('field.type') }}: {{ $item['wallet_type'] }}
                                             @endif
                                             @if(isset($item['worker_name']))
-                                                <br>{{ __('field.worker') }}: {{ $item['worker_name'] }}
+                                                <br>{{ __('field.worker') }}: {{ $item['worker_name'] }} ({{$centerUser->name ?? ''}} - reception )
                                             @endif
                                             @if(isset($item['commission']))
                                                 <br>{{ __('field.commission') }}: {{ $item['commission'] }}%
