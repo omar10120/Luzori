@@ -1,3 +1,18 @@
+<style>
+    .daily-report-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 2px; 
+    }
+    .daily-report-table td, .daily-report-table th {
+        vertical-align: top;
+    }
+ 
+    .daily-report-table strong {
+        font-weight: 100;
+        font-size:5px;
+    }
+</style>
 <div class="table-responsive">
     <!-- Summary Cards -->
     <div class="row mb-4">

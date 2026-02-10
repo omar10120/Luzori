@@ -2,14 +2,15 @@
     .daily-report-table {
         width: 100%;
         border-collapse: collapse;
-        font-size: 12px; /* You can modify this to change the global font size */
+        font-size: 2px; 
     }
     .daily-report-table td, .daily-report-table th {
         vertical-align: top;
     }
  
     .daily-report-table strong {
-        font-weight: 500;
+        font-weight: 100;
+        font-size:5px;
     }
 </style>
 <div class="table-responsive">
