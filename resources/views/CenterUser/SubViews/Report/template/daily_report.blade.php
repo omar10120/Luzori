@@ -2,7 +2,6 @@
     $fontFamily = App::getLocale() == 'ar' ? 'Cairo' : 'Poppins';
 @endphp
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&family=Poppins:wght@400;700&display=swap" rel="stylesheet">
-
 <div class="table-responsive">
     <table class="table table-bordered daily-report-table">
         <thead>
