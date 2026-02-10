@@ -1,5 +1,21 @@
+<!-- <style>
+    .daily-report-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px; /* You can modify this to change the global font size */
+    }
+    .daily-report-table td, .daily-report-table th {
+        vertical-align: top;
+    }
+    .daily-report-table th {
+        background-color: #f8f9fa;
+    }
+    .daily-report-table div {
+        font-weight: 700;
+    }
+</style> -->
 <div class="table-responsive">
-    <table class="table table-bordered">
+    <table class="table table-bordered daily-report-table">
         <thead>
             <tr>
                 <th colspan="{{ count($firstusers) }}">{{ __('admin.daily_report_for') . $date }}</th>
@@ -8,9 +24,9 @@
         <tbody>
             <tr>
                 @foreach ($firstusers as $user)
-                    <td style="text-align: center"><strong>
+                    <td style="text-align: center"><div>
                         {{ $user->name }} {{ $user->is_center_user ? '(reception)' : '' }}
-                    </strong></td>
+                    </div></td>
                 @endforeach
             </tr>
             @php
@@ -53,7 +69,7 @@
                             @continue
                         @endif
                         @if (isset($total_with_users[$user->id]))
-                            <strong>{{ get_currency() . get_num_format($total_with_users[$user->id]) }}</strong>
+                            <div>{{ get_currency() . get_num_format($total_with_users[$user->id]) }}</div>
                         @endif
                     </td>
                 @endforeach
@@ -70,7 +86,7 @@
                         @if (isset($payments_with_prices[$index]) && !empty($payments_with_prices[$index]))
                             <tr>
                                 <td colspan="{{ count($firstusers) }}">
-                                    <strong>{{ $value }}</strong>
+                                    <div>{{ $value }}</div>
                                 </td>
                             </tr>
                             <tr>
@@ -174,7 +190,7 @@
                                             @continue
                                         @endif
                                         @if (isset($total_with_users[$user->id]))
-                                            <strong>{{ get_currency() . get_num_format($total_with_users[$user->id]) }}</strong>
+                                            <div>{{ get_currency() . get_num_format($total_with_users[$user->id]) }}</div>
                                         @endif
                                     </td>
                                 @endforeach
@@ -188,7 +204,7 @@
             @endphp
             <tr>
                 <td colspan="{{ count($firstusers) }}">
-                    <strong>{{ __('field.commission') }}</strong>
+                    <div>{{ __('field.commission') }}</div>
                 </td>
             </tr>
             @if (!empty($users_with_commission))
@@ -218,7 +234,7 @@
             @endphp
             <tr>
                 <td colspan="{{ count($firstusers) }}">
-                    <strong>{{ __('field.tip') }}</strong>
+                    <div>{{ __('field.tip') }}</div>
                 </td>
             </tr>
             @if (!empty($users_with_tips))
@@ -248,7 +264,7 @@
 
     @if ($secondusers != '[]')
         <br><br><br><br><br><br>
-        <table class="table table-bordered">
+        <table class="table table-bordered daily-report-table">
             <thead>
                 <tr>
                     <th colspan="{{ count($secondusers) }}">{{ __('admin.daily_report_for') . $date }}</th>
@@ -257,7 +273,7 @@
             <tbody>
                 <tr>
                     @foreach ($secondusers as $user)
-                        <td style="text-align: center"><strong>{{ $user->name }} {{ $user->is_center_user ? '(reception)' : '' }}</strong></td>
+                        <td style="text-align: center"><div>{{ $user->name }} {{ $user->is_center_user ? '(reception)' : '' }}</div></td>
                     @endforeach
                 </tr>
                 @php
@@ -300,7 +316,7 @@
                                 @continue
                             @endif
                             @if (isset($total_with_users[$user->id]))
-                                <strong>{{ get_currency() . get_num_format($total_with_users[$user->id]) }}</strong>
+                                <div>{{ get_currency() . get_num_format($total_with_users[$user->id]) }}</div>
                             @endif
                         </td>
                     @endforeach
@@ -314,7 +330,7 @@
                             @if (isset($payments_with_prices[$index]) && !empty($payments_with_prices[$index]))
                                 <tr>
                                     <td colspan="{{ count($secondusers) }}">
-                                        <strong>{{ $value }}</strong>
+                                        <div>{{ $value }}</div>
                                     </td>
                                 </tr>
                                 <tr>
@@ -418,7 +434,7 @@
                                                 @continue
                                             @endif
                                             @if (isset($total_with_users[$user->id]))
-                                                <strong>{{ get_currency() . get_num_format($total_with_users[$user->id]) }}</strong>
+                                                <div>{{ get_currency() . get_num_format($total_with_users[$user->id]) }}</div>
                                             @endif
                                         </td>
                                     @endforeach
@@ -429,7 +445,7 @@
                 @endif
                 <tr>
                     <td colspan="{{ count($secondusers) }}">
-                        <strong>{{ __('field.commission') }}</strong>
+                        <div>{{ __('field.commission') }}</div>
                     </td>
                 </tr>
                 @if (!empty($users_with_commission))
@@ -456,7 +472,7 @@
                 @endif
                 <tr>
                     <td colspan="{{ count($secondusers) }}">
-                        <strong>{{ __('field.tip') }}</strong>
+                        <div>{{ __('field.tip') }}</div>
                     </td>
                 </tr>
                 @if (!empty($users_with_tips))
@@ -487,7 +503,7 @@
 
     @if ($restusers != '[]')
         <br><br><br><br><br><br>
-        <table class="table table-bordered">
+        <table class="table table-bordered daily-report-table">
             <thead>
                 <tr>
                     <th colspan="{{ count($restusers) }}">{{ __('admin.daily_report_for') . $date }}</th>
@@ -496,7 +512,7 @@
             <tbody>
                 <tr>
                     @foreach ($restusers as $user)
-                        <td style="text-align: center"><strong>{{ $user->name }} {{ $user->is_center_user ? '(reception)' : '' }}</strong></td>
+                        <td style="text-align: center"><div>{{ $user->name }} {{ $user->is_center_user ? '(reception)' : '' }}</div></td>
                     @endforeach
                 </tr>
                 @php
@@ -539,7 +555,7 @@
                                 @continue
                             @endif
                             @if (isset($total_with_users[$user->id]))
-                                <strong>{{ get_currency() . get_num_format($total_with_users[$user->id]) }}</strong>
+                                <div>{{ get_currency() . get_num_format($total_with_users[$user->id]) }}</div>
                             @endif
                         </td>
                     @endforeach
@@ -552,7 +568,7 @@
                         @if (isset($payments_with_prices[$index]) && !empty($payments_with_prices[$index]))
                             <tr>
                                 <td colspan="{{ count($restusers) }}">
-                                    <strong>{{ $value }}</strong>
+                                    <div>{{ $value }}</div>
                                 </td>
                             </tr>
                             <tr>
@@ -655,7 +671,7 @@
                                             @continue
                                         @endif
                                         @if (isset($total_with_users[$user->id]))
-                                            <strong>{{ get_currency() . get_num_format($total_with_users[$user->id]) }}</strong>
+                                            <div>{{ get_currency() . get_num_format($total_with_users[$user->id]) }}</div>
                                         @endif
                                     </td>
                                 @endforeach
@@ -665,7 +681,7 @@
                 @endif
                 <tr>
                     <td colspan="{{ count($restusers) }}">
-                        <strong>{{ __('field.commission') }}</strong>
+                        <div>{{ __('field.commission') }}</div>
                     </td>
                 </tr>
                 @if (!empty($users_with_commission))
@@ -692,7 +708,7 @@
                 @endif
                 <tr>
                     <td colspan="{{ count($restusers) }}">
-                        <strong>{{ __('field.tip') }}</strong>
+                        <div>{{ __('field.tip') }}</div>
                     </td>
                 </tr>
                 @if (!empty($users_with_tips))
@@ -732,7 +748,7 @@
             <tr>
                 <td colspan="{{ count($users) }}">
                     <h3 style="margin-bottom: 0;margin-top: 0">
-                        <strong>{{ __('field.total') }}</strong>
+                        <div>{{ __('field.total') }}</div>
                     </h3>
                 </td>
             </tr>
@@ -750,10 +766,10 @@
                             }
                         @endphp
                         <td style="width: 50px;background-color: #666;color: #fff;text-align: center">
-                            <strong>{{ $type }}</strong>
+                            <div>{{ $type }}</div>
                         </td>
                         <td style="width:50px;">
-                            <strong>{{ get_currency() . get_num_format($total_payments_types[$getPaymentsType]) }}</strong>
+                            <div>{{ get_currency() . get_num_format($total_payments_types[$getPaymentsType]) }}</div>
                         </td>
                     @endforeach
                 @endif
@@ -763,10 +779,10 @@
                             $last_total += $product_details_price;
                         @endphp
                         <td style="width: 50px;background-color: #666;color: #fff;text-align: center">
-                            <strong>{{ __('s.' . $index) }}</strong>
+                            <div>{{ __('s.' . $index) }}</div>
                         </td>
                         <td style="width:150px;">
-                            <strong>{{ get_currency() . get_num_format($product_details_price) }}</strong>
+                            <div>{{ get_currency() . get_num_format($product_details_price) }}</div>
                         </td>
                     @endif
                 @endforeach
@@ -776,36 +792,36 @@
                             $last_total += $wallet_details_price;
                         @endphp
                         <td style="width: 50px;background-color: #666;color: #fff;text-align: center">
-                            <strong>{{ $index }}</strong>
+                            <div>{{ $index }}</div>
                         </td>
                         <td style="width:50px;">
-                            <strong>{{ get_currency() . get_num_format($wallet_details_price) }}</strong>
+                            <div>{{ get_currency() . get_num_format($wallet_details_price) }}</div>
                         </td>
                     @endif
                 @endforeach
                 <td style="width: 50px;background-color: #666;color: #fff;text-align: center">
-                    <strong>
+                    <div>
                         {{ __('field.commission') }}
-                    </strong>
+                    </div>
                 </td>
                 <td style="width:50px;">
-                    <strong>{{ get_currency() . get_num_format($total_commission) }}</strong>
+                    <div>{{ get_currency() . get_num_format($total_commission) }}</div>
                 </td>
                 <td style="width: 50px;background-color: #666;color: #fff;text-align: center">
-                    <strong>
+                    <div>
                         {{ __('field.tip') }}
-                    </strong>
+                    </div>
                 </td>
                 <td style="width:50px;">
-                    <strong>{{ get_currency() . get_num_format($total_tips) }}</strong>
+                    <div>{{ get_currency() . get_num_format($total_tips) }}</div>
                 </td>
             </tr>
             <tr style="background-color: #666666;color: #ffffff">
                 <td style="width: 50px;background-color: #666;color: #fff;text-align: center">
-                    <strong>{{ __('field.total') }}</strong>
+                    <div>{{ __('field.total') }}</div>
                 </td>
                 <td style="width:50px;color: #ffffff" colspan="{{ count($users) }}">
-                    <strong>{{ get_currency() . get_num_format($last_total) }}</strong>
+                    <div>{{ get_currency() . get_num_format($last_total) }}</div>
                 </td>
             </tr>
         </tbody>
