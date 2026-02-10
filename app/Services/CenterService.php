@@ -108,6 +108,12 @@ class CenterService
                     '--class' => 'PaymentMethodSeeder',
                     '--database'  => 'tenant',
                 ]);
+                  Artisan::call('db:seed', [
+                    '--class' => 'WorkerSeeder',
+                    '--database'  => 'tenant',
+                ]);
+
+
                 $centerUser = new CenterUser($request);
                 $centerUser->setConnection('tenant');
                 $centerUser->save();

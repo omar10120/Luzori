@@ -79,6 +79,8 @@ class WorkerDataTable extends DataTable
             $query->where('branch_id', $branchId);
         }
 
+        $query->where('is_center_user', false);
+
         return $query->orderBy($this->plural . '.id', 'DESC');
     }
 
