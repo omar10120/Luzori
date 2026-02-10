@@ -328,6 +328,7 @@
                                                 </select>
                                             </div>
                                         </div>
+                                     
                                        
                                         <div class="col-md-12 mb-2">
                                             <div class="mb-1">
@@ -335,7 +336,7 @@
                                                 <select class="select2 form-control" name="worker_id" id="product-worker">
                                                     <option value="">{{ __('field.select_worker') }}</option>
                                                     @foreach ($workers as $worker)
-                                                        <option value="{{ $worker->id }}">{{ $worker->name }} - {{ $worker->phone }} ({{$centerUser->name ?? ''}} - reception ) </option>
+                                                        <option value="{{ $worker->id }}">{{ $worker->name }} - {{ $worker->phone }} {{ $worker->is_center_user ? '('. ($centerUser->name ?? '') .' - reception)' : '' }} </option>
                                                     @endforeach
                                                 </select>
                                             </div>
@@ -1909,6 +1910,7 @@
                         // Note: Stock validation would need to be done server-side for accuracy
                         // For now, we'll add it and validate on payment
     
+                        // Get worker name for display
                         const worker = workerId ? get_worker(workerId) : null;
     
                         cart.push({
@@ -1935,7 +1937,7 @@
                         $('#product-products').val(null).trigger('change');
                         $('#product-discount').val('');
                         $('#product-payment_type').val('');
-                        $('#product-worker').val(null).trigger('change');
+                        $('#product-sales_worker, #product-worker').val(null).trigger('change');
                         $('#product-commission-div').hide();
                         $('#product-commission').prop('required', false).val('');
     
@@ -2972,13 +2974,35 @@
                         branch_id: branchId
                     },
                     success: function(workers) {
+                        const centerUserName = '{{ $centerUser->name ?? '' }}';
+                        
+                        // Update product-sales_worker dropdown
+                        const $salesWorkerSelect = $('#product-sales_worker');
+                        const currentSalesWorker = $salesWorkerSelect.val();
+                        $salesWorkerSelect.empty().append('<option value="">{{ __('field.select_sales_worker') }}</option>');
+                        $.each(workers, function(index, worker) {
+                            let label = worker.name + ' - ' + (worker.phone || '');
+                            if (worker.is_center_user) {
+                                label += ' (' + centerUserName + ' - reception)';
+                            }
+                            const option = new Option(label, worker.id, false, false);
+                            if (worker.id == currentSalesWorker) {
+                                option.selected = true;
+                            }
+                            $salesWorkerSelect.append(option);
+                        });
+                        $salesWorkerSelect.trigger('change');
                         
                         // Update product-worker dropdown
                         const $workerSelect = $('#product-worker');
                         const currentWorker = $workerSelect.val();
                         $workerSelect.empty().append('<option value="">{{ __('field.select_worker') }}</option>');
                         $.each(workers, function(index, worker) {
-                            const option = new Option(worker.name, worker.id, false, false);
+                            let label = worker.name + ' - ' + (worker.phone || '');
+                            if (worker.is_center_user) {
+                                label += ' (' + centerUserName + ' - reception)';
+                            }
+
                             if (worker.id == currentWorker) {
                                 option.selected = true;
                             }

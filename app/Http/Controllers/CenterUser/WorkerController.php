@@ -110,7 +110,7 @@ class WorkerController extends Controller
 
     public function info(Request $request)
     {
-        return Worker::select('name', 'phone')->find($request->worker_id);
+        return Worker::select('id', 'name', 'phone', 'is_center_user')->find($request->worker_id);
     }
 
     public function getWorkersByService(Request $request, WorkerService $workerService)
@@ -131,7 +131,7 @@ class WorkerController extends Controller
         }
         $workers = Worker::when($branch_id, function($query) use ($branch_id) {
             return $query->where('branch_id', $branch_id);
-        })->select('id', 'name', 'phone')->get();
+        })->select('id', 'name', 'phone', 'is_center_user')->get();
         return response()->json($workers);
     }
 }

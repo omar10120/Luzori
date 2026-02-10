@@ -8,7 +8,9 @@
         <tbody>
             <tr>
                 @foreach ($firstusers as $user)
-                    <td style="text-align: center"><strong>{{ $user->name }}</strong></td>
+                    <td style="text-align: center"><strong>
+                        {{ $user->name }} {{ $user->is_center_user ? '(reception)' : '' }}
+                    </strong></td>
                 @endforeach
             </tr>
             @php
@@ -255,7 +257,7 @@
             <tbody>
                 <tr>
                     @foreach ($secondusers as $user)
-                        <td style="text-align: center"><strong>{{ $user->name }}</strong></td>
+                        <td style="text-align: center"><strong>{{ $user->name }} {{ $user->is_center_user ? '(reception)' : '' }}</strong></td>
                     @endforeach
                 </tr>
                 @php
@@ -494,7 +496,7 @@
             <tbody>
                 <tr>
                     @foreach ($restusers as $user)
-                        <td style="text-align: center"><strong>{{ $user->name }}</strong></td>
+                        <td style="text-align: center"><strong>{{ $user->name }} {{ $user->is_center_user ? '(reception)' : '' }}</strong></td>
                     @endforeach
                 </tr>
                 @php

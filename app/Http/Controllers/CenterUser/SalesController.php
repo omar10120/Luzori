@@ -126,7 +126,7 @@ class SalesController extends Controller
         // Filter workers by branch
         $workers = Worker::when($branchId, function($query) use ($branchId) {
             return $query->where('branch_id', $branchId);
-        })->select('id', 'name', 'phone')->get();
+        })->select('id', 'name', 'phone', 'is_center_user')->get();
 
         $categoriesJson = $this->getFormattedCategories();
         $centerUser = auth('center_user')->user();
@@ -294,7 +294,7 @@ class SalesController extends Controller
         // Filter workers by branch
         $workers = Worker::when($branchId, function($query) use ($branchId) {
             return $query->where('branch_id', $branchId);
-        })->select('id', 'name', 'phone')->get();
+        })->select('id', 'name', 'phone', 'is_center_user')->get();
 
         // Extract employees/workers from cart items (bookings)
         $cartEmployees = [];

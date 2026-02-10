@@ -51,7 +51,15 @@
                                         <div class="alert alert-info mb-0">
                                             <div class="d-flex flex-wrap gap-2">
                                                 @foreach($cartEmployees as $employee)
-                                                    <span class="badge bg-label-primary">{{ $employee }} ({{$centerUser->name ?? ''}} - reception )</span>
+                                                    <span class="badge bg-label-primary">
+                                                        {{ $employee }}
+                                                        @php
+                                                            $empWorker = $workers->where('name', $employee)->first();
+                                                        @endphp
+                                                        @if($empWorker && $empWorker->is_center_user)
+                                                            ({{ $centerUser->name ?? '' }} - reception)
+                                                        @endif
+                                                    </span>
                                                 @endforeach
                                             </div>
                                         </div>
@@ -71,7 +79,7 @@
                                         @foreach ($workers as $worker)
                                             <option value="{{ $worker->id }}" 
                                                 {{ isset($cart['worker_id']) && $cart['worker_id'] == $worker->id ? 'selected' : '' }}>
-                                                {{ $worker->name }} - {{ $worker->phone }} ({{$centerUser->name ?? ''}} - reception )
+                                                {{ $worker->name }} - {{ $worker->phone }} {{ $worker->is_center_user ? '('. ($centerUser->name ?? '') .' - reception)' : '' }} 
                                             </option>
                                         @endforeach
                                     </select>
@@ -183,7 +191,18 @@
                                                 <br>{{ __('field.type') }}: {{ $item['wallet_type'] }}
                                             @endif
                                             @if(isset($item['worker_name']))
-                                                <br>{{ __('field.worker') }}: {{ $item['worker_name'] }} ({{$centerUser->name ?? ''}} - reception )
+                                                <br>{{ __('field.worker') }}: {{ $item['worker_name'] }}
+                                                @php
+                                                    $itemWorkerId = $item['worker_id'] ?? null;
+                                                    $itemWorker = $itemWorkerId ? $workers->where('id', $itemWorkerId)->first() : null;
+                                                    // Fallback to name if ID not present or not found
+                                                    if (!$itemWorker) {
+                                                        $itemWorker = $workers->where('name', $item['worker_name'])->first();
+                                                    }
+                                                @endphp
+                                                @if($itemWorker && $itemWorker->is_center_user)
+                                                    ({{ $centerUser->name ?? '' }} - reception)
+                                                @endif
                                             @endif
                                             @if(isset($item['commission']))
                                                 <br>{{ __('field.commission') }}: {{ $item['commission'] }}%

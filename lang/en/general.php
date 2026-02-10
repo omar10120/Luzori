@@ -152,7 +152,8 @@ return [
     'enter_the_description_of_the_service' => 'Enter the description of the service',
     'select_a_supplier_from_the_list' => 'Select a supplier from the list',
     'select_a_services_from_the_list' => 'Select a service from the list',
-    'optional - Tip will be for this worker' => 'Optional - Tip will be for this worker',
+    'optional',
+    'Tip will be for this worker' => 'Tip will be for this worker',
     'sms_sale_confirmation' => 'Thank you {user_name}. The efficient purchase process from {salon_name}. The bill number is {bill_number}'
       
     
