@@ -4,11 +4,11 @@
         border-collapse: collapse;
         font-size: 10px; 
     }
-    .daily-report-table td, .daily-report-table th {
+     th {
         vertical-align: top;
     }
  
-    .daily-report-table strong {
+    strong {
         font-weight: 100;
         font-size:12px;
     }
