@@ -129,9 +129,10 @@ class SalesController extends Controller
         })->get();
 
         $categoriesJson = $this->getFormattedCategories();
+        $centerUser = auth('center_user')->user();
 
         $view = 'CenterUser.SubViews.' . $this->model . '.cart';
-        return view($view, compact('services', 'products', 'workers', 'discounts', 'paymentMethods', 'productPaymentMethods', 'walletPaymentMethods', 'wallets', 'users', 'cart', 'title', 'menu', 'menu_link', 'categoriesJson'));
+        return view($view, compact('services', 'products', 'workers', 'discounts', 'paymentMethods', 'productPaymentMethods', 'walletPaymentMethods', 'wallets', 'users', 'cart', 'title', 'menu', 'menu_link', 'categoriesJson', 'centerUser'));
     }
 
     /**

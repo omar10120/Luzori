@@ -14,7 +14,7 @@ class WorkerService
         $workers = ModelsWorkerService::where('service_id', $service_id)->pluck('worker_id');
         $workerList = collect();
         foreach ($workers as $worker) {
-            $query = Worker::select('id', 'name')->where('id', $worker);
+            $query = Worker::select('id', 'name', 'phone')->where('id', $worker);
             if ($branch_id) {
                 $query->where('branch_id', $branch_id);
             }

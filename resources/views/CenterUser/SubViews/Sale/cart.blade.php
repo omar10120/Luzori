@@ -328,24 +328,14 @@
                                                 </select>
                                             </div>
                                         </div>
-                                        <div class="col-md-12 mb-2">
-                                            <div class="mb-1">
-                                                <label for="product-sales_worker" class="form-label">{{ __('field.sales_worker') }}</label>
-                                                <select class="select2 form-control" name="sales_worker_id" id="product-sales_worker">
-                                                    <option value="">{{ __('field.select_sales_worker') }}</option>
-                                                    @foreach ($workers as $worker)
-                                                        <option value="{{ $worker->id }}">{{ $worker->name }}</option>
-                                                    @endforeach
-                                                </select>
-                                            </div>
-                                        </div>
+                                       
                                         <div class="col-md-12 mb-2">
                                             <div class="mb-1">
                                                 <label for="product-worker" class="form-label">{{ __('field.worker') }}</label>
                                                 <select class="select2 form-control" name="worker_id" id="product-worker">
                                                     <option value="">{{ __('field.select_worker') }}</option>
                                                     @foreach ($workers as $worker)
-                                                        <option value="{{ $worker->id }}">{{ $worker->name }}</option>
+                                                        <option value="{{ $worker->id }}">{{ $worker->name }} - {{ $worker->phone }} ({{$centerUser->name ?? ''}} - reception ) </option>
                                                     @endforeach
                                                 </select>
                                             </div>
@@ -1275,7 +1265,10 @@
                                     <label class="form-label">{{ __('field.worker') }}</label>
                                     <select class="form-control" name="service[${service.id}][worker_id]">`;
                     $.each(workers, function(index, worker) {
-                        service_info += `<option value="${worker.id}">${worker.name}</option>`;
+                        const centerUserName = '{{ $centerUser->name ?? "" }}';
+                        const workerPhone = worker.phone || '';
+                        const displayText = `${worker.name} - ${workerPhone} (${centerUserName})`;
+                        service_info += `<option value="${worker.id}">${displayText}</option>`;
                     });
                     service_info += `</select></div></div>
                         <div class="col-md-3">
@@ -1849,7 +1842,6 @@
             $('#addProductBtn').on('click', function() {
                 const selectedProducts = $('#product-products').val();
                 const discount = $('#product-discount').val();
-                const salesWorkerId = $('#product-sales_worker').val();
                 const workerId = $('#product-worker').val();
                 const commission = $('#product-commission').val();
                 const paymentType = $('#product-payment_type').val();
@@ -1863,12 +1855,6 @@
                     return;
                 }
 
-                if (!salesWorkerId) {
-                    if (typeof toastr !== 'undefined') {
-                        toastr.error('{{ __('field.please_select_sales_worker') }}');
-                    }
-                    return;
-                }
 
                 // Commission is required if worker is selected
                 if (workerId && workerId != '' && !commission) {
@@ -1923,8 +1909,6 @@
                         // Note: Stock validation would need to be done server-side for accuracy
                         // For now, we'll add it and validate on payment
     
-                        // Get worker name for display
-                        const salesWorker = get_worker(salesWorkerId);
                         const worker = workerId ? get_worker(workerId) : null;
     
                         cart.push({
@@ -1936,8 +1920,6 @@
                             is_buy_product_group: false,
                             payment_type: paymentType || null,
                             discount: discount || null,
-                            sales_worker_id: salesWorkerId,
-                            sales_worker_name: salesWorker ? salesWorker.name : '',
                             worker_id: workerId || null,
                             worker_name: worker ? worker.name : '',
                             commission: commission || null
@@ -1953,7 +1935,7 @@
                         $('#product-products').val(null).trigger('change');
                         $('#product-discount').val('');
                         $('#product-payment_type').val('');
-                        $('#product-sales_worker, #product-worker').val(null).trigger('change');
+                        $('#product-worker').val(null).trigger('change');
                         $('#product-commission-div').hide();
                         $('#product-commission').prop('required', false).val('');
     
@@ -2058,10 +2040,6 @@
                     } else if (item.type === 'product') {
                         itemHtml += `<small class="text-muted">
                             {{ __('field.quantity') }}: ${item.quantity}`;
-                        if (item.sales_worker_id) {
-                            const salesWorker = get_worker(item.sales_worker_id);
-                            itemHtml += `<br>{{ __('field.sales_worker') }}: ${salesWorker ? salesWorker.name : ''}`;
-                        }
                         if (item.worker_id && item.worker_name) {
                             itemHtml += `<br>{{ __('field.worker') }}: ${item.worker_name}`;
                         }
@@ -2994,18 +2972,6 @@
                         branch_id: branchId
                     },
                     success: function(workers) {
-                        // Update product-sales_worker dropdown
-                        const $salesWorkerSelect = $('#product-sales_worker');
-                        const currentSalesWorker = $salesWorkerSelect.val();
-                        $salesWorkerSelect.empty().append('<option value="">{{ __('field.select_sales_worker') }}</option>');
-                        $.each(workers, function(index, worker) {
-                            const option = new Option(worker.name, worker.id, false, false);
-                            if (worker.id == currentSalesWorker) {
-                                option.selected = true;
-                            }
-                            $salesWorkerSelect.append(option);
-                        });
-                        $salesWorkerSelect.trigger('change');
                         
                         // Update product-worker dropdown
                         const $workerSelect = $('#product-worker');
