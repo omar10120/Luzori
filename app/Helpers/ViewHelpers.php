@@ -12,7 +12,7 @@ function get_user_role()
     }
 }
 
-function get_num_format($number, $decimals = 3)
+function get_num_format($number, $decimals = 2)
 {
     if ($number === null || $number === '') {
         return number_format(0, $decimals);
