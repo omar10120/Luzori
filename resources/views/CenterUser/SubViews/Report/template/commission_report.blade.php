@@ -14,7 +14,7 @@
     }
  
     .daily-report-table strong {
-        font-weight: 700;
+        font-weight: 300;
         font-size:12px;
     }
 </style>
