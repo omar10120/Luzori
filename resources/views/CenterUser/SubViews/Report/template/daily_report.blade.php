@@ -17,6 +17,10 @@
         font-weight: 700;
         font-size:12px;
     }
+    .table-responsive{
+        
+        font-size:12px;
+    }
 </style>
 <div class="table-responsive">
     <table class="table table-bordered daily-report-table">
