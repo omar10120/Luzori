@@ -1,21 +1,26 @@
+@php
+    $fontFamily = App::getLocale() == 'ar' ? 'Cairo' : 'Poppins';
+@endphp
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&family=Poppins:wght@400;700&display=swap" rel="stylesheet">
 <style>
     .daily-report-table {
         width: 100%;
         border-collapse: collapse;
         font-size: 10px; 
+        font-family: '{{ $fontFamily }}', sans-serif !important;
     }
-     th {
+    .daily-report-table td, .daily-report-table th {
         vertical-align: top;
     }
  
-    strong {
-        font-weight: 100;
+    .daily-report-table strong {
+        font-weight: 700;
         font-size:12px;
     }
 </style>
 <br>
 <div class="table-responsive">
-    <table class="table table-bordered">
+    <table class="table table-bordered daily-report-table">
         <thead>
             <tr>
                 <th style="width: 70px">{{ __('field.date') }}</th>
@@ -71,7 +76,7 @@
         </tfoot>
     </table>
     <br>
-    <table class="table table-bordered">
+    <table class="table table-bordered daily-report-table">
         <thead>
             <tr>
                 <th style="width: 70px">{{ __('field.date') }}</th>
@@ -126,7 +131,7 @@
     <br>
 
     @if ($restusers != '[]')
-        <table class="table table-bordered">
+        <table class="table table-bordered daily-report-table">
             <thead>
                 <tr>
                     <th style="width: 70px">{{ __('field.date') }}</th>
