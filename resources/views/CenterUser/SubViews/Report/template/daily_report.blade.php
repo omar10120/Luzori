@@ -2,6 +2,53 @@
     $fontFamily = App::getLocale() == 'ar' ? 'Cairo' : 'Poppins';
 @endphp
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+<style>
+     .daily-report-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 10px;
+        font-family: '{{ $fontFamily }}',
+        sans-serif !important;
+    }
+
+    .daily-report-table td,
+    .daily-report-table th {
+        vertical-align: top;
+    }
+
+    .daily-report-table strong {
+        font-weight: 300;
+        font-size: 12px;
+    }
+
+    .table-responsive {
+
+        font-size: 12px;
+    }
+</style><style>
+     .daily-report-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 10px;
+        font-family: '{{ $fontFamily }}',
+        sans-serif !important;
+    }
+
+    .daily-report-table td,
+    .daily-report-table th {
+        vertical-align: top;
+    }
+
+    .daily-report-table strong {
+        font-weight: 300;
+        font-size: 12px;
+    }
+
+    .table-responsive {
+
+        font-size: 12px;
+    }
+</style>
 <div class="table-responsive">
     <table class="table table-bordered daily-report-table">
         <thead>
@@ -737,7 +784,7 @@
                 <td colspan="{{ count($users) }}">
                     <div style="margin-bottom: 0;margin-top: 0">
                         {{ __('field.total') }}
-                                                    </div>
+                    </div>
                 </td>
             </tr>
             <tr>
