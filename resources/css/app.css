@@ -2,25 +2,11 @@
         font-family: "Poppins", "Times New Roman", serif;
     }
 
-    /* .daily-report-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 10px;
-        font-family: '{{ $fontFamily }}',
-        sans-serif !important;
-    }
+ a, li{
+    font-size: 12px;
+ }
 
-    .daily-report-table td,
-    .daily-report-table th {
-        vertical-align: top;
-    }
+ .layout-wrapper:not(.layout-horizontal) .bg-menu-theme .menu-inner .menu-item .menu-link {
 
-    .daily-report-table strong {
-        font-weight: 300;
-        font-size: 12px;
-    }
-
-    .table-responsive {
-
-        font-size: 12px;
-    } */
+    font-size: 12px;
+}

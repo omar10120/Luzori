@@ -10,7 +10,7 @@
     }
 @endphp
 
-<ul class="menu-sub">
+<ul class="menu-sub" style="font-size:12px;">
     @if (isset($menu))
         @foreach ($menu as $submenu)
             @php
@@ -40,7 +40,7 @@
 
             @if (!isset($submenu->permissions))
                 <li class="menu-item {{ $activeClass }}">
-                    <a href="{{ isset($submenu->url) ? url('/' . ltrim($submenu->url, '/')) : 'javascript:void(0)' }}"
+                    <a href="{{ isset($submenu->url) ? url('/' . ltrim($submenu->url, '/')) : 'javascript:void(0)' }}" style="font-size:12px;"
                         class="{{ isset($submenu->submenu) ? 'menu-link menu-toggle' : 'menu-link' }}"
                         @if (isset($submenu->target) and !empty($submenu->target)) target="_blank" @endif>
                         @if (isset($submenu->icon))
@@ -76,7 +76,7 @@
             @else
                 @canany($submenu->permissions, $guard)
                     <li class="menu-item {{ $activeClass }}">
-                        <a href="{{ isset($submenu->url) ? url('/' . ltrim($submenu->url, '/')) : 'javascript:void(0)' }}"
+                        <a href="{{ isset($submenu->url) ? url('/' . ltrim($submenu->url, '/')) : 'javascript:void(0)' }}" style="font-size:12px;"
                             class="{{ isset($submenu->submenu) ? 'menu-link menu-toggle' : 'menu-link' }}"
                             @if (isset($submenu->target) and !empty($submenu->target)) target="_blank" @endif>
                             @if (isset($submenu->icon))
