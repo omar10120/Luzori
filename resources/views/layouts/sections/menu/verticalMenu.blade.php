@@ -1,4 +1,9 @@
 @php
+    $fontFamily = App::getLocale() == 'ar' ? 'Cairo' : 'Poppins';
+@endphp
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+
+@php
     $configData = Helper::appClasses();
     $currentSegment = request()->segment(2);
 @endphp
@@ -7,6 +12,7 @@
     @if (!isset($navbarFull))
         <div class="app-brand demo">
             @if (str_contains(url()->current(), 'admin'))
+
                 <a href="{{ route('admin.cp') }}" class="app-brand-link">
                     <span class="app-brand-logo demo">
                             @if ($configData['style'] === 'light')
