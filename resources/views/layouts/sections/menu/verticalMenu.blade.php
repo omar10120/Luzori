@@ -61,7 +61,8 @@
                 <li class="menu-item {{ $activeClass }}">
                     <a href="{{ isset($menu->url) ? url('/' . ltrim($menu->url, '/')) : 'javascript:void(0);' }}"
                        class="{{ isset($menu->submenu) ? 'menu-link menu-toggle' : 'menu-link' }}"
-                       
+
+                       style="font-size:12px;"
                        @if(isset($menu->target) && !empty($menu->target)) target="_blank" @endif>
 
                         @isset($menu->icon)
