@@ -53,11 +53,11 @@ function get_symbol_type($type = "")
 function get_color_type($type = "")
 {
     if ($type == "member_ship") {
-        return "red";
+        return "#D8A7A0";
     }
 
     if ($type == "discount_code") {
-        return "#1b3ad1";
+        return "#FFD6A8";
     }
 
     if ($type == "free_service") {
