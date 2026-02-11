@@ -55,6 +55,7 @@
                 <li class="menu-item {{ $activeClass }}">
                     <a href="{{ isset($menu->url) ? url('/' . ltrim($menu->url, '/')) : 'javascript:void(0);' }}"
                        class="{{ isset($menu->submenu) ? 'menu-link menu-toggle' : 'menu-link' }}"
+                       
                        @if(isset($menu->target) && !empty($menu->target)) target="_blank" @endif>
 
                         @isset($menu->icon)
@@ -73,8 +74,10 @@
                                 }
                                 $iconFile = \Illuminate\Support\Str::endsWith($iconName, '.svg') ? $iconName : $iconName . '.svg';
                             @endphp
-                            <img src="{{ asset('assets/icons/' . $iconFile) }}"
-                                 style="width: 1.375rem;margin: 0 8px 0 0;" alt="">
+                            <div style="padding-left:10px; padding-right:10px">
+                                <img src="{{ asset('assets/icons/' . $iconFile) }}"
+                                style="width: 1.375rem;margin: 0 8px 0 0; " alt="">
+                            </div>
                         @endisset
 
                         <div>{{ __('locale.' . $menu->name) }}</div>
