@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\CenterUser;
+namespace App\Http\Controllers\CenterAPI;
 
 use App\Datatables\CenterUser\CategoryServiceDataTable ;
 use App\Helpers\MyHelper;
