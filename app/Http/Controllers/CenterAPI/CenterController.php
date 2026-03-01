@@ -22,8 +22,9 @@ class CenterController extends Controller
     {
         $query = Center::where('status', 'approve');
 
-        if ($request->has('rate')) {
-            $query->where('rate', $request->rate);
+        if ($request->filled('rate')) {
+            $rate = trim($request->query('rate'), '"');
+            $query->where('rate', $rate);
         }
 
         $centers = $query->get();
