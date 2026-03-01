@@ -21,6 +21,10 @@ class SetActiveCenter
      */
     public function handle(Request $request, Closure $next)
     {
+        if ($request->is('center_api/centers')) {
+            return $next($request);
+        }
+
         $domain = $request->header('domain');
         if ($domain) {
             $center = Center::where('domain', $domain)->first();

@@ -30,6 +30,9 @@ class CenterService
             if (isset($request['image'])) {
                 $center->addMedia($request['image'])->toMediaCollection('Center');
             }
+            if (isset($request['primary_image'])) {
+                $center->addMedia($request['primary_image'])->toMediaCollection('PrimaryImage');
+            }
             $center->assignRole($request['role']);
 
             $dbName = $center->database;
@@ -152,6 +155,10 @@ class CenterService
         if (isset($request['image'])) {
             $center->clearMediaCollection('Center');
             $center->addMedia($request['image'])->toMediaCollection('Center');
+        }
+        if (isset($request['primary_image'])) {
+            $center->clearMediaCollection('PrimaryImage');
+            $center->addMedia($request['primary_image'])->toMediaCollection('PrimaryImage');
         }
 
         if (!isset($request['password'])) {

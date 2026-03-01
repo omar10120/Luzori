@@ -308,6 +308,7 @@ return [
     'created_by'                      => 'Created By',
     'status'                          => 'Status',
     'active'                          => 'Active',
+    'rate'                            => 'Rate',
     'inactive'                        => 'Inactive',
     'utilities'                       => 'Utilities',
     'no_supplier'                     => 'No Supplier',

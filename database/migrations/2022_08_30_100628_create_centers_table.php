@@ -23,6 +23,9 @@ return new class extends Migration
             $table->string('phone')->unique()->nullable();
             $table->string('currency', 10)->default('AED');
             $table->string('password');
+            $table->enum('status', ['pending', 'approve', 'reject'])->default('approve');
+            $table->string('reject_reason')->nullable();
+            $table->enum('rate', ['recently_viewed', 'recommended', 'new_to', 'trending'])->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

@@ -18,6 +18,10 @@ class CenterDataTable extends DataTable
     public function dataTable(QueryBuilder $query): EloquentDataTable
     {
         return (new EloquentDataTable($query))
+            ->addColumn('primary_image', function ($row) {
+                $image = $row->getFirstMediaUrl('PrimaryImage') ?: asset('assets/img/avatars/1.png');
+                return '<img src="' . $image . '" width="50px" height="50px" class="rounded-circle shadow-sm">';
+            })
             ->editColumn('action', function ($item) {
                 $route = 'admin.' . $this->plural;
                 $id = $item->id;
@@ -44,6 +48,18 @@ class CenterDataTable extends DataTable
                             </span>
                         </label>';
             })
+            ->editColumn('approval_status', function ($row) {
+                $statusClasses = [
+                    'pending' => 'bg-label-warning',
+                    'approve' => 'bg-label-success',
+                    'reject' => 'bg-label-danger',
+                ];
+                $class = $statusClasses[$row->status] ?? 'bg-label-secondary';
+                return '<span class="badge ' . $class . '">' . ucfirst($row->status) . '</span>';
+            })
+            ->editColumn('rate', function ($row) {
+                return ucfirst(str_replace('_', ' ', $row->rate ?? '---'));
+            })
             ->editColumn('role', function ($row) {
                 $role = 'لا يوجد';
                 if ($row->roles()?->count()) {
@@ -54,7 +70,7 @@ class CenterDataTable extends DataTable
             ->editColumn('name', function ($row) {
                 return \App\Helpers\MyHelper::truncateWithReadMore($row->name ?? '');
             })
-            ->rawColumns(['status', 'name'], true)
+            ->rawColumns(['status', 'name', 'approval_status', 'primary_image'], true)
             ->setRowId('id');
     }
 
@@ -122,13 +138,15 @@ class CenterDataTable extends DataTable
     {
         return [
             Column::make('id')->title('#'),
+            Column::computed('primary_image')->title(__('field.image')),
             Column::make('name')->title(__('field.name')),
             Column::make('domain')->title(__('field.domain')),
             Column::make('email')->title(__('field.email')),
-            Column::make('currency')->title(__('field.currency')),
             Column::make('phone')->title(__('field.phone')),
             Column::computed('role')->title(__('field.role')),
-            Column::computed('status')->title(__('field.status')),
+            Column::computed('approval_status')->title(__('field.status')),
+            Column::make('rate')->title(__('field.rate')),
+            Column::computed('status')->title(__('field.active')),
             Column::make('created_at')->title(__('field.created_at')),
         ];
     }

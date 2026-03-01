@@ -34,7 +34,10 @@ class Center extends Authenticatable implements HasMedia
         'country_code',
         'phone',
         'password',
-        'currency'
+        'currency',
+        'status',
+        'reject_reason',
+        'rate'
     ];
     protected $hidden = ['password'];
 

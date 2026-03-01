@@ -144,14 +144,53 @@
                             </div>
                         </div>
                         <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-1">
+                                    <label class="form-label">{{ __('field.status') }}</label>
+                                    <select class="select2 form-control" name="status" id="status_select">
+                                        <option value="pending" {{ $item && $item->status == 'pending' ? 'selected' : '' }}>Pending</option>
+                                        <option value="approve" {{ ($item && $item->status == 'approve') || !$item ? 'selected' : '' }}>Approve</option>
+                                        <option value="reject" {{ $item && $item->status == 'reject' ? 'selected' : '' }}>Reject</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-1">
+                                    <label class="form-label">{{ __('field.rate') }}</label>
+                                    <select class="select2 form-control" name="rate">
+                                        <option value="">None</option>
+                                        <option value="recently_viewed" {{ $item && $item->rate == 'recently_viewed' ? 'selected' : '' }}>Recently Viewed</option>
+                                        <option value="recommended" {{ $item && $item->rate == 'recommended' ? 'selected' : '' }}>Recommended</option>
+                                        <option value="new_to" {{ $item && $item->rate == 'new_to' ? 'selected' : '' }}>New to</option>
+                                        <option value="trending" {{ $item && $item->rate == 'trending' ? 'selected' : '' }}>Trending</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4" id="reject_reason_container" style="display: {{ $item && $item->status == 'reject' ? 'block' : 'none' }}">
+                                <div class="mb-1">
+                                    <label class="form-label">Reject Reason</label>
+                                    <input type="text" class="form-control" name="reject_reason" placeholder="Reason for rejection" value="{{ $item ? $item->reject_reason : '' }}" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-1">
-                                    <label class="form-label">{{ __('field.image') }}</label>
+                                    <label class="form-label">{{ __('field.image') }} (Logo)</label>
                                     <input type="file" class="form-control" id="image" name="image" />
                                 </div>
-                                <img id="show_image" src="{{ $item ? $item->image : '' }}"
-                                    style="{{ $item ? '' : 'display:none;' }} width:200px;height:200px;margin:20px;"
-                                    alt="center image" />
+                                <img id="show_image" src="{{ $item ? $item->getFirstMediaUrl('Center') : '' }}"
+                                    style="{{ $item && $item->getFirstMediaUrl('Center') ? '' : 'display:none;' }} width:200px;height:200px;margin:20px;"
+                                    alt="center logo" />
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-1">
+                                    <label class="form-label">Primary Image</label>
+                                    <input type="file" class="form-control" id="primary_image" name="primary_image" />
+                                </div>
+                                <img id="show_primary_image" src="{{ $item ? $item->getFirstMediaUrl('PrimaryImage') : '' }}"
+                                    style="{{ $item && $item->getFirstMediaUrl('PrimaryImage') ? '' : 'display:none;' }} width:200px;height:200px;margin:20px;"
+                                    alt="primary image" />
                             </div>
                         </div>
                     </div>
@@ -182,6 +221,23 @@
                 show_image.src = URL.createObjectURL(file)
             }
         }
+        primary_image.onchange = evt => {
+            const [file] = primary_image.files
+            if (file) {
+                document.getElementById("show_primary_image").style.display = "block";
+                show_primary_image.src = URL.createObjectURL(file)
+            }
+        }
+
+        $(document).ready(function() {
+            $('#status_select').on('change', function() {
+                if ($(this).val() == 'reject') {
+                    $('#reject_reason_container').show();
+                } else {
+                    $('#reject_reason_container').hide();
+                }
+            });
+        });
     </script>
 
     <script>

@@ -301,6 +301,7 @@ return [
     'created_by'                      => 'انشئت عن طريق',
     'status'                          => 'الحالة',
     'active'                          => 'نشط',
+    'rate'                            => 'التقييم',
     'inactive'                        => 'غير نشط',
     'utilities'                       => 'Utilities',
     'no_supplier'                     => 'بدون مورد',
