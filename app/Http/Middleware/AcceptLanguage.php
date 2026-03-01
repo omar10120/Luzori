@@ -22,11 +22,24 @@ class AcceptLanguage
      * @param  \Closure(\Illuminate\Http\Request): (\Illuminate\Http\Response|\Illuminate\Http\RedirectResponse)  $next
      * @return \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse
      */
-    public function handle(Request $request, Closure $next)
-    {
-        $locale = $request->header('Accept-Language');
-        $this->application->setLocale($locale);
+  public function handle(Request $request, Closure $next)
+{
+    $locale = $request->header('Accept-Language');
 
-        return $next($request);
+    if ($locale) {
+        // Get first language only
+        $locale = explode(',', $locale)[0];
+
+        // Convert en-US → en
+        $locale = substr($locale, 0, 2);
+
+        $supportedLocales = ['en', 'ar'];
+
+        if (in_array($locale, $supportedLocales)) {
+            $this->application->setLocale($locale);
+        }
     }
+
+    return $next($request);
+}
 }
