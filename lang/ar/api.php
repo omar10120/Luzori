@@ -35,6 +35,7 @@ return [
     'settingExists'                                 => 'الإعدادات الموجودة',
     'pageExists'                                    => 'الصفحات الموجودة',
     'infoExists'                                    => 'المعلومات الموجودة',
-    'domain_dont_exists'                            => 'الدومين غير موجود',
+    'domain_dont_exists'                            => 'النطاق غير موجود',
     'userNotFound'                                  => 'المستخدم غير موجود',
+    'registerSuccessfully'                          => 'تم التسجيل بنجاح',
 ];

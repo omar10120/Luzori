@@ -56,6 +56,7 @@ Route::group(['prefix' => 'auth'], function () {
         Route::post('check-code', 'checkCode');
         Route::post('reset', 'reset');
     });
+    Route::post('register', [CenterController::class, 'register']);
 });
 
 Route::group(['prefix' => 'sms'], function () {

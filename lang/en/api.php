@@ -37,4 +37,5 @@ return [
     'infoExists'                                    => 'Infos Exists',
     'domain_dont_exists'                            => 'Domain Don\'t Exists',
     'userNotFound'                                  => 'User Not Found',
+    'registerSuccessfully'                          => 'Register Successfully',
 ];

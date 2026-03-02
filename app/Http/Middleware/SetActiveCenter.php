@@ -24,6 +24,9 @@ class SetActiveCenter
         if ($request->is('center_api/centers')) {
             return $next($request);
         }
+        if ($request->is('center_api/auth/register')) {
+            return $next($request);
+        }   
 
         $domain = $request->header('domain');
         if ($domain) {
