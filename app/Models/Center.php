@@ -37,7 +37,8 @@ class Center extends Authenticatable implements HasMedia
         'currency',
         'status',
         'reject_reason',
-        'rate'
+        'rate',
+        'is_setup'
     ];
     protected $hidden = ['password'];
 

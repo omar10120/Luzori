@@ -26,6 +26,7 @@ return new class extends Migration
             $table->enum('status', ['pending', 'approve', 'reject'])->default('approve');
             $table->string('reject_reason')->nullable();
             $table->enum('rate', ['recently_viewed', 'recommended', 'new_to', 'trending'])->nullable();
+            $table->boolean('is_setup')->default(false);
             $table->timestamps();
             $table->softDeletes();
         });

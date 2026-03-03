@@ -35,33 +35,49 @@ class CenterService
             }
             $center->assignRole($request['role']);
 
-            $dbName = $center->database;
-            
-            \Log::info('Attempting to create database', [
-                'dbName' => $dbName,
-                'dbHost' => env('DB_HOST', '127.0.0.1'),
-                'dbUsername' => env('DB_USERNAME', 'luzori')
-            ]);
-            
-            try {
-                $new_db = DB::statement("CREATE DATABASE `$dbName`");
-            } catch (\Exception $dbError) {
-                \Log::error('Database creation error', [
-                    'dbName' => $dbName,
-                    'error' => $dbError->getMessage(),
-                    'code' => $dbError->getCode()
-                ]);
-                $new_db = false;
+            if ($center->status == 'approve') {
+                $this->setupCenterDatabase($center);
             }
-            
-            \Log::info('Database creation result', [
-                'dbName' => $dbName,
-                'success' => $new_db,
-                'error' => $new_db ? 'No error' : 'Database creation failed'
+
+            return $center;
+        } catch (Exception $e) {
+            \Log::error('Center creation failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
-            
-            if ($new_db) {
-                // Configure tenant connection with all credentials
+            throw $e;
+        }
+    }
+
+    public function setupCenterDatabase(Center $center)
+    {
+        if ($center->is_setup) {
+            return;
+        }
+
+        $dbName = $center->database;
+        $originalDb = Config::get('database.connections.mysql.database');
+
+        \Log::info('Attempting to create database', [
+            'dbName' => $dbName,
+            'dbHost' => env('DB_HOST', '127.0.0.1'),
+            'dbUsername' => env('DB_USERNAME', 'luzori')
+        ]);
+
+        try {
+            $new_db = DB::statement("CREATE DATABASE IF NOT EXISTS `$dbName` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+        } catch (\Exception $dbError) {
+            \Log::error('Database creation error', [
+                'dbName' => $dbName,
+                'error' => $dbError->getMessage(),
+                'code' => $dbError->getCode()
+            ]);
+            $new_db = false;
+        }
+
+        if ($new_db) {
+            try {
+                // Configure tenant connection
                 Config::set('database.connections.tenant.database', $dbName);
                 Config::set('database.connections.tenant.host', env('DB_HOST', '127.0.0.1'));
                 Config::set('database.connections.tenant.port', env('DB_PORT', '3306'));
@@ -78,100 +94,95 @@ class CenterService
                     '--path' => 'database/migrations/centers',
                     '--database' => 'tenant'
                 ]);
-                Artisan::call('db:seed', [
-                    '--class' => 'WeekDaySeeder',
-                    '--database'  => 'tenant',
-                ]);
-                Artisan::call('db:seed', [
-                    '--class' => 'CenterUserPermissionSeeder',
-                    '--database'  => 'tenant',
-                ]);
-                Artisan::call('db:seed', [
-                    '--class' => 'CenterUserRoleSeeder',
-                    '--database'  => 'tenant',
-                ]);
-                Artisan::call('db:seed', [
-                    '--class' => 'LanguageSeeder',
-                    '--database'  => 'tenant',
-                ]);
-                Artisan::call('db:seed', [
-                    '--class' => 'InfoSeeder',
-                    '--database'  => 'tenant',
-                ]);
-                Artisan::call('db:seed', [
-                    '--class' => 'PageSeeder',
-                    '--database'  => 'tenant',
-                ]);
-                Artisan::call('db:seed', [
-                    '--class' => 'SettingSeeder',
-                    '--database'  => 'tenant',
-                ]);
                 
-                Artisan::call('db:seed', [
-                    '--class' => 'PaymentMethodSeeder',
-                    '--database'  => 'tenant',
-                ]);
-                  Artisan::call('db:seed', [
-                    '--class' => 'WorkerSeeder',
-                    '--database'  => 'tenant',
-                ]);
+                $seeders = [
+                    'WeekDaySeeder',
+                    'CenterUserPermissionSeeder',
+                    'CenterUserRoleSeeder',
+                    'LanguageSeeder',
+                    'InfoSeeder',
+                    'PageSeeder',
+                    'SettingSeeder',
+                    'PaymentMethodSeeder',
+                    'WorkerSeeder'
+                ];
 
+                foreach ($seeders as $seeder) {
+                    Artisan::call('db:seed', [
+                        '--class' => $seeder,
+                        '--database' => 'tenant',
+                    ]);
+                }
 
-                $centerUser = new CenterUser($request);
-                $centerUser->setConnection('tenant');
-                $centerUser->save();
-                // $centerUser->addMedia($request['image'])->toMediaCollection('CenterUser');
+                // Create Center User in the new database
+                $userData = $center->only(['name', 'email', 'country_code', 'phone', 'currency']);
+                $userData['created_at'] = now();
+                $userData['updated_at'] = now();
+                
+                // Bypass model setter to avoid double hashing since Center->password is already hashed
+                $userData['password'] = $center->password; 
+
+                $centerUserId = DB::connection('tenant')->table('center_users')->insertGetId($userData);
+
                 DB::connection('tenant')->table('model_has_roles')->insert([
-                    'role_id' => 1,
-                    'model_type' => get_class($centerUser),
-                    'model_id' => $centerUser->id,
+                    'role_id' => 1, // Super Admin
+                    'model_type' => 'App\Models\CenterUser',
+                    'model_id' => $centerUserId,
                 ]);
-                $configOutput = [];
-                $configReturnCode = 0;
-                exec("php artisan config:show database.connections.tenant 2>&1", $configOutput, $configReturnCode);
-                $configInfo = "Tenant Config:\n" . implode("\n", $configOutput);
-                \log::info($configInfo);
-                \log::info($configReturnCode);
-                \log::info("dbName: ".$dbName);
-                
-                // $centerUser->assignRole($request['role']);
+
+            } finally {
+                // Restore the main connection
+                Config::set('database.connections.mysql.database', $originalDb);
+                DB::purge('mysql');
+                DB::reconnect('mysql');
             }
-            return $center;
-        } catch (Exception $e) {
-            // Log the config info for debugging
-            \Log::error('Center creation failed', [
-                'error' => $e->getMessage(),
-                'config_info' => $configInfo,
-                'trace' => $e->getTraceAsString()
-            ]);
-            throw $e;
+
+            $center->update(['is_setup' => true]);
+            
+            \Log::info("Center setup completed successfully: " . $dbName);
         }
     }
 
     public function edit($request)
     {
         DB::beginTransaction();
-        $center = Center::withTrashed()->find($request['id']);
-        if (isset($request['image'])) {
-            $center->clearMediaCollection('Center');
-            $center->addMedia($request['image'])->toMediaCollection('Center');
-        }
-        if (isset($request['primary_image'])) {
-            $center->clearMediaCollection('PrimaryImage');
-            $center->addMedia($request['primary_image'])->toMediaCollection('PrimaryImage');
-        }
+        try {
+            $center = Center::withTrashed()->find($request['id']);
+            if (isset($request['image'])) {
+                $center->clearMediaCollection('Center');
+                $center->addMedia($request['image'])->toMediaCollection('Center');
+            }
+            if (isset($request['primary_image'])) {
+                $center->clearMediaCollection('PrimaryImage');
+                $center->addMedia($request['primary_image'])->toMediaCollection('PrimaryImage');
+            }
 
-        if (!isset($request['password'])) {
-            unset($request['password']);
-        }
+            if (isset($request['password']) && empty($request['password'])) {
+                unset($request['password']);
+            }
 
-        $center->update($request);
-        if (isset($request['role'])) {
-            $center->roles()->detach();
-            $center->assignRole($request['role']);
+            $center->update($request);
+            
+            if (isset($request['role'])) {
+                $center->roles()->detach();
+                $center->assignRole($request['role']);
+            }
+
+            // Trigger setup if approved and not already setup
+            if ($center->status == 'approve' && !$center->is_setup) {
+                $this->setupCenterDatabase($center);
+            }
+
+            DB::commit();
+            return $center;
+        } catch (Exception $e) {
+            DB::rollBack();
+            \Log::error('Center update failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            throw $e;
         }
-        DB::commit();
-        return $center;
     }
 
     public function delete($id)
