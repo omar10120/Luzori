@@ -36,6 +36,7 @@ class SetActiveCenter
                 DB::reconnect();
                 return $next($request);
             }
+            
         }
         return MyHelper::responseJSON(__('api.domain_dont_exists'), Response::HTTP_BAD_REQUEST);
     }
