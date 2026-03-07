@@ -14,7 +14,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use App\Models\Info;
 use Spatie\Permission\Models\Permission;
-use Illuminate\Support\Facades\Log;
 
 class LoginController extends Controller
 {
@@ -35,11 +34,10 @@ class LoginController extends Controller
                 // Decrypt the auth data
                 $decryptedData = decrypt($authData);
                 $userData = json_decode($decryptedData, true);
-                Log::alert("123");
+                
                 // Check if the data is valid and not expired
                 if ($userData && isset($userData['id'], $userData['email'], $userData['expires'])) {
                     if ($userData['expires'] > now()->timestamp) {
-                        
                         // Get the center user
                         $centerUser = \App\Models\CenterUser::withTrashed()
                             ->where('id', $userData['id'])
@@ -85,23 +83,15 @@ class LoginController extends Controller
         $host = $request->getHost();
         $parts = explode('.', $host);
     
-        // Case 1: Login from root domain (luzori.com or www.luzori.com) or Dashboard
+        // Case 1: Login from root domain (luzori.com or www.luzori.com)
         // Middleware will keep default DB, so we need to check all centers
         
-        $isBaseOrDashboard = (count($parts) <= 2 || (count($parts) === 3 && $parts[0] === 'www') || in_array('dashboard', $parts));
-
-        \Log::info("Login attempt detected.", ['host' => $host, 'is_base_or_dashboard' => $isBaseOrDashboard]);
-
-        if ($isBaseOrDashboard) {
+        if (count($parts) <= 2 || (count($parts) === 3 && $parts[0] === 'www')) {
             $centers = Center::all();
-            \Log::info("Searching across all centers.", ['center_count' => $centers->count()]);
-            
-            $originalDatabase = \Config::get('database.connections.mysql.database');
     
             foreach ($centers as $center) {
                 try {
                     // Switch DB dynamically
-                    \Log::info("Checking center: " . $center->database);
                     \Config::set('database.connections.mysql.database', $center->database);
                     \DB::purge('mysql');
                     \DB::reconnect('mysql');
@@ -112,45 +102,30 @@ class LoginController extends Controller
                         ->first();
     
                     if ($centerUser && \Hash::check($request->password, $centerUser->password)) {
-                        \Log::info("User found in center database: " . $center->database);
                         // Generate a signed URL with user data for cross-domain authentication
                         $userData = [
                             'id' => $centerUser->id,
                             'email' => $centerUser->email,
                             'center_domain' => $center->domain,
-                            'expires' => now()->addMinutes(10)->timestamp
+                            'expires' => now()->addMinutes(5)->timestamp
                         ];
                         
                         $encryptedData = encrypt(json_encode($userData));
                         
-                        // Use dashboard domain if current request is from dashboard
-                        $redirectDomain = in_array('dashboard', $parts) ? "dashboard.luzori.com" : "{$center->domain}.luzori.com";
-                        $redirectUrl = "https://{$redirectDomain}/center_user/login?auth=" . urlencode($encryptedData);
-
-                        \Log::info("Login successful. Redirecting to: " . $redirectUrl);
-
                         return MyHelper::responseJSON('تم تسجيل الدخول بنجاح', 200, [
-                            'redirect_url' => $redirectUrl
+                            'redirect_url' => "https://{$center->domain}.luzori.com/center_user/login?auth=" . urlencode($encryptedData)
                         ]);
                     }
                 } catch (\Exception $e) {
-                    \Log::error("DB check failed for center {$center->database}: " . $e->getMessage(), ['exception' => $e]);
+                    \Log::error("DB check failed for center {$center->database}: " . $e->getMessage());
                 }
             }
-            
-            // Restore original database if not found
-            \Log::info("User not found in any center. Restoring original database: " . $originalDatabase);
-            \Config::set('database.connections.mysql.database', $originalDatabase);
-            \DB::purge('mysql');
-            \DB::reconnect('mysql');
     
             return MyHelper::responseJSON('فشلت عملية تسجيل الدخول, حقل اسم المستخدم او كلمة المرور غير صحيحة', 400);
         }
     
         // Case 2: Login from subdomain (center1.luzori.com or www.center1.luzori.com)
         // Middleware already switched DB, so we can use the current connection
-        \Log::info("Login attempt from subdomain. Connection should already be set.");
-
         $centerUser = CenterUser::withTrashed()
             ->where('statusWeb', 1)
             ->where('email', $request->email)
