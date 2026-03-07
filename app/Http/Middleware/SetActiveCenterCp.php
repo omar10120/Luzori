@@ -7,7 +7,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
-
+use Illuminate\Support\Facades\Log;
 
 class SetActiveCenterCp
 {
@@ -35,7 +35,7 @@ class SetActiveCenterCp
         $subdomain = $parts[1];
     }
 
-    if ($subdomain) {
+    if ($subdomain && $subdomain !== 'dashboard') {
         $center = Center::where('domain', $subdomain)->first();
 
         if ($center) {
