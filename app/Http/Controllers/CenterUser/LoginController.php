@@ -146,10 +146,19 @@ class LoginController extends Controller
                         $encryptedData = encrypt(json_encode($userData));
                         
                         // Determine redirect domain
-                        $redirectDomain = in_array('dashboard', $parts) ? "dashboard.luzori.com" : "{$center->domain}.luzori.com";
+                        $segments = explode('.', $host);
+                        if (in_array('127.0.0.1', $segments) || in_array('localhost', $segments)) {
+                            $redirectDomain = $host;
+                        } else {
+                            // Extract base domain (e.g., luzori.com) and prepend the center's domain
+                            $baseDomain = implode('.', array_slice($segments, -2));
+                            $redirectDomain = "{$center->domain}.{$baseDomain}";
+                        }
+                        
+                        $protocol = request()->secure() ? 'https://' : 'http://';
 
                         return MyHelper::responseJSON('تم تسجيل الدخول بنجاح', 200, [
-                            'redirect_url' => "https://{$redirectDomain}/center_user/login?auth=" . urlencode($encryptedData)
+                            'redirect_url' => "{$protocol}{$redirectDomain}/center_user/login?auth=" . urlencode($encryptedData)
                         ]);
                     }
                 } catch (\Exception $e) {

@@ -21,7 +21,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #d1d5db; /* Light gray text */
+            
         }
 
         .register-card {
@@ -46,28 +46,29 @@
 
         .register-title {
             text-align: center;
-            color: #ffffff;
+            
             font-size: 1.5rem;
             font-weight: 600;
             margin-bottom: 2rem;
         }
 
         .form-label {
-            color: #d1d5db;
+            
             font-size: 0.85rem;
             font-weight: 500;
+            color:white;
         }
 
         .form-control, .form-select {
-            background-color: #f1dfc5 !important; /* Sandy/peach input background */
+            
             border: none !important;
             border-radius: 0.375rem;
-            color: #495057 !important;
+            
             padding: 0.6rem 1rem;
         }
         
         .form-control[type="password"] {
-            background-color: #e2e8f0 !important; /* Slightly cooler for password */
+            
         }
 
         .form-control:focus, .form-select:focus {
@@ -75,9 +76,9 @@
         }
         
         .input-group-text {
-            background-color: #e2e8f0;
-            border: none;
-            color: #495057;
+            
+            
+            
         }
 
         /* Phone input group styling */
@@ -88,13 +89,14 @@
             border-top-right-radius: 0;
             border-bottom-right-radius: 0;
             width: 35%;
-            background-color: #f1dfc5;
+            
         }
         .phone-input-group .form-control {
             border-top-left-radius: 0;
             border-bottom-left-radius: 0;
             width: 65%;
-            background-color: #f1dfc5;
+            
+            
         }
 
         .file-upload-box {
@@ -104,14 +106,14 @@
             text-align: center;
             padding: 1.5rem;
             cursor: pointer;
-            color: #9ca3af;
+            
             transition: all 0.2s ease;
             position: relative;
         }
 
         .file-upload-box:hover {
             border-color: #f1dfc5;
-            color: #f1dfc5;
+            
         }
 
         .file-upload-box input[type="file"] {
@@ -137,9 +139,10 @@
 
         .btn-register {
             background-color: #276749; /* Dark green */
-            color: white;
-            border: none;
-            border-radius: 2rem; /* Pill shape */
+            
+            
+            
+            
             padding: 0.6rem 2.5rem;
             font-weight: 500;
             transition: all 0.2s;
@@ -147,7 +150,7 @@
 
         .btn-register:hover {
             background-color: #22543d;
-            color: white;
+            
             transform: translateY(-1px);
         }
 
@@ -278,19 +281,19 @@
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="name" class="form-label">Name Center</label>
-                                <input type="text" class="form-control" id="name" name="name" placeholder="name of center" required>
+                                <input type="text" class="form-control" id="name" name="name" placeholder="name of center" required  style="background-color:#DFC3A5 ; color:black">
                             </div>
                             
                             <div class="mb-3">
                                 <label for="email" class="form-label">Email Center</label>
-                                <input type="email" class="form-control" id="email" name="email" placeholder="example@email.com" style="background-color: #e2e8f0 !important;" required>
+                                <input type="email" class="form-control" id="email" name="email" placeholder="example@email.com"  required style="background-color:#DFC3A5 ; color:black">
                             </div>
 
                             <div class="mb-3">
                                 <label for="password" class="form-label">Password</label>
                                 <div class="input-group">
-                                    <input type="password" id="password" class="form-control" name="password" placeholder="••••••••" required>
-                                    <span class="input-group-text cursor-pointer toggle-password" style="background-color: #e2e8f0 !important;"><i class="ti ti-eye-off"></i></span>
+                                    <input type="password" id="password" class="form-control" name="password" placeholder="••••••••" required  style="background-color:#DFC3A5 ; color:black">
+                                    <span class="input-group-text cursor-pointer toggle-password"  ><i class="ti ti-eye-off"></i></span>
                                 </div>
                             </div>
 
@@ -299,7 +302,7 @@
                                 <div class="file-upload-box">
                                     <div class="file-upload-icon"><i class="ti ti-camera"></i></div>
                                     <div class="file-upload-text">SELECT LOGO</div>
-                                    <input type="file" id="image" name="image" accept="image/*">
+                                    <input type="file" id="image" name="image" accept="image/*"  style="background-color:#DFC3A5 ; color:black">
                                 </div>
                             </div>
                         </div>
@@ -308,25 +311,27 @@
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="domain" class="form-label">Domain Center</label>
-                                <input type="text" class="form-control" id="domain" name="domain" placeholder="center-name" required>
+                                <input type="text" class="form-control" id="domain" name="domain" placeholder="center-name" required  style="background-color:#DFC3A5 ; color:black">
                             </div>
 
                             <div class="mb-3">
                                 <label class="form-label">Phone Center</label>
                                 <div class="phone-input-group">
-                                    <select class="form-select" id="country_code" name="country_code">
+                                    <select class="form-select" id="country_code" name="country_code"  style="background-color:#DFC3A5 ; color:black">
                                         <option value="971">🇦🇪 +971</option>
-                                        <option value="1">🇺🇸 +1</option>
-                                        <option value="44">🇬🇧 +44</option>
                                         <option value="966">🇸🇦 +966</option>
+                                        <option value="974">🇶🇦 +974</option>
+                                        <option value="965">🇰🇼 +965</option>
+                                        <option value="968">🇴🇲 +968</option>
+                                        <option value="973">🇧🇭 +973</option>
                                     </select>
-                                    <input type="text" class="form-control" id="phone" name="phone" placeholder="503140232" required>
+                                    <input type="text" class="form-control" id="phone" name="phone" placeholder="503140232" required  style="background-color:#DFC3A5 ; color:black">
                                 </div>
                             </div>
 
                             <div class="mb-3">
                                 <label for="currency" class="form-label">Currency</label>
-                                <select class="form-select" id="currency" name="currency">
+                                <select class="form-select" id="currency" name="currency"  style="background-color:#DFC3A5 ; color:black">
                                     <option value="AED">AED</option>
                                     <option value="USD">USD</option>
                                     <option value="SAR">SAR</option>
@@ -339,14 +344,14 @@
                                 <div class="file-upload-box">
                                     <div class="file-upload-icon"><i class="ti ti-upload"></i></div>
                                     <div class="file-upload-text">PRIMARY IMAGE</div>
-                                    <input type="file" id="primary_image" name="primary_image" accept="image/*">
+                                    <input type="file" id="primary_image" name="primary_image" accept="image/*"  style="background-color:#DFC3A5 ; color:black">
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <div class="mt-4 text-center">
-                        <button type="submit" class="btn btn-register">
+                        <button type="submit" class="btn btn-register" style="background-color:#276749 ; color:white; border-radius:5rem">
                             <span>Register</span>
                         </button>
                     </div>
