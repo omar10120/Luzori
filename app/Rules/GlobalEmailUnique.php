@@ -51,6 +51,12 @@ class GlobalEmailUnique implements ValidationRule
             $centers = Center::all();
             
             foreach ($centers as $center) {
+                // If we are updating a center, skip checking its own tenant database
+                // because the center and its primary center_user share the same email.
+                if ($this->excludeId && $this->excludeTable === 'centers' && $center->id == $this->excludeId) {
+                    continue;
+                }
+
                 try {
                     // Switch to center database
                     Config::set('database.connections.mysql.database', $center->database);
