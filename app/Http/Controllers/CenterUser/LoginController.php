@@ -38,6 +38,25 @@ class LoginController extends Controller
                 // Check if the data is valid and not expired
                 if ($userData && isset($userData['id'], $userData['email'], $userData['expires'])) {
                     if ($userData['expires'] > now()->timestamp) {
+                        
+                        // If we are on dashboard or base domain, we need to find the right database based on the auth token data
+                        $host = request()->getHost();
+                        $parts = explode('.', $host);
+                        $isBaseOrDashboard = (count($parts) <= 2 || (count($parts) === 3 && $parts[0] === 'www') || in_array('dashboard', $parts));
+
+                        if ($isBaseOrDashboard && isset($userData['center_domain'])) {
+                            \Log::info("Cross-domain auth attempt. Domain: " . $userData['center_domain']);
+                            $center = Center::where('domain', $userData['center_domain'])->first();
+                            if ($center) {
+                                \Log::info("Switching to database: " . $center->database);
+                                \Config::set('database.connections.mysql.database', $center->database);
+                                \DB::purge('mysql');
+                                \DB::reconnect('mysql');
+                            } else {
+                                \Log::warning("Center not found for domain: " . $userData['center_domain']);
+                            }
+                        }
+
                         // Get the center user
                         $centerUser = \App\Models\CenterUser::withTrashed()
                             ->where('id', $userData['id'])
@@ -83,11 +102,15 @@ class LoginController extends Controller
         $host = $request->getHost();
         $parts = explode('.', $host);
     
-        // Case 1: Login from root domain (luzori.com or www.luzori.com)
+        // Case 1: Login from root domain (luzori.com or www.luzori.com) or dashboard
         // Middleware will keep default DB, so we need to check all centers
         
-        if (count($parts) <= 2 || (count($parts) === 3 && $parts[0] === 'www')) {
+        $isBaseOrDashboard = (count($parts) <= 2 || (count($parts) === 3 && $parts[0] === 'www') || in_array('dashboard', $parts));
+
+        if ($isBaseOrDashboard) {
+            \Log::info("Dashboard/Root login attempt.", ['host' => $host, 'email' => $request->email]);
             $centers = Center::all();
+            $originalDatabase = \Config::get('database.connections.mysql.database');
     
             foreach ($centers as $center) {
                 try {
@@ -102,24 +125,34 @@ class LoginController extends Controller
                         ->first();
     
                     if ($centerUser && \Hash::check($request->password, $centerUser->password)) {
+                        \Log::info("User found in database: " . $center->database);
                         // Generate a signed URL with user data for cross-domain authentication
                         $userData = [
                             'id' => $centerUser->id,
                             'email' => $centerUser->email,
                             'center_domain' => $center->domain,
-                            'expires' => now()->addMinutes(5)->timestamp
+                            'expires' => now()->addMinutes(10)->timestamp
                         ];
                         
                         $encryptedData = encrypt(json_encode($userData));
                         
+                        // Determine redirect domain
+                        $redirectDomain = in_array('dashboard', $parts) ? "dashboard.luzori.com" : "{$center->domain}.luzori.com";
+
                         return MyHelper::responseJSON('تم تسجيل الدخول بنجاح', 200, [
-                            'redirect_url' => "https://{$center->domain}.luzori.com/center_user/login?auth=" . urlencode($encryptedData)
+                            'redirect_url' => "https://{$redirectDomain}/center_user/login?auth=" . urlencode($encryptedData)
                         ]);
                     }
                 } catch (\Exception $e) {
                     \Log::error("DB check failed for center {$center->database}: " . $e->getMessage());
                 }
             }
+            
+            // Restore original database
+            \Log::info("Login failed. Restoring original database.");
+            \Config::set('database.connections.mysql.database', $originalDatabase);
+            \DB::purge('mysql');
+            \DB::reconnect('mysql');
     
             return MyHelper::responseJSON('فشلت عملية تسجيل الدخول, حقل اسم المستخدم او كلمة المرور غير صحيحة', 400);
         }

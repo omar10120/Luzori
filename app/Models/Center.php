@@ -25,7 +25,7 @@ class Center extends Authenticatable implements HasMedia
         SoftDeletes;
 
     protected $table = 'centers';
-    protected $connection = 'mysql'; // Always use main database for centers table
+    protected $connection = 'central'; // Always use main database for centers table
     protected $fillable = [
         'name',
         'domain',
