@@ -150,9 +150,9 @@ class LoginController extends Controller
                         if (in_array('127.0.0.1', $segments) || in_array('localhost', $segments)) {
                             $redirectDomain = $host;
                         } else {
-                            // Extract base domain (e.g., luzori.com) and prepend the center's domain
+                            // Extract base domain (e.g., luzori.com) and prepend the center's domain + dashboard
                             $baseDomain = implode('.', array_slice($segments, -2));
-                            $redirectDomain = "{$center->domain}.{$baseDomain}";
+                            $redirectDomain = "{$center->domain}.dashboard.{$baseDomain}";
                         }
                         
                         $protocol = request()->secure() ? 'https://' : 'http://';
