@@ -8,6 +8,7 @@ return [
     'our_work' => 'أعمالنا',
     'contact' => 'اتصل بنا',
     'login' => 'تسجيل الدخول',
+    'signup' => 'إنشاء حساب',
     'get_in_touch' => 'تواصل معنا',
     
     // Hero Section

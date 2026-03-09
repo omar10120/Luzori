@@ -57,6 +57,8 @@ Route::get('login', [LoginController::class, 'index'])->name('login');
 
 Route::post('login', [LoginController::class, 'authenticate'])->name('login');
 
+Route::get('signup', [LoginController::class, 'signup'])->name('signup');
+
 // 2FA Verification routes
 Route::get('verify', [LoginController::class, 'showVerifyForm'])->name('verify.show');
 Route::post('verify', [LoginController::class, 'verifyCode'])->name('verify');

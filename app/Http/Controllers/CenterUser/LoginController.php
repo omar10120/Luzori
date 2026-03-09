@@ -25,6 +25,11 @@ class LoginController extends Controller
         return redirect('center_user/login');
     }
 
+    public function signup()
+    {
+        return view('CenterUser.register');
+    }
+
     public function index()
     {
         // Check if there's an auth parameter for cross-domain authentication

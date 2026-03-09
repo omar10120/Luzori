@@ -308,4 +308,5 @@ return [
     'local'                           => 'محلي',
     'no_payee'                        => 'بدون مدين',
     'not_selected'                    => 'غير محدد',
+    
 ];

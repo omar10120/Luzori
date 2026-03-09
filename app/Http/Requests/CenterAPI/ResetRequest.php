@@ -26,13 +26,13 @@ class ResetRequest extends FormRequest
         $type = (preg_match("/^[^@]*@[^@]*\.[^@]*$/", $this->username)) ? 'email' : 'phone';
         if ($type == 'email') {
             return [
-                'username' => 'required|email|exists:center_users,email',
+                'username' => 'required|email',
                 'password' => 'required|min:6|max:15|same:password_confirmation',
                 'fcm_token' => 'nullable',
             ];
         } else {
             return [
-                'username' => 'required|numeric|exists:center_users,phone',
+                'username' => 'required|numeric',
                 'password' => 'required|min:6|max:15|same:password_confirmation',
                 'fcm_token' => 'nullable',
             ];

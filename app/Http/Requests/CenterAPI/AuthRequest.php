@@ -26,13 +26,13 @@ class AuthRequest extends FormRequest
         $type = (preg_match("/^[^@]*@[^@]*\.[^@]*$/", $this->username)) ? 'email' : 'phone';
         if ($type == 'email') {
             return [
-                'username' => 'required|email|exists:center_users,email',
+                'username' => 'required|email',
                 'password' => 'required',
                 'fcm_token' => 'nullable',
             ];
         } else {
             return [
-                'username' => 'required|numeric|exists:center_users,phone',
+                'username' => 'required|numeric',
                 'password' => 'required',
                 'fcm_token' => 'nullable',
             ];

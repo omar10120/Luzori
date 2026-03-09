@@ -180,6 +180,9 @@
                 <a href="{{ route('center_user.login') }}" class="btn btn-warning px-3 py-1 fw-medium me-2" style="transition: all 0.3s ease-in-out; transform: scale(1); font-size: 0.85rem;" onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 4px 15px rgba(255, 193, 7, 0.4)'" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none'">
                     {{ __('website.login') }}
                 </a>
+                   <a href="{{ route('center_user.signup') }}" class="btn btn-warning px-3 py-1 fw-medium me-2" style="transition: all 0.3s ease-in-out; transform: scale(1); font-size: 0.85rem;" onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 4px 15px rgba(255, 193, 7, 0.4)'" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none'">
+                    {{ __('website.signup') }}
+                </a>
                 <a href="#footer" class="btn btn-outline-warning px-3 py-1 fw-medium" style="transition: all 0.3s ease-in-out; transform: scale(1); font-size: 0.85rem;" onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 4px 15px rgba(255, 193, 7, 0.4)'" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none'">
                     {{ __('website.get_in_touch') }}
                 </a>
@@ -222,6 +225,9 @@
                         <div class="border-top pt-3">
                             <a href="{{ route('center_user.login') }}" class="btn btn-warning w-100 fw-medium mb-2 py-2" style="transition: all 0.3s ease-in-out; transform: scale(1); font-size: 0.85rem;" onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 4px 15px rgba(255, 193, 7, 0.4)'" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none'">
                             {{ __('website.login') }}
+                            </a>
+                            <a href="{{ route('center_user.signup') }}" class="btn btn-warning w-100 fw-medium mb-2 py-2" style="transition: all 0.3s ease-in-out; transform: scale(1); font-size: 0.85rem;" onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 4px 15px rgba(255, 193, 7, 0.4)'" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none'">
+                            {{ __('website.signup') }}
                             </a>
                             <a href="#" class="btn btn-outline-warning w-100 fw-medium py-2" style="transition: all 0.3s ease-in-out; transform: scale(1); font-size: 0.85rem;" onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 4px 15px rgba(255, 193, 7, 0.4)'" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none'">
                             {{ __('website.get_in_touch') }}

@@ -8,6 +8,7 @@ return [
     'our_work' => 'Our Work',
     'contact' => 'Contact',
     'login' => 'Login',
+    'signup' => 'Signup',
     'get_in_touch' => 'Get in Touch',
     
     // Hero Section

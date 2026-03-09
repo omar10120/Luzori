@@ -26,12 +26,12 @@ class CheckCodeRequest extends FormRequest
         $type = (preg_match("/^[^@]*@[^@]*\.[^@]*$/", $this->username)) ? 'email' : 'phone';
         if ($type == 'email') {
             return [
-                'username' => 'required|email|exists:center_users,email',
+                'username' => 'required|email',
                 'verification_code' => 'required'
             ];
         } else {
             return [
-                'username' => 'required|numeric|exists:center_users,phone',
+                'username' => 'required|numeric',
                 'verification_code' => 'required'
             ];
         }

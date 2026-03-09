@@ -36,7 +36,7 @@ class SetActiveCenterCp
     }
 
     if ($subdomain && $subdomain !== 'dashboard') {
-        $center = Center::where('domain', $subdomain)->first();
+        $center = Center::where('domain', $subdomain)->first(); 
 
         if ($center) {
             Config::set('database.connections.mysql.database', $center->database);
