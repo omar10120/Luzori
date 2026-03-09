@@ -33,11 +33,20 @@ class SetActiveCenter
             $center = Center::where('domain', $domain)->first();
             if ($center) {
                 Config::set('database.connections.mysql.database', $center->database);
-                DB::reconnect();
+                DB::purge('mysql');
+                DB::reconnect('mysql');
                 return $next($request);
             }
-            
         }
+        
+        // Allow auth routes to proceed without a domain header so they can search across tenants
+        if ($request->is('center_api/auth/login') || 
+            $request->is('center_api/auth/forget') || 
+            $request->is('center_api/auth/check-code') || 
+            $request->is('center_api/auth/reset')) {
+            return $next($request);
+        }
+
         return MyHelper::responseJSON(__('api.domain_dont_exists'), Response::HTTP_BAD_REQUEST);
     }
 }
