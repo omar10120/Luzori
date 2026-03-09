@@ -21,6 +21,7 @@ class LoginController extends Controller
     public function logout()
     {
         auth('center_user')->logout();
+        session()->forget('active_center_domain');
         return redirect('center_user/login');
     }
 
@@ -65,6 +66,9 @@ class LoginController extends Controller
                             ->first();
                         
                         if ($centerUser) {
+                            // Set active center domain in session for dashboard/root domain DB switching
+                            session(['active_center_domain' => $userData['center_domain']]);
+
                             // If 2FA is enabled for this center, require verification; else login immediately
                             if ($this->isTwoFactorEnabled()) {
                                 $code = $this->generateVerificationCode();
@@ -165,6 +169,13 @@ class LoginController extends Controller
             ->first();
     
         if ($centerUser && Hash::check($request->password, $centerUser->password)) {
+            // Set active center domain for session
+            $dbName = \Config::get('database.connections.mysql.database');
+            $center = Center::where('database', $dbName)->first();
+            if ($center) {
+                session(['active_center_domain' => $center->domain]);
+            }
+
             if ($this->isTwoFactorEnabled()) {
                 // Require verification
                 $code = $this->generateVerificationCode();

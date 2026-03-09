@@ -48,6 +48,16 @@ class SetActiveCenterCp
         return abort(404, 'Center not found');
     }
 
+    // Handle dashboard or root domain for authenticated users (or those mid-2FA)
+    if (($subdomain === 'dashboard' || !$subdomain) && session()->has('active_center_domain')) {
+        $center = Center::where('domain', session('active_center_domain'))->first();
+        if ($center) {
+            Config::set('database.connections.mysql.database', $center->database);
+            DB::purge('mysql');
+            DB::reconnect('mysql');
+        }
+    }
+
     return $next($request);
 }
 
