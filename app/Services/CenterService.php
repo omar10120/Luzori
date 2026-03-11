@@ -31,7 +31,10 @@ class CenterService
                 $center->addMedia($request['image'])->toMediaCollection('Center');
             }
             if (isset($request['primary_image'])) {
-                $center->addMedia($request['primary_image'])->toMediaCollection('PrimaryImage');
+                $images = is_array($request['primary_image']) ? $request['primary_image'] : [$request['primary_image']];
+                foreach ($images as $img) {
+                    $center->addMedia($img)->toMediaCollection('PrimaryImage');
+                }
             }
             $center->assignRole($request['role']);
 
@@ -152,9 +155,23 @@ class CenterService
                 $center->clearMediaCollection('Center');
                 $center->addMedia($request['image'])->toMediaCollection('Center');
             }
+            // Delete specific existing primary images by media ID
+            if (!empty($request['delete_primary_images'])) {
+                $mediaIds = array_filter(explode(',', $request['delete_primary_images']));
+                foreach ($mediaIds as $mediaId) {
+                    $media = $center->media()->where('id', $mediaId)->first();
+                    if ($media) {
+                        $media->delete();
+                    }
+                }
+            }
+
+            // Add new primary images (without clearing remaining existing ones)
             if (isset($request['primary_image'])) {
-                $center->clearMediaCollection('PrimaryImage');
-                $center->addMedia($request['primary_image'])->toMediaCollection('PrimaryImage');
+                $images = is_array($request['primary_image']) ? $request['primary_image'] : [$request['primary_image']];
+                foreach ($images as $img) {
+                    $center->addMedia($img)->toMediaCollection('PrimaryImage');
+                }
             }
 
             if (isset($request['password']) && empty($request['password'])) {

@@ -185,12 +185,37 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-1">
-                                    <label class="form-label">Primary Image</label>
-                                    <input type="file" class="form-control" id="primary_image" name="primary_image" />
+                                    <label class="form-label">Primary Images <small>(up to 4)</small></label>
+                                    
+                                    {{-- Show existing images --}}
+                                    @if($item && $item->getMedia('PrimaryImage')->count())
+                                        <div class="d-flex flex-wrap gap-2 mb-2" id="existingPrimaryImages">
+                                            @foreach($item->getMedia('PrimaryImage') as $media)
+                                                <div class="position-relative existing-img-thumb" data-media-id="{{ $media->id }}" style="width:100px;height:100px;">
+                                                    <img src="{{ $media->getUrl() }}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;border:1px solid #ddd;">
+                                                    <button type="button" class="btn btn-sm btn-danger remove-existing-img" data-media-id="{{ $media->id }}" style="position:absolute;top:2px;right:2px;padding:1px 5px;font-size:0.65rem;line-height:1;">
+                                                        <i class="ti ti-x"></i>
+                                                    </button>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @endif
+
+                                    {{-- New image uploads --}}
+                                    <div id="adminPrimaryImagesContainer">
+                                        <div class="admin-primary-slot mb-2">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <input type="file" class="form-control form-control-sm admin-primary-input" name="primary_image[]" accept="image/*">
+                                                <img class="admin-img-preview" style="width:50px;height:50px;object-fit:cover;border-radius:4px;display:none;">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button type="button" id="addAdminPrimaryImage" class="btn btn-sm btn-outline-primary mt-1">
+                                        <i class="ti ti-plus"></i> Add Image
+                                    </button>
+                                    {{-- Hidden field for images to delete --}}
+                                    <input type="hidden" name="delete_primary_images" id="deletePrimaryImages" value="">
                                 </div>
-                                <img id="show_primary_image" src="{{ $item ? $item->getFirstMediaUrl('PrimaryImage') : '' }}"
-                                    style="{{ $item && $item->getFirstMediaUrl('PrimaryImage') ? '' : 'display:none;' }} width:200px;height:200px;margin:20px;"
-                                    alt="primary image" />
                             </div>
                         </div>
                     </div>
@@ -221,15 +246,69 @@
                 show_image.src = URL.createObjectURL(file)
             }
         }
-        primary_image.onchange = evt => {
-            const [file] = primary_image.files
-            if (file) {
-                document.getElementById("show_primary_image").style.display = "block";
-                show_primary_image.src = URL.createObjectURL(file)
-            }
-        }
 
+        // Multi Primary Image management
         $(document).ready(function() {
+            let existingCount = $('#existingPrimaryImages .existing-img-thumb').length || 0;
+            let newSlotCount = 1;
+            const maxImages = 4;
+
+            function updateAddButton() {
+                let totalCount = ($('#existingPrimaryImages .existing-img-thumb').length || 0) + $('#adminPrimaryImagesContainer .admin-primary-slot').length;
+                if (totalCount >= maxImages) {
+                    $('#addAdminPrimaryImage').hide();
+                } else {
+                    $('#addAdminPrimaryImage').show();
+                }
+            }
+
+            // Add new upload slot
+            $('#addAdminPrimaryImage').click(function() {
+                let totalCount = ($('#existingPrimaryImages .existing-img-thumb').length || 0) + $('#adminPrimaryImagesContainer .admin-primary-slot').length;
+                if (totalCount >= maxImages) return;
+                newSlotCount++;
+                let html = `<div class="admin-primary-slot mb-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <input type="file" class="form-control form-control-sm admin-primary-input" name="primary_image[]" accept="image/*">
+                        <img class="admin-img-preview" style="width:50px;height:50px;object-fit:cover;border-radius:4px;display:none;">
+                        <button type="button" class="btn btn-sm btn-danger remove-admin-slot" style="padding:2px 6px;font-size:0.7rem;"><i class="ti ti-x"></i></button>
+                    </div>
+                </div>`;
+                $('#adminPrimaryImagesContainer').append(html);
+                updateAddButton();
+            });
+
+            // Remove new upload slot
+            $(document).on('click', '.remove-admin-slot', function() {
+                $(this).closest('.admin-primary-slot').remove();
+                updateAddButton();
+            });
+
+            // Preview new image
+            $(document).on('change', '.admin-primary-input', function(e) {
+                let file = e.target.files[0];
+                let preview = $(this).siblings('.admin-img-preview');
+                if (file) {
+                    preview.show().attr('src', URL.createObjectURL(file));
+                } else {
+                    preview.hide().attr('src', '');
+                }
+            });
+
+            // Remove existing image
+            $(document).on('click', '.remove-existing-img', function() {
+                let mediaId = $(this).data('media-id');
+                let current = $('#deletePrimaryImages').val();
+                let ids = current ? current.split(',') : [];
+                ids.push(mediaId);
+                $('#deletePrimaryImages').val(ids.join(','));
+                $(this).closest('.existing-img-thumb').fadeOut(200, function() {
+                    $(this).remove();
+                    updateAddButton();
+                });
+            });
+
+            updateAddButton();
             $('#status_select').on('change', function() {
                 if ($(this).val() == 'reject') {
                     $('#reject_reason_container').show();

@@ -33,7 +33,8 @@ class RegisterRequest extends FormRequest
             'password' => 'required|min:6|max:15|same:password_confirmation',
             'password_confirmation' => 'required',
             'image' => 'nullable|image|max:4096|mimes:jpg,jpeg,png,gif',
-            'primary_image' => 'nullable|image|max:4096|mimes:jpg,jpeg,png,gif',
+            'primary_image' => 'nullable|array|max:4',
+            'primary_image.*' => 'image|max:4096|mimes:jpg,jpeg,png,gif',
             'currency' => 'nullable|string|max:10',
         ];
     }

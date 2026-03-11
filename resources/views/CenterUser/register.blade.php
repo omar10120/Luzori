@@ -186,14 +186,64 @@
                 }
             });
 
-            // File selection preview text
-            $('input[type="file"]').change(function(e) {
+            // Logo file selection preview text
+            $('#image').change(function(e) {
                 let fileName = e.target.files[0]?.name;
                 if (fileName) {
                     $(this).siblings('.file-upload-text').text(fileName);
                 } else {
-                    let defaultText = $(this).attr('id') === 'image' ? 'SELECT LOGO' : 'PRIMARY IMAGE';
-                    $(this).siblings('.file-upload-text').text(defaultText);
+                    $(this).siblings('.file-upload-text').text('SELECT LOGO');
+                }
+            });
+
+            // Primary Images: add / remove / preview
+            let primarySlotCount = 1;
+            const maxPrimaryImages = 4;
+
+            $('#addPrimaryImage').click(function() {
+                if (primarySlotCount >= maxPrimaryImages) {
+                    return;
+                }
+                primarySlotCount++;
+                let idx = primarySlotCount;
+                let html = `
+                    <div class="primary-image-slot mb-2" data-index="${idx}">
+                        <div class="file-upload-box position-relative">
+                            <div class="file-upload-icon"><i class="ti ti-upload"></i></div>
+                            <div class="file-upload-text">IMAGE ${idx}</div>
+                            <input type="file" name="primary_image[]" accept="image/*" class="primary-img-input" style="background-color:#DFC3A5; color:black">
+                            <img class="img-preview d-none" style="max-height:60px; margin-top:6px; border-radius:4px;">
+                            <button type="button" class="btn btn-sm btn-danger remove-primary-slot" style="position:absolute; top:4px; right:4px; z-index:5; padding:2px 6px; font-size:0.7rem;">
+                                <i class="ti ti-x"></i>
+                            </button>
+                        </div>
+                    </div>`;
+                $('#primaryImagesContainer').append(html);
+                if (primarySlotCount >= maxPrimaryImages) {
+                    $(this).hide();
+                }
+            });
+
+            $(document).on('click', '.remove-primary-slot', function() {
+                $(this).closest('.primary-image-slot').remove();
+                primarySlotCount--;
+                $('#addPrimaryImage').show();
+            });
+
+            $(document).on('change', '.primary-img-input', function(e) {
+                let file = e.target.files[0];
+                let preview = $(this).siblings('.img-preview');
+                let text = $(this).siblings('.file-upload-text');
+                if (file) {
+                    text.text(file.name);
+                    let reader = new FileReader();
+                    reader.onload = function(ev) {
+                        preview.attr('src', ev.target.result).removeClass('d-none');
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    text.text('IMAGE');
+                    preview.addClass('d-none').attr('src', '');
                 }
             });
 
@@ -340,12 +390,20 @@
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label">Primary Image</label>
-                                <div class="file-upload-box">
-                                    <div class="file-upload-icon"><i class="ti ti-upload"></i></div>
-                                    <div class="file-upload-text">PRIMARY IMAGE</div>
-                                    <input type="file" id="primary_image" name="primary_image" accept="image/*"  style="background-color:#DFC3A5 ; color:black">
+                                <label class="form-label">Primary Images <small>(1–4 images)</small></label>
+                                <div id="primaryImagesContainer">
+                                    <div class="primary-image-slot mb-2" data-index="0">
+                                        <div class="file-upload-box position-relative">
+                                            <div class="file-upload-icon"><i class="ti ti-upload"></i></div>
+                                            <div class="file-upload-text">IMAGE 1</div>
+                                            <input type="file" name="primary_image[]" accept="image/*" class="primary-img-input" style="background-color:#DFC3A5; color:black">
+                                            <img class="img-preview d-none" style="max-height:60px; margin-top:6px; border-radius:4px;">
+                                        </div>
+                                    </div>
                                 </div>
+                                <button type="button" id="addPrimaryImage" class="btn btn-sm btn-outline-light mt-1" style="font-size:0.8rem;">
+                                    <i class="ti ti-plus"></i> Add Image
+                                </button>
                             </div>
                         </div>
                     </div>
