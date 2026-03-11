@@ -40,6 +40,23 @@ class CenterController extends Controller
     }
 
     /**
+     * Fetch a single approved center by ID.
+     *
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function show($id)
+    {
+        $center = Center::where('status', 'approve')->find($id);
+
+        if ($center) {
+            return MyHelper::responseJSON(__('api.doneSuccessfully'), Response::HTTP_OK, CenterResource::make($center));
+        }
+
+        return MyHelper::responseJSON(__('api.noDataFound'), Response::HTTP_NOT_FOUND);
+    }
+
+    /**
      * Register a new center.
      * 
      * @param RegisterRequest $request

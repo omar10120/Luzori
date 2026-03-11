@@ -48,6 +48,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('centers', [CenterController::class, 'index']);
+Route::get('centers/{id}', [CenterController::class, 'show']);
 
 Route::group(['prefix' => 'auth'], function () {
     Route::controller(AuthController::class)->group(function () {

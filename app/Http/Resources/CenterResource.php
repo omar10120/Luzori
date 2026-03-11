@@ -22,7 +22,10 @@ class CenterResource extends JsonResource
     //  $res['phone'] = $this->phone;
 
         $res['logo'] = $this->getFirstMediaUrl('Center') ?: asset('assets/img/avatars/1.png');
-        $res['primary_image'] = $this->getFirstMediaUrl('PrimaryImage') ?: asset('assets/img/avatars/1.png');
+        // $res['primary_image'] = $this->getFirstMediaUrl('PrimaryImage') ?: asset('assets/img/avatars/1.png');
+        $res['primary_images'] = $this->getMedia('PrimaryImage')->map(function ($media) {
+            return $media->getUrl();
+        })->toArray();
         $res['rate'] = $this->rate;
         $res['created_at'] = $this->created_at;
         return $res;
