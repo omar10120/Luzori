@@ -136,12 +136,49 @@
                                     <input type="file" class="form-control" id="image" name="image" />
                                 </div>
                                 @php
-                                    $userImage = $item && $item->image ? $item->image : asset('assets/img/avatars/1.png');
+                                    $userImage = $item && $item->getFirstMediaUrl('CenterUser') ? $item->getFirstMediaUrl('CenterUser') : asset('assets/img/avatars/1.png');
                                 @endphp
                                 <img id="show_image" src="{{ $userImage }}"
                                     style="width:200px;height:200px;margin:20px;"
                                     alt="center user image" />
                             </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-1">
+                                    <label class="form-label">Primary Images <small>(up to 4)</small></label>
+                                    
+                                    {{-- Show existing primary images --}}
+                                    @if($item && $item->getMedia('PrimaryImage')->count())
+                                        <div class="d-flex flex-wrap gap-2 mb-2" id="existingPrimaryImages">
+                                            @foreach($item->getMedia('PrimaryImage') as $media)
+                                                <div class="position-relative existing-img-thumb" data-media-id="{{ $media->id }}" style="width:100px;height:100px;">
+                                                    <img src="{{ $media->getUrl() }}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;border:1px solid #ddd;">
+                                                    <button type="button" class="btn btn-sm btn-danger remove-existing-img" data-media-id="{{ $media->id }}" style="position:absolute;top:2px;right:2px;padding:1px 5px;font-size:0.65rem;line-height:1;">
+                                                        <i class="ti ti-x"></i>
+                                                    </button>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @endif
+
+                                    {{-- New primary image uploads --}}
+                                    <div id="primaryImagesContainer">
+                                        <div class="primary-image-slot mb-2">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <input type="file" class="form-control form-control-sm primary-img-input" name="primary_image[]" accept="image/*">
+                                                <img class="img-preview" style="width:50px;height:50px;object-fit:cover;border-radius:4px;display:none;">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button type="button" id="addPrimaryImage" class="btn btn-sm btn-outline-primary mt-1">
+                                        <i class="ti ti-plus"></i> Add Image
+                                    </button>
+                                    {{-- Hidden field for images to delete --}}
+                                    <input type="hidden" name="delete_primary_images" id="deletePrimaryImages" value="">
+                                </div>
+                            </div>
+                        </div>
                         </div>
                     </div>
                     <div class="card-footer">
@@ -172,6 +209,84 @@
             }
         }
 
+        // Multi Primary Image management
+$(document).ready(function () {
+
+    const maxImages = 4;
+
+    function getTotalImages() {
+        let existing = $('#existingPrimaryImages .existing-img-thumb').length;
+        let newSlots = $('#primaryImagesContainer .primary-image-slot').length;
+        return existing + newSlots;
+    }
+
+    function updateAddButton() {
+        if (getTotalImages() >= maxImages) {
+            $('#addPrimaryImage').hide();
+        } else {
+            $('#addPrimaryImage').show();
+        }
+    }
+
+    // Add new upload slot
+    $('#addPrimaryImage').click(function () {
+
+        if (getTotalImages() >= maxImages) return;
+
+        let html = `
+        <div class="primary-image-slot mb-2">
+            <div class="d-flex align-items-center gap-2">
+                <input type="file" class="form-control form-control-sm primary-img-input" name="primary_image[]" accept="image/*">
+                <img class="img-preview" style="width:50px;height:50px;object-fit:cover;border-radius:4px;display:none;">
+                <button type="button" class="btn btn-sm btn-danger remove-slot" style="padding:2px 6px;font-size:0.7rem;">
+                    <i class="ti ti-x"></i>
+                </button>
+            </div>
+        </div>`;
+
+        $('#primaryImagesContainer').append(html);
+
+        updateAddButton();
+    });
+
+    // Remove new upload slot
+    $(document).on('click', '.remove-slot', function () {
+        $(this).closest('.primary-image-slot').remove();
+        updateAddButton();
+    });
+
+    // Preview image
+    $(document).on('change', '.primary-img-input', function (e) {
+        let file = e.target.files[0];
+        let preview = $(this).siblings('.img-preview');
+
+        if (file) {
+            preview.show().attr('src', URL.createObjectURL(file));
+        } else {
+            preview.hide().attr('src', '');
+        }
+    });
+
+    // Remove existing image
+    $(document).on('click', '.remove-existing-img', function () {
+
+        let mediaId = $(this).data('media-id');
+        let current = $('#deletePrimaryImages').val();
+
+        let ids = current ? current.split(',') : [];
+        ids.push(mediaId);
+
+        $('#deletePrimaryImages').val(ids.join(','));
+
+        $(this).closest('.existing-img-thumb').fadeOut(200, function () {
+            $(this).remove();
+            updateAddButton();
+        });
+    });
+
+    updateAddButton();
+
+});
         // Phone prefix toggle for UAE (+971)
         document.addEventListener('DOMContentLoaded', function() {
             const countryCodeSelect = document.querySelector('select[name="country_code"]');

@@ -25,6 +25,12 @@ class CenterUserService
         if (isset($request['image'])) {
             $centerUser->addMedia($request['image'])->toMediaCollection('CenterUser');
         }
+        if (isset($request['primary_image'])) {
+            $images = is_array($request['primary_image']) ? $request['primary_image'] : [$request['primary_image']];
+            foreach ($images as $img) {
+                $centerUser->addMedia($img)->toMediaCollection('PrimaryImage');
+            }
+        }
         if (isset($request['role'])) {
             // Get the role by ID to assign it properly
             $role = \Spatie\Permission\Models\Role::findById($request['role'], 'center_api');
@@ -41,6 +47,25 @@ class CenterUserService
         if (isset($request['image'])) {
             $centerUser->clearMediaCollection('CenterUser');
             $centerUser->addMedia($request['image'])->toMediaCollection('CenterUser');
+        }
+
+        // Delete specific existing primary images by media ID
+        if (!empty($request['delete_primary_images'])) {
+            $mediaIds = array_filter(explode(',', $request['delete_primary_images']));
+            foreach ($mediaIds as $mediaId) {
+                $media = $centerUser->media()->where('id', $mediaId)->first();
+                if ($media) {
+                    $media->delete();
+                }
+            }
+        }
+
+        // Add new primary images (without clearing remaining existing ones)
+        if (isset($request['primary_image'])) {
+            $images = is_array($request['primary_image']) ? $request['primary_image'] : [$request['primary_image']];
+            foreach ($images as $img) {
+                $centerUser->addMedia($img)->toMediaCollection('PrimaryImage');
+            }
         }
 
         if (!isset($request['password'])) {

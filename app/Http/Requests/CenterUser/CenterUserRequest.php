@@ -47,6 +47,9 @@ class CenterUserRequest extends FormRequest
                 'password_confirmation' => 'nullable|min:6|max:15',
                 'role' => 'required',
                 'image' => 'nullable|image|max:4096|mimes:jpg,jpeg,png,gif|mimetypes:image/jpeg,image/png',
+                'primary_image' => 'nullable|array|max:4',
+                'primary_image.*' => 'image|max:4096|mimes:jpg,jpeg,png,gif|mimetypes:image/jpeg,image/png',
+                'delete_primary_images' => 'nullable|string',
             ];
         } else {
             return [
@@ -59,6 +62,9 @@ class CenterUserRequest extends FormRequest
                 'password' => 'required|min:6|max:15|same:password_confirmation',
                 'role' => 'required',
                 'image' => 'nullable|image|max:4096|mimes:jpg,jpeg,png,gif|mimetypes:image/jpeg,image/png',
+                'primary_image' => 'nullable|array|max:4',
+                'primary_image.*' => 'image|max:4096|mimes:jpg,jpeg,png,gif|mimetypes:image/jpeg,image/png',
+                'delete_primary_images' => 'nullable|string',
             ];
         }
     }
