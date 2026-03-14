@@ -28,6 +28,18 @@ class CenterResource extends JsonResource
         })->toArray();
         $res['rate'] = $this->rate;
         $res['created_at'] = $this->created_at;
+
+        // Include nested data if provided via attributes or explicitly loaded
+        if (isset($this->branches)) {
+            $res['branches'] = BranchResource::collection($this->branches);
+        }
+        if (isset($this->categories)) {
+            $res['categories'] = CategoryServiceResource::collection($this->categories);
+        }
+        if (isset($this->services)) {
+            $res['services'] = ServiceResource::collection($this->services);
+        }
+
         return $res;
     }
 }

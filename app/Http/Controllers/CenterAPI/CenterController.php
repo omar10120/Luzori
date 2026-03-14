@@ -8,8 +8,13 @@ use App\Http\Resources\CenterResource;
 use App\Http\Requests\CenterAPI\RegisterRequest;
 use App\Services\CenterService;
 use App\Models\Center;
+use App\Models\Branch;
+use App\Models\CategoryService;
+use App\Models\Service;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\DB;
 
 class CenterController extends Controller
 {
@@ -50,6 +55,17 @@ class CenterController extends Controller
         $center = Center::where('status', 'approve')->find($id);
 
         if ($center) {
+            // Switch to center's database to fetch nested data
+            if ($center->database) {
+                Config::set('database.connections.mysql.database', $center->database);
+                DB::reconnect();
+
+                // Fetch data from the switched mysql connection
+                $center->branches = Branch::all();
+                $center->categories = CategoryService::with('services')->get();
+                $center->services = Service::where('is_top', true)->get(); // Example: Top services
+            }
+
             return MyHelper::responseJSON(__('api.doneSuccessfully'), Response::HTTP_OK, CenterResource::make($center));
         }
 

@@ -6,23 +6,18 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class ServiceResource extends JsonResource
 {
-    /**
-     * Transform the resource into an array.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
-     */
     public function toArray($request)
     {
-        $res['id'] = $this->id;
-        $res['name'] = $this->translate(app()->getLocale())->name;
-        $res['rooms_no'] = $this->rooms_no;
-        $res['free_book'] = $this->free_book;
-        $res['price'] = $this->price;
-        $res['is_top'] = $this->is_top;
-        $res['has_commission'] = $this->has_commission;
-        $res['image'] = $this->image;
-        $res['created_at'] = $this->created_at;
-        return $res;
+        return [
+            'id' => $this->id,
+            'name' => $this->name,
+            'description' => $this->description,
+            'price' => $this->price,
+            'rooms_no' => $this->rooms_no,
+            'max_time' => $this->max_time,
+            'extra_time' => $this->extra_time,
+            'is_top' => $this->is_top,
+            'image' => $this->getFirstMediaUrl('Service') ?: asset('assets/img/avatars/1.png'),
+        ];
     }
 }

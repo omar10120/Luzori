@@ -4,17 +4,16 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class BranchResource extends JsonResource
+class CategoryServiceResource extends JsonResource
 {
     public function toArray($request)
     {
         return [
             'id' => $this->id,
             'name' => $this->name,
-            'city' => $this->city,
-            'address' => $this->address,
-            'longitude' => $this->longitude,
-            'latitude' => $this->latitude,
+            'description' => $this->description,
+            'keywords' => $this->keywords,
+            'services' => ServiceResource::collection($this->whenLoaded('services')),
         ];
     }
 }
