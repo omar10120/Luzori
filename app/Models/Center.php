@@ -54,6 +54,8 @@ class Center extends Authenticatable implements HasMedia
 
     public function setPasswordAttribute($value)
     {
-        $this->attributes['password'] = bcrypt($value);
+        if (!empty($value)) {
+            $this->attributes['password'] = bcrypt($value);
+        }
     }
 }
