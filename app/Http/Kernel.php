@@ -71,6 +71,16 @@ class Kernel extends HttpKernel
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
             \App\Http\Middleware\ClearCach::class,
         ],
+
+        'app_api' => [
+            \App\Http\Middleware\SetAcceptHeader::class,
+            \App\Http\Middleware\AcceptLanguage::class,
+            // \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
+            \Illuminate\Routing\Middleware\ThrottleRequests::class . ':app_api',
+            \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            \App\Http\Middleware\ClearCach::class,
+        ],
+
     ];
 
     /**
