@@ -64,7 +64,9 @@ Route::group(['middleware' => 'auth:admin'], function () {
 
     Route::group(['prefix' => 'users', 'as' => 'users.'], function () {
         Route::controller(\App\Http\Controllers\Admin\UserController::class)->group(function () {
-            Route::get('index', 'index')->name('index'); // We can add permissions later
+            Route::get('index', 'index')->name('index')->can('VIEW_USERS');
+            Route::get('create', 'create')->name('create');
+            Route::post('updateOrCreate', 'updateOrCreate')->name('updateOrCreate');
         });
     });
 

@@ -14,7 +14,8 @@
                 "VIEW_ADMINS",
                 "VIEW_INFOS",
                 "VIEW_PAGES",
-                "VIEW_SETTINGS"
+                "VIEW_SETTINGS",
+                "VIEW_USERS"
             ]
         },
         {
@@ -75,6 +76,20 @@
             ],
             "permissions": [
                 "VIEW_ADMINS"
+            ]
+        },
+        {
+            "url": "admin/users/index",
+            "name": "users",
+            "icon": "users",
+            "slug": [
+                "users"
+            ],
+            "permissions": [
+                "VIEW_USERS",
+                "CREATE_USERS",
+                "UPDATE_USERS",
+                "DELETE_USERS"
             ]
         },
         {

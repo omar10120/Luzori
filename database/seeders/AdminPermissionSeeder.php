@@ -166,5 +166,32 @@ class AdminPermissionSeeder extends Seeder
             'guard_name' => 'admin',
         ]);
         // END SETTINGS
+
+        // START USERS
+        Permission::create([
+            'name' => 'VIEW_USERS',
+            'name_ar' => 'عرض المستخدمين',
+            'group' => 'Users',
+            'guard_name' => 'admin',
+        ]);
+        Permission::create([
+            'name' => 'CREATE_USERS',
+            'name_ar' => 'إضافة مستخدم',
+            'group' => 'Users',
+            'guard_name' => 'admin',
+        ]);
+        Permission::create([
+            'name' => 'UPDATE_USERS',
+            'name_ar' => 'تعديل مستخدم',
+            'group' => 'Users',
+            'guard_name' => 'admin',
+        ]);
+        Permission::create([
+            'name' => 'DELETE_USERS',
+            'name_ar' => 'حذف مستخدم',
+            'group' => 'Users',
+            'guard_name' => 'admin',
+        ]);
+        // END USERS
     }
 }

@@ -29,7 +29,7 @@ class UserDataTable extends DataTable
                 $id = $item->id;
                 $model = $this->model;
                 $options = [
-                    'edit' => false,
+                    'edit' => true,
                     'delete' => true,
                     'permissions' => false,
                     'operation' => DeleteActionEnum::FORCE_DELETE->value,

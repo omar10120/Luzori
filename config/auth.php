@@ -84,6 +84,11 @@ return [
             'driver' => 'eloquent',
             'model' => App\Models\CenterUser::class,
         ],
+        'appusers' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\AppUser::class,
+        ]
+        
     ],
 
     /*

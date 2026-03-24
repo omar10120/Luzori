@@ -3,47 +3,47 @@
         <i class="fas fa-ellipsis-v"></i>
     </button>
     <div class="dropdown-menu dropdown-menu-end">
-        @isset($options['print'])
+        @if(!empty($options['print']))
             <a class="dropdown-item" href="{{ route($route . '.print', ['id' => $id]) }}" target="_blank">
                 <i class="ti ti-print"></i>{{ __('general.print') }}
             </a>
-        @endisset
-        @isset($options['vacation'])
+        @endif
+        @if(!empty($options['vacation']))
             <a class="dropdown-item" href="{{ route('center_user.vacations.create', ['id' => $id]) }}">
                 <i class="ti ti-plus"></i>{{ __('field.vacations') }}
             </a>
-        @endisset
-        @isset($options['show-user-to-wallet'])
+        @endif
+        @if(!empty($options['show-user-to-wallet']))
             <a class="dropdown-item" href="{{ route('center_user.users_wallets.showUsers', ['id' => $id]) }}">
                 <i class="ti ti-eye"></i>{{ __('field.show_users') }}
             </a>
-        @endisset
-        @isset($options['add-user-to-wallet'])
+        @endif
+        @if(!empty($options['add-user-to-wallet']))
             <a class="dropdown-item" href="{{ route('center_user.users_wallets.create', ['id' => $id]) }}">
                 <i class="ti ti-plus"></i>{{ __('field.add_user') }}
             </a>
-        @endisset
-        @isset($options['show'])
+        @endif
+        @if(!empty($options['show']))
             <a class="dropdown-item" href="{{ route($route . '.show', ['id' => $id]) }}">
                 <i class="ti ti-eye"></i>{{ __('general.show') }}
             </a>
-        @endisset
-        @isset($options['edit'])
+        @endif
+        @if(!empty($options['edit']))
             <a class="dropdown-item" href="{{ route($route . '.create', ['id' => $id]) }}">
                 <i class="ti ti-pin"></i>{{ __('general.edit') }}
             </a>
-        @endisset
-        @isset($options['permissions'])
+        @endif
+        @if(!empty($options['permissions']))
             <a class="dropdown-item" href="{{ route($route . '.permissions', ['id' => $id]) }}">
                 <i class="ti ti-shield"></i>{{ __('general.permissions') }}
             </a>
-        @endisset
-        @isset($options['delete'])
+        @endif
+        @if(!empty($options['delete']))
             <a class="dropdown-item" data-id="{{ $id }}" href="#"
                 onclick="deleteEntity('{{ $model }}', '{{ $id }}', '{{ $options['operation'] }}', '{{ $options['with_trashed'] }}')">
                 <i class="ti ti-trash"></i>{{ __('general.delete') }}
             </a>
-        @endisset
+        @endif
     </div>
 </div>
 
