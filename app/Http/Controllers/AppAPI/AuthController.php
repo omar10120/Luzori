@@ -70,7 +70,39 @@ class AuthController extends Controller
     public function profile(Request $request)
     {
         $user = $request->user();
+        $user->image_url = $user->getFirstMediaUrl('PrimaryImage');
         return MyHelper::responseJSON(__('api.doneSuccessfully'), Response::HTTP_OK, $user);
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $user = $request->user();
+
+        $request->validate([
+            'first_name' => 'nullable|string|max:255',
+            'last_name' => 'nullable|string|max:255',
+            'email' => 'nullable|string|email|max:255|unique:users,email,' . $user->id,
+            'phone' => 'nullable|string|unique:users,phone,' . $user->id,
+            'password' => 'nullable|string|min:6|confirmed',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+        ]);
+
+        $data = $request->only(['first_name', 'last_name', 'email', 'phone']);
+        
+        if ($request->filled('password')) {
+            $data['password'] = $request->password;
+        }
+
+        $user->update(array_filter($data));
+
+        if ($request->hasFile('image')) {
+            $user->clearMediaCollection('PrimaryImage');
+            $user->addMediaFromRequest('image')->toMediaCollection('PrimaryImage');
+        }
+
+        $user->image_url = $user->getFirstMediaUrl('PrimaryImage');
+
+        return MyHelper::responseJSON(__('api.updateSuccessfully') ?? 'Profile updated successfully', Response::HTTP_OK, $user);
     }
 
     public function logout(Request $request)
