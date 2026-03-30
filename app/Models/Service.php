@@ -44,4 +44,9 @@ class Service extends Model implements HasMedia
     {
         return $this->belongsTo(CategoryService::class, 'category_id');
     }
+
+    public function workers()
+    {
+        return $this->belongsToMany(Worker::class, 'workers_services', 'service_id', 'worker_id');
+    }
 }

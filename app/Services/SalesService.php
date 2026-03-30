@@ -29,7 +29,7 @@ class SalesService
     /**
      * Process cart and create sale with all related records
      */
-    public function processSale($cartData)
+    public function processSale($cartData, $overrides = [])
     {
         DB::beginTransaction();
         try {
@@ -44,11 +44,11 @@ class SalesService
             $tip = $cartData['tip'] ?? 0;
             $total = $subtotal + $tax + $tip;
 
-            // Get branch
-            $branchId = auth('center_user')->user()->branch_id ?? Branch::first()->id ?? null;
+            // Get branch with override support
+            $branchId = $overrides['branch_id'] ?? (auth('center_user')->user()->branch_id ?? (Branch::first()->id ?? null));
             
             if (!$branchId) {
-                throw new \Exception('No branch found for this user');
+                throw new \Exception('No branch found for this sale');
             }
 
             // Create Sale record
@@ -60,7 +60,7 @@ class SalesService
                 'worker_id' => $cartData['worker_id'] ?? null,
                 'client_id' => $cartData['client_id'] ?? null,
                 'branch_id' => $branchId,
-                'created_by' => auth('center_user')->id() ?? auth('center_api')->id(),
+                'created_by' => $overrides['created_by'] ?? (auth('center_user')->id() ?? auth('center_api')->id()),
             ]);
 
             // Separate items by type
@@ -104,7 +104,7 @@ class SalesService
                     $paymentType = $item['payment_type'];
                 }
                 $is_free = !empty($item['membership_id']) ? true : false;
-                $booking = $this->createBookingFromCartItem($item, $sale->id, $branchId, $paymentType, $bookingSubtotal, $is_free, $tip, $cartData['worker_id'] ?? null);
+                $booking = $this->createBookingFromCartItem($item, $sale->id, $branchId, $paymentType, $bookingSubtotal, $is_free, $tip, $cartData['worker_id'] ?? null, $cartData['client_id'] ?? null, $overrides['created_by'] ?? null);
                 
                 SaleItem::create([
                     'sale_id' => $sale->id,
@@ -280,7 +280,7 @@ class SalesService
      * Create Booking from cart item (one booking with one or more services)
      */
     
-    private function createBookingFromCartItem($item, $saleId, $branchId, $paymentType = null, $bookingTotal = 0,$is_free, &$tip, $tipWorkerId = null)
+    private function createBookingFromCartItem($item, $saleId, $branchId, $paymentType = null, $bookingTotal = 0,$is_free, &$tip, $tipWorkerId = null, $clientId = null, $createdBy = null)
     {
         $services = $item['services'] ?? null;
         if (!empty($services) && is_array($services)) {
@@ -299,9 +299,9 @@ class SalesService
             'mobile' => $item['client_mobile'] ?? null,
             'payment_type' => !empty($paymentType) ? $paymentType : (\App\Models\PaymentMethod::forBooking()->first()->name ?? 'service_cash'),
             'branch_id' => $branchId,
-            'user_id' => null,
+            'user_id' => $clientId,
             'sale_id' => $saleId,
-            'created_by' => auth('center_user')->id() ?? auth('center_api')->id(),
+            'created_by' => $createdBy ?? (auth('center_user')->id() ?? auth('center_api')->id()),
         ]);
 
         if (!empty($services) && is_array($services)) {

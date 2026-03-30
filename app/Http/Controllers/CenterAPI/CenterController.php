@@ -62,8 +62,8 @@ class CenterController extends Controller
 
                 // Fetch data from the switched mysql connection
                 $center->branches = Branch::all();
-                $center->categories = CategoryService::with('services')->get();
-                $center->services = Service::where('is_top', true)->get(); // Example: Top services
+                $center->categories = CategoryService::with('services.workers')->get();
+                $center->services = Service::with('workers')->where('is_top', true)->get(); // Example: Top services
             }
 
             return MyHelper::responseJSON(__('api.doneSuccessfully'), Response::HTTP_OK, CenterResource::make($center));

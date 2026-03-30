@@ -23,6 +23,12 @@ Route::prefix('auth')->group(function () {
     });
 });
 
+Route::middleware('auth:sanctum')->group(function () {
+    Route::prefix('booking')->group(function () {
+        Route::post('store', [\App\Http\Controllers\AppAPI\BookingController::class, 'store']);
+    });
+});
+
 Route::middleware('auth:sanctum')->prefix('wallet')->controller(WalletController::class)->group(function () {
     Route::get('balance', 'balance');
     Route::get('payment-methods', 'paymentMethods');
