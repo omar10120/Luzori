@@ -193,5 +193,14 @@ class AdminPermissionSeeder extends Seeder
             'guard_name' => 'admin',
         ]);
         // END USERS
+
+        // START BOOKINGS
+        Permission::create([
+            'name' => 'VIEW_BOOKINGS',
+            'name_ar' => 'عرض الحجوزات',
+            'group' => 'Bookings',
+            'guard_name' => 'admin',
+        ]);
+        
     }
 }

@@ -149,10 +149,10 @@ return [
     'select_if_the_service_has_commission' => 'اختر إذا كانت الخدمة لها عمولة',
     'select_a_supplier_from_the_list' => 'اختر مورد من القائمة',
     'select_a_services_from_the_list' => 'حدد خدمة من القائمة',
-    'optional',
+    'optional' => 'اختياري',
     'Tip will be for this worker' => ' سيتم تحديد الدرهم لهذا الموظف',
     'sms_sale_confirmation' => 'شكراً لك {user_name}. عملية الشراء الفعالة من {salon_name}. رقم الفاتورة هو {bill_number}',
     'all' => 'الكل',   
-    
-
+    'all_centers' => 'جميع الصالونات',
+    'all_bookings' => 'جميع الحجوزات',
 ];

@@ -62,6 +62,12 @@ Route::group(['middleware' => 'auth:admin'], function () {
         });
     });
 
+    Route::group(['prefix' => 'bookings', 'as' => 'bookings.'], function () {
+        Route::controller(\App\Http\Controllers\Admin\BookingController::class)->group(function () {
+            Route::get('index', 'index')->name('index')->can('VIEW_CENTERS');
+        });
+    });
+
     Route::group(['prefix' => 'users', 'as' => 'users.'], function () {
         Route::controller(\App\Http\Controllers\Admin\UserController::class)->group(function () {
             Route::get('index', 'index')->name('index')->can('VIEW_USERS');

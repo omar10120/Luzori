@@ -49,6 +49,17 @@
             ]
         },
         {
+            "url": "admin/bookings/index",
+            "name": "bookings",
+            "icon": "calendar",
+            "slug": [
+                "bookings"
+            ],
+            "permissions": [
+                "VIEW_CENTERS"
+            ]
+        },
+        {
             "menuHeader": "roles_admins",
             "slug": [],
             "permissions": [

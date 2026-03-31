@@ -307,6 +307,7 @@ return [
     'no_supplier'                     => 'بدون مورد',
     'local'                           => 'محلي',
     'no_payee'                        => 'بدون مدين',
-    'not_selected'                    => 'غير محدد',
-    
+    'not_selected'                    => 'Not Selected',
+    'center_email'                    => 'Center Email',
+    'booking_number'                  => 'Booking Number',
 ];
