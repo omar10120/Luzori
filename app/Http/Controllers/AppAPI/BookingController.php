@@ -56,8 +56,8 @@ class BookingController extends Controller
                     'first_name' => $appUser->first_name,
                     'last_name' => $appUser->last_name,
                     'email' => $appUser->email,
-                    'phone' => $appUser->phone,
-                    'country_code' => $appUser->country_code,
+                    'phone' => $appUser->phone ?? '-',
+                    'country_code' => $appUser->country_code ?? '+',
                     'branch_id' => $request->branch_id,
                     'wallet' => 0,
                 ]);
