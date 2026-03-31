@@ -38,4 +38,7 @@ return [
     'domain_dont_exists'                            => 'Domain Don\'t Exists',
     'userNotFound'                                  => 'User Not Found',
     'registerSuccessfully'                          => 'Register Successfully',
+    'outside_booking'                               => 'Outside Booking',
+    'inside_booking'                                => 'Inside Booking',
+    'booking_source'                                => 'Booking Source',
 ];

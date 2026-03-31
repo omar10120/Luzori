@@ -331,6 +331,7 @@ class SalesService
                     'to_time' => $svc['to_time'],
                     'commission' => $svc['commission'] ?? null,
                     'commission_type' => $svc['commission_type'] ?? null,
+                    'booking_source' => $item['booking_source'] ?? 'inside_booking',
                 ]);
             }
         } else {
@@ -360,6 +361,7 @@ class SalesService
                 'to_time' => $item['to_time'],
                 'commission' => $item['commission'] ?? null,
                 'commission_type' => $item['commission_type'] ?? null,
+                'booking_source' => $item['booking_source'] ?? 'inside_booking',
             ]);
         }
 

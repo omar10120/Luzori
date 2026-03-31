@@ -24,6 +24,7 @@ return new class extends Migration
             $table->foreignId('booking_id')->nullable()->constrained('bookings')->onDelete('cascade');
             $table->foreignId('worker_id')->nullable()->constrained('workers')->onDelete('cascade');
             $table->foreignId('service_id')->nullable()->constrained('services')->onDelete('cascade');
+            $table->enum('booking_source', ['inside_booking', 'outside_booking'])->default('inside_booking');
             $table->timestamps();
         });
     }

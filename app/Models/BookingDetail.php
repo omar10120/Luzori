@@ -25,6 +25,7 @@ class BookingDetail extends Model
         'booking_id',
         'worker_id',
         'service_id',
+        'booking_source',
     ];
 
     public function booking(): BelongsTo

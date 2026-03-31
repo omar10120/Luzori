@@ -38,4 +38,8 @@ return [
     'domain_dont_exists'                            => 'النطاق غير موجود',
     'userNotFound'                                  => 'المستخدم غير موجود',
     'registerSuccessfully'                          => 'تم التسجيل بنجاح',
+    'outside_booking'                               => 'حجز عن طريق البوابة',
+    'inside_booking'                                => 'حجز عن طريق المركز',
+    'booking_source'                                => 'مصدر الحجز',
+
 ];

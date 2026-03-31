@@ -152,6 +152,7 @@ return [
     'optional',
     'Tip will be for this worker' => ' سيتم تحديد الدرهم لهذا الموظف',
     'sms_sale_confirmation' => 'شكراً لك {user_name}. عملية الشراء الفعالة من {salon_name}. رقم الفاتورة هو {bill_number}',
+    'all' => 'الكل',   
     
 
 ];

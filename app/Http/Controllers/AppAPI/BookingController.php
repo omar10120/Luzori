@@ -83,6 +83,7 @@ class BookingController extends Controller
                     'payment_type' => $request->payment_type ?? 'service_cash',
                     'client_name' => $tenantUser->name,
                     'client_mobile' => $tenantUser->phone,
+                    'booking_source' => 'outside_booking',
                 ];
             }
 

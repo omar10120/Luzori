@@ -247,6 +247,34 @@ class SalesDataTable extends DataTable
 
                 return empty($types) ? '-' : implode(', ', $types);
             })
+            ->addColumn('booking_source', function ($row) {
+                $sources = [];
+                foreach ($row->saleItems as $saleItem) {
+                    if ($saleItem->item_type === 'booking' && $saleItem->itemable) {
+                        $booking = $saleItem->itemable;
+                        foreach ($booking->details as $detail) {
+                            $source = $detail->booking_source ?? 'inside_booking';
+                            if (!in_array($source, $sources, true)) {
+                                $sources[] = $source;
+                            }
+                        }
+                    }
+                }
+                
+                if (empty($sources)) {
+                    return '-';
+                }
+                
+                $html = '';
+                foreach ($sources as $source) {
+                    if ($source === 'outside_booking') {
+                        $html .= '<span class="badge bg-label-info mb-1">' . __('api.outside_booking') . '</span><br>';
+                    } else {
+                        $html .= '<span class="badge bg-label-secondary mb-1">' . __('api.inside_booking') . '</span><br>';
+                    }
+                }
+                return $html;
+            })
             ->addColumn('product_payment', function ($row) {
                 $types = [];
 
@@ -352,7 +380,7 @@ class SalesDataTable extends DataTable
                             </span>
                         </label>';
             })
-            ->rawColumns(['status', 'worker.name', 'client.name', 'services', 'products', 'coupons', 'booking_employees', 'product_employees'], true)
+            ->rawColumns(['status', 'worker.name', 'client.name', 'services', 'products', 'coupons', 'booking_employees', 'product_employees', 'booking_source'], true)
             ->setRowId('id');
     }
 
@@ -394,6 +422,15 @@ class SalesDataTable extends DataTable
             $query->where('branch_id', request()->input('branch_id'));
         });
 
+        $query->when(request()->has('booking_source'), function ($query) {
+            $source = request()->input('booking_source');
+            if ($source === 'inside_booking' || $source === 'outside_booking') {
+                $query->whereHas('bookings.details', function ($q) use ($source) {
+                    $q->where('booking_source', $source);
+                });
+            }
+        });
+
         return $query->orderBy($this->plural . '.id', 'DESC');
     }
 
@@ -406,7 +443,11 @@ class SalesDataTable extends DataTable
             ->setTableId($this->plural . '-table')
             ->addTableClass('dt-responsive')
             ->columns($this->getColumns())
-            ->minifiedAjax()
+            ->ajax([
+                'data' => 'function(d) {
+                    d.booking_source = $("#booking_source_filter").val();
+                }',
+            ])
             ->orderBy(1)
             ->responsive(true)
             ->dom('
@@ -440,7 +481,19 @@ class SalesDataTable extends DataTable
             ->language($this->getDataTableLanguageUrl())
             ->addTableClass('table table-bordered table-hover')
             ->initComplete('function () {
-             $(".dt-action-buttons").append("<a href=' . $addRoute . ' class=\"btn btn-primary btn-sm mx-1 mx-md-2 px-2 px-md-3 py-1 py-md-2\">' . __('general.add_new') . '<i class=\"ti ti-plus\"></i></a>");
+                var filterHtml = \'<select id="booking_source_filter" class="form-select form-select-sm d-inline-block ms-2" style="width: auto;">\' +
+                    \'<option value="">' . __('general.all') . '</option>\' +
+                    \'<option value="inside_booking">' . (__('api.inside_booking') ?? 'Inside Booking') . '</option>\' +
+                    \'<option value="outside_booking">' . (__('api.outside_booking') ?? 'Outside Booking') . '</option>\' +
+                \'</select>\';
+                
+                $(".dt-action-buttons").append(filterHtml);
+                
+                $("#booking_source_filter").on("change", function() {
+                    window.LaravelDataTables["sales-table"].draw();
+                });
+
+                $(".dt-action-buttons").append("<a href=\'' . $addRoute . '\' class=\'btn btn-primary btn-sm mx-1 mx-md-2 px-2 px-md-3 py-1 py-md-2\'>' . __('general.add_new') . '<i class=\'ti ti-plus\'></i></a>");
             }')
             ->parameters([]);
     }
@@ -469,6 +522,7 @@ class SalesDataTable extends DataTable
             Column::computed('product_payment')->searchable(true)->title(__('field.payment_method') . ' (' . __('locale.products') . ')'),
             Column::computed('coupon_payment')->searchable(true)->title(__('field.payment_method') . ' (' . __('field.coupons') . ')'),
             Column::make('created_at')->searchable(true)->title(__('field.created_at')),
+            Column::computed('booking_source')->searchable(false)->title(__('api.booking_source') ?? 'Source'),
             Column::computed('booking_employees')->searchable(false)->title(__('field.employee') . ' (' . __('locale.bookings') . ')'),
             Column::computed('product_employees')->searchable(false)->title(__('field.employee') . ' (' . __('locale.products') . ')'),
             Column::computed('worker.name')->searchable(true)->title(__('field.worker')),
@@ -484,7 +538,7 @@ class SalesDataTable extends DataTable
     }
 
     protected function filename(): string
-    {
+    {   
         return $this->plural . '_' . date('YmdHis');
     }
 }

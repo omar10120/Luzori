@@ -154,7 +154,8 @@ return [
     'select_a_services_from_the_list' => 'Select a service from the list',
     'optional',
     'Tip will be for this worker' => 'Tip will be for this worker',
-    'sms_sale_confirmation' => 'Thank you {user_name}. The efficient purchase process from {salon_name}. The bill number is {bill_number}'
+    'sms_sale_confirmation' => 'Thank you {user_name}. The efficient purchase process from {salon_name}. The bill number is {bill_number}',
+    'all' => 'all'
       
     
     ];
