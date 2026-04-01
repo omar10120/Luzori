@@ -24,7 +24,8 @@ class ServiceResource extends JsonResource
                         'id' => $worker->id,
                         'name' => $worker->name,
                         'image' => $worker->getFirstMediaUrl('Worker') ?: asset('assets/img/avatars/1.png'),
-                        'has_commission' => $worker->has_commission
+                        'has_commission' => $worker->has_commission,
+                        'branch_id' => $worker->branch_id,
                     ];
                 });
             }, []),

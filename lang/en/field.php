@@ -315,6 +315,8 @@ return [
     'local'                           => 'Local',
     'no_payee'                        => 'No Payee',
     'not_selected'                    => 'Not Selected',
+    'center_email'                    => 'Center Email',
+    'booking_number'                  => 'Booking Number',
     
     
     
