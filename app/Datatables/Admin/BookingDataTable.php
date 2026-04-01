@@ -77,16 +77,23 @@ class BookingDataTable extends DataTable
                 $class = $row->deleted_at ? 'bg-label-danger' : 'bg-label-success';
                 return '<span class="badge ' . $class . '">' . $status . '</span>';
             })
+            ->addColumn('booking_source', function ($row) {
+                $source = $row->details->first()->booking_source ?? 'inside_booking';
+                $class = $source === 'outside_booking' ? 'bg-label-info' : 'bg-label-secondary';
+                $label = $source === 'outside_booking' ? (__('api.outside_booking') ?? 'Outside') : (__('api.inside_booking') ?? 'Inside');
+                return '<span class="badge ' . $class . '">' . $label . '</span>';
+            })
             ->addColumn('commission', function ($row) {
                 return $row->details->map(fn($d) => ($d->commission ?? '0') . ($d->commission_type === 'percent' ? '%' : ''))->implode(', ');
             })
-            ->rawColumns(['booking_status', 'service_time'])
+            ->rawColumns(['booking_status', 'service_time', 'booking_source'])
             ->setRowId('id');
     }
 
     public function query(Booking $model)
     {
         $centerId = request()->get('center_id');
+        $bookingSource = request()->get('booking_source');
         
         if ($centerId) {
             $center = Center::find($centerId);
@@ -97,7 +104,12 @@ class BookingDataTable extends DataTable
                 
                 $query = $model->newQuery()->with(['details.service.translation', 'details.worker', 'user', 'branch', 'sale.buyProducts.details.product.translation'])->orderBy('id', 'desc');
                 
-                // Add center info to each row manually after fetching if needed, or handle in dataTable
+                if ($bookingSource) {
+                    $query->whereHas('details', function($q) use ($bookingSource) {
+                        $q->where('booking_source', $bookingSource);
+                    });
+                }
+                
                 return $query;
             }
         }
@@ -111,10 +123,16 @@ class BookingDataTable extends DataTable
                 DB::purge('mysql');
                 DB::reconnect('mysql');
                 
-                $bookings = Booking::with(['details.service.translation', 'details.worker', 'user', 'branch', 'sale.buyProducts.details.product.translation'])
-                    ->orderBy('id', 'desc')
-                    ->limit(20) 
-                    ->get();
+                $query = Booking::with(['details.service.translation', 'details.worker', 'user', 'branch', 'sale.buyProducts.details.product.translation'])
+                    ->orderBy('id', 'desc');
+                
+                if ($bookingSource) {
+                    $query->whereHas('details', function($q) use ($bookingSource) {
+                        $q->where('booking_source', $bookingSource);
+                    });
+                }
+                
+                $bookings = $query->limit(20)->get();
                     
                 foreach ($bookings as $booking) {
                     $booking->center_email = $center->email;
@@ -142,6 +160,7 @@ class BookingDataTable extends DataTable
                 'url' => route('admin.bookings.index'),
                 'data' => 'function(d) {
                     d.center_id = $("#center_filter").val();
+                    d.booking_source = $("#booking_source_filter").val();
                 }',
             ])
             ->orderBy(1)
@@ -185,9 +204,16 @@ class BookingDataTable extends DataTable
                 
                 filterHtml += \'</select>\';
                 
+                var sourceFilterHtml = \'<select id="booking_source_filter" class="form-select form-select-sm d-inline-block ms-2" style="width: auto;">\' +
+                    \'<option value="">' . __('api.booking_source') . '</option>\' +
+                    \'<option value="inside_booking">' . __('api.inside_booking') . '</option>\' +
+                    \'<option value="outside_booking">' . __('api.outside_booking') . '</option>\' +
+                \'</select>\';
+                
+                $(".dt-action-buttons").prepend(sourceFilterHtml);
                 $(".dt-action-buttons").prepend(filterHtml);
                 
-                $("#center_filter").on("change", function() {
+                $("#center_filter, #booking_source_filter").on("change", function() {
                     window.LaravelDataTables["bookings-table"].draw();
                 });
             }');
@@ -218,6 +244,7 @@ class BookingDataTable extends DataTable
             Column::computed('service_time')->title(__('field.time') ?? 'Time'),
             Column::computed('purchased_products')->title(__('field.products') ?? 'Products'),
             Column::computed('booking_status')->title(__('field.status') ?? 'Status'),
+            Column::computed('booking_source')->title(__('api.booking_source') ?? 'Source'),
             Column::computed('commission')->title(__('field.commission') ?? 'Commission (%)'),
         ];
     }
