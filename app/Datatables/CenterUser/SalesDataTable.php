@@ -276,10 +276,31 @@ class SalesDataTable extends DataTable
                 return $html;
             })
             ->addColumn('status', function ($row) {
-                if (!$row->client) {
+                // Find all bookings associated with this sale
+                $booking = $row->bookings->first();
+                if (!$booking) {
                     return '-';
                 }
-                return $row->client->status ?? $row->client->status ?? '-';
+
+                $firstDetail = $booking->details->first();
+                $status = $firstDetail->status ?? 'confirmed';
+                $source = $firstDetail->booking_source ?? 'inside_booking';
+
+                // Handle inside bookings (just look at deleted_at)
+                if ($source !== 'outside_booking') {
+                    $deletedStatus = $booking->deleted_at ? 'cancelled' : 'confirmed';
+                    $class = $booking->deleted_at ? 'bg-label-danger' : 'bg-label-success';
+                    return '<span class="badge ' . $class . '">' . __('field.booking_status_' . $deletedStatus) . '</span>';
+                }
+
+                // Handle outside bookings (use the new status column)
+                $map = [
+                    'pending'   => 'bg-label-warning',
+                    'confirmed' => 'bg-label-success',
+                    'rejected'  => 'bg-label-danger',
+                ];
+                $class = $map[$status] ?? 'bg-label-secondary';
+                return '<span class="badge ' . $class . '">' . __('field.booking_status_' . $status) . '</span>';
             })
             ->addColumn('product_payment', function ($row) {
                 $types = [];
@@ -361,30 +382,11 @@ class SalesDataTable extends DataTable
             ->editColumn('client.name', function ($row) {
                 return \App\Helpers\MyHelper::truncateWithReadMore($row->client?->name ?? __('general.walk_in'));
             })
-            ->editColumn('tip', function ($row) {
+             ->editColumn('tip', function ($row) {
                 return $row->tip > 0 ? number_format($row->tip, 2) . ' ' . trim(get_currency()) : '-';
             })
             ->editColumn('total', function ($row) {
                 return number_format($row->total, 2) . ' ' . trim(get_currency());
-            })
-     ->editColumn('status', function ($row) {
-                $user = auth('center_user')->user();
-                $canDelete = $user && $user->can('DELETE_SALES', 'center_api');
-                
-                if (!$canDelete) {
-                    return '-';
-                }
-                
-                $checked = $row->deleted_at ? '' : 'checked';
-                $operation = $row->deleted_at ? DeleteActionEnum::RESTORE_DELETED->value : DeleteActionEnum::SOFT_DELETE->value;
-                return '<label class="switch switch-square">
-                            <input onChange="changeStatus(\'' . $this->model . '\',\'' . $row->id . '\',\'' . $operation . '\')"
-                                type="checkbox" class="switch-input"' . $checked . '>
-                            <span class="switch-toggle-slider">
-                            <span class="switch-on"></span>
-                            <span class="switch-off"></span>
-                            </span>
-                        </label>';
             })
             ->rawColumns(['status', 'worker.name', 'client.name', 'services', 'products', 'coupons', 'booking_employees', 'product_employees', 'booking_source'], true)
             ->setRowId('id');
