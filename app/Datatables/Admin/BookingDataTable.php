@@ -73,9 +73,24 @@ class BookingDataTable extends DataTable
                 return '---';
             })
             ->addColumn('booking_status', function ($row) {
-                $status = $row->deleted_at ? 'Cancelled' : 'Confirmed';
-                $class = $row->deleted_at ? 'bg-label-danger' : 'bg-label-success';
-                return '<span class="badge ' . $class . '">' . $status . '</span>';
+                $detail = $row->details->first();
+                $status = $detail->status ?? ($row->deleted_at ? 'rejected' : 'confirmed');
+                $source = $detail->booking_source ?? 'inside_booking';
+
+                if ($source !== 'outside_booking') {
+                    $statusLabel = $row->deleted_at ? 'Cancelled' : 'Confirmed';
+                    $class = $row->deleted_at ? 'bg-label-danger' : 'bg-label-success';
+                    return '<span class="badge ' . $class . '">' . $statusLabel . '</span>';
+                }
+
+                $map = [
+                    'pending'   => ['class' => 'bg-label-warning', 'label' => 'Pending'],
+                    'confirmed' => ['class' => 'bg-label-success', 'label' => 'Confirmed'],
+                    'rejected'  => ['class' => 'bg-label-danger', 'label' => 'Rejected'],
+                ];
+
+                $config = $map[$status] ?? ['class' => 'bg-label-secondary', 'label' => ucfirst($status)];
+                return '<span class="badge ' . $config['class'] . '">' . $config['label'] . '</span>';
             })
             ->addColumn('booking_source', function ($row) {
                 $source = $row->details->first()->booking_source ?? 'inside_booking';
@@ -97,6 +112,7 @@ class BookingDataTable extends DataTable
     {
         $centerId = request()->get('center_id');
         $bookingSource = request()->get('booking_source');
+        $date = request()->get('date');
         
         if ($centerId) {
             $center = Center::find($centerId);
@@ -111,6 +127,10 @@ class BookingDataTable extends DataTable
                     $query->whereHas('details', function($q) use ($bookingSource) {
                         $q->where('booking_source', $bookingSource);
                     });
+                }
+
+                if ($date) {
+                    $query->where('booking_date', $date);
                 }
                 
                 return $query;
@@ -133,6 +153,10 @@ class BookingDataTable extends DataTable
                     $query->whereHas('details', function($q) use ($bookingSource) {
                         $q->where('booking_source', $bookingSource);
                     });
+                }
+
+                if ($date) {
+                    $query->where('booking_date', $date);
                 }
                 
                 $bookings = $query->limit(20)->get();
@@ -164,6 +188,7 @@ class BookingDataTable extends DataTable
                 'data' => 'function(d) {
                     d.center_id = $("#center_filter").val();
                     d.booking_source = $("#booking_source_filter").val();
+                    d.date = $("#date_filter").val();
                 }',
             ])
             ->orderBy(1)
@@ -212,11 +237,14 @@ class BookingDataTable extends DataTable
                     \'<option value="inside_booking">' . __('api.inside_booking') . '</option>\' +
                     \'<option value="outside_booking">' . __('api.outside_booking') . '</option>\' +
                 \'</select>\';
+
+                var dateFilterHtml = \'<input type="date" id="date_filter" class="form-control form-control-sm d-inline-block ms-2" style="width: auto;">\';
                 
+                $(".dt-action-buttons").prepend(dateFilterHtml);
                 $(".dt-action-buttons").prepend(sourceFilterHtml);
                 $(".dt-action-buttons").prepend(filterHtml);
                 
-                $("#center_filter, #booking_source_filter").on("change", function() {
+                $("#center_filter, #booking_source_filter, #date_filter").on("change", function() {
                     window.LaravelDataTables["bookings-table"].draw();
                 });
             }');

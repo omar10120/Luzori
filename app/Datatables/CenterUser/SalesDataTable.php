@@ -275,6 +275,12 @@ class SalesDataTable extends DataTable
                 }
                 return $html;
             })
+            ->addColumn('status', function ($row) {
+                if (!$row->client) {
+                    return '-';
+                }
+                return $row->client->status ?? $row->client->status ?? '-';
+            })
             ->addColumn('product_payment', function ($row) {
                 $types = [];
 
@@ -523,15 +529,17 @@ class SalesDataTable extends DataTable
             Column::computed('coupon_payment')->searchable(true)->title(__('field.payment_method') . ' (' . __('field.coupons') . ')'),
             Column::make('created_at')->searchable(true)->title(__('field.created_at')),
             Column::computed('booking_source')->searchable(false)->title(__('api.booking_source') ?? 'Source'),
+            Column::computed('status')->searchable(false)->title(__('field.status')),
             Column::computed('booking_employees')->searchable(false)->title(__('field.employee') . ' (' . __('locale.bookings') . ')'),
             Column::computed('product_employees')->searchable(false)->title(__('field.employee') . ' (' . __('locale.products') . ')'),
             Column::computed('worker.name')->searchable(true)->title(__('field.worker')),
             Column::computed('tip')->searchable(false)->title(__('field.tip')),
             Column::computed('total')->searchable(false)->title(__('field.total')),
+
         ];
         
         if ($canDelete) {
-            $columns[] = Column::computed('status')->searchable(false)->title(__('field.status'));
+            // Removed duplicate status column
         }
         
         return $columns;

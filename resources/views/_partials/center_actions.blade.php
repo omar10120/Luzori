@@ -222,4 +222,42 @@
             }
         });
     }
+
+    function bookingAction(url, id) {
+        var title = "{{ __('admin.sure_edit') }}";
+        Swal.fire({
+            title: title,
+            icon: 'warning',
+            showDenyButton: true,
+            confirmButtonText: "{{ __('general.yes') }}",
+            denyButtonText: "{{ __('general.cancel') }}",
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: url,
+                    type: 'POST',
+                    dataType: 'json',
+                    data: {
+                        _token: '{{ csrf_token() }}',
+                        id: id
+                    },
+                    success: function(response) {
+                        Swal.fire({
+                            title: "{{ __('general.success') }}",
+                            icon: 'success',
+                            timer: 3000
+                        });
+                        $('.table').DataTable().ajax.reload();
+                    },
+                    error: function(response) {
+                        Swal.fire({
+                            title: "{{ __('general.error') }}",
+                            text: response.responseJSON ? response.responseJSON.message : "{{ __('general.error_occurred') }}",
+                            icon: 'error'
+                        });
+                    }
+                });
+            }
+        });
+    }
 </script>

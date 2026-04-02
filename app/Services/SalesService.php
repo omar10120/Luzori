@@ -332,6 +332,7 @@ class SalesService
                     'commission' => $svc['commission'] ?? null,
                     'commission_type' => $svc['commission_type'] ?? null,
                     'booking_source' => $item['booking_source'] ?? 'inside_booking',
+                    'status' => ($item['booking_source'] ?? 'inside_booking') === 'outside_booking' ? 'pending' : 'confirmed',
                 ]);
             }
         } else {
@@ -362,6 +363,7 @@ class SalesService
                 'commission' => $item['commission'] ?? null,
                 'commission_type' => $item['commission_type'] ?? null,
                 'booking_source' => $item['booking_source'] ?? 'inside_booking',
+                'status' => ($item['booking_source'] ?? 'inside_booking') === 'outside_booking' ? 'pending' : 'confirmed',
             ]);
         }
 

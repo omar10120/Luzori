@@ -156,7 +156,7 @@ return [
     'Tip will be for this worker' => 'Tip will be for this worker',
     'sms_sale_confirmation' => 'Thank you {user_name}. The efficient purchase process from {salon_name}. The bill number is {bill_number}',
     'all' => 'all',
-    'all_centers' => 'all centers'
-      
-    
-    ];
+    'all_centers' => 'all centers',
+    'confirm' => 'Confirm',
+    'reject' => 'Reject',
+];

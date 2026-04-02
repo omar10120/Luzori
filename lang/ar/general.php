@@ -155,4 +155,6 @@ return [
     'all' => 'الكل',   
     'all_centers' => 'جميع الصالونات',
     'all_bookings' => 'جميع الحجوزات',
+    'confirm' => 'تأكيد',
+    'reject' => 'رفض',
 ];

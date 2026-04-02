@@ -275,6 +275,8 @@ Route::group(['middleware' => 'auth_center_user:center_user'], function () {
             Route::post('updateOrCreate', 'updateOrCreate')->name('updateOrCreate');
             Route::get('get-services-by-user', 'getServicesByUser')->name('get-services-by-user');
             Route::get('print', 'print')->name('print');
+            Route::post('confirm', 'confirm')->name('confirm');
+            Route::post('reject', 'reject')->name('reject');
         });
     });
 

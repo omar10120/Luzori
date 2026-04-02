@@ -11,6 +11,7 @@ use App\Models\Discount;
 use App\Models\Worker;
 use App\Models\User;
 use App\Models\Service;
+use App\Models\BookingDetail;
 use App\Services\BookingService;
 use App\Services\CRUDService;
 use Illuminate\Http\Request;
@@ -157,5 +158,39 @@ class BookingController extends Controller
         $view = 'CenterUser.SubViews.' . $this->model . '.print';
         $pdf = Pdf::loadView($view, compact('booking', 'template'), [], $options);
         return $pdf->stream('booking.pdf');
+    }
+
+    public function confirm(Request $request)
+    {
+        $can = 'UPDATE_' . Str::upper($this->plural);
+        if (!auth('center_user')->user()->can($can, 'center_api')) {
+            return abort(403);
+        }
+
+        $booking = Booking::withTrashed()->findOrFail($request->id);
+        $booking->details()->update(['status' => 'confirmed']);
+
+        return MyHelper::responseJSON(__('api.editSuccessfully'), Response::HTTP_OK);
+    }
+
+    public function reject(Request $request)
+    {
+        $can = 'UPDATE_' . Str::upper($this->plural);
+        if (!auth('center_user')->user()->can($can, 'center_api')) {
+            return abort(403);
+        }
+
+        $booking = Booking::withTrashed()->with(['details', 'user'])->findOrFail($request->id);
+
+        // Update all details to rejected
+        $booking->details()->update(['status' => 'rejected']);
+
+        // Refund total price to user wallet
+        if ($booking->user) {
+            $totalPrice = $booking->details->sum('price');
+            $booking->user->increment('wallet', $totalPrice);
+        }
+
+        return MyHelper::responseJSON(__('api.editSuccessfully'), Response::HTTP_OK);
     }
 }

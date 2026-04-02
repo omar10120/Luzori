@@ -30,7 +30,41 @@ class BookingDataTable extends DataTable
                     'with_trashed' => 1,
                 ];
                 $html = view()->make('_partials.center_actions', compact('id', 'route', 'options', 'model'))->render();
+
+                // Add Confirm/Reject buttons for pending outside bookings
+                $firstDetail = $item->details->first();
+                if ($firstDetail && $firstDetail->booking_source === 'outside_booking' && $firstDetail->status === 'pending') {
+                    $confirmUrl = route('center_user.bookings.confirm');
+                    $rejectUrl  = route('center_user.bookings.reject');
+                    $html .= '<button type="button" onclick="bookingAction(\'' . $confirmUrl . '\', ' . $id . ')" class="btn btn-success btn-sm me-1" title="' . __('general.confirm') . '">
+                                <i class="ti ti-check"></i>
+                              </button>';
+                    $html .= '<button type="button" onclick="bookingAction(\'' . $rejectUrl . '\', ' . $id . ')" class="btn btn-danger btn-sm" title="' . __('general.reject') . '">
+                                <i class="ti ti-x"></i>
+                              </button>';
+                }
+
                 return $html;
+            })
+            ->editColumn('booking_status', function ($row) {
+                $firstDetail = $row->details->first();
+                $status = $firstDetail->status ?? 'confirmed';
+                $source = $firstDetail->booking_source ?? 'inside_booking';
+
+                // Only show status badge for outside bookings
+                if ($source !== 'outside_booking') {
+                    $deletedStatus = $row->deleted_at ? 'cancelled' : 'confirmed';
+                    $class = $row->deleted_at ? 'bg-label-danger' : 'bg-label-success';
+                    return '<span class="badge ' . $class . '">' . __('field.booking_status_' . $deletedStatus) . '</span>';
+                }
+
+                $map = [
+                    'pending'   => 'bg-label-warning',
+                    'confirmed' => 'bg-label-success',
+                    'rejected'  => 'bg-label-danger',
+                ];
+                $class = $map[$status] ?? 'bg-label-secondary';
+                return '<span class="badge ' . $class . '">' . __('field.booking_status_' . $status) . '</span>';
             })
             ->editColumn('status', function ($row) {
                 $checked = $row->deleted_at ? '' : 'checked';
@@ -55,7 +89,7 @@ class BookingDataTable extends DataTable
             ->editColumn('full_name', function ($row) {
                 return \App\Helpers\MyHelper::truncateWithReadMore($row->full_name ?? '');
             })
-            ->rawColumns(['details.service.translation.name', 'status', 'full_name'], true)
+            ->rawColumns(['details.service.translation.name', 'status', 'booking_status', 'full_name', 'action'], true)
             ->setRowId('id');
     }
 
@@ -145,6 +179,7 @@ class BookingDataTable extends DataTable
             Column::make('full_name')->searchable(true)->title(__('field.full_name')),
             Column::make('mobile')->searchable(true)->title(__('field.mobile')),
             Column::make('payment_type')->searchable(true)->title(__('field.payment_type')),
+            Column::computed('booking_status')->searchable(false)->title(__('field.booking_status')),
             Column::make('created_at')->searchable(true)->title(__('field.created_at')),
         ];
     }

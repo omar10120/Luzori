@@ -306,7 +306,6 @@ return [
     'tip_will_be_for_this_worker'    => 'Tip will be for this worker',
     'no_mobile'                      => 'No mobile',
     'created_by'                      => 'Created By',
-    'status'                          => 'Status',
     'active'                          => 'Active',
     'rate'                            => 'Rate',
     'inactive'                        => 'Inactive',
@@ -317,12 +316,11 @@ return [
     'not_selected'                    => 'Not Selected',
     'center_email'                    => 'Center Email',
     'booking_number'                  => 'Booking Number',
-    
-    
-    
-    
-    
-
-    
-    
+    'field'                           => 'Status',
+    'booking_status'                  => 'Status',
+    'booking_status_pending'          => 'Pending',
+    'booking_status_confirmed'        => 'Confirmed',
+    'booking_status_rejected'         => 'Rejected',
+    'booking_status_cancelled'        => 'Cancelled',
+    'ID'                              => 'ID'
 ];
