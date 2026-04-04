@@ -35,9 +35,14 @@ class SalesReportController extends Controller
         $selected_branch = $request->get('branch_id');
         $template = "";
         if (!empty($request->year)) {
-            $temp_report = Booking::whereRaw('YEAR(booking_date)="' . $request->get('year') . '"')
-                ->whereRaw('MONTH(booking_date)="' . $request->get('month') . '"')
-                ->with('details');
+            $temp_report = Booking::whereYear('booking_date', $request->get('year'))
+                ->whereMonth('booking_date', $request->get('month'))
+                ->whereHas('details', function ($query) {
+                    $query->where('status', 'confirmed');
+                })
+                ->with(['details' => function ($query) {
+                    $query->where('status', 'confirmed');
+                }]);
             if (!empty($request->get('branch_id'))) {
                 $temp_report->where('branch_id', $request->get('branch_id'));
             }
@@ -127,7 +132,10 @@ class SalesReportController extends Controller
                 }
             }
             
-            $temp_memberShipCards = UserUsedCard::with('booking', 'booking.details')->whereRaw('YEAR(created_at)="' . $request->get('year') . '" and MONTH(created_at)="' . $request->get('month') . '"');
+            $temp_memberShipCards = UserUsedCard::with(['booking', 'booking.details' => function($q) { $q->where('status', 'confirmed'); }])
+                ->whereHas('booking.details', function($q) { $q->where('status', 'confirmed'); })
+                ->whereYear('created_at', $request->get('year'))
+                ->whereMonth('created_at', $request->get('month'));
             if (get_user_role() == 1 || $selected_branch) {
                 $branch_id = $selected_branch ? $selected_branch : auth('center_user')->user()->branch_id;
                 $temp_memberShipCards->whereHas('booking', function ($query) use ($branch_id) {
@@ -158,7 +166,10 @@ class SalesReportController extends Controller
                     }
                 }
             }
-            $temp_discount = UserUsedDiscount::with('booking', 'booking.details')->whereRaw('YEAR(created_at)="' . $request->get('year') . '" and MONTH(created_at)="' . $request->get('month') . '"');
+            $temp_discount = UserUsedDiscount::with(['booking', 'booking.details' => function($q) { $q->where('status', 'confirmed'); }])
+                ->whereHas('booking.details', function($q) { $q->where('status', 'confirmed'); })
+                ->whereYear('created_at', $request->get('year'))
+                ->whereMonth('created_at', $request->get('month'));
             if (get_user_role() == 1 || $selected_branch) {
                 $branch_id = $selected_branch ? $selected_branch : auth('center_user')->user()->branch_id;
                 $temp_discount->whereHas('booking', function ($query) use ($branch_id) {

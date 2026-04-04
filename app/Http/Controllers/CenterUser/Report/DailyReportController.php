@@ -13,6 +13,7 @@ use App\Models\UserUsedDiscount;
 use App\Models\BuyProduct;
 use App\Models\UserWallet;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 use niklasravnsborg\LaravelPdf\Facades\Pdf;
 
 class DailyReportController extends Controller
@@ -56,7 +57,15 @@ class DailyReportController extends Controller
 
         if (!empty($date)) {
             $date = date('Y-m-d', strtotime($date));
-            $temp_report = Booking::whereRaw('booking_date="' . $date . '"')->with('details');
+            $temp_report = Booking::where('booking_date', $date)
+                ->whereHas('details', function ($query) {
+                    $query->where('status', 'confirmed');
+                })
+                ->with(['details' => function ($query) {
+                    $query->where('status', 'confirmed');
+                }]);
+            // $temp_report = Booking::whereRaw('booking_date="' . $date . '"')->with('details');
+            Log::info($temp_report->get());
             if ($selected_branch) {
                 $temp_report->where('branch_id', $selected_branch);
             }

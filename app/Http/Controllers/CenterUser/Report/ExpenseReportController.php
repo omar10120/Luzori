@@ -136,7 +136,12 @@ class ExpenseReportController extends Controller
 
         // Get bookings income
         $temp_bookings = Booking::whereBetween('booking_date', [$start_date, $end_date])
-            ->with('details');
+            ->whereHas('details', function ($query) {
+                $query->where('status', 'confirmed');
+            })
+            ->with(['details' => function ($query) {
+                $query->where('status', 'confirmed');
+            }]);
 
         if ($selected_branch) {
             $temp_bookings->where('branch_id', $selected_branch);

@@ -53,9 +53,14 @@ class CommissionReportController extends Controller
                 $result[$date] = $temp;
                 $result[$date]["total"] = 0;
             }
-            $temp_report = Booking::whereRaw('YEAR(booking_date)="' . $request->get('year') . '"')
-                ->whereRaw('MONTH(booking_date)="' . $request->get('month') . '"')
-                ->with('details');
+            $temp_report = Booking::whereYear('booking_date', $request->get('year'))
+                ->whereMonth('booking_date', $request->get('month'))
+                ->whereHas('details', function ($query) {
+                    $query->where('status', 'confirmed');
+                })
+                ->with(['details' => function ($query) {
+                    $query->where('status', 'confirmed');
+                }]);
             if (!empty($request->get('branch_id'))) {
                 $temp_report->where('branch_id', $request->get('branch_id'));
             }
