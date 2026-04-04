@@ -45,5 +45,6 @@ return [
     'Choose Commission'                     => 'Choose Commission',
     'searching'                             => 'Searching',
     'you_do_not_have_permission_to_perform_this_action' => 'You do not have permission to perform this action',
+    'sure_edit'                             => 'are you sure you want to confirm booking'
     
 ];

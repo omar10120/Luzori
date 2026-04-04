@@ -300,7 +300,26 @@ class SalesDataTable extends DataTable
                     'rejected'  => 'bg-label-danger',
                 ];
                 $class = $map[$status] ?? 'bg-label-secondary';
-                return '<span class="badge ' . $class . '">' . __('field.booking_status_' . $status) . '</span>';
+                $html = '<span class="badge ' . $class . '">' . __('field.booking_status_' . $status) . '</span>';
+
+                // Add confirm/reject actions for pending outside bookings
+                $user = auth('center_user')->user();
+                if ($status === 'pending' && $user && $user->can('UPDATE_BOOKINGS', 'center_api')) {
+                    $id = $booking->id;
+                    $confirmUrl = route('center_user.bookings.confirm');
+                    $rejectUrl = route('center_user.bookings.reject');
+
+                    $html .= '<div class="mt-1">
+                                <button type="button" onclick="bookingAction(\'' . $confirmUrl . '\', ' . $id . ')" class="btn btn-success btn-xs me-1" title="' . __('general.confirm') . '">
+                                    <i class="ti ti-check ti-xs"></i>
+                                </button>
+                                <button type="button" onclick="bookingAction(\'' . $rejectUrl . '\', ' . $id . ')" class="btn btn-danger btn-xs" title="' . __('general.reject') . '">
+                                    <i class="ti ti-x ti-xs"></i>
+                                </button>
+                              </div>';
+                }
+
+                return $html;
             })
             ->addColumn('product_payment', function ($row) {
                 $types = [];

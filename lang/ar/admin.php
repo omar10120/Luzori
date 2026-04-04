@@ -44,4 +44,6 @@ return [
     'Choose employee'                         => 'اختر عامل',
     'Choose Commission'                     => 'اختر خصم',
     'searching'                             => 'جاري البحث',
+    'sure_edit'                             => 'هل تريد تأكيد الحجز',
+    
 ];

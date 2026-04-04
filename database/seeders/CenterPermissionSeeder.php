@@ -476,6 +476,12 @@ class CenterPermissionSeeder extends Seeder
             'group' => 'Bookings',
             'guard_name' => 'center',
         ]);
+        Permission::create([
+            'name' => 'UPDATE_BOOKINGS',
+            'name_ar' => 'تعديل الحجز',
+            'group' => 'Bookings',
+            'guard_name' => 'center',
+        ]);
         // END BOOKINGS
 
         // START SALES
