@@ -167,7 +167,23 @@ class BookingController extends Controller
             return abort(403);
         }
 
-        $booking = Booking::withTrashed()->findOrFail($request->id);
+        $booking = Booking::withTrashed()->with('details')->findOrFail($request->id);
+        
+        // Calculate amount to credit center wallet (only for pending outside bookings)
+        $pendingOutsideAmount = $booking->details
+            ->where('status', 'pending')
+            ->where('booking_source', 'outside_booking')
+            ->sum('price');
+
+        if ($pendingOutsideAmount > 0) {
+            // Find center in central database by current database name
+            $currentDb = config('database.connections.mysql.database');
+            $center = \App\Models\Center::where('database', $currentDb)->first();
+            if ($center) {
+                $center->incrementWallet($pendingOutsideAmount);
+            }
+        }
+
         $booking->details()->update(['status' => 'confirmed']);
 
         return MyHelper::responseJSON(__('api.editSuccessfully'), Response::HTTP_OK);

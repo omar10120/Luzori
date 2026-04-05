@@ -171,30 +171,6 @@ class SalesService
                 ]);
             }
 
-            // 5. Update Center Wallet (For outside bookings)
-            if (!empty($overrides['center_id'])) {
-                $outsideBookingTotal = 0;
-                foreach ($serviceItems as $item) {
-                    if (($item['booking_source'] ?? '') === 'outside_booking') {
-                        // Sum up the subtotal for this outside booking
-                        if (!empty($item['services']) && is_array($item['services'])) {
-                            foreach ($item['services'] as $svc) {
-                                $outsideBookingTotal += (float) ($svc['price'] ?? 0);
-                            }
-                        } else {
-                            $outsideBookingTotal += (float) ($item['price'] ?? 0);
-                        }
-                    }
-                }
-
-                if ($outsideBookingTotal > 0) {
-                    $center = \App\Models\Center::find($overrides['center_id']);
-                    if ($center) {
-                        $center->incrementWallet($outsideBookingTotal);
-                    }
-                }
-            }
-
             DB::commit();
 
             $sale->load(['client', 'branch.translation']);
