@@ -63,13 +63,16 @@ class BookingController extends Controller
                 ]);
             }
 
-            // 3. Prepare Cart Data for SalesService
+            // 3. Calculate Total Price and Check Wallet
+            $totalPrice = 0;
             $cartItems = [];
             foreach ($request->services as $svc) {
                 $service = Service::find($svc['id']);
                 if (!$service) {
                     return MyHelper::responseJSON('Service not found: ' . $svc['id'], Response::HTTP_NOT_FOUND);
                 }
+
+                $totalPrice += (float) $service->price;
 
                 $cartItems[] = [
                     'type' => 'service',
@@ -87,27 +90,49 @@ class BookingController extends Controller
                 ];
             }
 
+            // Check and Deduct Wallet (from Central database)
+            $isPaidFromWallet = ($request->payment_type === 'wallet');
+            if ($isPaidFromWallet) {
+                // We use DB::connection('central') because $appUser is from central
+                // and we might have switched 'mysql' to tenant DB already.
+                $centralUser = DB::connection('central')->table('users')->where('id', $appUser->id)->first();
+                
+                if (!$centralUser || $centralUser->wallet < $totalPrice) {
+                    return MyHelper::responseJSON(__('api.insufficient_balance') ?? 'Insufficient wallet balance', Response::HTTP_BAD_REQUEST);
+                }
+
+                // Deduct from central wallet
+                DB::connection('central')->table('users')->where('id', $appUser->id)->decrement('wallet', $totalPrice);
+            }
+
+            // 4. Prepare Cart Data for SalesService
             $cartData = [
                 'items' => $cartItems,
                 'client_id' => $tenantUser->id,
-                'worker_id' => null, // Overall sale worker (optional)
+                'worker_id' => null, 
                 'tip' => 0,
                 'tax' => 0,
             ];
 
-            // 4. Process Sale using SalesService
-            // Note: SalesService uses auth('center_user') for created_by and branch_id.
-            // We might need to handle this if it throws errors, but processSale seems to have some fallbacks.
-            // Let's pass the branch_id in a way that respects the service's expectations if possible.
-            
-            $sale = $salesService->processSale($cartData, [
-                'branch_id' => $request->branch_id,
-                'created_by' => $tenantUser->id
-            ]);
+            try {
+                // 5. Process Sale using SalesService
+                $sale = $salesService->processSale($cartData, [
+                    'branch_id' => $request->branch_id,
+                    'created_by' => $tenantUser->id,
+                    'center_id' => $center->id
+                ]);
 
-            return MyHelper::responseJSON(__('api.doneSuccessfully'), Response::HTTP_CREATED, [
-                'sale' => $sale->load(['bookings.details.service.translation', 'bookings.details.worker']),
-            ]);
+                return MyHelper::responseJSON(__('api.doneSuccessfully'), Response::HTTP_CREATED, [
+                    'sale' => $sale->load(['bookings.details.service.translation', 'bookings.details.worker']),
+                ]);
+
+            } catch (\Exception $saleException) {
+                // ROLLBACK: If booking fails, refund the central wallet if it was deducted
+                if ($isPaidFromWallet) {
+                    DB::connection('central')->table('users')->where('id', $appUser->id)->increment('wallet', $totalPrice);
+                }
+                throw $saleException;
+            }
 
         } catch (\Exception $e) {
             Log::error('App Booking Error: ' . $e->getMessage(), [

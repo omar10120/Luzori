@@ -43,6 +43,8 @@ class CenterRequest extends FormRequest
                 'status' => 'nullable|in:pending,approve,reject',
                 'reject_reason' => 'nullable|string',
                 'rate' => 'nullable|in:recently_viewed,recommended,new_to,trending',
+                'bank_name' => 'nullable|string|max:21',
+                'admin_discount' => 'nullable|numeric|min:0|max:100',
             ];
         } else {
             return [
@@ -54,7 +56,6 @@ class CenterRequest extends FormRequest
                 'currency' => 'nullable|string|max:10',
                 'password' => 'required|min:6|max:15|same:password_confirmation',
                 'role' => 'required',
-                
                 'image' => 'nullable|image|max:4096|mimes:jpg,jpeg,png,gif|mimetypes:image/jpeg,image/png',
                 'primary_image' => 'nullable|array|max:4',
                 'primary_image.*' => 'image|max:4096|mimes:jpg,jpeg,png,gif|mimetypes:image/jpeg,image/png',
@@ -62,6 +63,8 @@ class CenterRequest extends FormRequest
                 'status' => 'nullable|in:pending,approve,reject',
                 'reject_reason' => 'nullable|string',
                 'rate' => 'nullable|in:recently_viewed,recommended,new_to,trending',
+                'bank_name' => 'nullable|string|max:21',
+                'admin_discount' => 'nullable|numeric|min:0|max:100',
             ];
         }
     }

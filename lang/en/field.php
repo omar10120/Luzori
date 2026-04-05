@@ -322,5 +322,7 @@ return [
     'booking_status_confirmed'        => 'Confirmed',
     'booking_status_rejected'         => 'Rejected',
     'booking_status_cancelled'        => 'Cancelled',
-    'ID'                              => 'ID'
+    'ID'                              => 'ID',
+    'admin_discount'                  => 'admin discount',
+    'bank_name'                       => 'bank name'
 ];

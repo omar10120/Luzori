@@ -309,10 +309,14 @@ return [
     'not_selected'                    => 'Not Selected',
     'center_email'                    => ' ايميل المركز',
     'booking_number'                  => ' رقم الحجز',
-    'ID'                              => 'المعرف',
+    'id'                              => 'المعرف',
     'booking_status'                  => 'حالة الحجز',
     'booking_status_pending'          => 'قيد الانتظار',
     'booking_status_confirmed'        => 'مؤكد',
     'booking_status_rejected'         => 'مرفوض',
     'booking_status_cancelled'        => 'ملغي',
+    'admin_discount'                  => 'خصم الادمن',
+    'bank_name'                       => 'رقم البنك'
+    
+    
 ];

@@ -38,9 +38,32 @@ class Center extends Authenticatable implements HasMedia
         'status',
         'reject_reason',
         'rate',
-        'is_setup'
+        'is_setup',
+        'wallet',
+        'bank_name',
+        'admin_discount'
     ];
     protected $hidden = ['password'];
+
+    protected $casts = [
+        'wallet' => 'decimal:2',
+        'admin_discount' => 'decimal:2',
+        'is_setup' => 'boolean'
+    ];
+
+    /**
+     * Increment center wallet balance
+     */
+    public function incrementWallet(float $amount)
+    {
+        if ($amount <= 0) {
+            return;
+        }
+
+        $this->update([
+            'wallet' => ($this->wallet ?? 0) + $amount
+        ]);
+    }
 
     public function fcmTokens()
     {

@@ -174,6 +174,28 @@
                             </div>
                         </div>
                         <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-1">
+                                    <label class="form-label">Wallet Balance</label>
+                                    <input type="text" class="form-control" value="{{ $item ? $item->wallet : '0.00' }}" readonly disabled />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-1">
+                                    <label class="form-label">Bank Name</label>
+                                    <input type="text" class="form-control" name="bank_name" maxlength="21"
+                                        placeholder="Bank Name (max 21 chars)" value="{{ $item ? $item->bank_name : '' }}" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-1">
+                                    <label class="form-label">Admin Commission (%)</label>
+                                    <input type="number" step="0.01" min="0" max="100" class="form-control" name="admin_discount"
+                                        placeholder="e.g. 10.00" value="{{ $item ? $item->admin_discount : '0.00' }}" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-1">
                                     <label class="form-label">{{ __('field.image') }} (Logo)</label>

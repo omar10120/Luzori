@@ -41,4 +41,7 @@ return [
     'outside_booking'                               => 'Outside Booking',
     'inside_booking'                                => 'Inside Booking',
     'booking_source'                                => 'Booking Source',
+    'id'                                            => 'ID',
+    'insufficient_balance'                          => 'Insufficient wallet balance',
+
 ];

@@ -41,5 +41,6 @@ return [
     'outside_booking'                               => 'حجز عن طريق البوابة',
     'inside_booking'                                => 'حجز عن طريق المركز',
     'booking_source'                                => 'مصدر الحجز',
+    'insufficient_balance'                          => 'رصيدك غير كافٍ',
 
 ];

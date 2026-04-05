@@ -276,7 +276,7 @@ class BookingDataTable extends DataTable
             Column::computed('purchased_products')->title(__('field.products') ?? 'Products'),
             Column::computed('booking_status')->title(__('field.status') ?? 'Status'),
             Column::computed('booking_source')->title(__('api.booking_source') ?? 'Source'),
-            Column::computed('commission')->title(__('field.commission') ?? 'Commission (%)'),
+            // Column::computed('commission')->title(__('field.commission') ?? 'Commission (%)'),
             Column::computed('created_at')->title(__('field.created_at') ?? 'created_at '),
             
 

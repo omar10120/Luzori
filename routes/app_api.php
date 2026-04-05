@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AppAPI\AuthController;
 use App\Http\Controllers\AppAPI\WalletController;
 use App\Http\Controllers\AppAPI\FirebaseAuthController;
+use App\Http\Controllers\AppAPI\BookingController;
 
 /*
 |--------------------------------------------------------------------------
@@ -25,7 +26,7 @@ Route::prefix('auth')->group(function () {
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('booking')->group(function () {
-        Route::post('store', [\App\Http\Controllers\AppAPI\BookingController::class, 'store']);
+        Route::post('store', [BookingController::class, 'store']);
     });
 });
 
