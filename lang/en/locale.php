@@ -59,5 +59,6 @@ return [
     'employee'                          => 'Worker',
     'sales'                             => 'Sales',
     'workers'                           => 'employees',
+    'withdrawal_requests'               => 'Withdrawal Requests',
 
 ];

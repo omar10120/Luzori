@@ -59,6 +59,8 @@ return [
     'employee'                          => 'الموظف',
     'sales'                             => 'المبيعات',
     'workers'                           => 'العمال',
+    'withdrawal_requests'               => 'طلبات السحب',
+    
     
     
     

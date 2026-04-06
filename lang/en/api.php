@@ -43,5 +43,36 @@ return [
     'booking_source'                                => 'Booking Source',
     'id'                                            => 'ID',
     'insufficient_balance'                          => 'Insufficient wallet balance',
+    'withdrawal_instructions'                       => 'Withdrawal Instructions',
+    'wallet_balance'                                => 'Wallet Balance',
+    'withdrawal_request_sent'                       => 'Withdrawal Request Sent Successfully',
+    'withdrawal_request_already_exists'             => 'Withdrawal Request Already Exists',
+    'withdrawal_request_created'                    => 'Withdrawal Request Created Successfully',
+    'withdrawal_request_confirmed'                  => 'Withdrawal Request Confirmed Successfully',
+    'withdrawal_request_rejected'                   => 'Withdrawal Request Rejected Successfully',
+    'withdrawal_request_refunded'                   => 'Withdrawal Request Refunded Successfully',
+    'withdrawal_request_not_found'                  => 'Withdrawal Request Not Found',
+    'withdrawal_request_already_confirmed'          => 'Withdrawal Request Already Confirmed',
+    'withdrawal_request_already_rejected'           => 'Withdrawal Request Already Rejected',
+    'withdrawal_request_already_refunded'           => 'Withdrawal Request Already Refunded',
+    'withdrawal_request_already_cancelled'          => 'Withdrawal Request Already Cancelled',
+    'withdrawal_request_already_completed'          => 'Withdrawal Request Already Completed',
+    'withdrawal_request_already_pending'            => 'Withdrawal Request Already Pending',
+    'withdrawal_request_already_processing'         => 'Withdrawal Request Already Processing',
+    'withdrawal_step_1'                             => 'Withdrawal Step 1',
+    'withdrawal_step_2'                             => 'Withdrawal Step 2',
+    'withdrawal_step_3'                             => 'Withdrawal Step 3',
+    'withdrawal_step_4'                             => 'Withdrawal Step 4',
+    'available_for_withdrawal'                      => 'available for withdrawal',
+    'request_withdrawal'                            => 'Request with drawal',
+    'confirm_withdrawal_request'                    => 'Confirm Withdrawal Request',
+    'confirm_withdrawal_approval'                   => 'Confirm Withdrawal Approval',
+    
+    
+    
+    
+    
+    
+    
 
 ];

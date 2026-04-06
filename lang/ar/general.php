@@ -52,6 +52,7 @@ return [
     'walk_in'                 => 'المستعار',
     'read_more'               => 'اقرأ المزيد',
     'read_less'               => 'اقرأ أقل',
+    'close'                   => 'إغلاق',
     'location_on_map'         => 'الموقع على الخريطة',
     'enter_the_official_name_of_the_branch' => 'أدخل اسم الفرع الرسمي',
     'select_a_city_or_type_for_custom_city' => 'اختر مدينة أو أدخل مدينة خاصة',
@@ -157,4 +158,8 @@ return [
     'all_bookings' => 'جميع الحجوزات',
     'confirm' => 'تأكيد',
     'reject' => 'رفض',
+    'sure_delete' => 'هل أنت متأكد من عملية الحذف؟',
+    'are_you_sure' => 'هل أنت متأكد؟',
+    'confirm_withdrawal_approval' => 'هل أنت متأكد من الموافقة على طلب السحب؟ هذا يعني أنك قمت بإرسال المال.',
+    
 ];

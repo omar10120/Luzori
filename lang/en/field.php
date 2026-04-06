@@ -324,5 +324,8 @@ return [
     'booking_status_cancelled'        => 'Cancelled',
     'ID'                              => 'ID',
     'admin_discount'                  => 'admin discount',
-    'bank_name'                       => 'bank name'
+    'bank_name'                       => 'bank name',
+    'center'                          => 'center',
+    'admin_notes'                     => 'admin notes',
+    'wallet_balance'                  => 'wallet ballance'
 ];

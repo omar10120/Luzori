@@ -94,7 +94,7 @@
                 withTrashed: withTrashed
             });
             Swal.fire({
-                title: "{{ __('admin.sure_delete') }}",
+                title: "{{ __('admin.sure_delete2') }}",
                 icon: 'warning',
                 html: "{{ __('admin.not_be_able_to_back') }}",
                 showDenyButton: true,

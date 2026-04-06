@@ -211,6 +211,17 @@
       ]
     },
     {
+      "url": "center_user/withdrawal_requests/index",
+      "name": "withdrawal_requests",
+      "icon": "cash",
+      "slug": [
+        "withdrawal_requests"
+      ],
+      "permissions": [
+        "VIEW_SETTINGS"
+      ]
+    },
+    {
       "url": "center_user/expenses/index",
       "name": "expenses",
       "external_icon": "expenses",

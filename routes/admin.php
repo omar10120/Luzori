@@ -68,6 +68,14 @@ Route::group(['middleware' => 'auth:admin'], function () {
         });
     });
 
+    Route::group(['prefix' => 'withdrawal_requests', 'as' => 'withdrawal_requests.'], function () {
+        Route::controller(\App\Http\Controllers\Admin\WithdrawalRequestController::class)->group(function () {
+            Route::get('index', 'index')->name('index')->can('VIEW_CENTERS'); // Usually if they can view centers they can view financials, or use a new permission
+            Route::post('{id}/approve', 'approve')->name('approve')->can('VIEW_CENTERS');
+            Route::post('{id}/reject', 'reject')->name('reject')->can('VIEW_CENTERS');
+        });
+    });
+
     Route::group(['prefix' => 'users', 'as' => 'users.'], function () {
         Route::controller(\App\Http\Controllers\Admin\UserController::class)->group(function () {
             Route::get('index', 'index')->name('index')->can('VIEW_USERS');

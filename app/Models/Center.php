@@ -65,6 +65,11 @@ class Center extends Authenticatable implements HasMedia
         ]);
     }
 
+    public function withdrawalRequests()
+    {
+        return $this->hasMany(CenterWithdrawalRequest::class, 'center_id');
+    }
+
     public function fcmTokens()
     {
         return $this->morphMany(FcmToken::class, 'tokenable');

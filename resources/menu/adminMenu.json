@@ -60,6 +60,17 @@
             ]
         },
         {
+            "url": "admin/withdrawal_requests/index",
+            "name": "withdrawal_requests",
+            "icon": "cash",
+            "slug": [
+                "withdrawal_requests"
+            ],
+            "permissions": [
+                "VIEW_CENTERS"
+            ]
+        },
+        {
             "menuHeader": "roles_admins",
             "slug": [],
             "permissions": [

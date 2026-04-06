@@ -326,6 +326,13 @@ Route::group(['middleware' => 'auth_center_user:center_user'], function () {
         });
     });
 
+    Route::group(['prefix' => 'withdrawal_requests', 'as' => 'withdrawal_requests.'], function () {
+        Route::controller(\App\Http\Controllers\CenterUser\WithdrawalRequestController::class)->group(function () {
+            Route::get('index', 'index')->name('index'); // No specific permission for now or we can use a new one, but let's assume if they can see settings/reports they can see this, or just open for all center_users.
+            Route::post('store', 'store')->name('store');
+        });
+    });
+
     Route::group(['prefix' => 'reports', 'as' => 'reports.'], function () {
         Route::controller(DailyReportController::class)->group(function () {
             Route::get('daily-report', 'daily_report')->name('daily-report');
