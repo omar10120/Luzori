@@ -200,25 +200,38 @@
       ]
     },
     {
-      "url": "center_user/sales/index",
       "name": "sales",
       "external_icon": "sales",
       "slug": [
-        "sales"
-      ],
-      "permissions": [
-        "VIEW_SALES"
-      ]
-    },
-    {
-      "url": "center_user/withdrawal_requests/index",
-      "name": "withdrawal_requests",
-      "icon": "cash",
-      "slug": [
+        "sales",
         "withdrawal_requests"
       ],
       "permissions": [
-        "VIEW_SETTINGS"
+        "VIEW_SALES"
+      ],
+      "submenu": [
+        {
+          "url": "center_user/sales/index",
+          "name": "sales",
+          "external_icon": "sales",
+          "slug": [
+            "sales"
+          ],
+          "permissions": [
+            "VIEW_SALES"
+          ]
+        },
+        {
+          "url": "center_user/withdrawal_requests/index",
+          "name": "withdrawal_requests",
+          "icon": "cash",
+          "slug": [
+            "withdrawal_requests"
+          ],
+          "permissions": [
+            "VIEW_SETTINGS"
+          ]
+        }
       ]
     },
     {
