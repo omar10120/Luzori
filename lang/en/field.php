@@ -327,5 +327,6 @@ return [
     'bank_name'                       => 'bank name',
     'center'                          => 'center',
     'admin_notes'                     => 'admin notes',
-    'wallet_balance'                  => 'wallet ballance'
+    'wallet_balance'                  => 'wallet ballance',
+    'updated_at'                      => 'updated at'
 ];

@@ -320,6 +320,7 @@ return [
     'center'                          => 'المركز',
     'admin_notes'                     => 'ملاحظات الادمن',
     'wallet_balance'                  => 'رصيد المحفظة',
+    'updated_at'                      => 'تاريخ التحديث'
 
     
     
