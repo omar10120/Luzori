@@ -27,7 +27,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-8">
+        <!-- <div class="col-md-8">
             <div class="card h-100">
                 <div class="card-body">
                     <h5 class="card-title">{{ __('api.withdrawal_instructions') ?? 'Withdrawal Instructions' }}</h5>
@@ -37,7 +37,7 @@
                     <p class="mb-0">4. {{ __('api.withdrawal_step_4') ?? 'If the request is rejected, the amount will be refunded to your wallet.' }}</p>
                 </div>
             </div>
-        </div>
+        </div> -->
     </div>
     
     <div class="row">
