@@ -323,7 +323,9 @@ return [
     'updated_at'                      => 'تاريخ التحديث',
     'multiple_payment_methods'        => 'طرق الدفع المتعددة',
     'total_to_pay'                    => 'المبلغ المستحق',
-    'payment_methods'                 => 'طريقة الدفع'
+    'payment_methods'                 => 'طريقة الدفع', 
+    'please_fill_all_required_fields' => 'يرجى ملء جميع الحقول المطلوبة (مجموع الدفعات يجب ان يساوي الفاتورة)'
+
     
     
 

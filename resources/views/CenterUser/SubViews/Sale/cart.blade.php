@@ -1093,6 +1093,9 @@
             // Clear invalid state when payment method is selected
             $('#booking-payment_type, #product-payment_type').on('change', function() {
                 $(this).removeClass('is-invalid');
+                if (this.id === 'booking-payment_type') {
+                    validateBookingPayments();
+                }
             });
             
             // Phone prefix toggle for UAE (+971) in Add Customer Modal
@@ -1596,6 +1599,7 @@
                     $('#booking-multiple-payments-container').hide();
                     $('#booking-payment_type').prop('required', true);
                 }
+                validateBookingPayments();
             });
 
             // Helper to get total for current booking
@@ -1610,6 +1614,57 @@
                     });
                 }
                 return total;
+            }
+
+            // Real-time validation for booking payments
+            function validateBookingPayments() {
+                const isMultiple = $('#booking-multiple_payments_toggle').is(':checked');
+                const $nextBtn = $('#booking-nextStep3');
+                const $errorMsg = $('#booking-multiple-payments-error');
+                let isValid = true;
+
+                if (isMultiple) {
+                    const totalToPay = getCurrentBookingTotal();
+                    let totalPaid = 0;
+                    let hasEmptyFields = false;
+
+                    $('#booking-multiple-payments-list .booking-payment-row').each(function() {
+                        const type = $(this).find('.booking-multi-payment-type').val();
+                        const amount = parseFloat($(this).find('.booking-multi-payment-amount').val()) || 0;
+                        
+                        if (!type || amount <= 0) {
+                            hasEmptyFields = true;
+                        }
+                        totalPaid += amount;
+                    });
+
+                    const diff = Math.abs(totalPaid - totalToPay);
+                    if (hasEmptyFields) {
+                        $errorMsg.text('{{ __('field.please_fill_all_required_fields') }}').show();
+                        isValid = false;
+                    } else if (diff > 0.01) {
+                        const amountText = totalPaid.toFixed(2) + ' / ' + totalToPay.toFixed(2);
+                        if (totalPaid < totalToPay) {
+                            $errorMsg.text('{{ __('field.remaining_amount') }}: ' + (totalToPay - totalPaid).toFixed(2)).show();
+                        } else {
+                            $errorMsg.text('{{ __('field.excess_amount') }}: ' + (totalPaid - totalToPay).toFixed(2)).show();
+                        }
+                        isValid = false;
+                    } else {
+                        $errorMsg.hide();
+                    }
+                } else {
+                    const paymentType = $('#booking-payment_type').val();
+                    const hasWalletSelected = $('input[name="discount_id"].booking-wallet-radio:checked').length > 0;
+                    
+                    if (!hasWalletSelected && (!paymentType || paymentType === '')) {
+                        isValid = false;
+                    }
+                    $errorMsg.hide();
+                }
+
+                $nextBtn.prop('disabled', !isValid);
+                return isValid;
             }
 
             // Function to update dropdowns to disable selected options
@@ -1656,23 +1711,17 @@
                     </div>`;
                 $('#booking-multiple-payments-list').append(newRow);
                 updatePaymentDropdowns();
+                validateBookingPayments();
             });
 
             // Handle changes in multi-payment rows
             $(document).on('change', '.booking-multi-payment-type', function() {
                 updatePaymentDropdowns();
+                validateBookingPayments();
             });
 
             $(document).on('input', '.booking-multi-payment-amount', function() {
-                const totalToPay = getCurrentBookingTotal();
-                let totalPaid = 0;
-                $('.booking-multi-payment-amount').each(function() {
-                    totalPaid += parseFloat($(this).val()) || 0;
-                });
-                
-                if (Math.abs(totalPaid - totalToPay) < 0.01) {
-                    $('#booking-multiple-payments-error').hide();
-                }
+                validateBookingPayments();
             });
 
             // Remove Multiple Payment Row
@@ -1680,15 +1729,7 @@
                 if ($('#booking-multiple-payments-list .booking-payment-row').length > 1) {
                     $(this).closest('.booking-payment-row').remove();
                     updatePaymentDropdowns();
-                    // Clear error if remaining total matches
-                    const totalToPay = getCurrentBookingTotal();
-                    let totalPaid = 0;
-                    $('.booking-multi-payment-amount').each(function() {
-                        totalPaid += parseFloat($(this).val()) || 0;
-                    });
-                    if (Math.abs(totalPaid - totalToPay) < 0.01) {
-                        $('#booking-multiple-payments-error').hide();
-                    }
+                    validateBookingPayments();
                 } else {
                     alert('At least one payment method is required.');
                 }
@@ -1696,6 +1737,12 @@
 
             $('#booking-nextStep3').on('click', function(e) {
                 e.preventDefault();
+                
+                // Final validation before proceeding
+                if (!validateBookingPayments()) {
+                    return false;
+                }
+
                 // name and mobile are already in bookingWizardData from Step 2 transition
                 // But if not set, try to get from global customer variables
                 if (!bookingWizardData.name && selectedCustomerName) {
@@ -1732,62 +1779,17 @@
 
                 var isMultiple = $('#booking-multiple_payments_toggle').is(':checked');
                 var paymentMethods = [];
-                var totalPaid = 0;
-                var totalAmount = 0;
                 
-                // Calculate total to be paid
-                $.each(bookingWizardData.services, function(index, item) {
-                    var serviceData = get_service(item.id);
-                    if (serviceData) {
-                        totalAmount += calculateDiscountedServicePrice(serviceData.price);
-                    }
-                });
-
                 if (isMultiple) {
-                    let hasError = false;
                     $('#booking-multiple-payments-list .booking-payment-row').each(function() {
                         const type = $(this).find('.booking-multi-payment-type').val();
                         const amount = parseFloat($(this).find('.booking-multi-payment-amount').val()) || 0;
-                        
-                        if (!type || amount <= 0) {
-                            hasError = true;
-                            return false;
-                        }
-                        
                         paymentMethods.push({ method: type, amount: amount });
-                        totalPaid += amount;
                     });
-
-                    if (hasError) {
-                        alert('Please fill all payment method types and amounts.');
-                        return false;
-                    }
-
-                    if (Math.abs(totalPaid - totalAmount) > 0.01) {
-                        $('#booking-multiple-payments-error').text('Total paid (' + totalPaid.toFixed(2) + ') must equal bill amount (' + totalAmount.toFixed(2) + ')').show();
-                        return false;
-                    } else {
-                        $('#booking-multiple-payments-error').hide();
-                    }
                     
                     bookingWizardData.payment_type = 'multiple';
                     bookingWizardData.payment_methods = paymentMethods;
                 } else {
-                    if (hasWalletSelected) {
-                        // Wallet/Membership act as payment methods - no need for separate payment
-                        paymentType = null;
-                        $paymentTypeField.removeClass('is-invalid');
-                    } else {
-                        // For discount codes or no selection - payment method IS required
-                        if (!paymentType || paymentType === '') {
-                            $paymentTypeField.addClass('is-invalid');
-                            $paymentTypeField.siblings('.invalid-feedback').text('{{ __('field.payment_method') }} is required');
-                            $paymentTypeField.focus();
-                            return false;
-                        } else {
-                            $paymentTypeField.removeClass('is-invalid');
-                        }
-                    }
                     bookingWizardData.payment_type = paymentType;
                     bookingWizardData.payment_methods = null;
                 }

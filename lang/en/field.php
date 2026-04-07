@@ -331,5 +331,6 @@ return [
     'updated_at'                      => 'updated at',
     'multiple_payment_methods'        => 'Multiple Payment Methods',
     'total_to_pay'                    => 'Total To Pay',
-    'payment_methods'                 => 'payment Methods'
+    'payment_methods'                 => 'payment Methods',
+    'please_fill_all_required_fields' => 'Please fill all required fields (payment group must equal invoice)'
 ];
