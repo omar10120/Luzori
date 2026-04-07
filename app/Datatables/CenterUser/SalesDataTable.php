@@ -234,18 +234,26 @@ class SalesDataTable extends DataTable
                 }
             })
             ->addColumn('booking_payment', function ($row) {
-                $types = [];
+                $methods = [];
                 
                 foreach ($row->saleItems as $saleItem) {
                     if ($saleItem->item_type === 'booking' && $saleItem->itemable) {
                         $booking = $saleItem->itemable;
-                        if ($booking->payment_type && !in_array($booking->payment_type, $types, true)) {
-                            $types[] = $booking->payment_type;
+                        if ($booking->payment_type === 'multiple' && !empty($booking->payment_methods)) {
+                            foreach ($booking->payment_methods as $method) {
+                                $methodName = $method['method'] ?? 'N/A';
+                                $amount = number_format($method['amount'] ?? 0, 2);
+                                $methods[] = $methodName . " (" . $amount . ")";
+                            }
+                        } elseif ($booking->payment_type) {
+                            if (!in_array($booking->payment_type, $methods, true)) {
+                                $methods[] = $booking->payment_type;
+                            }
                         }
                     }
                 }
 
-                return empty($types) ? '-' : implode(', ', $types);
+                return empty($methods) ? '-' : implode(', ', $methods);
             })
             ->addColumn('booking_source', function ($row) {
                 $sources = [];
@@ -348,6 +356,31 @@ class SalesDataTable extends DataTable
                 }
 
                 return empty($types) ? '-' : implode(', ', $types);
+            })
+            ->addColumn('payment_methods', function ($row) {
+                $methods = [];
+                
+                foreach ($row->saleItems as $saleItem) {
+                    if ($saleItem->itemable) {
+                        $itemable = $saleItem->itemable;
+                        
+                        // Check for common payment_type field
+                        $type = $itemable->payment_type ?? $itemable->wallet_type ?? null;
+                        
+                        if ($type === 'multiple' && isset($itemable->payment_methods) && !empty($itemable->payment_methods)) {
+                            foreach ($itemable->payment_methods as $method) {
+                                $name = $method['method'] ?? 'N/A';
+                                if (!in_array($name, $methods, true)) {
+                                    $methods[] = $name;
+                                }
+                            }
+                        } elseif ($type && !in_array($type, $methods, true)) {
+                            $methods[] = $type;
+                        }
+                    }
+                }
+                
+                return empty($methods) ? '-' : implode(', ', $methods);
             })
             ->editColumn('worker.name', function ($row) {
                 return \App\Helpers\MyHelper::truncateWithReadMore($row->worker?->name ?? '-');
@@ -545,6 +578,7 @@ class SalesDataTable extends DataTable
             Column::computed('coupons')->searchable(false)->title(__('field.coupons')),
             Column::computed('client.name')->searchable(true)->title(__('field.client')),
             Column::make('client_mobile')->searchable(true)->title(__('field.phone')),
+            Column::computed('payment_methods')->searchable(false)->title(__('field.payment_methods') ?? 'Payment Methods'),
             Column::computed('booking_payment')->searchable(true)->title(__('field.payment_method') . ' (' . __('locale.bookings') . ')'),
             Column::computed('product_payment')->searchable(true)->title(__('field.payment_method') . ' (' . __('locale.products') . ')'),
             Column::computed('coupon_payment')->searchable(true)->title(__('field.payment_method') . ' (' . __('field.coupons') . ')'),
