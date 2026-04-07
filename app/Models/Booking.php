@@ -20,11 +20,17 @@ class Booking extends Model
         'mobile',
         'notes',
         'payment_type',
+        'payment_methods',
         'created_by',
         'wallet_id',
         'branch_id',
         'user_id',
         'sale_id'
+    ];
+
+    protected $casts = [
+        'payment_methods' => 'array',
+        'booking_date' => 'date',
     ];
 
     public function details(): HasMany

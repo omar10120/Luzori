@@ -116,18 +116,17 @@ class StaffReportController extends Controller
             if (isset($result['price']) && isset($result['tips'])) {
                 if (!$report->isEmpty()) {
                     foreach ($report as $value) {
-                        $price = 0;
-                        $tip = 0;
-                        if (isset($result['price'][$value->booking_date]) && isset($result['tips'][$value->booking_date])) {
+                        $booking_date_str = $value->booking_date->format('Y-m-d');
+                        if (isset($result['price'][$booking_date_str]) && isset($result['tips'][$booking_date_str])) {
                             if (!$value->details->isEmpty()) {
                                 foreach ($value->details as $detail) {
-                                    if (!isset($result['price'][$value->booking_date][$detail->worker_id]) && !isset($result['tips'][$value->booking_date][$detail->worker_id])) {
+                                    if (!isset($result['price'][$booking_date_str][$detail->worker_id]) && !isset($result['tips'][$booking_date_str][$detail->worker_id])) {
                                         continue;
                                     }
                                     $price = $detail->price;
                                     $tip = $detail->tip;
-                                    $result['price'][$value->booking_date][$detail->worker_id] += $price;
-                                    $result['tips'][$value->booking_date][$detail->worker_id] += $tip;
+                                    $result['price'][$booking_date_str][$detail->worker_id] += $price;
+                                    $result['tips'][$booking_date_str][$detail->worker_id] += $tip;
                                 }
                             }
                         }

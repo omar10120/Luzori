@@ -256,6 +256,14 @@
                                                     <div id="booking-walletsElement"></div>
                                                     <div id="booking-membershipsElement"></div>
                                                     <div id="booking-servicesTable"></div>
+                                                    <div class="row mb-2">
+                                                        <div class="col-md-12">
+                                                            <div class="form-check form-switch mb-2">
+                                                                <input class="form-check-input" type="checkbox" id="booking-multiple_payments_toggle">
+                                                                <label class="form-check-label" for="booking-multiple_payments_toggle">{{ __('field.multiple_payment_methods') }}</label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                     <div class="row mb-4" id="booking-payment-method-container">
                                                         <div class="col-md-12">
                                                             <div class="mb-1">
@@ -268,6 +276,32 @@
                                                                 </select>
                                                                 <div class="invalid-feedback"></div>
                                                             </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row mb-4" id="booking-multiple-payments-container" style="display: none;">
+                                                        <div class="col-md-12">
+                                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                                <label class="form-label mb-0">{{ __('field.payment_method') }} & {{ __('field.amount') }} <span class="text-danger">*</span></label>
+                                                                <div class="badge bg-label-info pb-1 pt-1" style="font-size: 14px;">
+                                                                    {{ __('field.total_to_pay') }}: <span id="booking-multi-payment-total-display">0.00</span> {{ get_currency() }}
+                                                                </div>
+                                                            </div>
+                                                            <div id="booking-multiple-payments-list">
+                                                                <div class="d-flex mb-2 booking-payment-row">
+                                                                    <select class="form-control booking-multi-payment-type flex-grow-1 me-2">
+                                                                        <option value="">{{ __('field.select_payment_method') }}</option>
+                                                                        @foreach($paymentMethods as $paymentMethod)
+                                                                            <option value="{{ $paymentMethod->name }}">{{ $paymentMethod->name }}</option>
+                                                                        @endforeach
+                                                                    </select>
+                                                                    <input type="number" class="form-control booking-multi-payment-amount" placeholder="{{ __('field.amount') }}" step="0.01" style="width: 120px;">
+                                                                    <button type="button" class="btn btn-outline-danger ms-2 btn-remove-booking-payment"><i class="ti ti-trash"></i></button>
+                                                                </div>
+                                                            </div>
+                                                            <button type="button" class="btn btn-sm btn-outline-primary mt-2" id="btn-add-booking-payment">
+                                                                <i class="ti ti-plus me-1"></i> {{ __('general.add') }}
+                                                            </button>
+                                                            <div class="text-danger mt-2" style="display: none;" id="booking-multiple-payments-error"></div>
                                                         </div>
                                                     </div>
                                                     <div class="col-12 mt-4 d-flex justify-content-between">
@@ -1544,6 +1578,122 @@
             // Enable next button by default since customer is already pre-validated coming into this step
             $('#booking-nextStep3').prop('disabled', false);
 
+            // Handle Multiple Payments Toggle
+            $(document).on('change', '#booking-multiple_payments_toggle', function() {
+                if ($(this).is(':checked')) {
+                    $('#booking-payment-method-container').hide();
+                    $('#booking-multiple-payments-container').show();
+                    $('#booking-payment_type').prop('required', false);
+                    
+                    // Reset multiple payments list with one row pre-filled with total
+                    $('#booking-multiple-payments-list').empty();
+                    const totalToPay = getCurrentBookingTotal();
+                    $('#booking-multi-payment-total-display').text(totalToPay.toFixed(2));
+                    
+                    $('#btn-add-booking-payment').trigger('click');
+                } else {
+                    $('#booking-payment-method-container').show();
+                    $('#booking-multiple-payments-container').hide();
+                    $('#booking-payment_type').prop('required', true);
+                }
+            });
+
+            // Helper to get total for current booking
+            function getCurrentBookingTotal() {
+                let total = 0;
+                if (bookingWizardData.services && bookingWizardData.services.length > 0) {
+                    bookingWizardData.services.forEach(function(item) {
+                        var serviceData = get_service(item.id);
+                        if (serviceData) {
+                            total += calculateDiscountedServicePrice(serviceData.price);
+                        }
+                    });
+                }
+                return total;
+            }
+
+            // Function to update dropdowns to disable selected options
+            function updatePaymentDropdowns() {
+                const selectedMethods = [];
+                $('.booking-multi-payment-type').each(function() {
+                    const val = $(this).val();
+                    if (val) selectedMethods.push(val);
+                });
+
+                $('.booking-multi-payment-type').each(function() {
+                    const currentVal = $(this).val();
+                    $(this).find('option').each(function() {
+                        const optVal = $(this).val();
+                        if (optVal && optVal !== currentVal && selectedMethods.includes(optVal)) {
+                            $(this).prop('disabled', true).hide();
+                        } else {
+                            $(this).prop('disabled', false).show();
+                        }
+                    });
+                });
+            }
+
+            // Add Multiple Payment Row
+            $(document).on('click', '#btn-add-booking-payment', function() {
+                const totalToPay = getCurrentBookingTotal();
+                let alreadyPaid = 0;
+                $('.booking-multi-payment-amount').each(function() {
+                    alreadyPaid += parseFloat($(this).val()) || 0;
+                });
+                
+                const remaining = Math.max(0, totalToPay - alreadyPaid);
+
+                const newRow = `
+                    <div class="d-flex mb-2 booking-payment-row">
+                        <select class="form-control booking-multi-payment-type flex-grow-1 me-2" required>
+                            <option value="">{{ __('field.select_payment_method') }}</option>
+                            @foreach($paymentMethods as $paymentMethod)
+                                <option value="{{ $paymentMethod->name }}">{{ $paymentMethod->name }}</option>
+                            @endforeach
+                        </select>
+                        <input type="number" class="form-control booking-multi-payment-amount" placeholder="{{ __('field.amount') }}" step="0.01" style="width: 120px;" value="${remaining > 0 ? remaining.toFixed(2) : ''}">
+                        <button type="button" class="btn btn-outline-danger ms-2 btn-remove-booking-payment"><i class="ti ti-trash"></i></button>
+                    </div>`;
+                $('#booking-multiple-payments-list').append(newRow);
+                updatePaymentDropdowns();
+            });
+
+            // Handle changes in multi-payment rows
+            $(document).on('change', '.booking-multi-payment-type', function() {
+                updatePaymentDropdowns();
+            });
+
+            $(document).on('input', '.booking-multi-payment-amount', function() {
+                const totalToPay = getCurrentBookingTotal();
+                let totalPaid = 0;
+                $('.booking-multi-payment-amount').each(function() {
+                    totalPaid += parseFloat($(this).val()) || 0;
+                });
+                
+                if (Math.abs(totalPaid - totalToPay) < 0.01) {
+                    $('#booking-multiple-payments-error').hide();
+                }
+            });
+
+            // Remove Multiple Payment Row
+            $(document).on('click', '.btn-remove-booking-payment', function() {
+                if ($('#booking-multiple-payments-list .booking-payment-row').length > 1) {
+                    $(this).closest('.booking-payment-row').remove();
+                    updatePaymentDropdowns();
+                    // Clear error if remaining total matches
+                    const totalToPay = getCurrentBookingTotal();
+                    let totalPaid = 0;
+                    $('.booking-multi-payment-amount').each(function() {
+                        totalPaid += parseFloat($(this).val()) || 0;
+                    });
+                    if (Math.abs(totalPaid - totalToPay) < 0.01) {
+                        $('#booking-multiple-payments-error').hide();
+                    }
+                } else {
+                    alert('At least one payment method is required.');
+                }
+            });
+
             $('#booking-nextStep3').on('click', function(e) {
                 e.preventDefault();
                 // name and mobile are already in bookingWizardData from Step 2 transition
@@ -1579,27 +1729,68 @@
                 var hasWalletSelected = $('input[name="discount_id"].booking-wallet-radio:checked').length > 0;
                 var hasMembershipSelected = $('input[name="discount_id"].booking-membership-radio:checked').length > 0;
                 var hasDiscountSelected = $('input[name="discount_id"].booking-discount-radio:checked').length > 0;
+
+                var isMultiple = $('#booking-multiple_payments_toggle').is(':checked');
+                var paymentMethods = [];
+                var totalPaid = 0;
+                var totalAmount = 0;
                 
-                // Validate payment method:
-                // - Wallet/Membership act as payment methods, so payment_type is not required
-                // - Discount codes only reduce the price, remaining amount still needs a payment method
-                if (hasWalletSelected) {
-                    // Wallet/Membership act as payment methods - no need for separate payment
-                    paymentType = null;
-                    $paymentTypeField.removeClass('is-invalid');
-                } else {
-                    // For discount codes or no selection - payment method IS required
-                    if (!paymentType || paymentType === '') {
-                        $paymentTypeField.addClass('is-invalid');
-                        $paymentTypeField.siblings('.invalid-feedback').text('{{ __('field.payment_method') }} is required');
-                        $paymentTypeField.focus();
+                // Calculate total to be paid
+                $.each(bookingWizardData.services, function(index, item) {
+                    var serviceData = get_service(item.id);
+                    if (serviceData) {
+                        totalAmount += calculateDiscountedServicePrice(serviceData.price);
+                    }
+                });
+
+                if (isMultiple) {
+                    let hasError = false;
+                    $('#booking-multiple-payments-list .booking-payment-row').each(function() {
+                        const type = $(this).find('.booking-multi-payment-type').val();
+                        const amount = parseFloat($(this).find('.booking-multi-payment-amount').val()) || 0;
+                        
+                        if (!type || amount <= 0) {
+                            hasError = true;
+                            return false;
+                        }
+                        
+                        paymentMethods.push({ method: type, amount: amount });
+                        totalPaid += amount;
+                    });
+
+                    if (hasError) {
+                        alert('Please fill all payment method types and amounts.');
+                        return false;
+                    }
+
+                    if (Math.abs(totalPaid - totalAmount) > 0.01) {
+                        $('#booking-multiple-payments-error').text('Total paid (' + totalPaid.toFixed(2) + ') must equal bill amount (' + totalAmount.toFixed(2) + ')').show();
                         return false;
                     } else {
-                        $paymentTypeField.removeClass('is-invalid');
+                        $('#booking-multiple-payments-error').hide();
                     }
+                    
+                    bookingWizardData.payment_type = 'multiple';
+                    bookingWizardData.payment_methods = paymentMethods;
+                } else {
+                    if (hasWalletSelected) {
+                        // Wallet/Membership act as payment methods - no need for separate payment
+                        paymentType = null;
+                        $paymentTypeField.removeClass('is-invalid');
+                    } else {
+                        // For discount codes or no selection - payment method IS required
+                        if (!paymentType || paymentType === '') {
+                            $paymentTypeField.addClass('is-invalid');
+                            $paymentTypeField.siblings('.invalid-feedback').text('{{ __('field.payment_method') }} is required');
+                            $paymentTypeField.focus();
+                            return false;
+                        } else {
+                            $paymentTypeField.removeClass('is-invalid');
+                        }
+                    }
+                    bookingWizardData.payment_type = paymentType;
+                    bookingWizardData.payment_methods = null;
                 }
-
-                bookingWizardData.payment_type = paymentType;
                 
                 // Get selected wallet, membership, or discount code info
                 var selectedWallet = $('input[name="discount_id"].booking-wallet-radio:checked');
@@ -1631,7 +1822,11 @@
                 }
                 
                 if (!paymentMethodDisplay) {
-                    paymentMethodDisplay = bookingWizardData.payment_type || '{{ __('field.not_selected') }}';
+                    if (bookingWizardData.payment_type === 'multiple' && bookingWizardData.payment_methods) {
+                        paymentMethodDisplay = bookingWizardData.payment_methods.map(m => m.method + ': ' + m.amount.toFixed(2)).join(', ');
+                    } else {
+                        paymentMethodDisplay = bookingWizardData.payment_type || '{{ __('field.not_selected') }}';
+                    }
                 }
                 
                 // Store discount code info if selected
@@ -1747,6 +1942,7 @@
                     client_name: bookingWizardData.name,
                     client_mobile: bookingWizardData.mobile,
                     payment_type: bookingWizardData.payment_type || null,
+                    payment_methods: bookingWizardData.payment_methods || null,
                     wallet_id: bookingWizardData.wallet_id || null,
                     membership_id: bookingWizardData.membership_id || null,
                     discount_id: bookingWizardData.discount_id || null

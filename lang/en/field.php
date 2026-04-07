@@ -328,5 +328,7 @@ return [
     'center'                          => 'center',
     'admin_notes'                     => 'admin notes',
     'wallet_balance'                  => 'wallet ballance',
-    'updated_at'                      => 'updated at'
+    'updated_at'                      => 'updated at',
+    'multiple_payment_methods'        => 'Multiple Payment Methods',
+    'total_to_pay'                    => 'Total To Pay',
 ];

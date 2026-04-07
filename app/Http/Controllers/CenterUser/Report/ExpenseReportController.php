@@ -152,7 +152,7 @@ class ExpenseReportController extends Controller
         $bookings = $temp_bookings->get();
 
         foreach ($bookings as $booking) {
-            $date = $booking->booking_date;
+            $date = $booking->booking_date->format('Y-m-d');
             if (!isset($incomeByDate[$date])) {
                 $incomeByDate[$date] = 0;
             }
@@ -167,11 +167,29 @@ class ExpenseReportController extends Controller
                 $totalIncome += $amount;
 
                 // Group by payment type
-                $paymentType = $detail->payment_type ?? 'cash';
-                if (!isset($incomeByType[$paymentType])) {
-                    $incomeByType[$paymentType] = 0;
+                $paymentType = $booking->payment_type ?? 'cash';
+                if ($paymentType === 'multiple' && !empty($booking->payment_methods)) {
+                    $bookingTotal = collect($booking->details)->sum('price');
+                    if ($bookingTotal > 0) {
+                        foreach ($booking->payment_methods as $pm) {
+                            $method = $pm['method'] ?? null;
+                            $pmAmount = floatval($pm['amount'] ?? 0);
+                            if ($method && $pmAmount > 0) {
+                                $proportion = $pmAmount / $bookingTotal;
+                                $distributedAmount = $amount * $proportion;
+                                if (!isset($incomeByType[$method])) {
+                                    $incomeByType[$method] = 0;
+                                }
+                                $incomeByType[$method] += $distributedAmount;
+                            }
+                        }
+                    }
+                } else {
+                    if (!isset($incomeByType[$paymentType])) {
+                        $incomeByType[$paymentType] = 0;
+                    }
+                    $incomeByType[$paymentType] += $amount;
                 }
-                $incomeByType[$paymentType] += $amount;
             }
         }
 

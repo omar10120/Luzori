@@ -205,7 +205,6 @@ class DailyReportController extends Controller
                                     $payment_type_select = 'wallet';
                                 }
 
-                                $result[$detail->worker_id][$payment_type_select] += $price;
                                 array_push($users_with_prices[$detail->worker_id], $price);
 
                                 // Check if commission exists (not null) - allow 0 values
@@ -220,7 +219,7 @@ class DailyReportController extends Controller
                                         $commission_amount = floatval($detail->commission);
                                     } else {
                                         // Backward compatibility: if commission_type is null, assume percentage
-                                        $commission_amount = 0;
+                                        $commission_amount = ($price * floatval($detail->commission)) / 100;
                                     }
                                     array_push($users_with_commission[$detail->worker_id], $commission_amount);
                                 }
@@ -238,7 +237,28 @@ class DailyReportController extends Controller
                                     $free_price += $detail->price;
                                 }
 
-                                $payments_with_prices[$payment_type_select][$detail->worker_id][] = $price - $free_price;
+                                if ($payment_type_select === 'multiple' && !empty($value->payment_methods)) {
+                                    $bookingTotal = collect($value->details)->sum('price');
+                                    if ($bookingTotal > 0) {
+                                        foreach ($value->payment_methods as $pm) {
+                                            $method = $pm['method'] ?? null;
+                                            $pmAmount = floatval($pm['amount'] ?? 0);
+                                            if ($method && $pmAmount > 0) {
+                                                $proportion = $pmAmount / $bookingTotal;
+                                                $distributedPrice = $price * $proportion;
+                                                $distributedFreePrice = $free_price * $proportion;
+
+                                                if (isset($result[$detail->worker_id][$method])) {
+                                                    $result[$detail->worker_id][$method] += $distributedPrice;
+                                                    $payments_with_prices[$method][$detail->worker_id][] = $distributedPrice - $distributedFreePrice;
+                                                }
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    $result[$detail->worker_id][$payment_type_select] += $price;
+                                    $payments_with_prices[$payment_type_select][$detail->worker_id][] = $price - $free_price;
+                                }
 
                                 if (isset($memberShipCardsUsers[$detail->worker_id]) && $value->id == $memberShipCardsUsers[$detail->worker_id]['booking_id'] && !in_array($detail->worker_id, $selected_memberShipCardsUsers)) {
                                     $temp = [];

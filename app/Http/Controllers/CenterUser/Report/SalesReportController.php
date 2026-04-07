@@ -90,14 +90,43 @@ class SalesReportController extends Controller
             }
             if (!$report->isEmpty()) {
                 foreach ($report as $value) {
-                    $price = 0;
-                    if (isset($result[$value->booking_date])) {
+                    $booking_date_str = $value->booking_date->format('Y-m-d');
+                    if (isset($result[$booking_date_str])) {
+                        $selected_payment_type = $value->payment_type;
+                        if (empty($value->payment_type)) {
+                            $selected_payment_type = "wallet";
+                        }
+
                         if (!$value->details->isEmpty()) {
                             foreach ($value->details as $detail) {
-                                $price += $detail->price;
+                                $detail_price = $detail->price;
                                 if ($detail->is_free == 1) {
-                                    $result[$value->booking_date]['free'] += $detail->price;
-                                    $price -= $detail->price;
+                                    $result[$booking_date_str]['free'] += $detail->price;
+                                    $detail_price -= $detail->price;
+                                }
+
+                                if ($selected_payment_type === 'multiple' && !empty($value->payment_methods)) {
+                                    $bookingTotal = collect($value->details)->sum('price');
+                                    if ($bookingTotal > 0) {
+                                        foreach ($value->payment_methods as $pm) {
+                                            $method = $pm['method'] ?? null;
+                                            $pmAmount = floatval($pm['amount'] ?? 0);
+                                            if ($method && $pmAmount > 0) {
+                                                $proportion = $pmAmount / $bookingTotal;
+                                                $distributedPrice = $detail_price * $proportion;
+
+                                                if (!isset($result[$booking_date_str][$method])) {
+                                                    $result[$booking_date_str][$method] = 0;
+                                                }
+                                                $result[$booking_date_str][$method] += $distributedPrice;
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    if (!isset($result[$booking_date_str][$selected_payment_type])) {
+                                        $result[$booking_date_str][$selected_payment_type] = 0;
+                                    }
+                                    $result[$booking_date_str][$selected_payment_type] += $detail_price;
                                 }
                                 
                                 // Calculate commission based on commission_type
@@ -113,21 +142,10 @@ class SalesReportController extends Controller
                                         // Backward compatibility: if commission_type is null, assume percentage
                                         $commission_amount = ($detail->price * floatval($detail->commission)) / 100;
                                     }
-                                    $result[$value->booking_date]['commission'] += $commission_amount;
+                                    $result[$booking_date_str]['commission'] += $commission_amount;
                                 }
                             }
                         }
-                        $selected_payment_type = $value->payment_type;
-                        if (empty($value->payment_type)) {
-                            $selected_payment_type = "wallet";
-                        }
-                        
-                        // Ensure the payment type key exists in the result array
-                        if (!isset($result[$value->booking_date][$selected_payment_type])) {
-                            $result[$value->booking_date][$selected_payment_type] = 0;
-                        }
-                        
-                        $result[$value->booking_date][$selected_payment_type] += $price;
                     }
                 }
             }
@@ -145,22 +163,42 @@ class SalesReportController extends Controller
             $memberShipCards = $temp_memberShipCards->get();
             if (!$memberShipCards->isEmpty()) {
                 foreach ($memberShipCards as $memberShipCard) {
-                    $selected_payment_type = $memberShipCard->booking->payment_type;
-                    if (empty($memberShipCard->booking->payment_type)) {
-                        $selected_payment_type = "wallet";
-                    }
-                    $amount = $memberShipCard->amount;
                     if (!empty($memberShipCard->booking) && !empty($memberShipCard->booking->details)) {
+                        $selected_payment_type = $memberShipCard->booking->payment_type;
+                        if (empty($memberShipCard->booking->payment_type)) {
+                            $selected_payment_type = "wallet";
+                        }
+                        $amount = $memberShipCard->amount;
+                        $bookingTotal = collect($memberShipCard->booking->details)->sum('price');
+                        $booking_date_str = $memberShipCard->booking->booking_date->format('Y-m-d');
+
                         foreach ($memberShipCard->booking->details as $detail) {
-                            if (in_array($memberShipCard->booking->booking_date, array_keys($result))) {
-                                // Ensure the payment type key exists in the result array
-                                if (!isset($result[$memberShipCard->booking->booking_date][$selected_payment_type])) {
-                                    $result[$memberShipCard->booking->booking_date][$selected_payment_type] = 0;
-                                }
-                                
+                            if (isset($result[$booking_date_str])) {
                                 $user_amount = ($detail->price * $amount) / 100;
-                                $result[$memberShipCard->booking->booking_date]['free'] += $user_amount;
-                                $result[$memberShipCard->booking->booking_date][$selected_payment_type] -= $user_amount;
+                                $result[$booking_date_str]['free'] += $user_amount;
+
+                                if ($selected_payment_type === 'multiple' && !empty($memberShipCard->booking->payment_methods)) {
+                                    if ($bookingTotal > 0) {
+                                        foreach ($memberShipCard->booking->payment_methods as $pm) {
+                                            $method = $pm['method'] ?? null;
+                                            $pmAmount = floatval($pm['amount'] ?? 0);
+                                            if ($method && $pmAmount > 0) {
+                                                $proportion = $pmAmount / $bookingTotal;
+                                                $distributedDiscount = $user_amount * $proportion;
+                                                if (!isset($result[$booking_date_str][$method])) {
+                                                    $result[$booking_date_str][$method] = 0;
+                                                }
+                                                $result[$booking_date_str][$method] -= $distributedDiscount;
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    // Ensure the payment type key exists in the result array
+                                    if (!isset($result[$booking_date_str][$selected_payment_type])) {
+                                        $result[$booking_date_str][$selected_payment_type] = 0;
+                                    }
+                                    $result[$booking_date_str][$selected_payment_type] -= $user_amount;
+                                }
                             }
                         }
                     }
@@ -179,31 +217,48 @@ class SalesReportController extends Controller
             $discount = $temp_discount->get();
             $discountsArr = [];
             if (!$discount->isEmpty()) {
-                foreach ($discount as $static) {
-                    $amount = $static->amount;
                     if (!empty($static->booking) && !empty($static->booking->details)) {
                         $selected_payment_type = $static->booking->payment_type;
                         if (empty($static->booking->payment_type)) {
                             $selected_payment_type = "wallet";
                         }
+                        $amount = $static->amount;
+                        $bookingTotal = collect($static->booking->details)->sum('price');
+                        $booking_date_str = $static->booking->booking_date->format('Y-m-d');
+
                         foreach ($static->booking->details as $detail) {
-                            if ($static->type == "fixed") {
-                                $user_amount = $amount;
-                            } else {
-                                $user_amount = ($detail->price * $amount) / 100;
-                            }
-                            if (isset($result[$static->booking->booking_date])) {
-                                // Ensure the payment type key exists in the result array
-                                if (!isset($result[$static->booking->booking_date][$selected_payment_type])) {
-                                    $result[$static->booking->booking_date][$selected_payment_type] = 0;
+                            if (isset($result[$booking_date_str])) {
+                                if ($static->type == "fixed") {
+                                    $user_amount = $amount;
+                                } else {
+                                    $user_amount = ($detail->price * $amount) / 100;
                                 }
-                                
-                                // $result[$static->booking->booking_date]['free'] += $user_amount;
-                                $result[$static->booking->booking_date][$selected_payment_type] -= $user_amount;
+
+                                if ($selected_payment_type === 'multiple' && !empty($static->booking->payment_methods)) {
+                                    if ($bookingTotal > 0) {
+                                        foreach ($static->booking->payment_methods as $pm) {
+                                            $method = $pm['method'] ?? null;
+                                            $pmAmount = floatval($pm['amount'] ?? 0);
+                                            if ($method && $pmAmount > 0) {
+                                                $proportion = $pmAmount / $bookingTotal;
+                                                $distributedDiscount = $user_amount * $proportion;
+                                                if (!isset($result[$booking_date_str][$method])) {
+                                                    $result[$booking_date_str][$method] = 0;
+                                                }
+                                                $result[$booking_date_str][$method] -= $distributedDiscount;
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    // Ensure the payment type key exists in the result array
+                                    if (!isset($result[$booking_date_str][$selected_payment_type])) {
+                                        $result[$booking_date_str][$selected_payment_type] = 0;
+                                    }
+                                    $result[$booking_date_str][$selected_payment_type] -= $user_amount;
+                                }
                             }
                         }
                     }
-                }
             }
 
             $temp_users_wallets = UserWallet::whereRaw('YEAR(users_wallets.created_at)="' . $request->get('year') . '" and MONTH(users_wallets.created_at)="' . $request->get('month') . '"');

@@ -298,6 +298,7 @@ class SalesService
             'full_name' => $item['client_name'] ?? 'Walk-in',
             'mobile' => $item['client_mobile'] ?? null,
             'payment_type' => !empty($paymentType) ? $paymentType : (\App\Models\PaymentMethod::forBooking()->first()->name ?? 'service_cash'),
+            'payment_methods' => $item['payment_methods'] ?? null,
             'branch_id' => $branchId,
             'user_id' => $clientId,
             'sale_id' => $saleId,

@@ -51,13 +51,14 @@ class CommissionReportController extends Controller
             $report = $temp_report->get();
             if (!$report->isEmpty()) {
                 foreach ($report as $value) {
-                    if (isset($result[$value->booking_date])) {
+                    $booking_date_str = $value->booking_date->format('Y-m-d');
+                    if (isset($result[$booking_date_str])) {
                         if (!$value->details->isEmpty()) {
                             foreach ($value->details as $detail) {
-                                if (isset($result[$value->booking_date][$detail->worker_id])) {
-                                    $result[$value->booking_date][$detail->worker_id] += $detail->commission;
+                                if (isset($result[$booking_date_str][$detail->worker_id])) {
+                                    $result[$booking_date_str][$detail->worker_id] += $detail->commission;
                                     $users_with_totals[$detail->worker_id] += $detail->commission;
-                                    $result[$value->booking_date]["total"] += $detail->commission;
+                                    $result[$booking_date_str]["total"] += $detail->commission;
                                 }
                             }
                         }

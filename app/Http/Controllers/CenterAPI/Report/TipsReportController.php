@@ -92,15 +92,15 @@ class TipsReportController extends Controller
             if (isset($result)) {
                 if (!$report->isEmpty()) {
                     foreach ($report as $value) {
-                        $tip = 0;
-                        if (isset($result[$value->booking_date])) {
+                        $booking_date_str = $value->booking_date->format('Y-m-d');
+                        if (isset($result[$booking_date_str])) {
                             if (!$value->details->isEmpty()) {
                                 foreach ($value->details as $detail) {
-                                    if (!isset($result[$value->booking_date][$detail->worker_id])) {
+                                    if (!isset($result[$booking_date_str][$detail->worker_id])) {
                                         continue;
                                     }
                                     $tip = $detail->tip;
-                                    $result[$value->booking_date][$detail->worker_id] += $tip;
+                                    $result[$booking_date_str][$detail->worker_id] += $tip;
                                 }
                             }
                         }
@@ -167,15 +167,15 @@ class TipsReportController extends Controller
         if (isset($result['tips'])) {
             if (!$report->isEmpty()) {
                 foreach ($report as $value) {
-                    $tip = 0;
-                    if (isset($result['tips'][$value->booking_date])) {
+                    $booking_date_str = $value->booking_date->format('Y-m-d');
+                    if (isset($result['tips'][$booking_date_str])) {
                         if (!$value->details->isEmpty()) {
                             foreach ($value->details as $detail) {
-                                if (!isset($result['tips'][$value->booking_date][$detail->worker_id])) {
+                                if (!isset($result['tips'][$booking_date_str][$detail->worker_id])) {
                                     continue;
                                 }
                                 $tip = $detail->tip;
-                                $result['tips'][$value->booking_date][$detail->worker_id] += $tip;
+                                $result['tips'][$booking_date_str][$detail->worker_id] += $tip;
                             }
                         }
                     }
