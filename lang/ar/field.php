@@ -322,7 +322,9 @@ return [
     'wallet_balance'                  => 'رصيد المحفظة',
     'updated_at'                      => 'تاريخ التحديث',
     'multiple_payment_methods'        => 'طرق الدفع المتعددة',
-    'total_to_pay'                    => 'المبلغ المستحق'
+    'total_to_pay'                    => 'المبلغ المستحق',
+    'payment_methods'                 => 'طريقة الدفع'
+    
     
 
     

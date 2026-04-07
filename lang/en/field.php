@@ -331,4 +331,5 @@ return [
     'updated_at'                      => 'updated at',
     'multiple_payment_methods'        => 'Multiple Payment Methods',
     'total_to_pay'                    => 'Total To Pay',
+    'payment_methods'                 => 'payment Methods'
 ];
