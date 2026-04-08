@@ -57,7 +57,6 @@ class SettingRequest extends FormRequest
         $validations = [
             'language' => 'required',
             'tips' => 'required',
-            'invoice_info' => 'required',
             'image' => 'nullable|image|max:4096|mimes:jpg,jpeg,png,gif|mimetypes:image/jpeg,image/png',
         ];
 

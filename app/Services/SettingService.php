@@ -18,13 +18,16 @@ class SettingService
             'Auther' => Page::with(['translation'])->where('type', PageEnum::Auther->value)->first(),
             'Address' => Page::with(['translation'])->where('type', PageEnum::Address->value)->first(),
             'FooterText' => Page::with(['translation'])->where('type', PageEnum::FooterText->value)->first(),
+            'PrivacyPolicyApp' => Page::with(['translation'])->where('type', PageEnum::PrivacyPolicyApp->value)->first(),
+            'TermsOfUseApp' => Page::with(['translation'])->where('type', PageEnum::TermsOfUseApp->value)->first(),
+            'TermsOfServiceApp' => Page::with(['translation'])->where('type', PageEnum::TermsOfServiceApp->value)->first(),
+            'AboutUsApp' => Page::with(['translation'])->where('type', PageEnum::AboutUsApp->value)->first(),
         ];
 
         return [
             'item' => $item,
             'language' => Setting::where('key', SettingEnum::language->value)->first(),
             'tips' => Setting::where('key', SettingEnum::tips->value)->first(),
-            'invoice_info' => Setting::where('key', SettingEnum::invoice_info->value)->first(),
             'image' => Setting::first()->image,
         ];
     }
@@ -51,11 +54,6 @@ class SettingService
         $setting = Setting::where('key', SettingEnum::tips->value)->first();
         $setting->update([
             'value' => $request['tips']
-        ]);
-
-        $setting = Setting::where('key', SettingEnum::invoice_info->value)->first();
-        $setting->update([
-            'value' => $request['invoice_info']
         ]);
 
         if (isset($request['image'])) {

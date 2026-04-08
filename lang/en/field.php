@@ -329,8 +329,13 @@ return [
     'admin_notes'                     => 'admin notes',
     'wallet_balance'                  => 'wallet ballance',
     'updated_at'                      => 'updated at',
-    'multiple_payment_methods'        => 'Multiple Payment Methods',
+    'multiple_payment_methods'        => 'Split Payment',
     'total_to_pay'                    => 'Total To Pay',
     'payment_methods'                 => 'payment Methods',
-    'please_fill_all_required_fields' => 'Please fill all required fields (payment group must equal invoice)'
+    'please_fill_all_required_fields' => 'Please fill all required fields (payment group must equal invoice)',
+    'app_legal_sections'              => 'App Legal Sections',
+    'privacy_policy_app'              => 'Privacy Policy (App)',
+    'terms_of_use_app'                => 'Terms of Use (App)',
+    'terms_of_service_app'            => 'Terms of Service (App)',
+    'about_us_app'                    => 'About Us (App)'
 ];

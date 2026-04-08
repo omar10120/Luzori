@@ -124,5 +124,52 @@ class PageSeeder extends Seeder
                 'value' => '© Copyrights 2024. All rights reserved.',
             ]
         ]);
+        Page::create([
+            'type' => PageEnum::PrivacyPolicyApp->value,
+            'ar' => [
+                'value' => 'any',
+            ],
+            'en' => [
+                'value' => 'any',
+            ]
+        ]);
+
+        Page::create([
+        'type' => PageEnum::TermsOfUseApp->value,
+        'ar' => [
+            'value' => 'any',
+        ],
+        'en' => [
+            'value' => 'any',
+        ]
+       ]);
+        Page::create([
+        'type' => PageEnum::TermsOfServiceApp->value,
+        'ar' => [
+            'value' => 'any',
+        ],
+        'en' => [
+            'value' => 'any',
+        ]
+       ]);
+        Page::create([
+        'type' => PageEnum::AboutUsApp->value,
+        'ar' => [
+            'value' => 'any',
+        ],
+        'en' => [
+            'value' => 'any',
+        ]
+        ]);
+
+        Page::create([
+            'type' => PageEnum::InvoiceInfo->value,
+            'ar' => [
+                'value' => 'معلومات الفاتورة',
+            ],
+            'en' => [
+                'value' => 'Invoice Information',
+            ]
+        ]);
     }
 }

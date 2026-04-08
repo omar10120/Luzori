@@ -321,10 +321,15 @@ return [
     'admin_notes'                     => 'ملاحظات الادمن',
     'wallet_balance'                  => 'رصيد المحفظة',
     'updated_at'                      => 'تاريخ التحديث',
-    'multiple_payment_methods'        => 'طرق الدفع المتعددة',
+    'multiple_payment_methods'        => 'دفعات متفرقة',
     'total_to_pay'                    => 'المبلغ المستحق',
     'payment_methods'                 => 'طريقة الدفع', 
-    'please_fill_all_required_fields' => 'يرجى ملء جميع الحقول المطلوبة (مجموع الدفعات يجب ان يساوي الفاتورة)'
+    'please_fill_all_required_fields' => 'يرجى ملء جميع الحقول المطلوبة (مجموع الدفعات يجب ان يساوي الفاتورة)',
+    'app_legal_sections'              => 'أقسام التطبيق القانونية',
+    'privacy_policy_app'              => 'سياسة الخصوصية للايفون (التطبيق)',
+    'terms_of_use_app'                => 'شروط الاستخدام للايفون (التطبيق)',
+    'terms_of_service_app'            => 'شروط الخدمة للايفون (التطبيق)',
+    'about_us_app'                    => 'عن التطبيق (من نحن)'
 
     
     

@@ -37,8 +37,7 @@
                                                     <label class="form-label">{{ __('field.about_us') }}</label>
                                                     <input type="hidden" name="{{ $locale }}[about_us][key]"
                                                         value="{{ App\Enums\PageEnum::AboutUs->value }}">
-                                                    <textarea class="summernote" name="{{ $locale }}[about_us][value]">{{ $item ? $item['about_us']->translate($locale)->value : null }}</textarea>
-                                                </div>
+                                                    <textarea class="summernote" name="{{ $locale }}[about_us][value]">{{ $item['about_us']?->translate($locale)?->value }}</textarea>                                                </div>
                                             </div>
                                         </div>
                                         <div class="row">
@@ -47,7 +46,7 @@
                                                     <label class="form-label">{{ __('field.privacy_policy') }}</label>
                                                     <input type="hidden" name="{{ $locale }}[privacy_policy][key]"
                                                         value="{{ App\Enums\PageEnum::PrivacyPolicy->value }}">
-                                                    <textarea class="summernote" name="{{ $locale }}[privacy_policy][value]">{{ $item ? $item['privacy_policy']->translate($locale)->value : null }}</textarea>
+                                                    <textarea class="summernote" name="{{ $locale }}[privacy_policy][value]">{{ $item['privacy_policy']?->translate($locale)?->value }}</textarea>
                                                 </div>
                                             </div>
                                         </div>
@@ -57,7 +56,61 @@
                                                     <label class="form-label">{{ __('field.terms_conditions') }}</label>
                                                     <input type="hidden" name="{{ $locale }}[terms_conditions][key]"
                                                         value="{{ App\Enums\PageEnum::TermsConditions->value }}">
-                                                    <textarea class="summernote" name="{{ $locale }}[terms_conditions][value]">{{ $item ? $item['terms_conditions']->translate($locale)->value : null }}</textarea>
+                                                    <textarea class="summernote" name="{{ $locale }}[terms_conditions][value]">{{ $item['terms_conditions']?->translate($locale)?->value }}</textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <hr>
+                                        <h4 class="mb-3">{{ __('field.invoice_info') }}</h4>
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <div class="mb-1">
+                                                    <label class="form-label">{{ __('field.invoice_info') }}</label>
+                                                    <input type="hidden" name="{{ $locale }}[invoice_info][key]"
+                                                        value="{{ App\Enums\PageEnum::InvoiceInfo->value }}">
+                                                    <textarea class="summernote" name="{{ $locale }}[invoice_info][value]">{{ $item['invoice_info']?->translate($locale)?->value }}</textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <hr>
+                                        <h4 class="mb-3">{{ __('field.app_legal_sections') }}</h4>
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <div class="mb-1">
+                                                    <label class="form-label">{{ __('field.privacy_policy_app') }}</label>
+                                                    <input type="hidden" name="{{ $locale }}[privacy_policy_app][key]"
+                                                        value="{{ App\Enums\PageEnum::PrivacyPolicyApp->value }}">
+                                                    <textarea class="summernote" name="{{ $locale }}[privacy_policy_app][value]">{{ $item['privacy_policy_app']?->translate($locale)?->value }}</textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <div class="mb-1">
+                                                    <label class="form-label">{{ __('field.terms_of_use_app') }}</label>
+                                                    <input type="hidden" name="{{ $locale }}[terms_of_use_app][key]"
+                                                        value="{{ App\Enums\PageEnum::TermsOfUseApp->value }}">
+                                                    <textarea class="summernote" name="{{ $locale }}[terms_of_use_app][value]">{{ $item['terms_of_use_app']?->translate($locale)?->value }}</textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <div class="mb-1">
+                                                    <label class="form-label">{{ __('field.terms_of_service_app') }}</label>
+                                                    <input type="hidden" name="{{ $locale }}[terms_of_service_app][key]"
+                                                        value="{{ App\Enums\PageEnum::TermsOfServiceApp->value }}">
+                                                    <textarea class="summernote" name="{{ $locale }}[terms_of_service_app][value]">{{ $item['terms_of_service_app']?->translate($locale)?->value }}</textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <div class="mb-1">
+                                                    <label class="form-label">{{ __('field.about_us_app') }}</label>
+                                                    <input type="hidden" name="{{ $locale }}[about_us_app][key]"
+                                                        value="{{ App\Enums\PageEnum::AboutUsApp->value }}">
+                                                    <textarea class="summernote" name="{{ $locale }}[about_us_app][value]">{{ $item['about_us_app']?->translate($locale)?->value }}</textarea>
                                                 </div>
                                             </div>
                                         </div>

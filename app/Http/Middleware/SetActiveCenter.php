@@ -33,6 +33,10 @@ class SetActiveCenter
         if ($request->is('app_api/booking/store')) {
             return $next($request);
         }
+        if ($request->is('app_api/info')) {
+            return $next($request);
+        }
+            
 
         $domain = $request->header('domain');
         if ($domain) {

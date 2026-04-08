@@ -5,12 +5,15 @@ use App\Http\Controllers\AppAPI\AuthController;
 use App\Http\Controllers\AppAPI\WalletController;
 use App\Http\Controllers\AppAPI\FirebaseAuthController;
 use App\Http\Controllers\AppAPI\BookingController;
+use App\Http\Controllers\AppAPI\InfoController;
 
 /*
 |--------------------------------------------------------------------------
 | App API Routes (Main Database)
 |--------------------------------------------------------------------------
 */
+
+Route::get('info', [InfoController::class, 'index']);
 
 Route::prefix('auth')->group(function () {
     Route::post('register', [AuthController::class, 'register']);

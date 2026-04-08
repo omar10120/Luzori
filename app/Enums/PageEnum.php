@@ -15,4 +15,9 @@ enum PageEnum: int
     case Slogan = 9;
     case Address = 10;
     case FooterText = 11;
+    case PrivacyPolicyApp = 12;
+    case TermsOfUseApp = 13;
+    case TermsOfServiceApp = 14;
+    case AboutUsApp = 15;
+    case InvoiceInfo = 16;
 }
