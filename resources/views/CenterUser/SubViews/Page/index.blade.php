@@ -29,8 +29,8 @@
                             @include('Admin.Components.languages-tabs')
                             <div class="tab-content">
                                 @foreach (Config::get('translatable.locales') as $locale)
-                                    <div class="tab-pane {{ $loop->first ? 'active' : null }}" id="{{ $locale }}"
-                                        aria-labelledby="{{ $locale }}-tab" role="tabpanel">
+                                    <div class="tab-pane {{ $loop->first ? 'active' : null }}" id="{{ $locale }}-add"
+                                        aria-labelledby="{{ $locale }}-tab-add" role="tabpanel">
                                         <div class="row">
                                             <div class="col-md-12">
                                                 <div class="mb-1">
