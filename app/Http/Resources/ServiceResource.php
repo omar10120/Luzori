@@ -26,7 +26,15 @@ class ServiceResource extends JsonResource
                         'image' => $worker->getFirstMediaUrl('Worker') ?: asset('assets/img/avatars/1.png'),
                         'has_commission' => $worker->has_commission,
                         'branch_id' => $worker->branch_id,
-                        
+                        'vacations' => $worker->relationLoaded('vacations')
+                            ? $worker->vacations->map(function ($vacation) {
+                                return [
+                                    'id' => $vacation->id,
+                                    'day' => $vacation->day,
+                                    'describe' => $vacation->describe,
+                                ];
+                            })->values()->all()
+                            : [],
                     ];
                 });
             }, []),
