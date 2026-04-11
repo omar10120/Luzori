@@ -19,6 +19,9 @@ return new class extends Migration
             $table->float('wallet')->default(0);
             $table->boolean('is_active')->default(1);
             $table->text('image')->nullable();
+            $table->text('address')->nullable();
+            $table->date('birth')->nullable();
+            $table->string('gender', 32)->nullable();
             $table->string('remember_token')->nullable();
             $table->timestamps();
             $table->softDeletes();

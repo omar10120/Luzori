@@ -31,6 +31,9 @@ class AppUser extends Authenticatable implements HasMedia
         'wallet',
         'is_active',
         'image',
+        'address',
+        'birth',
+        'gender',
     ];
 
     protected $hidden = [

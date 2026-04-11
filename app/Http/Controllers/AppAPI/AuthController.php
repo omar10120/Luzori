@@ -21,6 +21,9 @@ class AuthController extends Controller
             'country_code' => 'nullable|string|max:20',
             'phone' => 'required|string|unique:users,phone',
             'password' => 'required|string|min:6|confirmed',
+            'address' => 'nullable|string|max:255',
+            'birth' => 'nullable|date',
+            'gender' => 'nullable|string|max:255',
         ]);
 
         $user = AppUser::create([
@@ -32,6 +35,9 @@ class AuthController extends Controller
             'password' => $request->password,
             'is_active' => 1,
             'wallet' => 0,
+            'address' => $request->address,
+            'birth' => $request->birth,
+            'gender' => $request->gender,
         ]);
 
         $token = $user->createToken('app_auth_token')->plainTextToken;
@@ -47,6 +53,9 @@ class AuthController extends Controller
         $request->validate([
             'email' => 'required|string',
             'password' => 'required|string',
+            'address' => 'nullable|string|max:255',
+            'birth' => 'nullable|date',
+            'gender' => 'nullable|string|max:255',
         ]);
 
         $user = AppUser::where('email', $request->email)->first();
@@ -85,9 +94,12 @@ class AuthController extends Controller
             'phone' => 'nullable|string|unique:users,phone,' . $user->id,
             'password' => 'nullable|string|min:6|confirmed',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'address' => 'nullable|string|max:255',
+            'birth' => 'nullable|date',
+            'gender' => 'nullable|string|max:255',
         ]);
 
-        $data = $request->only(['first_name', 'last_name', 'email', 'phone']);
+        $data = $request->only(['first_name', 'last_name', 'email', 'phone', 'address', 'birth', 'gender']);
         
         if ($request->filled('password')) {
             $data['password'] = $request->password;

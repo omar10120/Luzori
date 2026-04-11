@@ -31,6 +31,13 @@ class User extends Model implements HasMedia
         'phone',
         'wallet',
         'branch_id',
+        'address',
+        'birth',
+        'gender',
+    ];
+
+    protected $casts = [
+        'birth' => 'date',
     ];
 
     public function branch(): BelongsTo
