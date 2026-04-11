@@ -55,10 +55,6 @@ class FirebaseAuthController extends Controller
                     'last_name' => $lastName,
                     'firebase_uid' => $firebaseUserId,
                     'provider' => $request->provider,
-                    'country_code' => $firebaseUser->phoneNumber,
-                    'phone' => $firebaseUser->phoneNumber,
-                    'birth' => $firebaseUser->birth,
-                    'gender' => $firebaseUser->gender,
                 ]
             );
 
