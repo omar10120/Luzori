@@ -30,6 +30,7 @@ Route::prefix('auth')->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('booking')->group(function () {
         Route::post('store', [BookingController::class, 'store']);
+        Route::get('list', [BookingController::class, 'list']);
     });
 });
 

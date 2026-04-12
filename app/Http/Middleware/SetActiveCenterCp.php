@@ -19,7 +19,7 @@ class SetActiveCenterCp
 
     if (in_array($host, ['127.0.0.1', 'localhost'])) {
         // 🔹 Local dev: set a default test center
-        $center = Center::where('domain', 'center')->first(); // or specify manually
+        $center = Center::where('domain', 'center1')->first(); // or specify manually
         if ($center) {
             Config::set('database.connections.mysql.database', $center->database);
             DB::purge('mysql');

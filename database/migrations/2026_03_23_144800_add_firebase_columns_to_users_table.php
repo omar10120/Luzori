@@ -15,9 +15,7 @@ return new class extends Migration
             $table->string('firebase_uid')->nullable()->after('email');
             $table->string('provider')->nullable()->default('email')->after('firebase_uid');
             $table->string('phone')->nullable()->change();
-            $table->string('address')->nullable()->after('phone');
-            $table->date('birth')->nullable()->after('address');
-            $table->string('gender', 32)->nullable()->after('birth');
+  
         });
     }
 
@@ -30,9 +28,7 @@ return new class extends Migration
             $table->dropColumn('firebase_uid');
             $table->dropColumn('provider');
             $table->string('phone')->nullable(false)->change();
-            $table->dropColumn('address');
-            $table->dropColumn('birth');
-            $table->dropColumn('gender');
+
         });
     }
 };
