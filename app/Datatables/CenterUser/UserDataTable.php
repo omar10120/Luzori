@@ -50,16 +50,19 @@ class UserDataTable extends DataTable
                             </span>
                         </label>';
             })
-            ->editColumn('first_name', function ($row) {
-                return \App\Helpers\MyHelper::truncateWithReadMore($row->name ?? '');
+            ->editColumn('packages', function ($row) {
+                $count = $row->packages->where('status', 'active')->count();
+                return '<span class="badge bg-info">' . $count . ' ' . __('locale.packages') . '</span>';
             })
-            ->rawColumns(['status', 'first_name'], true)
+            ->rawColumns(['status', 'first_name', 'packages'], true)
             ->setRowId('id');
     }
 
     public function query(User $model): QueryBuilder
     {
-        return $model->query()->withTrashed()->with(['media'])->orderBy($this->plural . '.id', 'DESC');
+        return $model->query()->withTrashed()->with(['media', 'packages' => function($q) {
+            $q->where('status', 'active');
+        }])->orderBy($this->plural . '.id', 'DESC');
     }
 
     public function html(): HtmlBuilder
@@ -133,6 +136,7 @@ class UserDataTable extends DataTable
             Column::make('email')->searchable(true)->title(__('field.email')),
             Column::computed('phone')->searchable(true)->title(__('field.phone')),
             Column::make('wallet')->searchable(true)->title(__('field.wallet')),
+            Column::computed('packages')->searchable(false)->title(__('locale.packages')),
             Column::computed('status')->searchable(false)->title(__('field.status')),
             Column::make('created_at')->searchable(true)->title(__('field.created_at')),
         ];

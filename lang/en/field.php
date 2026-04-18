@@ -337,5 +337,9 @@ return [
     'privacy_policy_app'              => 'Privacy Policy (App)',
     'terms_of_use_app'                => 'Terms of Use (App)',
     'terms_of_service_app'            => 'Terms of Service (App)',
-    'about_us_app'                    => 'About Us (App)'
+    'about_us_app'                    => 'About Us (App)',
+    'package_does_not_need_schedule'  => 'package_does_not_need_schedule',
+    'packages'                        => 'Packages',
+    'package'                         => 'Package',
+    'total_services_price'            => 'Total Services Price',
 ];

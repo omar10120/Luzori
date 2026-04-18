@@ -60,6 +60,11 @@ class User extends Model implements HasMedia
         return $this->hasMany(Membership::class);
     }
 
+    public function packages(): HasMany
+    {
+        return $this->hasMany(UserPackage::class);
+    }
+
     protected function getNameAttribute()
     {
         return $this->first_name . ' ' . $this->last_name;

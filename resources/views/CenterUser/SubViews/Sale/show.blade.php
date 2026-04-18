@@ -88,8 +88,8 @@
                                     @foreach($sale->saleItems as $saleItem)
                                         <tr>
                                             <td>
-                                                <span class="badge bg-{{ $saleItem->item_type === 'booking' ? 'primary' : 'info' }}">
-                                                    {{ $saleItem->item_type === 'booking' ? __('locale.bookings') : __('locale.products') }}
+                                                <span class="badge bg-{{ $saleItem->item_type === 'booking' ? 'primary' : ($saleItem->item_type === 'user_package' ? 'success' : 'info') }}">
+                                                    {{ $saleItem->item_type === 'booking' ? __('locale.bookings') : ($saleItem->item_type === 'user_package' ? __('locale.packages') : __('locale.products')) }}
                                                 </span>
                                             </td>
                                             <td>
@@ -104,6 +104,9 @@
                                                             {{ $booking->details->first()->_date }} • 
                                                             {{ $booking->details->first()->from_time }} - {{ $booking->details->first()->to_time }}
                                                         </small>
+                                                        @if($booking->details->first()->is_free)
+                                                            <br><small class="text-success">({{ __('field.covered_by_package') ?? 'Covered by Package' }})</small>
+                                                        @endif
                                                     @endif
                                                 @elseif($saleItem->item_type === 'buy_product')
                                                     @php
@@ -113,6 +116,15 @@
                                                         })->filter()->implode(', ');
                                                     @endphp
                                                     {{ $products ?: '-' }}
+                                                @elseif($saleItem->item_type === 'user_package')
+                                                    @php
+                                                        $userPackage = $saleItem->itemable;
+                                                        $package = $userPackage->package ?? null;
+                                                    @endphp
+                                                    {{ $package?->name ?? '-' }}
+                                                    <br><small class="text-muted">
+                                                        {{ __('general.new_purchase') ?? 'New Purchase' }}
+                                                    </small>
                                                 @endif
                                             </td>
                                             <td>{{ $saleItem->quantity }}</td>

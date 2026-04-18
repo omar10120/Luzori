@@ -42,26 +42,40 @@
                         <div class="row">
                             <div class="col-md-12 mb-2">
                                 <div class="mb-1">
+                                    <label for="price" class="form-label">{{ __('field.price') }} <span class="text-danger">*</span></label>
+                                    <small class="text-muted">{{__('general.enter_the_price_of_the_package')}}</small>
+                                    <input type="number" step="0.01" id="price" class="form-control" name="price" placeholder="{{ __('field.price') }}" value="{{ $item ? $item->price : '' }}" required />
+                                    @if($item)
+                                        <div class="mt-2">
+                                            <span class="badge bg-label-primary">
+                                                {{ __('field.total_services_price') }}: {{ number_format($item->total_value, 2) }} {{ get_currency() }}
+                                            </span>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="col-md-12 mb-2">
+                                <div class="mb-1">
                                     <label for="paid_services" class="form-label">{{ __('field.paid_services') }} <span class="text-danger">*</span></label>
                                     <small class="text-muted">{{__('general.select_a_paid_services_from_the_list')}}</small>
-                                    <select class="select2 form-control" name="paid_services[]" id="paid_services" multiple>
+                                    <select class="select2 form-control" name="paid_services[]" id="paid_services" multiple required>
                                         @foreach ($services as $service)
                                             <option
                                                 {{ $item ? (in_array($service->id, $item->packageServicePaid()->pluck('service_id')->toArray()) ? 'selected' : null) : null }}
-                                                value="{{ $service->id }}">{{ $service->name }}</option>
+                                                value="{{ $service->id }}">{{ $service->name }} ({{ number_format($service->price, 2) }} {{ get_currency() }})</option>
                                         @endforeach
                                     </select>
                                 </div>
                             </div>
                             <div class="col-md-12 mb-2">
                                 <div class="mb-1">
-                                        <label for="free_services" class="form-label">{{ __('field.free_services') }} <span class="text-danger">*</span></label>
+                                        <label for="free_services" class="form-label">{{ __('field.free_services') }} </label>
                                     <small class="text-muted">{{__('general.select_a_free_services_from_the_list')}}</small>
                                     <select class="select2 form-control" name="free_services[]" id="free_services" multiple>
                                         @foreach ($services as $service)
                                             <option
                                                 {{ $item ? (in_array($service->id, $item->packageServiceFree()->pluck('service_id')->toArray()) ? 'selected' : null) : null }}
-                                                value="{{ $service->id }}">{{ $service->name }}</option>
+                                                value="{{ $service->id }}">{{ $service->name }} ({{ number_format($service->price, 2) }} {{ get_currency() }})</option>
                                         @endforeach
                                     </select>
                                 </div>

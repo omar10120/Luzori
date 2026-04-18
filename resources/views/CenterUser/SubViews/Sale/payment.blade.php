@@ -141,6 +141,12 @@
                                             $displayPrice += (float)($svc['price'] ?? 0);
                                             $originalPriceTotal += (float)($svc['original_price'] ?? $svc['price'] ?? 0);
                                         }
+                                        if (!empty($item['packages']) && is_array($item['packages'])) {
+                                            foreach ($item['packages'] as $pkg) {
+                                                $displayPrice += (float)($pkg['price'] ?? 0);
+                                                $originalPriceTotal += (float)($pkg['price'] ?? 0);
+                                            }
+                                        }
                                     } else {
                                         $price = $item['price'] ?? 0;
                                         $quantity = $item['quantity'] ?? 1;
@@ -159,6 +165,16 @@
                                         </div>
                                     </div>
                                     @if($item['type'] === 'service')
+                                        @if(!empty($item['packages']) && is_array($item['packages']))
+                                            @foreach($item['packages'] as $pkg)
+                                                <div class="d-flex justify-content-between align-items-center mt-1">
+                                                    <small class="text-success">
+                                                        <i class="ti ti-package me-1"></i> {{ $pkg['name'] ?? '' }} ({{ __('general.new_purchase')}})
+                                                    </small>
+                                                    <small class="text-success">{{ number_format((float)($pkg['price'] ?? 0), 2) }} {{ get_currency() }}</small>
+                                                </div>
+                                            @endforeach
+                                        @endif
                                         @if(!empty($item['services']) && is_array($item['services']))
                                             @foreach($item['services'] as $svc)
                                                 <div class="d-flex justify-content-between align-items-center mt-1">
@@ -230,6 +246,11 @@
                                     } elseif(isset($item['type']) && $item['type'] === 'service' && !empty($item['services']) && is_array($item['services'])) {
                                         foreach ($item['services'] as $svc) {
                                             $subtotal += (float)($svc['price'] ?? 0);
+                                        }
+                                        if (!empty($item['packages']) && is_array($item['packages'])) {
+                                            foreach ($item['packages'] as $pkg) {
+                                                $subtotal += (float)($pkg['price'] ?? 0);
+                                            }
                                         }
                                     } else {
                                         $price = isset($item['price']) ? (float)$item['price'] : 0;

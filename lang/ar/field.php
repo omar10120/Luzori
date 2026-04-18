@@ -329,7 +329,11 @@ return [
     'privacy_policy_app'              => 'سياسة الخصوصية للايفون (التطبيق)',
     'terms_of_use_app'                => 'شروط الاستخدام للايفون (التطبيق)',
     'terms_of_service_app'            => 'شروط الخدمة للايفون (التطبيق)',
-    'about_us_app'                    => 'عن التطبيق (من نحن)'
+    'about_us_app'                    => 'عن التطبيق (من نحن)',
+    'package_does_not_need_schedule'  => 'الباقة لا تحتاج جدول',
+    'packages'                        => 'الباقات',
+    'package'                         => 'الباقة',
+    'total_services_price'            => 'إجمالي سعر الخدمات',
 
     
     

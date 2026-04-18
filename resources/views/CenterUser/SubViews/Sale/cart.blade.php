@@ -184,6 +184,14 @@
                                                                                         <option value="{{ $service->id }}" data-category-id="{{ $service->category_id }}">{{ $service->name }}</option>
                                                                                     @endforeach
                                                                                 </select>
+                                                                                <div class="mt-3 mb-1">
+                                                                                    <label for="booking-packages" class="form-label mb-0">{{ __('locale.packages') }}</label>
+                                                                                    <select class="select2 form-control " name="packages[]" id="booking-packages" multiple>
+                                                                                        @foreach ($packages as $package)
+                                                                                            <option value="{{ $package->id }}" data-price="{{ $package->price }}">{{ $package->name }} ({{ $package->price }} {{ get_currency() }})</option>
+                                                                                        @endforeach
+                                                                                    </select>
+                                                                                </div>
                                                                             </div>
                                                                         </div>
                                                                     </div>
@@ -215,7 +223,6 @@
                                                         </button>
                                                     </div>
                                                 </div>
-
                                                 <!-- Step 3: Customer Details -->
                                                 <div id="booking-third-step" class="content">
                                                     <div class="row mb-4">
@@ -255,6 +262,7 @@
                                                     </div>
                                                     <div id="booking-walletsElement"></div>
                                                     <div id="booking-membershipsElement"></div>
+                                                    <div id="booking-packagesElement"></div>
                                                     <div id="booking-servicesTable"></div>
                                                     <div class="row mb-2">
                                                         <div class="col-md-12">
@@ -1073,7 +1081,20 @@
             let selectedCustomerName = null; // Will be set on load or selection
             let selectedCustomerPhone = null; // Will be set on load or selection
             let bookingWizardData = {};
-            let bookingIds = {};
+            let bookingIds = []; // Should be array, not object
+            let bookingPackageIds = [];
+            
+            // Configuration from PHP to avoid mixing PHP and JS logic below
+            const posConfig = {
+                hasCommissionPermission: {{ has_commission_permission() ? 'true' : 'false' }},
+                allowedCommissionType: '{{ get_allowed_commission_type("booking") }}',
+                currency: '{{ get_currency() }}',
+                translations: {
+                    max_commission: '{{ __("field.max_commission") }}',
+                    commission_cannot_exceed: '{{ __("field.commission_cannot_exceed_service_price") }}',
+                    select_commission: '{{ __("field.select_commission") }}'
+                }
+            };
 
             // Store service prices from loaded services
             let servicesData = {};
@@ -1241,7 +1262,10 @@
                 $servicesSelect.val(currentSelections).trigger('change');
             }
 
-            $('#booking-services').on('change', function() {
+            $('#booking-services' ).on('change', function() {
+                $('#booking-nextStep1').prop('disabled', (!$(this).val() || $(this).val().length === 0));
+            });
+            $('#booking-packages' ).on('change', function() {
                 $('#booking-nextStep1').prop('disabled', (!$(this).val() || $(this).val().length === 0));
             });
 
@@ -1264,13 +1288,17 @@
 
             $('#booking-nextStep1').on('click', function(e) {
                 e.preventDefault();
-                let services = $('#booking-services').val();
-                if (!services || services.length === 0) {
-                    alert('Please select at least one service.');
+                let services = $('#booking-services').val() || [];
+                let packages = $('#booking-packages').val() || [];
+                
+                if (services.length === 0 && packages.length === 0) {
+                    alert('Please select at least one service or package.');
                     return false;
                 }
 
                 bookingIds = services;
+                bookingPackageIds = packages; // Track chosen packages
+                
                 let servicesArray = [];
                 services.forEach(service => {
                     var serviceData = servicesData[service] || {};
@@ -1281,6 +1309,17 @@
                         has_commission: serviceData.has_commission || false
                     };
                     servicesArray.push(serviceInfo);
+                });
+                
+                let packagesArray = [];
+                packages.forEach(pkg => {
+                    var pkgOption = $('#booking-packages').find('option[value="' + pkg + '"]');
+                    var pkgInfo = {
+                        id: pkg,
+                        name: pkgOption.text() || 'Package',
+                        price: parseFloat(pkgOption.data('price')) || 0
+                    };
+                    packagesArray.push(pkgInfo);
                 });
 
                 $('#booking-service-container').empty();
@@ -1322,23 +1361,15 @@
                                 </div>
                             </div>`;    
                     
-                    @if(has_commission_permission())
-                        @php
-                            $allowedBookingType = get_allowed_commission_type('booking');
-                        @endphp
-                        @if($allowedBookingType)
+                    if (posConfig.hasCommissionPermission && posConfig.allowedCommissionType) {
                         service_info += `
                             <div class="col-md-2">
                                 <div class="mb-1">
                                     <label class="form-label">{{ __('field.commission_type') }}</label>
-                                    <input type="hidden" name="service[${service.id}][commission_type]" value="{{ $allowedBookingType }}">
+                                    <input type="hidden" name="service[${service.id}][commission_type]" value="${posConfig.allowedCommissionType}">
                                     <select class="form-control commission-type-select" name="service[${service.id}][commission_type_display]" data-service-id="${service.id}" disabled>
-                                        <option value="{{ $allowedBookingType }}" selected>
-                                            @if($allowedBookingType == 'percentage')
-                                                {{ __('field.percentage') }}
-                                            @else
-                                                {{ __('field.fixed_value') }}
-                                            @endif
+                                        <option value="${posConfig.allowedCommissionType}" selected>
+                                            ${posConfig.allowedCommissionType === 'percentage' ? '{{ __("field.percentage") }}' : '{{ __("field.fixed_value") }}'}
                                         </option>
                                     </select>
                                 </div>
@@ -1346,36 +1377,32 @@
                             <div class="col-md-2">
                                 <div class="mb-1">
                                     <label class="form-label">{{ __('field.commission') }}</label>`;
-                        @if($allowedBookingType == 'percentage')
-                        service_info += `
-                                    <select class="form-control commission-percentage-select" name="service[${service.id}][commission]" id="booking-commission_percentage_${service.id}">
-                                        <option value="">{{ __('field.select_commission') }}</option>`;
-                        for (let i = 1; i <= 100; i++) {
-                            service_info += `<option value="${i}">${i}%</option>`;
+                        
+                        if (posConfig.allowedCommissionType === 'percentage') {
+                            service_info += `
+                                        <select class="form-control commission-percentage-select" name="service[${service.id}][commission]" id="booking-commission_percentage_${service.id}">
+                                            <option value="">${posConfig.translations.select_commission}</option>`;
+                            for (let i = 1; i <= 100; i++) {
+                                service_info += `<option value="${i}">${i}%</option>`;
+                            }
+                            service_info += `
+                                        </select>`;
+                        } else {
+                            service_info += `
+                                        <input type="number" class="form-control commission-fixed-input" name="service[${service.id}][commission]" id="booking-commission_fixed_${service.id}" placeholder="{{ __('field.commission') }}" step="0.01" min="0" max="${servicePrice}" data-service-price="${servicePrice}">
+                                        <small class="text-muted commission-max-hint" id="booking-commission_max_hint_${service.id}">${posConfig.translations.max_commission}: ${parseFloat(servicePrice).toFixed(5)} ${posConfig.currency}</small>`;
                         }
-                        service_info += `
-                                    </select>`;
-                        @else
-                        service_info += `
-                                    <input type="number" class="form-control commission-fixed-input" name="service[${service.id}][commission]" id="booking-commission_fixed_${service.id}" placeholder="{{ __('field.commission') }}" step="0.01" min="0" max="${servicePrice}" data-service-price="${servicePrice}">
-                                    <small class="text-muted commission-max-hint" id="booking-commission_max_hint_${service.id}">{{ __('field.max_commission') }}: ${parseFloat(servicePrice).toFixed(5)} {{ get_currency() }}</small>`;
-                        @endif
                         service_info += `
                                 </div>
                             </div>`;
-                        @endif
-                    @endif
+                    }
                     
                     service_info += `</div>`;
 
                     $('#booking-service-container').append(service_info);
                     
                     // Add real-time validation for fixed commission input after element is appended
-                    @if(has_commission_permission())
-                        @php
-                            $allowedBookingType = get_allowed_commission_type('booking');
-                        @endphp
-                        @if($allowedBookingType == 'fixed')
+                    if (posConfig.hasCommissionPermission && posConfig.allowedCommissionType === 'fixed') {
                         setTimeout(function() {
                             var currentServiceId = service.id;
                             var currentServicePrice = servicePrice;
@@ -1389,37 +1416,47 @@
                                     if (commissionValue > currentServicePrice) {
                                         $(this).addClass('is-invalid');
                                         if ($hint.length) {
-                                            $hint.removeClass('text-muted').addClass('text-danger').text('{{ __('field.commission_cannot_exceed_service_price') }}');
+                                            $hint.removeClass('text-muted').addClass('text-danger').text(posConfig.translations.commission_cannot_exceed);
                                         }
                                     } else {
                                         $(this).removeClass('is-invalid');
                                         if ($hint.length) {
-                                            $hint.removeClass('text-danger').addClass('text-muted').html('{{ __('field.max_commission') }}: ' + parseFloat(currentServicePrice).toFixed(5) + ' {{ get_currency() }}');
+                                            $hint.removeClass('text-danger').addClass('text-muted').html(posConfig.translations.max_commission + ': ' + parseFloat(currentServicePrice).toFixed(5) + ' ' + posConfig.currency);
                                         }
                                     }
-                                    // Check all commission fields and enable/disable Next button
                                     checkBookingCommissionValidation();
                                 });
-                                // Initial check when element is created
                                 setTimeout(function() {
                                     checkBookingCommissionValidation();
                                 }, 50);
                             }
                         }, 10);
-                        @endif
-                    @endif
+                    }
+                });
+                
+                packagesArray.forEach(pkg => {
+                    var pkgHtml = `
+                        <div class="row mb-4">
+                            <h2>${pkg.name}</h2>
+                            <div class="col-md-12">
+                                <div class="alert alert-info border-0 mb-0 py-2">
+                                    <div class="d-flex align-items-center">
+                                        <i class="ti ti-info-circle me-2"></i>
+                                        <span>{{ __('field.package_does_not_need_schedule') ?? 'This package will be added to the customer account for future use and requires no scheduling.' }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>`;
+                    $('#booking-service-container').append(pkgHtml);
                 });
 
+                bookingWizardData.packages = packagesArray; // Save it
                 bookingStepper.next();
             });
 
             // Function to check commission validation and enable/disable Next button
             function checkBookingCommissionValidation() {
-                @if(has_commission_permission())
-                    @php
-                        $allowedBookingType = get_allowed_commission_type('booking');
-                    @endphp
-                    @if($allowedBookingType == 'fixed')
+                if (posConfig.hasCommissionPermission && posConfig.allowedCommissionType === 'fixed') {
                     var hasInvalidCommission = false;
                     if (bookingIds && bookingIds.length > 0) {
                         bookingIds.forEach(function(serviceId) {
@@ -1440,8 +1477,7 @@
                     } else {
                         $nextButton.prop('disabled', false).removeClass('disabled');
                     }
-                    @endif
-                @endif
+                }
             }
 
             // Booking Step 2: Booking Details
@@ -1449,11 +1485,7 @@
                 e.preventDefault();
                 
                 // Check commission validation before proceeding
-                @if(has_commission_permission())
-                    @php
-                        $allowedBookingType = get_allowed_commission_type('booking');
-                    @endphp
-                    @if($allowedBookingType == 'fixed')
+                if (posConfig.hasCommissionPermission && posConfig.allowedCommissionType === 'fixed') {
                     var hasInvalid = false;
                     bookingIds.forEach(function(serviceId) {
                         var $fixedInput = $('#booking-commission_fixed_' + serviceId);
@@ -1465,17 +1497,23 @@
                                 $fixedInput.addClass('is-invalid');
                                 var $hint = $('#booking-commission_max_hint_' + serviceId);
                                 if ($hint.length) {
-                                    $hint.removeClass('text-muted').addClass('text-danger').text('{{ __('field.commission_cannot_exceed_service_price') }}');
+                                    $hint.removeClass('text-muted').addClass('text-danger').text(posConfig.translations.commission_cannot_exceed);
                                 }
                             }
                         }
                     });
                     if (hasInvalid) {
-                        alert('{{ __('field.commission_cannot_exceed_service_price') }}');
+                        alert(posConfig.translations.commission_cannot_exceed);
                         return false;
                     }
-                    @endif
-                @endif
+                }
+                
+                if (bookingIds.length === 0 && bookingPackageIds && bookingPackageIds.length > 0) {
+                    // Packages only, skip service validations
+                    bookingWizardData.services = [];
+                    finishStep2Validation();
+                    return;
+                }
 
                 var servicesArray = [];
                 let isValid = true;
@@ -1488,27 +1526,21 @@
                     var commission = '';
                     var commissionType = '';
                     
-                    @if(has_commission_permission())
-                        @php
-                            $allowedBookingType = get_allowed_commission_type('booking');
-                        @endphp
-                        @if($allowedBookingType)
-                        commissionType = '{{ $allowedBookingType }}';
+                    if (posConfig.hasCommissionPermission && posConfig.allowedCommissionType) {
+                        commissionType = posConfig.allowedCommissionType;
                         if (commissionType === 'percentage') {
                             commission = $('#booking-commission_percentage_' + service).val();
                         } else if (commissionType === 'fixed') {
                             commission = $('#booking-commission_fixed_' + service).val();
-                            // Validate fixed commission doesn't exceed service price
                             var servicePrice = parseFloat($('#booking-commission_fixed_' + service).data('service-price')) || 0;
                             var commissionValue = parseFloat(commission) || 0;
                             if (commission && commissionValue > servicePrice) {
-                                alert('{{ __('field.commission_cannot_exceed_service_price') }}. {{ __('field.service_price') }}: ' + parseFloat(servicePrice).toFixed(5) + ' {{ get_currency() }}');
+                                alert(posConfig.translations.commission_cannot_exceed + '. {{ __("field.service_price") }}: ' + parseFloat(servicePrice).toFixed(5) + ' ' + posConfig.currency);
                                 isValid = false;
                                 return false;
                             }
                         }
-                        @endif
-                    @endif
+                    }
 
                     if (!date || !worker_id || !from_time || !to_time) {
                         alert('Please fill all fields for each service.');
@@ -1533,6 +1565,9 @@
                 if (!isValid) return;
                 bookingWizardData.services = servicesArray;
                 
+                finishStep2Validation();
+                
+                function finishStep2Validation() {
                 // Validate customer selection before proceeding to Step 3
                 // Note: This validation should not block if user is just selecting discount/wallet/membership
                 // Only redirect if truly no customer is selected
@@ -1573,6 +1608,7 @@
                 }
 
                 bookingStepper.next();
+                } // End of finishStep2Validation
             });
 
             // Booking Step 3: Customer Details - validation removed as it relies on global customer now
@@ -1605,12 +1641,25 @@
             // Helper to get total for current booking
             function getCurrentBookingTotal() {
                 let total = 0;
+                
+                // Track remaining slots locally for this calculation pass
+                let tempPackageSlots = JSON.parse(JSON.stringify(userPackagesData));
+                let selectedPackageIds = [];
+                $('.booking-package-checkbox:checked').each(function() {
+                    selectedPackageIds.push($(this).val());
+                });
+
                 if (bookingWizardData.services && bookingWizardData.services.length > 0) {
                     bookingWizardData.services.forEach(function(item) {
                         var serviceData = get_service(item.id);
                         if (serviceData) {
-                            total += calculateDiscountedServicePrice(serviceData.price);
+                            total += calculateDiscountedServicePrice(serviceData.price, item.id, tempPackageSlots, selectedPackageIds);
                         }
+                    });
+                }
+                if (bookingWizardData.packages && bookingWizardData.packages.length > 0) {
+                    bookingWizardData.packages.forEach(function(item) {
+                        total += parseFloat(item.price) || 0;
                     });
                 }
                 return total;
@@ -1767,7 +1816,7 @@
                     bookingWizardData.mobile = selectedCustomerPhone;
                 }
 
-                if (!bookingWizardData.services || bookingWizardData.services.length === 0) {
+                if ((!bookingWizardData.services || bookingWizardData.services.length === 0) && (!bookingWizardData.packages || bookingWizardData.packages.length === 0)) {
                     alert('Please complete step 2 (Booking Details) first.');
                     return false;
                 }
@@ -1861,22 +1910,44 @@
                     var discountedPrice = calculateDiscountedServicePrice(servicePrice);
                     reviewHtml += `<tr>
                         <td>${item.name.trim()}</td>
-                        <td>${servicePrice.toFixed(2)} {{ get_currency() }}</td>
+                        <td class="review-item-price">${servicePrice.toFixed(2)} {{ get_currency() }}</td>
                         <td>${item.date}</td>
                         <td>${worker ? worker.name : 'N/A'}</td>
                         <td>${item.from_time}</td>
                         <td>${item.to_time}</td>
                     </tr>`;
                 });
+                
+                if (bookingWizardData.packages && bookingWizardData.packages.length > 0) {
+                    $.each(bookingWizardData.packages, function(index, pkg) {
+                        var pkgPrice = parseFloat(pkg.price) || 0;
+                        reviewHtml += `<tr class="table-info">
+                            <td><i class="ti ti-package me-1"></i> ${pkg.name.trim()} (New Purchase)</td>
+                            <td class="review-item-price">${pkgPrice.toFixed(2)} {{ get_currency() }}</td>
+                            <td colspan="4" class="text-center">{{ __('field.package_does_not_need_schedule') ?? 'No Scheduling Needed' }}</td>
+                        </tr>`;
+                    });
+                }
                 // Calculate total with discount
                 var totalAmount = 0;
+                let tempPackageSlots = JSON.parse(JSON.stringify(userPackagesData));
+                let selectedPackageIds = [];
+                $('.booking-package-checkbox:checked').each(function() {
+                    selectedPackageIds.push($(this).val());
+                });
+
                 $.each(bookingWizardData.services, function(index, item) {
                     var serviceData = get_service(item.id);
                     if (serviceData) {
-                        var discountedPrice = calculateDiscountedServicePrice(serviceData.price);
+                        var discountedPrice = calculateDiscountedServicePrice(serviceData.price, item.id, tempPackageSlots, selectedPackageIds);
                         totalAmount += discountedPrice;
                     }
                 });
+                if (bookingWizardData.packages && bookingWizardData.packages.length > 0) {
+                    $.each(bookingWizardData.packages, function(index, pkg) {
+                        totalAmount += parseFloat(pkg.price) || 0;
+                    });
+                }
                 
                 reviewHtml += `<tr>
                     <th class="fw-bolder" scope="row">{{__('field.full_name')}}</th>
@@ -1912,42 +1983,62 @@
 
             // Booking Step 4: Add to Cart (one booking with all services)
             $('#addBookingToCart').on('click', function() {
-                if (!bookingWizardData.services || bookingWizardData.services.length === 0) {
+                if ((!bookingWizardData.services || bookingWizardData.services.length === 0) && (!bookingWizardData.packages || bookingWizardData.packages.length === 0)) {
                     alert('Please complete all steps first.');
                     return;
                 }
 
                 var serviceRows = [];
-                bookingWizardData.services.forEach(function(service) {
-                    var worker = get_worker(service.worker_id);
-                    var serviceData = get_service(service.id);
-                    var originalPrice = serviceData ? serviceData.price : 0;
-                    var discountedPrice = calculateDiscountedServicePrice(originalPrice);
-                    serviceRows.push({
-                        id: service.id,
-                        name: service.name,
-                        price: discountedPrice,
-                        original_price: originalPrice,
-                        worker_id: service.worker_id,
-                        worker_name: worker ? worker.name : '',
-                        date: service.date,
-                        from_time: service.from_time,
-                        to_time: service.to_time,
-                        commission: service.commission || null,
-                        commission_type: service.commission_type || null
+                if (bookingWizardData.services) {
+                    bookingWizardData.services.forEach(function(service) {
+                        var worker = get_worker(service.worker_id);
+                        var serviceData = get_service(service.id);
+                        var originalPrice = serviceData ? serviceData.price : 0;
+                        var discountedPrice = calculateDiscountedServicePrice(originalPrice);
+                        serviceRows.push({
+                            id: service.id,
+                            name: service.name,
+                            price: discountedPrice,
+                            original_price: originalPrice,
+                            worker_id: service.worker_id,
+                            worker_name: worker ? worker.name : '',
+                            date: service.date,
+                            from_time: service.from_time,
+                            to_time: service.to_time,
+                            commission: service.commission || null,
+                            commission_type: service.commission_type || null
+                        });
                     });
+                }
+                
+                var packageRows = [];
+                if (bookingWizardData.packages) {
+                    bookingWizardData.packages.forEach(function(pkg) {
+                        packageRows.push({
+                            id: pkg.id,
+                            name: pkg.name,
+                            price: pkg.price
+                        });
+                    });
+                }
+
+                let selectedPackageIds = [];
+                $('.booking-package-checkbox:checked').each(function() {
+                    selectedPackageIds.push($(this).val());
                 });
 
                 cart.push({
                     type: 'service',
                     services: serviceRows,
+                    packages: packageRows,
                     client_name: bookingWizardData.name,
                     client_mobile: bookingWizardData.mobile,
                     payment_type: bookingWizardData.payment_type || null,
                     payment_methods: bookingWizardData.payment_methods || null,
                     wallet_id: bookingWizardData.wallet_id || null,
                     membership_id: bookingWizardData.membership_id || null,
-                    discount_id: bookingWizardData.discount_id || null
+                    discount_id: bookingWizardData.discount_id || null,
+                    user_package_ids: selectedPackageIds
                 });
 
                 saveCartToSession();
@@ -2172,14 +2263,21 @@
                 cart.forEach(item => {
                     if (item.type === 'user_wallet') {
                         subtotal += parseFloat(item.invoiced_amount || item.amount || 0);
-                    } else if (item.type === 'service' && item.services && item.services.length) {
-                        item.services.forEach(function(svc) {
-                            // Use original_price if available, otherwise use price
-                            var originalPrice = parseFloat(svc.original_price || svc.price || 0);
-                            // Recalculate discounted price based on current discount selection
-                            var discountedPrice = calculateDiscountedServicePrice(originalPrice);
-                            subtotal += discountedPrice;
-                        });
+                    } else if (item.type === 'service' && ((item.services && item.services.length) || (item.packages && item.packages.length))) {
+                        if (item.services) {
+                            item.services.forEach(function(svc) {
+                                // Use original_price if available, otherwise use price
+                                var originalPrice = parseFloat(svc.original_price || svc.price || 0);
+                                // Recalculate discounted price based on current discount selection
+                                var discountedPrice = calculateDiscountedServicePrice(originalPrice);
+                                subtotal += discountedPrice;
+                            });
+                        }
+                        if (item.packages) {
+                            item.packages.forEach(function(pkg) {
+                                subtotal += parseFloat(pkg.price || 0);
+                            });
+                        }
                     } else {
                         const price = parseFloat(item.price || 0);
                         const quantity = parseInt(item.quantity || 1);
@@ -2230,12 +2328,15 @@
                                     {{ __('field.date') }}: ${svc.date || ''} &nbsp; ${(svc.from_time || '')} - ${(svc.to_time || '')} &nbsp; ${servicePrice.toFixed(2)} {{ get_currency() }}
                                 </small>`;
                             });
-                        } else {
-                            itemHtml += `<small class="text-muted">
-                                {{ __('field.worker') }}: ${item.worker_name || ''}<br>
-                                {{ __('field.date') }}: ${item.date}<br>
-                                ${item.from_time} - ${item.to_time}
-                            </small>`;
+                        }
+                        
+                        if (item.packages && item.packages.length) {
+                            item.packages.forEach(function(pkg) {
+                                var pkgPrice = parseFloat(pkg.price || 0);
+                                itemHtml += `<small class="text-muted d-block">
+                                    <i class="ti ti-package me-1"></i> ${pkg.name || ''} &nbsp; ${pkgPrice.toFixed(2)} {{ get_currency() }}
+                                </small>`;
+                            });
                         }
                     } else if (item.type === 'product') {
                         itemHtml += `<small class="text-muted">
@@ -2270,14 +2371,21 @@
                     let displayPrice = 0;
                     if (item.type === 'user_wallet') {
                         displayPrice = parseFloat(item.invoiced_amount || item.amount || 0);
-                    } else if (item.type === 'service' && item.services && item.services.length) {
-                        item.services.forEach(function(svc) {
-                            // Use original_price if available, otherwise use price
-                            var originalPrice = parseFloat(svc.original_price || svc.price || 0);
-                            // Recalculate discounted price based on current discount selection
-                            var discountedPrice = calculateDiscountedServicePrice(originalPrice);
-                            displayPrice += discountedPrice;
-                        });
+                    } else if (item.type === 'service') {
+                        if (item.services && item.services.length) {
+                            item.services.forEach(function(svc) {
+                                // Use original_price if available, otherwise use price
+                                var originalPrice = parseFloat(svc.original_price || svc.price || 0);
+                                // Recalculate discounted price based on current discount selection
+                                var discountedPrice = calculateDiscountedServicePrice(originalPrice);
+                                displayPrice += discountedPrice;
+                            });
+                        }
+                        if (item.packages && item.packages.length) {
+                            item.packages.forEach(function(pkg) {
+                                displayPrice += parseFloat(pkg.price || 0);
+                            });
+                        }
                     } else {
                         const price = parseFloat(item.price || 0);
                         const quantity = parseInt(item.quantity || 1);
@@ -2380,9 +2488,12 @@
             });
 
             // Refactored reusable function to load customer services/wallets
+            let userPackagesData = [];
+            
             function loadCustomerServices(user_phone) {
                  if (!user_phone) {
-                     $('#booking-servicesTable, #booking-walletsElement, #booking-membershipsElement').html('');
+                     $('#booking-servicesTable, #booking-walletsElement, #booking-membershipsElement, #booking-packagesElement').html('');
+                     userPackagesData = [];
                      return;
                  }
 
@@ -2499,20 +2610,87 @@
                             attachRadioClearHandlers();
                         }
                     }
+                    if (response.packages) {
+                        var packages = response.packages;
+                        userPackagesData = packages; // Store globally for calculation
+                        let packagesElement = ``;
+                        $('#booking-packagesElement').html(packagesElement);
+                        if (packages.length != 0) {
+                            packagesElement += `<hr /><div class="d-flex justify-content-between align-items-center mb-2">
+                                <h5 class="mb-0">My Packages</h5>
+                                <button type="button" class="btn btn-sm btn-outline-secondary clear-package-selection" style="display: none;">
+                                    <i class="ti ti-x me-1"></i>{{ __('general.clear') }}
+                                </button>
+                            </div><div class="row g-2">`;
+                            $.each(packages, function(index, userPackage) {
+                                let servicesList = '';
+                                $.each(userPackage.remaining_services, function(i, srv) {
+                                    servicesList += `<div><i class="ti ti-point"></i> ${srv.service ? srv.service.name : ''} (${srv.remaining} left)</div>`;
+                                });
+                                
+                                packagesElement += `<div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-2">
+                                    <div class="form-check package-item" style="padding: 10px;color: #fff;background-color: #28a745;border-color: #28a745;border-radius: 4px;min-height: 50px;width: 100%;">
+                                        <div class="d-flex align-items-center gap-2 mb-2">
+                                            <input class="form-check-input flex-shrink-0 booking-package-checkbox" type="checkbox" name="user_package_ids[]" value="${userPackage.id}" id="booking-package${userPackage.id}" style="margin-top: 0;width: 18px;height: 18px;flex-shrink: 0;margin-right: 8px;">
+                                            <label class="form-check-label flex-grow-1 text-start" for="booking-package${userPackage.id}" style="word-break: break-word;white-space: normal;font-size: 14px;margin: 0;font-weight: bold;cursor:pointer;">
+                                                ${userPackage.package ? userPackage.package.name : 'Package #' + userPackage.id}
+                                            </label>
+                                        </div>
+                                        <div style="font-size: 12px;margin-left: 26px;">
+                                            ${servicesList}
+                                        </div>
+                                    </div>
+                                </div>`;
+                            });
+                            packagesElement += `</div>`;
+                            $('#booking-packagesElement').html(packagesElement);
+                            
+                            // Attach event listeners for packages
+                            $('.booking-package-checkbox').on('change', function() {
+                                $('.clear-package-selection').toggle($('.booking-package-checkbox:checked').length > 0);
+                                updateBookingReviewServicePrices();
+                                renderCart();
+                                calculateTotals();
+                            });
+                            
+                            $('.clear-package-selection').on('click', function() {
+                                $('.booking-package-checkbox').prop('checked', false);
+                                $(this).hide();
+                                updateBookingReviewServicePrices();
+                                renderCart();
+                                calculateTotals();
+                            });
+                        }
+                    }
                 } else {
-                    $('#booking-servicesTable, #booking-walletsElement, #booking-membershipsElement').html('');
+                    $('#booking-servicesTable, #booking-walletsElement, #booking-membershipsElement, #booking-packagesElement').html('');
+                    userPackagesData = [];
                 }
             }
 
             // Function to calculate discounted service price
             // Note: Wallets and memberships are payment methods, not discounts - they don't reduce the price
             // They deduct from wallet/membership balance on the backend
-            function calculateDiscountedServicePrice(originalPrice) {
+            function calculateDiscountedServicePrice(originalPrice, serviceId = null, tempSlots = null, packageIds = null) {
                 if (!originalPrice) {
                     return parseFloat(originalPrice || 0);
                 }
                 
                 var discountedPrice = parseFloat(originalPrice);
+
+                // 1. Check User Packages first (Treat as 100% discount for that slot)
+                if (serviceId && tempSlots && packageIds && packageIds.length > 0) {
+                    for (let pkgId of packageIds) {
+                        let userPackage = tempSlots.find(p => p.id == pkgId);
+                        if (userPackage && userPackage.remaining_services) {
+                            let slot = userPackage.remaining_services.find(s => s.service_id == serviceId && s.remaining > 0);
+                            if (slot) {
+                                slot.remaining--; // Use one slot
+                                return 0; // Service is free via package
+                            }
+                        }
+                    }
+                }
                 
                 var selectedDiscount = $('input[name="discount_id"].booking-discount-radio:checked');
                 if (selectedDiscount.length > 0) {
@@ -2545,24 +2723,52 @@
                 if (reviewTable.length === 0) return;
                 
                 var totalAmount = 0;
-                
+                let tempPackageSlots = JSON.parse(JSON.stringify(userPackagesData));
+                let selectedPackageIds = [];
+                $('.booking-package-checkbox:checked').each(function() {
+                    selectedPackageIds.push($(this).val());
+                });
+
                 reviewTable.find('tr').each(function() {
                     var $row = $(this);
-                    var $priceCell = $row.find('td').eq(1);
+                    var $priceCell = $row.find('td.review-item-price');
                     if ($priceCell.length && $row.find('th').length === 0) {
-                        // This is a service row, find the service ID from the name
-                        var serviceName = $row.find('td').first().text().trim();
-                        // Find matching service in bookingWizardData
-                        if (bookingWizardData.services && bookingWizardData.services.length > 0) {
-                            var matchingService = bookingWizardData.services.find(function(svc) {
-                                return svc.name.trim() === serviceName;
-                            });
-                            if (matchingService) {
-                                var serviceData = get_service(matchingService.id);
-                                if (serviceData) {
-                                    var discountedPrice = calculateDiscountedServicePrice(serviceData.price);
-                                    $priceCell.text(serviceData.price.toFixed(2) + ' {{ get_currency() }}');
-                                    totalAmount += discountedPrice;
+                        // Get original name (handle both service and package)
+                        var fullText = $row.find('td').first().text().trim();
+                        var isPackage = fullText.includes('(New Purchase)');
+                        var itemName = isPackage ? fullText.replace('(New Purchase)', '').trim() : fullText;
+
+                        if (isPackage) {
+                            // Find package in bookingWizardData
+                            if (bookingWizardData.packages && bookingWizardData.packages.length > 0) {
+                                var matchingPkg = bookingWizardData.packages.find(function(pkg) {
+                                    return pkg.name.trim() === itemName;
+                                });
+                                if (matchingPkg) {
+                                    totalAmount += parseFloat(matchingPkg.price) || 0;
+                                }
+                            }
+                        } else {
+                            // Find matching service in bookingWizardData
+                            if (bookingWizardData.services && bookingWizardData.services.length > 0) {
+                                var matchingService = bookingWizardData.services.find(function(svc) {
+                                    return svc.name.trim() === itemName;
+                                });
+                                if (matchingService) {
+                                    var serviceData = get_service(matchingService.id);
+                                    if (serviceData) {
+                                        var discountedPrice = calculateDiscountedServicePrice(serviceData.price, matchingService.id, tempPackageSlots, selectedPackageIds);
+                                        let priceText = serviceData.price.toFixed(2);
+                                        if (discountedPrice === 0 && serviceData.price > 0) {
+                                            priceText = `<del>${serviceData.price.toFixed(2)}</del> <span class="text-success">0.00 (Package)</span>`;
+                                        } else if (discountedPrice < serviceData.price) {
+                                            priceText = `<del>${serviceData.price.toFixed(2)}</del> <span class="text-primary">${discountedPrice.toFixed(2)}</span>`;
+                                        } else {
+                                            priceText = priceText + ' {{ get_currency() }}';
+                                        }
+                                        $priceCell.html(priceText);
+                                        totalAmount += discountedPrice;
+                                    }
                                 }
                             }
                         }
@@ -2754,6 +2960,87 @@
                                 toastr.success('{{ __('admin.operation_done_successfully') }}');
                             }
                             $servicesSelect.val(serviceData.id).trigger('change');
+                        }
+                    },
+                    error: function(xhr) {
+                        if (typeof toastr !== 'undefined') {
+                            toastr.error(xhr.responseJSON?.message || '{{ __('admin.an_error_occurred') }}');
+                        }
+                    },
+                    complete: function() {
+                        $btn.prop('disabled', false).html(originalHtml);
+                    }
+                });
+            });
+
+            // Quick Add Customer Modal
+            $('#save-quick-customer-btn').on('click', function(e) {
+                e.preventDefault();
+                const form = $('#quick-add-customer-form')[0];
+                if (!form.reportValidity()) {
+                    return;
+                }
+                const formData = new FormData(form);
+                
+                // Handle UAE Phone Prefix
+                const countryCodeSelect = formData.get('country_code');
+                const phonePrefix = formData.get('phone_prefix');
+                const rawPhone = formData.get('phone');
+                
+                if (phonePrefix && rawPhone && rawPhone.length === 7) {
+                    formData.set('phone', phonePrefix + rawPhone);
+                }
+                
+                formData.append('quick_add', '1');
+
+                const $btn = $(this);
+                const originalHtml = $btn.html();
+                $btn.prop('disabled', true).html('<i class="ti ti-loader-2 me-1"></i>{{ __('admin.sending') }}');
+
+                $.ajax({
+                    url: '{{ route("center_user.users.updateOrCreate") }}',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        if (response.message === 'redirect_to_home' || response.user || response.data) {
+                            const userData = response.user || response.data;
+                            
+                            // Get the full name and phone to display
+                            const fullName = (userData.first_name + ' ' + (userData.last_name || '')).trim();
+                            const phone = userData.phone || formData.get('phone');
+                            
+                            // Initialize customer in Select2 if it exists, or update UI directly
+                            if (typeof loadCustomerServices === 'function') {
+                                // Close modal
+                                $('#addCustomerModal').modal('hide');
+                                $('#quick-add-customer-form')[0].reset();
+                                
+                                // Call global customer selection logic if available (might need manual trigger depending on UI implementation)
+                                // But since this is a custom search box sometimes, we will trigger whatever logic is needed here
+                                selectedCustomerPhone = phone;
+                                selectedCustomerId = userData.id;
+                                selectedCustomerName = fullName;
+                                $('#customer-search').val(fullName); // Update search input
+                                $('#selected-customer-details').html(`
+                                    <strong>${fullName}</strong><br>
+                                    <small class="text-muted"><i class="ti ti-phone"></i> ${phone}</small>
+                                `);
+                                $('#selected-customer-info').show();
+                                $('#customer-search-results').hide();
+                                $('#customer-search').val('');
+                                
+                                // Also trigger global reload
+                                loadCustomerServices(phone);
+                                
+                                if (typeof toastr !== 'undefined') {
+                                    toastr.success('{{ __('admin.operation_done_successfully') }}');
+                                }
+                            } else {
+                                // Fallback
+                                window.location.reload();
+                            }
                         }
                     },
                     error: function(xhr) {

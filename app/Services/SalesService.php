@@ -20,12 +20,74 @@ use App\Models\UserUsedCard;
 use App\Models\Membership;
 use App\Models\UserWallet;
 use App\Models\Wallet;
+use App\Models\UserPackage;
+use App\Models\UserUsedPackage;
+use App\Models\PackageServicePaid;
+use App\Models\PackageServiceFree;
 use App\Services\SMSGatewayService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Models\Package;
+use App\Models\PaymentMethod;
+use App\Models\Worker;
+
+
 
 class SalesService
 {
+    /**
+     * Get all data needed for the cart view
+     */
+    public function getCartData($cart, $centerUser)
+    {
+        $services = Service::with(['translation'])->get();
+        $products = Product::with(['translation', 'branches'])->get();
+        $discounts = Discount::all();
+        $packages = Package::with(['translation'])->get();
+        
+        $paymentMethods = PaymentMethod::forBooking()->orWhereJsonContains('types', 'general')->get();
+        $productPaymentMethods = PaymentMethod::forProduct()->orWhereJsonContains('types', 'general')->get();
+        $walletPaymentMethods = PaymentMethod::forWallet()->get();
+        
+        $wallets = Wallet::with(['created_by_user', 'users.user'])
+             ->whereNull('deleted_at')
+            ->orderBy('id', 'DESC')
+            ->get();
+        
+        $users = User::with(['media'])->get();
+
+        // Branch filtering for workers
+        $branchId = null;
+        if (!empty($cart['client_id'])) {
+            $selectedCustomer = User::find($cart['client_id']);
+            if ($selectedCustomer && $selectedCustomer->branch_id) {
+                $branchId = $selectedCustomer->branch_id;
+            }
+        }
+        
+        if (!$branchId) {
+            $branchId = $centerUser->branch_id ?? null;
+        }
+        
+        $workers = Worker::when($branchId, function($query) use ($branchId) {
+            return $query->where('branch_id', $branchId);
+        })->select('id', 'name', 'phone', 'is_center_user')->get();
+
+        return [
+            'services' => $services,
+            'products' => $products,
+            'discounts' => $discounts,
+            'packages' => $packages,
+            'paymentMethods' => $paymentMethods,
+            'productPaymentMethods' => $productPaymentMethods,
+            'walletPaymentMethods' => $walletPaymentMethods,
+            'wallets' => $wallets,
+            'users' => $users,
+            'workers' => $workers,
+            'branchId' => $branchId
+        ];
+    }
+
     /**
      * Process cart and create sale with all related records
      */
@@ -83,38 +145,70 @@ class SalesService
                 }
             }
 
-            // Process service items (one booking per item; each item can have multiple services)
+            // Process service items (one booking per item map; each item can have multiple services and packages)
             foreach ($serviceItems as $item) {
-                // Calculate booking subtotal before creating booking
-                $bookingSubtotal = 0;
-                if (!empty($item['services']) && is_array($item['services'])) {
-                    foreach ($item['services'] as $svc) {
-                        $bookingSubtotal += (float) ($svc['price'] ?? 0);
-                    }
-                } else {
-                    $bookingSubtotal = (float) ($item['price'] ?? 0);
-                }
-                
                 // Determine payment type (wallet/membership override payment_type)
                 $paymentType = !empty($item['payment_type']) ? $item['payment_type'] : null;
                 if (!empty($item['wallet_id'])) {
                     $paymentType = 'wallet';
                 } elseif (!empty($item['membership_id'])) {
-                    
                     $paymentType = $item['payment_type'];
                 }
                 $is_free = !empty($item['membership_id']) ? true : false;
-                $booking = $this->createBookingFromCartItem($item, $sale->id, $branchId, $paymentType, $bookingSubtotal, $is_free, $tip, $cartData['worker_id'] ?? null, $cartData['client_id'] ?? null, $overrides['created_by'] ?? null);
                 
-                SaleItem::create([
-                    'sale_id' => $sale->id,
-                    'item_type' => 'booking',
-                    'itemable_id' => $booking->id,
-                    'itemable_type' => 'App\Models\Booking',
-                    'quantity' => 1,
-                    'price' => $bookingSubtotal,
-                    'subtotal' => $bookingSubtotal,
-                ]);
+                // --- 1. Process Services ---
+                if (!empty($item['services']) || (!isset($item['packages']) && isset($item['id']))) {
+                    $bookingSubtotal = 0;
+                    if (!empty($item['services']) && is_array($item['services'])) {
+                        foreach ($item['services'] as $svc) {
+                            $bookingSubtotal += (float) ($svc['price'] ?? 0);
+                        }
+                    } else {
+                        $bookingSubtotal = (float) ($item['price'] ?? 0);
+                    }
+                    
+                    $bookingTip = $tip; // Take current tip to pass by reference
+                    $booking = $this->createBookingFromCartItem($item, $sale->id, $branchId, $paymentType, $bookingSubtotal, $is_free, $bookingTip, $cartData['worker_id'] ?? null, $cartData['client_id'] ?? null, $overrides['created_by'] ?? null);
+                    $tip = $bookingTip; // Update tip after processing
+                    
+                    SaleItem::create([
+                        'sale_id' => $sale->id,
+                        'item_type' => 'booking',
+                        'itemable_id' => $booking->id,
+                        'itemable_type' => 'App\Models\Booking',
+                        'quantity' => 1,
+                        'price' => $bookingSubtotal,
+                        'subtotal' => $bookingSubtotal,
+                    ]);
+                }
+
+                // --- 2. Process Packages ---
+                if (!empty($item['packages']) && is_array($item['packages'])) {
+                    $user = null;
+                    if (!empty($item['client_mobile'])) {
+                        $user = User::where('phone', $item['client_mobile'])->first();
+                    }
+                    $userId = $user ? $user->id : ($cartData['client_id'] ?? null);
+
+                    foreach ($item['packages'] as $pkg) {
+                        $userPackage = \App\Models\UserPackage::create([
+                            'user_id' => $userId,
+                            'package_id' => $pkg['id'],
+                            'price' => $pkg['price'] ?? 0,
+                            'status' => 'active',
+                        ]);
+
+                        SaleItem::create([
+                            'sale_id' => $sale->id,
+                            'item_type' => 'user_package',
+                            'itemable_id' => $userPackage->id,
+                            'itemable_type' => 'App\Models\UserPackage',
+                            'quantity' => 1,
+                            'price' => $pkg['price'] ?? 0,
+                            'subtotal' => $pkg['price'] ?? 0,
+                        ]);
+                    }
+                }
             }
 
             // Process product items (create one BuyProduct for all products)
@@ -263,8 +357,14 @@ class SalesService
                         foreach ($item['services'] as $svc) {
                             $subtotal += (float) ($svc['price'] ?? 0);
                         }
-                    } else {
+                    } else if (empty($item['packages']) && !empty($item['id'])) {
                         $subtotal += (float) ($item['price'] ?? 0);
+                    }
+                    
+                    if (!empty($item['packages']) && is_array($item['packages'])) {
+                        foreach ($item['packages'] as $pkg) {
+                            $subtotal += (float) ($pkg['price'] ?? 0);
+                        }
                     }
                 } elseif ($item['type'] === 'product') {
                     $subtotal += $item['price'] * $item['quantity'];
@@ -305,6 +405,17 @@ class SalesService
             'created_by' => $createdBy ?? (auth('center_user')->id() ?? auth('center_api')->id()),
         ]);
 
+        // Load selected user packages and their definitions
+        $userPackages = [];
+        if (!empty($item['user_package_ids']) && is_array($item['user_package_ids'])) {
+            $userPackages = UserPackage::whereIn('id', $item['user_package_ids'])
+                ->with(['package.packageServicePaid', 'package.packageServiceFree'])
+                ->get();
+        }
+
+        // Keep track of used slots during this booking creation
+        $packageUsageLog = [];
+
         if (!empty($services) && is_array($services)) {
             foreach ($services as $svc) {
                 if (empty($svc['worker_id']) || empty($svc['from_time']) || empty($svc['to_time'])) {
@@ -320,13 +431,45 @@ class SalesService
                     $tip = 0; // Use tip only once
                 }
 
-                BookingDetail::create([
+                $coveredByPackage = false;
+                $userPackageIdUsed = null;
+                $isFreePackageSlot = 0;
+
+                foreach ($userPackages as $up) {
+                    // Check paid services first
+                    $paidSlot = $up->package->packageServicePaid->where('service_id', $service->id)->first();
+                    if ($paidSlot) {
+                        $usedCount = UserUsedPackage::where('user_package_id', $up->id)->where('service_id', $service->id)->where('is_free', 0)->count() + ($packageUsageLog[$up->id][$service->id][0] ?? 0);
+                        if ($usedCount < $up->package->packageServicePaid->where('service_id', $service->id)->count()) {
+                            $coveredByPackage = true;
+                            $userPackageIdUsed = $up->id;
+                            $isFreePackageSlot = 0;
+                            $packageUsageLog[$up->id][$service->id][0] = ($packageUsageLog[$up->id][$service->id][0] ?? 0) + 1;
+                            break;
+                        }
+                    }
+
+                    // Then check free services
+                    $freeSlot = $up->package->packageServiceFree->where('service_id', $service->id)->first();
+                    if ($freeSlot) {
+                        $usedCount = UserUsedPackage::where('user_package_id', $up->id)->where('service_id', $service->id)->where('is_free', 1)->count() + ($packageUsageLog[$up->id][$service->id][1] ?? 0);
+                        if ($usedCount < $up->package->packageServiceFree->where('service_id', $service->id)->count()) {
+                            $coveredByPackage = true;
+                            $userPackageIdUsed = $up->id;
+                            $isFreePackageSlot = 1;
+                            $packageUsageLog[$up->id][$service->id][1] = ($packageUsageLog[$up->id][$service->id][1] ?? 0) + 1;
+                            break;
+                        }
+                    }
+                }
+
+                $bookingDetail = BookingDetail::create([
                     'booking_id' => $booking->id,
                     'service_id' => $service->id,
                     'price' =>  $service->price,
                     '_date' => $svc['date'] ?? $bookingDate,
                     'worker_id' => $svc['worker_id'],
-                    // 'is_free' => $is_free,
+                    'is_free' => ($is_free || $coveredByPackage),
                     'tip' =>  $current_tip,
                     'from_time' => $svc['from_time'],
                     'to_time' => $svc['to_time'],
@@ -335,6 +478,16 @@ class SalesService
                     'booking_source' => $item['booking_source'] ?? 'inside_booking',
                     'status' => ($item['booking_source'] ?? 'inside_booking') === 'outside_booking' ? 'pending' : 'confirmed',
                 ]);
+
+                if ($coveredByPackage) {
+                    UserUsedPackage::create([
+                        'user_id' => $clientId,
+                        'user_package_id' => $userPackageIdUsed,
+                        'booking_id' => $booking->id,
+                        'service_id' => $service->id,
+                        'is_free' => $isFreePackageSlot
+                    ]);
+                }
             }
         } else {
             if (empty($item['worker_id']) || empty($item['from_time']) || empty($item['to_time'])) {
@@ -350,14 +503,45 @@ class SalesService
                 $tip = 0; // Use tip only once
             }
 
-            BookingDetail::create([
+            $coveredByPackage = false;
+            $userPackageIdUsed = null;
+            $isFreePackageSlot = 0;
+
+            foreach ($userPackages as $up) {
+                // First check paid services
+                $paidSlot = $up->package->packageServicePaid->where('service_id', $service->id)->first();
+                if ($paidSlot) {
+                    $usedCount = UserUsedPackage::where('user_package_id', $up->id)->where('service_id', $service->id)->where('is_free', 0)->count() + ($packageUsageLog[$up->id][$service->id][0] ?? 0);
+                    if ($usedCount < $up->package->packageServicePaid->where('service_id', $service->id)->count()) {
+                        $coveredByPackage = true;
+                        $userPackageIdUsed = $up->id;
+                        $isFreePackageSlot = 0;
+                        $packageUsageLog[$up->id][$service->id][0] = ($packageUsageLog[$up->id][$service->id][0] ?? 0) + 1;
+                        break;
+                    }
+                }
+
+                // Then check free services
+                $freeSlot = $up->package->packageServiceFree->where('service_id', $service->id)->first();
+                if ($freeSlot) {
+                    $usedCount = UserUsedPackage::where('user_package_id', $up->id)->where('service_id', $service->id)->where('is_free', 1)->count() + ($packageUsageLog[$up->id][$service->id][1] ?? 0);
+                    if ($usedCount < $up->package->packageServiceFree->where('service_id', $service->id)->count()) {
+                        $coveredByPackage = true;
+                        $userPackageIdUsed = $up->id;
+                        $isFreePackageSlot = 1;
+                        $packageUsageLog[$up->id][$service->id][1] = ($packageUsageLog[$up->id][$service->id][1] ?? 0) + 1;
+                        break;
+                    }
+                }
+            }
+
+            $bookingDetail = BookingDetail::create([
                 'booking_id' => $booking->id,
                 'service_id' => $service->id,
                 'price' =>  $service->price,
                 '_date' => $item['date'],
                 'tip' =>  $current_tip,
-                // 'is_free' => $is_free,
-
+                'is_free' => ($is_free || $coveredByPackage),
                 'worker_id' => $item['worker_id'],
                 'from_time' => $item['from_time'],
                 'to_time' => $item['to_time'],
@@ -366,7 +550,31 @@ class SalesService
                 'booking_source' => $item['booking_source'] ?? 'inside_booking',
                 'status' => ($item['booking_source'] ?? 'inside_booking') === 'outside_booking' ? 'pending' : 'confirmed',
             ]);
+
+            if ($coveredByPackage) {
+                UserUsedPackage::create([
+                    'user_id' => $clientId,
+                    'user_package_id' => $userPackageIdUsed,
+                    'booking_id' => $booking->id,
+                    'service_id' => $service->id,
+                    'is_free' => $isFreePackageSlot
+                ]);
+            }
         }
+
+        // Calculate monetary discount amount
+        $bookingOriginalTotal = 0;
+        $bookingTotalCalc = 0;
+        if (!empty($services) && is_array($services)) {
+            foreach ($services as $svc) {
+                $bookingOriginalTotal += (float) ($svc['original_price'] ?? ($svc['price'] ?? 0));
+                $bookingTotalCalc += (float) ($svc['price'] ?? 0);
+            }
+        } else {
+            $bookingOriginalTotal = (float) ($item['original_price'] ?? ($item['price'] ?? 0));
+            $bookingTotalCalc = (float) ($item['price'] ?? 0);
+        }
+        $discountAmountAED = max(0, $bookingOriginalTotal - $bookingTotalCalc);
 
         // Handle wallet payment - deduct booking amount from wallet balance
         if (!empty($item['wallet_id'])) {
@@ -387,7 +595,7 @@ class SalesService
 
                 UserUsedCard::create([
                     'code' => $membership->membership_no,
-                    'amount' => $membership->percent,
+                    'amount' => $discountAmountAED, // Save actual monetary amount instead of percentage
                     'user_id' => $userId,
                     'membershipcards_id' => $membership->id,
                     'booking_id' => $booking->id,
@@ -397,7 +605,7 @@ class SalesService
 
         // Handle discount code - create UserUsedDiscount record for daily report tracking
         if (!empty($item['discount_id'])) {
-            $this->recordDiscountUsage($item['discount_id'], $item['client_mobile'] ?? null, $booking->id);
+            $this->recordDiscountUsage($item['discount_id'], $item['client_mobile'] ?? null, $booking->id, $discountAmountAED);
         }
 
         return $booking;
@@ -449,7 +657,7 @@ class SalesService
     /**
      * Record discount code usage for daily report tracking
      */
-    private function recordDiscountUsage($discountId, $clientMobile, $bookingId)
+    private function recordDiscountUsage($discountId, $clientMobile, $bookingId, $discountAmountAED = null)
     {
         $discount = Discount::find($discountId);
         if (!$discount) {
@@ -466,7 +674,7 @@ class SalesService
 
         UserUsedDiscount::create([
             'code' => $discount->code,
-            'amount' => $discount->amount,
+            'amount' => $discountAmountAED !== null ? $discountAmountAED : $discount->amount, // Save actual monetary amount
             'type' => $discount->type,
             'user_id' => $userId,
             'discountcode_id' => $discount->id,

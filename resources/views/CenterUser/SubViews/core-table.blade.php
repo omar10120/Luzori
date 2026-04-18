@@ -106,6 +106,17 @@
             (new bootstrap.Modal(modalEl)).show();
         });
 
+        $(document).on('click', '.view-package-details', function() {
+            var btn = $(this);
+            var details = parseDetails(btn);
+            var title = btn.attr('data-modal-title') || '{{ __("locale.packages") }} {{ __("general.show") }}';
+            var headers = ['{{ __("field.package") }}', '{{ __("field.price") }}'];
+            var rows = details.map(function(d) { return [d.package, d.price]; });
+            if (modalTitle) modalTitle.textContent = title;
+            if (modalBody) modalBody.innerHTML = rows.length ? tableHtml(headers, rows) : '<p class="text-muted">-</p>';
+            (new bootstrap.Modal(modalEl)).show();
+        });
+
         $(document).on('click', '.view-coupon-details', function() {
             var btn = $(this);
             var details = parseDetails(btn);

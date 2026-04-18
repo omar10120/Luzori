@@ -60,10 +60,13 @@ class PackageDataTable extends DataTable
                             </span>
                         </label>';
             })
-            ->editColumn('translation.name', function ($row) {
-                return \App\Helpers\MyHelper::truncateWithReadMore($row->translation->name ?? '');
+            ->editColumn('price', function ($row) {
+                return number_format($row->price, 2) . ' ' . trim(get_currency());
             })
-            ->rawColumns(['packageServicePaid.service.translation.name', 'packageServiceFree.service.translation.name', 'status', 'translation.name'], true)
+            ->addColumn('total_value', function ($row) {
+                return '<span class="fw-bold text-primary">' . number_format($row->total_value, 2) . ' ' . trim(get_currency()) . '</span>';
+            })
+            ->rawColumns(['packageServicePaid.service.translation.name', 'packageServiceFree.service.translation.name', 'status', 'translation.name', 'total_value'], true)
             ->setRowId('id');
     }
 
@@ -140,6 +143,8 @@ class PackageDataTable extends DataTable
         return [
             Column::make('id')->searchable(true)->title('#'),
             Column::computed('translation.name')->searchable(true)->title(__('field.name')),
+            Column::make('price')->searchable(true)->title(__('field.price')),
+            Column::computed('total_value')->searchable(false)->title(__('field.total_services_price')),
             Column::computed('packageServicePaid.service.translation.name')->searchable(true)->title(__('field.paid_services')),
             Column::computed('packageServiceFree.service.translation.name')->searchable(true)->title(__('field.free_services')),
             Column::computed('status')->searchable(false)->title(__('field.status')),

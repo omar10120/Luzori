@@ -46,17 +46,19 @@ class PackageRequest extends FormRequest
         if (isset($this->id)) {
             $validations = [
                 'id' => 'required|exists:packages,id',
+                'price' => 'required|numeric|min:0',
                 'paid_services' => 'required|array',
                 'paid_services.*' => 'required|exists:services,id',
-                'free_services' => 'required|array',
-                'free_services.*' => 'required|exists:services,id',
+                'free_services' => 'nullable|array',
+                'free_services.*' => 'nullable|exists:services,id',
             ];
         } else {
             $validations = [
+                'price' => 'required|numeric|min:0',
                 'paid_services' => 'required|array',
                 'paid_services.*' => 'required|exists:services,id',
-                'free_services' => 'required|array',
-                'free_services.*' => 'required|exists:services,id',
+                'free_services' => 'nullable|array',
+                'free_services.*' => 'nullable|exists:services,id',
             ];
         }
         return array_merge($locales, $validations);

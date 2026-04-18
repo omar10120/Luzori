@@ -92,6 +92,7 @@ class PackageController extends Controller
             'id',
             'ar',
             'en',
+            'price',
             'paid_services',
             'free_services'
         );

@@ -63,23 +63,6 @@ class SalesController extends Controller
         $menu_link = route($this->indexRoute);
         $title = __('general.add') . ' ' . __('locale.' . $this->plural);
 
-        // Get services and products
-        $services = Service::with(['translation'])->get();
-        $products = Product::with(['translation', 'branches'])->get();
-        $discounts = \App\Models\Discount::all();
-        $paymentMethods = \App\Models\PaymentMethod::forBooking()->orWhereJsonContains('types', 'general')->get();
-        $productPaymentMethods = \App\Models\PaymentMethod::forProduct()->orWhereJsonContains('types', 'general')->get();
-        $walletPaymentMethods = \App\Models\PaymentMethod::forWallet()->get();
-        
-        
-        $wallets = \App\Models\Wallet::with(['created_by_user', 'users.user'])
-             ->whereNull('deleted_at')
-            ->orderBy('id', 'DESC')
-            ->get();
-        
-        // Get all users (customers) - no branch filtering
-        $users = User::with(['media'])->get();
-
         // Save cart if posted (AJAX request)
         if ($request->isMethod('post') && $request->has('cart')) {
             $cart = session('sales_cart', [
@@ -108,31 +91,27 @@ class SalesController extends Controller
             'tax' => 0,
             'payment_type' => null,
         ]);
+
+        $centerUser = auth('center_user')->user();
         
-        // Filter workers by selected customer's branch
-        $branchId = null;
-        if (!empty($cart['client_id'])) {
-            $selectedCustomer = User::find($cart['client_id']);
-            if ($selectedCustomer && $selectedCustomer->branch_id) {
-                $branchId = $selectedCustomer->branch_id;
-            }
-        }
+        // Use service to get all dependencies
+        $data = $this->salesService->getCartData($cart, $centerUser);
         
-        // If no customer branch, use logged-in user's branch
-        if (!$branchId) {
-            $branchId = auth('center_user')->user()->branch_id ?? null;
-        }
-        
-        // Filter workers by branch
-        $workers = Worker::when($branchId, function($query) use ($branchId) {
-            return $query->where('branch_id', $branchId);
-        })->select('id', 'name', 'phone', 'is_center_user')->get();
+        $services = $data['services'];
+        $products = $data['products'];
+        $discounts = $data['discounts'];
+        $packages = $data['packages'];
+        $paymentMethods = $data['paymentMethods'];
+        $productPaymentMethods = $data['productPaymentMethods'];
+        $walletPaymentMethods = $data['walletPaymentMethods'];
+        $wallets = $data['wallets'];
+        $users = $data['users'];
+        $workers = $data['workers'];
 
         $categoriesJson = $this->getFormattedCategories();
-        $centerUser = auth('center_user')->user();
 
         $view = 'CenterUser.SubViews.' . $this->model . '.cart';
-        return view($view, compact('services', 'products', 'workers', 'discounts', 'paymentMethods', 'productPaymentMethods', 'walletPaymentMethods', 'wallets', 'users', 'cart', 'title', 'menu', 'menu_link', 'categoriesJson', 'centerUser'));
+        return view($view, compact('services', 'products', 'workers', 'discounts', 'packages', 'paymentMethods', 'productPaymentMethods', 'walletPaymentMethods', 'wallets', 'users', 'cart', 'title', 'menu', 'menu_link', 'categoriesJson', 'centerUser'));
     }
 
     /**

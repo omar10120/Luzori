@@ -20,7 +20,8 @@ class Package extends Model
     ];
     protected $hidden = ['translations'];
     protected $fillable = [
-        'created_by'
+        'created_by',
+        'price',
     ];
 
     public function packageServicePaid(): HasMany
@@ -31,5 +32,21 @@ class Package extends Model
     public function packageServiceFree(): HasMany
     {
         return $this->hasMany(PackageServiceFree::class);
+    }
+
+    /**
+     * Get the total market value of all services in the package.
+     */
+    public function getTotalValueAttribute()
+    {
+        $paidSum = $this->packageServicePaid->sum(function($item) {
+            return $item->service->price ?? 0;
+        });
+
+        $freeSum = $this->packageServiceFree->sum(function($item) {
+            return $item->service->price ?? 0;
+        });
+
+        return $paidSum + $freeSum;
     }
 }

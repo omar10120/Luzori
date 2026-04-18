@@ -161,6 +161,36 @@ class SalesDataTable extends DataTable
 
                 return $html;
             })
+            ->addColumn('packages', function ($row) {
+                $packageDetails = [];
+                $count = 0;
+
+                foreach ($row->saleItems as $saleItem) {
+                    if ($saleItem->item_type === 'user_package' && $saleItem->itemable) {
+                        $count++;
+                        $userPackage = $saleItem->itemable;
+                        $packageName = $userPackage->package?->translation?->name ?? $userPackage->package?->name ?? 'N/A';
+                        $price = number_format($userPackage->price ?? 0, 2) . ' ' . trim(get_currency());
+                        
+                        $packageDetails[] = [
+                            'package' => $packageName,
+                            'price' => $price
+                        ];
+                    }
+                }
+
+                if (empty($packageDetails)) {
+                    return '-';
+                }
+
+                $packageLabel = $count === 1 ? __('locale.package') : __('locale.packages');
+                $html = '<span class="badge bg-label-info">' . $count . ' ' . $packageLabel . '</span>';
+                $html .= ' <button type="button" class="btn btn-sm btn-outline-info ms-2 view-package-details" data-sale-id="' . $row->id . '" data-modal-title="' . e(__('field.packages')) . ' ' . e(__('general.show')) . '" data-details="' . e(json_encode($packageDetails)) . '">';
+                $html .= '<i class="ti ti-eye me-1"></i>' . __('general.view_details');
+                $html .= '</button>';
+
+                return $html;
+            })
             ->addColumn('coupons', function ($row) {
                 $couponDetails = [];
                 $count = 0;
@@ -440,7 +470,7 @@ class SalesDataTable extends DataTable
             ->editColumn('total', function ($row) {
                 return number_format($row->total, 2) . ' ' . trim(get_currency());
             })
-            ->rawColumns(['status', 'worker.name', 'client.name', 'services', 'products', 'coupons', 'booking_employees', 'product_employees', 'booking_source'], true)
+            ->rawColumns(['status', 'worker.name', 'client.name', 'services', 'products', 'packages', 'coupons', 'booking_employees', 'product_employees', 'booking_source'], true)
             ->setRowId('id');
     }
 
@@ -463,6 +493,8 @@ class SalesDataTable extends DataTable
                             $q->with(['details.product.translation', 'sales_worker', 'worker']);
                         } elseif ($model instanceof \App\Models\UserWallet) {
                             $q->with(['wallet', 'user', 'worker']);
+                        } elseif ($model instanceof \App\Models\UserPackage) {
+                            $q->with(['package.translation']);
                         }
                     }
                 ]);
@@ -574,6 +606,7 @@ class SalesDataTable extends DataTable
             Column::make('id')->searchable(true)->title('#'),
             Column::computed('branch.translation.name')->searchable(true)->title(__('field.branch')),
             Column::computed('services')->searchable(false)->title(__('field.services') . ' (' . __('locale.bookings') . ')'),
+            Column::computed('packages')->searchable(false)->title(__('field.packages') . ' (' . __('locale.packages') . ')'),
             Column::computed('products')->searchable(false)->title(__('locale.products')),
             Column::computed('coupons')->searchable(false)->title(__('field.coupons')),
             Column::computed('client.name')->searchable(true)->title(__('field.client')),
