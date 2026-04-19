@@ -2611,23 +2611,48 @@
                         }
                     }
                     if (response.packages) {
-                        var packages = response.packages;
-                        userPackagesData = packages; // Store globally for calculation
+                        var allPackages = response.packages;
+                        userPackagesData = allPackages; // Store ALL globally for calculation
+
+                        // Get selected service IDs from Step 1 (bookingIds is set on nextStep1)
+                        var selectedServiceIds = (bookingIds || []).map(function(id) { return String(id); });
+
+                        // Filter: only show packages that have at least 1 remaining slot for a selected service
+                        var matchingPackages = allPackages.filter(function(userPackage) {
+                            if (!userPackage.remaining_services || userPackage.remaining_services.length === 0) return false;
+                            return userPackage.remaining_services.some(function(srv) {
+                                return srv.remaining > 0 && selectedServiceIds.includes(String(srv.service_id));
+                            });
+                        });
+
                         let packagesElement = ``;
                         $('#booking-packagesElement').html(packagesElement);
-                        if (packages.length != 0) {
+
+                        if (matchingPackages.length > 0) {
                             packagesElement += `<hr /><div class="d-flex justify-content-between align-items-center mb-2">
-                                <h5 class="mb-0">My Packages</h5>
+                                <h5 class="mb-0">{{ __('field.packages') }} <small class="text-muted fs-6">({{ __('field.matching_selected_services') ?? 'matching your selected services' }})</small></h5>
                                 <button type="button" class="btn btn-sm btn-outline-secondary clear-package-selection" style="display: none;">
                                     <i class="ti ti-x me-1"></i>{{ __('general.clear') }}
                                 </button>
                             </div><div class="row g-2">`;
-                            $.each(packages, function(index, userPackage) {
+
+                            $.each(matchingPackages, function(index, userPackage) {
+                                // Build services list — highlight matching ones, grey out non-matching
                                 let servicesList = '';
                                 $.each(userPackage.remaining_services, function(i, srv) {
-                                    servicesList += `<div><i class="ti ti-point"></i> ${srv.service ? srv.service.name : ''} (${srv.remaining} left)</div>`;
+                                    var svcName = srv.service ? srv.service.name : '';
+                                    var isMatch = selectedServiceIds.includes(String(srv.service_id)) && srv.remaining > 0;
+                                    if (isMatch) {
+                                        servicesList += `<div style="color:#d4ffd4;font-weight:bold;">
+                                            <i class="ti ti-check me-1"></i>${svcName} (${srv.remaining} left)
+                                        </div>`;
+                                    } else {
+                                        servicesList += `<div style="opacity:0.55;">
+                                            <i class="ti ti-point"></i> ${svcName} (${srv.remaining} left)
+                                        </div>`;
+                                    }
                                 });
-                                
+
                                 packagesElement += `<div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-2">
                                     <div class="form-check package-item" style="padding: 10px;color: #fff;background-color: #28a745;border-color: #28a745;border-radius: 4px;min-height: 50px;width: 100%;">
                                         <div class="d-flex align-items-center gap-2 mb-2">
@@ -2642,9 +2667,10 @@
                                     </div>
                                 </div>`;
                             });
+
                             packagesElement += `</div>`;
                             $('#booking-packagesElement').html(packagesElement);
-                            
+
                             // Attach event listeners for packages
                             $('.booking-package-checkbox').on('change', function() {
                                 $('.clear-package-selection').toggle($('.booking-package-checkbox:checked').length > 0);
@@ -2652,7 +2678,7 @@
                                 renderCart();
                                 calculateTotals();
                             });
-                            
+
                             $('.clear-package-selection').on('click', function() {
                                 $('.booking-package-checkbox').prop('checked', false);
                                 $(this).hide();
@@ -2660,6 +2686,9 @@
                                 renderCart();
                                 calculateTotals();
                             });
+                        } else {
+                            // No matching packages — clear the section silently (or show a small note)
+                            $('#booking-packagesElement').html('');
                         }
                     }
                 } else {
