@@ -76,6 +76,10 @@ class PaymentMethodSeeder extends Seeder
             'name' => 'general_cash',
             'types' => [PaymentMethod::TYPE_GENERAL]
         ]);
+             PaymentMethod::create([
+            'name' => 'package',
+            'types' => [PaymentMethod::TYPE_GENERAL]
+        ]);
     }
 }
 
