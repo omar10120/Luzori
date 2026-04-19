@@ -115,6 +115,44 @@ class SalesController extends Controller
     }
 
     /**
+     * AJAX Recalculate cart state
+     */
+    public function calculateCart(Request $request)
+    {
+        $cartData = [
+            'items' => $request->cart ?? [],
+            'tax' => $request->tax ?? 0,
+            'tip' => $request->tip ?? 0,
+        ];
+        $clientId = $request->client_id;
+        
+        $state = $this->salesService->calculateCartState($cartData, $clientId);
+        
+        // Pass essential data to partial
+        $html = view('CenterUser.SubViews.Sale.partials.cart_summary_content', [
+            'cartData' => $cartData,
+            'state' => $state
+        ])->render();
+
+        $reviewHtml = '';
+        if ($request->has('wizard_review')) {
+             $reviewHtml = view('CenterUser.SubViews.Sale.partials.booking_review_items', [
+                'items' => $state['items'], // These are the "draft" items for the wizard
+                'client_name' => $request->client_name,
+                'client_mobile' => $request->client_mobile,
+                'payment_method_display' => $request->payment_method_display,
+                'total' => $state['total']
+            ])->render();
+        }
+        
+        return MyHelper::responseJSON('Success', Response::HTTP_OK, [
+            'state' => $state,
+            'html' => $html,
+            'reviewHtml' => $reviewHtml
+        ]);
+    }
+
+    /**
      * Add service to cart
      */
     public function addServiceToCart(Request $request)
@@ -410,6 +448,42 @@ class SalesController extends Controller
         $view = 'CenterUser.SubViews.' . $this->model . '.print';
         $pdf = Pdf::loadView($view, compact('sale', 'template'), [], $options);
         return $pdf->stream('sale_' . $id . '.pdf');
+    }
+
+    /**
+     * Get customer services/history
+     */
+    public function getCustomerServices(Request $request)
+    {
+        $idOrPhone = $request->user_id ?? $request->user_phone;
+        $data = $this->salesService->getCustomerFullData($idOrPhone);
+        return MyHelper::responseJSON('Success', Response::HTTP_OK, $data);
+    }
+
+    /**
+     * Get customer wallets
+     */
+    public function getCustomerWallets(Request $request)
+    {
+        $idOrPhone = $request->user_id ?? $request->user_phone;
+        $data = $this->salesService->getCustomerFullData($idOrPhone);
+        if ($data['status']) {
+            return MyHelper::responseJSON('Success', Response::HTTP_OK, ['wallets' => $data['wallets']]);
+        }
+        return MyHelper::responseJSON('User not found', Response::HTTP_NOT_FOUND);
+    }
+
+    /**
+     * Get customer memberships
+     */
+    public function getCustomerMemberships(Request $request)
+    {
+        $idOrPhone = $request->user_id ?? $request->user_phone;
+        $data = $this->salesService->getCustomerFullData($idOrPhone);
+        if ($data['status']) {
+            return MyHelper::responseJSON('Success', Response::HTTP_OK, ['memberships' => $data['memberships']]);
+        }
+        return MyHelper::responseJSON('User not found', Response::HTTP_NOT_FOUND);
     }
 }
 

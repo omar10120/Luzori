@@ -346,6 +346,185 @@ class SalesService
     }
 
     /**
+     * Calculate the state of a cart (prices, discounts, package coverage) without persisting.
+     * Use this for AJAX recalculations and final processing.
+     */
+    public function calculateCartState($cartData, $clientId = null)
+    {
+        $items = $cartData['items'] ?? [];
+        $calculatedItems = [];
+        $subtotal = 0;
+        
+        // Load user packages if client is provided
+        $userPackages = [];
+        if ($clientId) {
+            $userPackages = UserPackage::where('user_id', $clientId)
+                ->where('status', 'active')
+                ->with(['package.packageServicePaid', 'package.packageServiceFree', 'package.translation'])
+                ->get();
+        }
+
+        // Track used slots in memory for this calculation
+        $packageUsageLog = [];
+
+        foreach ($items as $index => $item) {
+            $itemType = $item['type'] ?? 'service';
+            
+            // Handle grouped services (usually from Booking Wizard draft review)
+            if ($itemType === 'service' && !empty($item['services']) && is_array($item['services'])) {
+                foreach ($item['services'] as $svc) {
+                    $svcItem = $item;
+                    $serviceId = $svc['id'] ?? null;
+                    $service = Service::find($serviceId);
+                    
+                    $svcItem['id'] = $serviceId;
+                    $svcItem['name'] = $service ? $service->name : ($svc['name'] ?? 'Service');
+                    $svcItem['price'] = (float)($svc['price'] ?? ($service ? $service->price : 0));
+                    $svcItem['worker_id'] = $svc['worker_id'] ?? ($item['worker_id'] ?? null);
+                    $svcItem['date'] = $svc['date'] ?? ($item['date'] ?? null);
+                    $svcItem['from_time'] = $svc['from_time'] ?? ($item['from_time'] ?? null);
+                    $svcItem['to_time'] = $svc['to_time'] ?? ($item['to_time'] ?? null);
+
+                    if (!empty($svcItem['worker_id'])) {
+                        $worker = \App\Models\Worker::find($svcItem['worker_id']);
+                        $svcItem['worker_name'] = $worker ? $worker->name : 'N/A';
+                    }
+
+                    unset($svcItem['services']); // Treat as a single service item for the rest of calculation
+                    
+                    // Now process this item like a regular service item
+                    $res = $this->calculateSingleServiceItem($svcItem, $userPackages, $packageUsageLog);
+                    $calculatedItems[] = $res['item'];
+                    $subtotal += $res['price'];
+                    $packageUsageLog = $res['usageLog'];
+                }
+                continue; // Move to next cart item
+            }
+
+            // Regular item processing
+            $calculatedItem = $item;
+            $itemPrice = 0;
+
+            if ($itemType === 'service') {
+                $serviceId = $item['id'] ?? null;
+                if (!empty($item['id']) && empty($item['name'])) {
+                    $service = Service::find($item['id']);
+                    $calculatedItem['name'] = $service ? $service->name : 'Service';
+                }
+                
+                $res = $this->calculateSingleServiceItem($calculatedItem, $userPackages, $packageUsageLog);
+                $calculatedItem = $res['item'];
+                $itemPrice = $res['price'];
+                $packageUsageLog = $res['usageLog'];
+            } elseif ($itemType === 'product') {
+                $itemPrice = ($item['price'] ?? 0) * ($item['quantity'] ?? 1);
+            } elseif ($itemType === 'wallet' || $itemType === 'user_wallet') {
+                $itemPrice = $item['invoiced_amount'] ?? ($item['amount'] ?? 0);
+            }
+
+            $subtotal += $itemPrice;
+            $calculatedItems[] = $calculatedItem;
+        }
+
+        $tax = $cartData['tax'] ?? 0;
+        $tip = $cartData['tip'] ?? 0;
+        $total = $subtotal + $tax + $tip;
+
+        return [
+            'items' => $calculatedItems,
+            'subtotal' => $subtotal,
+            'tax' => $tax,
+            'tip' => $tip,
+            'total' => $total,
+            'currency' => get_currency()
+        ];
+    }
+
+    /**
+     * Helper to calculate a single service item's price and coverage
+     */
+    private function calculateSingleServiceItem($item, $userPackages, $packageUsageLog)
+    {
+        $serviceId = $item['id'] ?? null;
+        $service = Service::find($serviceId);
+        $calculatedItem = $item;
+        $itemPrice = 0;
+
+        if ($service) {
+            $originalPrice = (float) $service->price;
+            $finalPrice = $originalPrice;
+            $discountNote = '';
+            $isCoveredByPackage = false;
+
+            // 1. Check Package Coverage (if package selected in cart/wizard)
+            $selectedPackageIds = $item['user_package_ids'] ?? [];
+            if (!is_array($selectedPackageIds)) $selectedPackageIds = [$selectedPackageIds];
+
+            foreach ($userPackages as $up) {
+                if (!in_array($up->id, $selectedPackageIds)) continue;
+
+                // Check paid slots
+                $paidSlots = $up->package->packageServicePaid->where('service_id', $serviceId);
+                $usedPaidCount = UserUsedPackage::where('user_package_id', $up->id)->where('service_id', $serviceId)->where('is_free', 0)->count() + ($packageUsageLog[$up->id][$serviceId][0] ?? 0);
+                
+                if ($usedPaidCount < $paidSlots->count()) {
+                    $isCoveredByPackage = true;
+                    $packageUsageLog[$up->id][$serviceId][0] = ($packageUsageLog[$up->id][$serviceId][0] ?? 0) + 1;
+                    $finalPrice = 0;
+                    $discountNote = ' (Package: ' . ($up->package->translation->name ?? $up->package->name) . ')';
+                    break;
+                }
+
+                // Check free slots
+                $freeSlots = $up->package->packageServiceFree->where('service_id', $serviceId);
+                $usedFreeCount = UserUsedPackage::where('user_package_id', $up->id)->where('service_id', $serviceId)->where('is_free', 1)->count() + ($packageUsageLog[$up->id][$serviceId][1] ?? 0);
+                
+                if ($usedFreeCount < $freeSlots->count()) {
+                    $isCoveredByPackage = true;
+                    $packageUsageLog[$up->id][$serviceId][1] = ($packageUsageLog[$up->id][$serviceId][1] ?? 0) + 1;
+                    $finalPrice = 0;
+                    $discountNote = ' (Free Service from Package)';
+                    break;
+                }
+            }
+
+            // 2. Apply Discounts/Memberships if not covered by package
+            if (!$isCoveredByPackage) {
+                // Discount Code
+                if (!empty($item['discount_id'])) {
+                    $discount = Discount::find($item['discount_id']);
+                    if ($discount) {
+                        if ($discount->type === 'percentage') {
+                            $finalPrice = $finalPrice * (1 - $discount->amount / 100);
+                        } else {
+                            $finalPrice = max(0, $finalPrice - $discount->amount);
+                        }
+                    }
+                }
+
+                // Membership
+                if (!empty($item['membership_id'])) {
+                    $membership = Membership::find($item['membership_id']);
+                    if ($membership && $membership->percent > 0) {
+                        $finalPrice = $finalPrice * (1 - $membership->percent / 100);
+                    }
+                }
+            }
+
+            $calculatedItem['original_price'] = $originalPrice;
+            $calculatedItem['price'] = $finalPrice;
+            $calculatedItem['discount_note'] = $discountNote;
+            $itemPrice = $finalPrice;
+        }
+
+        return [
+            'item' => $calculatedItem,
+            'price' => $itemPrice,
+            'usageLog' => $packageUsageLog
+        ];
+    }
+
+    /**
      * Calculate subtotal from cart items
      */
     private function calculateSubtotal($items)
@@ -854,6 +1033,95 @@ class SalesService
         ]);
 
         return $userWallet;
+    }
+
+    /**
+     * Get unified customer data for POS (history, wallets, memberships, packages)
+     */
+    public function getCustomerFullData($phoneOrId)
+    {
+        $user = User::with([
+            'memberships', 
+            'wallets', 
+            'packages' => function($q) {
+                $q->where('status', 'active')->with(['package.packageServicePaid.service.category.translation', 'package.packageServiceFree.service.category.translation']);
+            },
+            'services' => function ($q) {
+                $q->with(['service' => function($sq) {
+                    $sq->with('category.translation');
+                }]);
+            }
+        ])->where(function($q) use ($phoneOrId) {
+            $q->where('id', $phoneOrId)->orWhere('phone', $phoneOrId);
+        })->first();
+
+        if ($user) {
+            $services = $user->services->groupBy('service_id');
+            $wallets = $user->wallets()->with(['wallet'])->get()->map(function($userWallet) use ($user) {
+                $usedAmount = UserUsedWallet::where('user_id', $user->id)
+                    ->where('wallet_id', $userWallet->wallet_id)
+                    ->sum('amount');
+                
+                $userWallet->remaining_balance = $userWallet->amount - $usedAmount;
+                return $userWallet;
+            });
+            $memberships = $user->memberships()->get();
+
+            $packages = $user->packages->map(function ($userPackage) {
+                $usedServices = UserUsedPackage::where('user_package_id', $userPackage->id)->get();
+                $remainingServices = [];
+
+                if ($userPackage->package) {
+                    // Process paid services
+                    $paidCounts = $userPackage->package->packageServicePaid->groupBy('service_id');
+                    foreach ($paidCounts as $serviceId => $services) {
+                        $totalSlots = $services->count();
+                        $usedSlots = $usedServices->where('service_id', $serviceId)->where('is_free', 0)->count();
+                        $remaining = $totalSlots - $usedSlots;
+                        if ($remaining > 0) {
+                            $remainingServices[] = [
+                                'service' => $services->first()->service,
+                                'service_id' => $serviceId,
+                                'remaining' => $remaining,
+                                'is_free' => 0
+                            ];
+                        }
+                    }
+
+                    // Process free services
+                    $freeCounts = $userPackage->package->packageServiceFree->groupBy('service_id');
+                    foreach ($freeCounts as $serviceId => $services) {
+                        $totalSlots = $services->count();
+                        $usedSlots = $usedServices->where('service_id', $serviceId)->where('is_free', 1)->count();
+                        $remaining = $totalSlots - $usedSlots;
+                        if ($remaining > 0) {
+                            $remainingServices[] = [
+                                'service' => $services->first()->service,
+                                'service_id' => $serviceId,
+                                'remaining' => $remaining,
+                                'is_free' => 1
+                            ];
+                        }
+                    }
+                }
+
+                $userPackage->remaining_services = $remainingServices;
+                return $userPackage;
+            })->filter(function ($userPackage) {
+                return count($userPackage->remaining_services) > 0;
+            })->values();
+
+            return [
+                'status' => true,
+                'user' => $user,
+                'services' => $services,
+                'wallets' => $wallets,
+                'memberships' => $memberships,
+                'packages' => $packages
+            ];
+        }
+
+        return ['status' => false];
     }
 }
 

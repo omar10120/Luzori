@@ -294,11 +294,15 @@ Route::group(['middleware' => 'auth_center_user:center_user'], function () {
         Route::controller(SalesController::class)->group(function () {
             Route::get('index', 'index')->name('index');
             Route::match(['get', 'post'], 'cart', 'cart')->name('cart');
+            Route::post('calculate-cart', 'calculateCart')->name('calculate-cart');
             Route::post('add-service-to-cart', 'addServiceToCart')->name('add-service-to-cart');
             Route::post('add-product-to-cart', 'addProductToCart')->name('add-product-to-cart');
             Route::post('remove-from-cart', 'removeFromCart')->name('remove-from-cart');
             Route::get('payment', 'payment')->name('payment');
             Route::post('process-payment', 'processPayment')->name('process-payment');
+            Route::get('get-customer-services', 'getCustomerServices')->name('get-customer-services');
+            Route::get('get-customer-wallets', 'getCustomerWallets')->name('get-customer-wallets');
+            Route::get('get-customer-memberships', 'getCustomerMemberships')->name('get-customer-memberships');
             Route::get('show/{id}', 'show')->name('show');
             Route::get('print/{id}', 'print')->name('print');
         });
