@@ -335,6 +335,8 @@ return [
     'package'                         => 'الباقة',
     'total_services_price'            => 'إجمالي سعر الخدمات',
     'add_users_to'                    => 'إضافة مستخدمين إلى الباقة',
+    'matching_selected_services'      => 'يتطابق الخدمات المختارة مع الخدمات المتاحة في الباقة',
+    'package_type'                    => 'نوع الباقة',
 
     
     

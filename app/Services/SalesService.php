@@ -154,6 +154,15 @@ class SalesService
             foreach ($serviceItems as $item) {
                 // Determine payment type (wallet/membership override payment_type)
                 $paymentType = !empty($item['payment_type']) ? $item['payment_type'] : null;
+                if (!empty($item['user_package_ids']) && is_array($item['user_package_ids'])) {
+                    $packagePaymentType = UserPackage::query()
+                        ->whereIn('id', $item['user_package_ids'])
+                        ->whereNotNull('package_type')
+                        ->value('package_type');
+
+                    // Package usage should force package-type payment instead of stale manual selection.
+                    $paymentType = $packagePaymentType ?: ($paymentType ?: 'package');
+                }
                 if (!empty($item['wallet_id'])) {
                     $paymentType = 'wallet';
                 } elseif (!empty($item['membership_id'])) {

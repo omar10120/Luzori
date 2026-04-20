@@ -1844,7 +1844,7 @@
                 // Track remaining slots locally for this calculation pass
                 let tempPackageSlots = JSON.parse(JSON.stringify(userPackagesData));
                 let selectedPackageIds = [];
-                $('.booking-package-checkbox:checked').each(function() {
+                $('.booking-package-radio:checked').each(function() {
                     selectedPackageIds.push($(this).val());
                 });
 
@@ -1870,6 +1870,14 @@
                 const $nextBtn = $('#booking-nextStep3');
                 const $errorMsg = $('#booking-multiple-payments-error');
                 let isValid = true;
+                const hasPackageSelected = $('.booking-package-radio:checked').length > 0;
+
+                // If package is selected, package type/payment method is auto-applied.
+                if (hasPackageSelected) {
+                    $errorMsg.hide();
+                    $nextBtn.prop('disabled', false);
+                    return true;
+                }
 
                 if (isMultiple) {
                     const totalToPay = getCurrentBookingTotal();
@@ -1913,6 +1921,63 @@
 
                 $nextBtn.prop('disabled', !isValid);
                 return isValid;
+            }
+
+            function getSelectedPackagePaymentType() {
+                const selectedPackage = $('.booking-package-radio:checked');
+                if (selectedPackage.length === 0) {
+                    return null;
+                }
+                const packageType = selectedPackage.data('package-type') || null;
+                if (packageType) {
+                    return packageType;
+                }
+                return resolvePackagePaymentMethodFromList();
+            }
+
+            function resolvePackagePaymentMethodFromList() {
+                const $paymentSelect = $('#booking-payment_type');
+                const options = $paymentSelect.find('option').toArray();
+                const packageOption = options.find(function(option) {
+                    const value = String(option.value || '').toLowerCase();
+                    const text = String($(option).text() || '').toLowerCase();
+                    return value.includes('package') || text.includes('package');
+                });
+
+                return packageOption ? packageOption.value : 'package';
+            }
+
+            function syncBookingPaymentUiByPackageSelection() {
+                const selectedPackage = $('.booking-package-radio:checked');
+                const hasPackageSelected = selectedPackage.length > 0;
+                const packagePaymentType = getSelectedPackagePaymentType();
+                const $multipleToggle = $('#booking-multiple_payments_toggle');
+                const $multipleToggleRow = $multipleToggle.closest('.row');
+
+                if (hasPackageSelected) {
+                    // Package payment behavior: hide manual payment controls and lock to package type when available.
+                    $multipleToggle.prop('checked', false);
+                    $('#booking-multiple-payments-container').hide();
+                    $multipleToggleRow.hide();
+                    $('#booking-payment-method-container').hide();
+                    if (packagePaymentType) {
+                        $('#booking-payment_type').val(packagePaymentType);
+                    }
+                    $('#booking-payment_type').prop('required', false);
+                } else {
+                    $multipleToggleRow.show();
+                    if ($multipleToggle.is(':checked')) {
+                        $('#booking-payment-method-container').hide();
+                        $('#booking-multiple-payments-container').show();
+                        $('#booking-payment_type').prop('required', false);
+                    } else {
+                        $('#booking-payment-method-container').show();
+                        $('#booking-multiple-payments-container').hide();
+                        $('#booking-payment_type').prop('required', true);
+                    }
+                }
+
+                validateBookingPayments();
             }
 
             // Function to update dropdowns to disable selected options
@@ -2025,7 +2090,9 @@
                 var hasMembershipSelected = $('input[name="discount_id"].booking-membership-radio:checked').length > 0;
                 var hasDiscountSelected = $('input[name="discount_id"].booking-discount-radio:checked').length > 0;
 
-                var isMultiple = $('#booking-multiple_payments_toggle').is(':checked');
+                var hasPackageSelected = $('.booking-package-radio:checked').length > 0;
+                var packagePaymentType = getSelectedPackagePaymentType();
+                var isMultiple = !hasPackageSelected && $('#booking-multiple_payments_toggle').is(':checked');
                 var paymentMethods = [];
                 
                 if (isMultiple) {
@@ -2037,6 +2104,9 @@
                     
                     bookingWizardData.payment_type = 'multiple';
                     bookingWizardData.payment_methods = paymentMethods;
+                } else if (hasPackageSelected) {
+                    bookingWizardData.payment_type = packagePaymentType || resolvePackagePaymentMethodFromList();
+                    bookingWizardData.payment_methods = null;
                 } else {
                     bookingWizardData.payment_type = paymentType;
                     bookingWizardData.payment_methods = null;
@@ -2047,6 +2117,7 @@
                 var selectedMembership = $('input[name="discount_id"].booking-membership-radio:checked');
                 var selectedDiscount = $('input[name="discount_id"].booking-discount-radio:checked');
                 var paymentMethodDisplay = '';
+                var selectedPackage = $('.booking-package-radio:checked');
                 
                 // Store wallet/membership info if selected
                 if (selectedWallet.length > 0) {
@@ -2074,6 +2145,13 @@
                 if (!paymentMethodDisplay) {
                     if (bookingWizardData.payment_type === 'multiple' && bookingWizardData.payment_methods) {
                         paymentMethodDisplay = bookingWizardData.payment_methods.map(m => m.method + ': ' + m.amount.toFixed(2)).join(', ');
+                    } else if (selectedPackage.length > 0) {
+                        var packageLabel = selectedPackage.closest('.package-item').find('label').first().text().trim();
+                        if (packagePaymentType) {
+                            paymentMethodDisplay = 'Package (' + packagePaymentType + '): ' + packageLabel;
+                        } else {
+                            paymentMethodDisplay = 'Package: ' + packageLabel;
+                        }
                     } else {
                         paymentMethodDisplay = bookingWizardData.payment_type || '{{ __('field.not_selected') }}';
                     }
@@ -2131,7 +2209,7 @@
                 var totalAmount = 0;
                 let tempPackageSlots = JSON.parse(JSON.stringify(userPackagesData));
                 let selectedPackageIds = [];
-                $('.booking-package-checkbox:checked').each(function() {
+                $('.booking-package-radio:checked').each(function() {
                     selectedPackageIds.push($(this).val());
                 });
 
@@ -2222,7 +2300,7 @@
                 }
 
                 let selectedPackageIds = [];
-                $('.booking-package-checkbox:checked').each(function() {
+                $('.booking-package-radio:checked').each(function() {
                     selectedPackageIds.push($(this).val());
                 });
 
@@ -2852,10 +2930,12 @@
                                     }
                                 });
 
+                                const packageType = userPackage.package_type || '';
+
                                 packagesElement += `<div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-2">
                                     <div class="form-check package-item" style="padding: 10px;color: #fff;background-color: #28a745;border-color: #28a745;border-radius: 4px;min-height: 50px;width: 100%;">
                                         <div class="d-flex align-items-center gap-2 mb-2">
-                                            <input class="form-check-input flex-shrink-0 booking-package-checkbox" type="checkbox" name="user_package_ids[]" value="${userPackage.id}" id="booking-package${userPackage.id}" style="margin-top: 0;width: 18px;height: 18px;flex-shrink: 0;margin-right: 8px;">
+                                            <input class="form-check-input flex-shrink-0 booking-package-radio" type="radio" name="user_package_ids[]" value="${userPackage.id}" data-package-type="${packageType}" id="booking-package${userPackage.id}" style="margin-top: 0;width: 18px;height: 18px;flex-shrink: 0;margin-right: 8px;">
                                             <label class="form-check-label flex-grow-1 text-start" for="booking-package${userPackage.id}" style="word-break: break-word;white-space: normal;font-size: 14px;margin: 0;font-weight: bold;cursor:pointer;">
                                                 ${userPackage.package ? userPackage.package.name : 'Package #' + userPackage.id}
                                             </label>
@@ -2871,16 +2951,18 @@
                             $('#booking-packagesElement').html(packagesElement);
 
                             // Attach event listeners for packages
-                            $('.booking-package-checkbox').on('change', function() {
-                                $('.clear-package-selection').toggle($('.booking-package-checkbox:checked').length > 0);
+                            $('.booking-package-radio').on('change', function() {
+                                $('.clear-package-selection').toggle($('.booking-package-radio:checked').length > 0);
+                                syncBookingPaymentUiByPackageSelection();
                                 updateBookingReviewServicePrices();
                                 renderCart();
                                 calculateTotals();
                             });
 
                             $('.clear-package-selection').on('click', function() {
-                                $('.booking-package-checkbox').prop('checked', false);
+                                $('.booking-package-radio').prop('checked', false);
                                 $(this).hide();
+                                syncBookingPaymentUiByPackageSelection();
                                 updateBookingReviewServicePrices();
                                 renderCart();
                                 calculateTotals();
@@ -2888,11 +2970,13 @@
                         } else {
                             // No matching packages — clear the section silently (or show a small note)
                             $('#booking-packagesElement').html('');
+                            syncBookingPaymentUiByPackageSelection();
                         }
                     }
                 } else {
                     $('#booking-servicesTable, #booking-walletsElement, #booking-membershipsElement, #booking-packagesElement').html('');
                     userPackagesData = [];
+                    syncBookingPaymentUiByPackageSelection();
                 }
             }
 
@@ -2953,7 +3037,7 @@
                 var totalAmount = 0;
                 let tempPackageSlots = JSON.parse(JSON.stringify(userPackagesData));
                 let selectedPackageIds = [];
-                $('.booking-package-checkbox:checked').each(function() {
+                $('.booking-package-radio:checked').each(function() {
                     selectedPackageIds.push($(this).val());
                 });
 
