@@ -43,7 +43,12 @@ class SalesService
         $services = Service::with(['translation'])->get();
         $products = Product::with(['translation', 'branches'])->get();
         $discounts = Discount::all();
-        $packages = Package::with(['translation'])->get();
+        $packages = Package::with([
+            'translation',
+            'usersPackages.user',
+            'packageServicePaid.service.translation',
+            'packageServiceFree.service.translation',
+        ])->get();
         
         $paymentMethods = PaymentMethod::forBooking()->orWhereJsonContains('types', 'general')->get();
         $productPaymentMethods = PaymentMethod::forProduct()->orWhereJsonContains('types', 'general')->get();

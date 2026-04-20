@@ -114,6 +114,12 @@
                                         {{ __('field.coupons') }} ({{ __('locale.wallets') }})
                                 </a>
                             </li>
+                            <li class="nav-item">
+                                <a class="nav-link" id="package-tab" data-bs-toggle="tab" href="#package" role="tab">
+                                    <i class="ti ti-box me-1"></i>
+                                    {{ __('locale.packages') }}
+                                </a>
+                            </li>
                         </ul>
 
                         <div class="tab-content">
@@ -487,6 +493,87 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- Packages Tab - Show Packages Table and Add User Package -->
+                            <div class="tab-pane fade" id="package" role="tabpanel">
+                                <div class="card mb-4">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <h5 class="mb-0">{{ __('locale.packages') }} ({{ __('field.available') ?? 'Available' }})</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered table-hover" id="packages-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th style="font-size: 10px;">#</th>
+                                                        <th style="font-size: 10px;">{{ __('field.name') }}</th>
+                                                        <th style="font-size: 10px;">{{ __('field.price') }}</th>
+                                                        <th style="font-size: 10px;">{{ __('field.paid_services') }}</th>
+                                                        <th style="font-size: 10px;">{{ __('field.free_services') }}</th>
+                                                        <th style="font-size: 10px;">{{ __('field.users') }}</th>
+                                                        <th style="font-size: 10px;">{{ __('general.actions') }}</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @forelse($packages as $package)
+                                                        <tr style="font-size: 10px;">
+                                                            <td>{{ $package->id }}</td>
+                                                            <td>{{ $package->name }}</td>
+                                                            <td>{{ number_format($package->price ?? 0, 2) }} {{ get_currency() }}</td>
+                                                            <td>
+                                                                @if($package->packageServicePaid && $package->packageServicePaid->count() > 0)
+                                                                    @foreach($package->packageServicePaid as $paidService)
+                                                                        <span class="badge bg-label-primary mb-1">{{ $paidService->service->name ?? '-' }}</span>
+                                                                    @endforeach
+                                                                @else
+                                                                    <span class="text-muted">-</span>
+                                                                @endif
+                                                            </td>
+                                                            <td>
+                                                                @if($package->packageServiceFree && $package->packageServiceFree->count() > 0)
+                                                                    @foreach($package->packageServiceFree as $freeService)
+                                                                        <span class="badge bg-label-success mb-1">{{ $freeService->service->name ?? '-' }}</span>
+                                                                    @endforeach
+                                                                @else
+                                                                    <span class="text-muted">-</span>
+                                                                @endif
+                                                            </td>
+                                                            <td>
+                                                                @if($package->usersPackages && $package->usersPackages->count() > 0)
+                                                                    @foreach($package->usersPackages as $userPackage)
+                                                                        <span class="badge bg-label-info mb-1">{{ $userPackage->user->name ?? '-' }}</span>
+                                                                    @endforeach
+                                                                @else
+                                                                    <span class="text-muted">-</span>
+                                                                @endif
+                                                            </td>
+                                                            <td>
+                                                                <button
+                                                                    type="button"
+                                                                    class="btn btn-sm btn-primary add-package-user-btn"
+                                                                    style="font-size: 10px;"
+                                                                    data-package-id="{{ $package->id }}"
+                                                                    data-package-name="{{ $package->name }}"
+                                                                    data-bs-toggle="modal"
+                                                                    data-bs-target="#addPackageUserModal"
+                                                                >
+                                                                    <i class="ti ti-user-plus me-1"></i>
+                                                                    {{ __('field.add_user') }}
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    @empty
+                                                        <tr>
+                                                            <td colspan="7" class="text-center text-muted">{{ __('field.no_data_found') }}</td>
+                                                        </tr>
+                                                    @endforelse
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
                         </div>
                     </div>
                 </div>
@@ -1065,6 +1152,59 @@
             </div>
         </div>
     </div>
+
+    <!-- Add Package User Modal -->
+    <div class="modal fade" id="addPackageUserModal" tabindex="-1" aria-labelledby="addPackageUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addPackageUserModalLabel">{{ __('locale.add_users_to') }} {{ __('locale.packages') }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="add-package-user-form">
+                        @csrf
+                        <input type="hidden" name="package_id" id="modal-package-id">
+                        <div class="row">
+                            <div class="col-md-8 mb-3">
+                                <div class="mb-1">
+                                    <label for="modal-package-user" class="form-label">{{ __('field.users') }} <span class="text-danger">*</span></label>
+                                    <select class="select2 form-control" name="user_id" id="modal-package-user" required>
+                                        <option value="">{{ __('field.select_user') }}</option>
+                                        @if($users && $users->count() > 0)
+                                            @foreach ($users as $user)
+                                                <option value="{{ $user->id }}">{{ $user->name }} ({{ $user->phone ?? $user->full_phone ?? '' }})</option>
+                                            @endforeach
+                                        @else
+                                            <option value="" disabled>{{ __('field.no_users_available') }}</option>
+                                        @endif
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="mb-1">
+                                    <label for="modal-package-type" class="form-label">{{ __('field.type') }} <span class="text-danger">*</span></label>
+                                    <select class="form-control" name="package_type" id="modal-package-type" required>
+                                        <option value="">{{ __('field.select_type') }}</option>
+                                        @foreach($walletPaymentMethods as $paymentMethod)
+                                            <option value="{{ $paymentMethod->name }}">{{ $paymentMethod->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('general.cancel') }}</button>
+                    <button type="button" class="btn btn-primary" id="save-package-user-btn">
+                        <i class="ti ti-check me-1"></i>
+                        {{ __('general.save') }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @section('vendor-script')
@@ -1110,7 +1250,7 @@
             @endforeach
 
             // Initialize Select2
-            $('#booking-services, #product-products, #product-sales_worker, #product-worker, #modal-wallet-user').select2();
+            $('#booking-services, #product-products, #product-sales_worker, #product-worker, #modal-wallet-user, #modal-package-user').select2();
             
             // Clear invalid state when payment method is selected
             $('#booking-payment_type, #product-payment_type').on('change', function() {
@@ -3336,6 +3476,91 @@
             });
 
             // Add Coupon Quick Action - handled in modal
+
+            // Packages Tab Functions
+            $(document).on('click', '.add-package-user-btn', function() {
+                const packageId = $(this).data('package-id');
+                const packageName = $(this).data('package-name');
+
+                $('#modal-package-id').val(packageId);
+                $('#addPackageUserModalLabel').text('{{ __('locale.add_users_to') }} {{ __('locale.packages') }} (' + packageName + ')');
+                $('#add-package-user-form')[0].reset();
+                if (!$('#modal-package-user').hasClass('select2-hidden-accessible')) {
+                    $('#modal-package-user').select2({
+                        dropdownParent: $('#addPackageUserModal')
+                    });
+                }
+                $('#modal-package-user').val(null).trigger('change');
+            });
+
+            $(document).on('click', '#save-package-user-btn', function(e) {
+                e.preventDefault();
+
+                const $form = $('#add-package-user-form');
+                const packageId = $('#modal-package-id').val();
+                const userId = $('#modal-package-user').val();
+                const packageType = $('#modal-package-type').val();
+
+                if (!$form[0].checkValidity()) {
+                    $form[0].reportValidity();
+                    return false;
+                }
+
+                if (!packageId || !userId || !packageType) {
+                    if (typeof toastr !== 'undefined') {
+                        toastr.error('{{ __('admin.an_error_occurred') }}');
+                    }
+                    return false;
+                }
+
+                const $btn = $(this);
+                const originalHtml = $btn.html();
+                $btn.prop('disabled', true).html('<i class="ti ti-loader-2 me-1"></i>{{ __('admin.sending') }}');
+
+                $.ajax({
+                    url: '{{ route("center_user.users_packages.updateOrCreate") }}',
+                    type: 'POST',
+                    data: {
+                        _token: '{{ csrf_token() }}',
+                        package_id: packageId,
+                        user_id: userId,
+                        package_type: packageType
+                    },
+                    success: function(response) {
+                        if (response.message === 'redirect_to_home' || response.message === '{{ __('admin.operation_done_successfully') }}') {
+                            $('#addPackageUserModal').modal('hide');
+                            $('#add-package-user-form')[0].reset();
+                            $('#modal-package-user').val(null).trigger('change');
+
+                            if (typeof toastr !== 'undefined') {
+                                toastr.success('{{ __('admin.operation_done_successfully') }}');
+                            }
+
+                            setTimeout(function() {
+                                window.location.reload();
+                            }, 250);
+                        } else if (typeof toastr !== 'undefined') {
+                            toastr.error(response.message || '{{ __('admin.an_error_occurred') }}');
+                        }
+                    },
+                    error: function(xhr) {
+                        if (xhr.status === 422 && xhr.responseJSON?.errors) {
+                            const errors = xhr.responseJSON.errors;
+                            const errorMessages = Object.values(errors).map(function(values) {
+                                return values[0];
+                            });
+                            if (typeof toastr !== 'undefined') {
+                                toastr.error(errorMessages.join('<br>'));
+                            }
+                        } else if (typeof toastr !== 'undefined') {
+                            toastr.error(xhr.responseJSON?.message || '{{ __('admin.an_error_occurred') }}');
+                        }
+                    },
+                    complete: function() {
+                        $btn.prop('disabled', false).html(originalHtml);
+                    }
+                });
+            });
 
             // Initial render
             renderCart();
