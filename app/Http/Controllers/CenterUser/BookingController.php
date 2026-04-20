@@ -164,6 +164,7 @@ class BookingController extends Controller
                 $userPackage->remaining_services = $remainingServices;
                 return $userPackage;
             })->filter(function ($userPackage) {
+                \Log::warning('Contact form packge : ' . $userPackage->package_type);
                 return count($userPackage->remaining_services) > 0;
             })->values();
 
