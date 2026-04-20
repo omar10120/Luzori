@@ -829,5 +829,32 @@ class CenterUserPermissionSeeder extends Seeder
             'guard_name' => 'center',
         ]);
         // END SERVICES CATEGORIES
+
+        // START USERS PACKAGES
+        Permission::create([
+            'name' => 'VIEW_USERS_PACKAGES',
+            'name_ar' => 'عرض حزم المستخدمين',
+            'group' => 'Users Packages',
+            'guard_name' => 'center',
+        ]);
+        Permission::create([
+            'name' => 'CREATE_USERS_PACKAGES',
+            'name_ar' => 'إضافة حزمة مستخدم',
+            'group' => 'Users Packages',
+            'guard_name' => 'center',
+        ]);
+        Permission::create([
+            'name' => 'UPDATE_USERS_PACKAGES',
+            'name_ar' => 'تعديل حزمة مستخدم',
+            'group' => 'Users Packages',
+            'guard_name' => 'center',
+        ]);
+        Permission::create([
+            'name' => 'DELETE_USERS_PACKAGES',
+            'name_ar' => 'حذف حزمة مستخدم',
+            'group' => 'Users Packages',
+            'guard_name' => 'center',
+        ]);
+        // END USERS PACKAGES
     }
 }

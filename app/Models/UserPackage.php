@@ -19,6 +19,8 @@ class UserPackage extends Model
         'package_id',
         'price',
         'status',
+        'package_type',
+        'created_by',
     ];
 
     public function user(): BelongsTo
@@ -29,5 +31,10 @@ class UserPackage extends Model
     public function package(): BelongsTo
     {
         return $this->belongsTo(Package::class);
+    }
+
+    public function created_by_user()
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 }

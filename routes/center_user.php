@@ -38,6 +38,7 @@ use App\Http\Controllers\CenterUser\InfoController;
 use App\Http\Controllers\CenterUser\PageController;
 use App\Http\Controllers\CenterUser\SettingController;
 use App\Http\Controllers\CenterUser\WeekDayController;
+use App\Http\Controllers\CenterUser\UserPackageController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -209,6 +210,14 @@ Route::group(['middleware' => 'auth_center_user:center_user'], function () {
 
     Route::group(['prefix' => 'packages', 'as' => 'packages.'], function () {
         Route::controller(PackageController::class)->group(function () {
+            Route::get('index', 'index')->name('index');
+            Route::get('create', 'create')->name('create');
+            Route::post('updateOrCreate', 'updateOrCreate')->name('updateOrCreate');
+        });
+    });
+
+    Route::group(['prefix' => 'users_packages', 'as' => 'users_packages.'], function () {
+        Route::controller(UserPackageController::class)->group(function () {
             Route::get('index', 'index')->name('index');
             Route::get('create', 'create')->name('create');
             Route::post('updateOrCreate', 'updateOrCreate')->name('updateOrCreate');

@@ -23,6 +23,11 @@
                 <i class="ti ti-plus"></i>{{ __('field.add_user') }}
             </a>
         @endif
+        @if(!empty($options['add-user-to-package']))
+            <a class="dropdown-item" href="{{ route('center_user.users_packages.create', ['id' => $id]) }}">
+                <i class="ti ti-plus"></i>{{ __('field.add_user') }}
+            </a>
+        @endif
         @if(!empty($options['show']))
             <a class="dropdown-item" href="{{ route($route . '.show', ['id' => $id]) }}">
                 <i class="ti ti-eye"></i>{{ __('general.show') }}

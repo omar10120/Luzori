@@ -26,9 +26,11 @@ class PackageDataTable extends DataTable
                 $options = [
                     'edit' => true,
                     'delete' => true,
+                    'add-user-to-package' => true,
                     'operation' => DeleteActionEnum::FORCE_DELETE->value,
                     'with_trashed' => 1,
                 ];
+                
                 $html = view()->make('_partials.center_actions', compact('id', 'route', 'options', 'model'))->render();
                 return $html;
             })
@@ -66,13 +68,23 @@ class PackageDataTable extends DataTable
             ->addColumn('total_value', function ($row) {
                 return '<span class="fw-bold text-primary">' . number_format($row->total_value, 2) . ' ' . trim(get_currency()) . '</span>';
             })
-            ->rawColumns(['packageServicePaid.service.translation.name', 'packageServiceFree.service.translation.name', 'status', 'translation.name', 'total_value'], true)
+            ->editColumn('users', function ($row) {
+                $users = '';
+                foreach ($row->usersPackages as $userPackage) {
+                    if ($userPackage->user) {
+                        $users .= '<span class="badge"
+                            style="border-radius:10px;background-color:#7367f0;margin:5px;padding:7px;">' . $userPackage->user->name . '</span>';
+                    }
+                }
+                return $users ?: '<span class="text-muted">' . __('general.no_users') . '</span>';
+            })
+            ->rawColumns(['packageServicePaid.service.translation.name', 'packageServiceFree.service.translation.name', 'status', 'translation.name', 'total_value', 'users'], true)
             ->setRowId('id');
     }
 
     public function query(Package $model): QueryBuilder
     {
-        return $model->query()->withTrashed()->with(['translation', 'packageServicePaid' => function ($q) {
+        return $model->query()->withTrashed()->with(['translation', 'usersPackages.user', 'packageServicePaid' => function ($q) {
             $q->with(['service' => function ($q) {
                 $q->with(['translation']);
             }]);
@@ -80,6 +92,7 @@ class PackageDataTable extends DataTable
             $q->with(['service' => function ($q) {
                 $q->with(['translation']);
             }]);
+            
         }])->orderBy($this->plural . '.id', 'DESC');
     }
 
@@ -148,6 +161,7 @@ class PackageDataTable extends DataTable
             Column::computed('packageServicePaid.service.translation.name')->searchable(true)->title(__('field.paid_services')),
             Column::computed('packageServiceFree.service.translation.name')->searchable(true)->title(__('field.free_services')),
             Column::computed('status')->searchable(false)->title(__('field.status')),
+            Column::computed('users')->searchable(false)->title(__('field.users')),
             Column::make('created_at')->searchable(true)->title(__('field.created_at')),
         ];
     }

@@ -34,6 +34,11 @@ class Package extends Model
         return $this->hasMany(PackageServiceFree::class);
     }
 
+    public function usersPackages(): HasMany
+    {
+        return $this->hasMany(UserPackage::class);
+    }
+
     /**
      * Get the total market value of all services in the package.
      */

@@ -184,14 +184,14 @@
                                                                                         <option value="{{ $service->id }}" data-category-id="{{ $service->category_id }}">{{ $service->name }}</option>
                                                                                     @endforeach
                                                                                 </select>
-                                                                                <div class="mt-3 mb-1">
+                                                                                <!-- <div class="mt-3 mb-1">
                                                                                     <label for="booking-packages" class="form-label mb-0">{{ __('locale.packages') }}</label>
                                                                                     <select class="select2 form-control " name="packages[]" id="booking-packages" multiple>
                                                                                         @foreach ($packages as $package)
-                                                                                            <option value="{{ $package->id }}" data-price="{{ $package->price }}">{{ $package->name }} ({{ $package->price }} {{ get_currency() }})</option>
+                                                                                                <option value="{{ $package->id }}" data-price="{{ $package->price }}">{{ $package->name }} ({{ $package->price }} {{ get_currency() }})</option>
                                                                                         @endforeach
                                                                                     </select>
-                                                                                </div>
+                                                                                </div> -->
                                                                             </div>
                                                                         </div>
                                                                     </div>
@@ -415,6 +415,7 @@
                                     </div>
                                 </form>
                             </div>
+                            
 
                             <!-- Wallet Tab - Show Coupons Table, Add User Wallet, and Add New Coupon -->
                             <div class="tab-pane fade" id="wallet" role="tabpanel">

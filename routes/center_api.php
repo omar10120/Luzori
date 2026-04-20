@@ -239,6 +239,17 @@ Route::group(['middleware' => 'auth:center_api'], function () {
             Route::delete('delete', 'delete')->can('DELETE_PACKAGES');
         });
     });
+     Route::group(['prefix' => 'users-packages'], function () {
+        Route::controller(UserPackageController::class)->group(function () {
+            Route::get('all', 'all')->can('VIEW_USERS_PACKAGES');
+            Route::get('find', 'find')->can('VIEW_USERS_PACKAGES');
+            Route::post('add', 'add')->can('CREATE_USERS_PACKAGES');
+            Route::post('edit', 'edit')->can('UPDATE_USERS_PACKAGES');
+            Route::delete('delete', 'delete')->can('DELETE_USERS_PACKAGES');
+        });
+    });
+    
+
 
     Route::group(['prefix' => 'bookings'], function () {
         Route::controller(BookingController::class)->group(function () {
