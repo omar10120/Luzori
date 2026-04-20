@@ -2180,14 +2180,28 @@
                         </tr>
                     </thead>
                     <tbody>`;
+                let tempPackageSlotsForReviewDisplay = JSON.parse(JSON.stringify(userPackagesData));
+                let selectedPackageIdsForReview = [];
+                $('.booking-package-radio:checked').each(function() {
+                    selectedPackageIdsForReview.push($(this).val());
+                });
+
                 $.each(bookingWizardData.services, function(index, item) {
                     worker = get_worker(item.worker_id);
                     service = get_service(item.id);
                     var servicePrice = service ? service.price : 0;
-                    var discountedPrice = calculateDiscountedServicePrice(servicePrice);
+                    var discountedPrice = calculateDiscountedServicePrice(servicePrice, item.id, tempPackageSlotsForReviewDisplay, selectedPackageIdsForReview);
+                    
+                    let priceDisplay = servicePrice.toFixed(2) + ' {{ get_currency() }}';
+                    if (discountedPrice === 0 && servicePrice > 0) {
+                        priceDisplay = `<del>${servicePrice.toFixed(2)}</del> <span class="text-success">0.00 (Package)</span>`;
+                    } else if (discountedPrice < servicePrice) {
+                        priceDisplay = `<del>${servicePrice.toFixed(2)}</del> <span class="text-primary">${discountedPrice.toFixed(2)}</span>`;
+                    }
+
                     reviewHtml += `<tr>
                         <td>${item.name.trim()}</td>
-                        <td class="review-item-price">${servicePrice.toFixed(2)} {{ get_currency() }}</td>
+                        <td class="review-item-price">${priceDisplay}</td>
                         <td>${item.date}</td>
                         <td>${worker ? worker.name : 'N/A'}</td>
                         <td>${item.from_time}</td>
@@ -2267,11 +2281,17 @@
 
                 var serviceRows = [];
                 if (bookingWizardData.services) {
+                    let tempPackageSlots = JSON.parse(JSON.stringify(userPackagesData));
+                    let selectedPackageIdsForBooking = [];
+                    $('.booking-package-radio:checked').each(function() {
+                        selectedPackageIdsForBooking.push($(this).val());
+                    });
+
                     bookingWizardData.services.forEach(function(service) {
                         var worker = get_worker(service.worker_id);
                         var serviceData = get_service(service.id);
                         var originalPrice = serviceData ? serviceData.price : 0;
-                        var discountedPrice = calculateDiscountedServicePrice(originalPrice);
+                        var discountedPrice = calculateDiscountedServicePrice(originalPrice, service.id, tempPackageSlots, selectedPackageIdsForBooking);
                         serviceRows.push({
                             id: service.id,
                             name: service.name,
@@ -2374,6 +2394,11 @@
                 $('#wizard_category_tree_jstree').jstree("deselect_all");
                 $('#wizard_category_tree_selected_text').text('{{ __("general.choose") }}');
                 $('#wizard_category_tree_input').val('');
+
+                // Reset packages selection
+                $('.booking-package-radio').prop('checked', false);
+                $('.clear-package-selection').hide();
+                syncBookingPaymentUiByPackageSelection();
 
                 // Name/Mobile are reset, but if customer is still selected, next booking should use them again
                 // So we don't clear global selectedCustomer vars, just the wizard local usage
@@ -2537,16 +2562,17 @@
 
             function calculateTotals() {
                 let subtotal = 0;
+                let tempPackageSlots = JSON.parse(JSON.stringify(userPackagesData));
+                
                 cart.forEach(item => {
                     if (item.type === 'user_wallet') {
                         subtotal += parseFloat(item.invoiced_amount || item.amount || 0);
                     } else if (item.type === 'service' && ((item.services && item.services.length) || (item.packages && item.packages.length))) {
                         if (item.services) {
                             item.services.forEach(function(svc) {
-                                // Use original_price if available, otherwise use price
                                 var originalPrice = parseFloat(svc.original_price || svc.price || 0);
-                                // Recalculate discounted price based on current discount selection
-                                var discountedPrice = calculateDiscountedServicePrice(originalPrice);
+                                // Pass service ID and package IDs from the cart item
+                                var discountedPrice = calculateDiscountedServicePrice(originalPrice, svc.id, tempPackageSlots, item.user_package_ids || []);
                                 subtotal += discountedPrice;
                             });
                         }
@@ -2563,8 +2589,6 @@
                 });
                 $('#cart-subtotal').text(subtotal.toFixed(2) + ' {{ get_currency() }}');
                 $('#cart-total').text(subtotal.toFixed(2) + ' {{ get_currency() }}');
-                // Enable button if cart has items (including wallets) AND customer is selected
-                // Allow proceeding with just coupons/wallets
                 $('#continueToPayment').prop('disabled', cart.length === 0 || !selectedCustomerId);
             }
 
@@ -2577,6 +2601,8 @@
                 let productCount = 0;
                 let walletCount = 0;
                 let userWalletCount = 0;
+
+                let tempPackageSlots = JSON.parse(JSON.stringify(userPackagesData));
 
                 cart.forEach((item, index) => {
                     // Get item name
@@ -2593,13 +2619,13 @@
                             <div class="flex-grow-1">
                                 <h6 class="mb-1">${itemName}</h6>`;
                     
+                    let displayPrice = 0;
                     if (item.type === 'service') {
                         if (item.services && item.services.length) {
                             item.services.forEach(function(svc) {
-                                // Use original_price if available, otherwise use price
                                 var originalPrice = parseFloat(svc.original_price || svc.price || 0);
-                                // Recalculate discounted price based on current discount selection
-                                var servicePrice = calculateDiscountedServicePrice(originalPrice);
+                                var servicePrice = calculateDiscountedServicePrice(originalPrice, svc.id, tempPackageSlots, item.user_package_ids || []);
+                                displayPrice += servicePrice;
                                 itemHtml += `<small class="text-muted d-block">
                                     ${svc.name || ''} &ndash; {{ __('field.worker') }}: ${svc.worker_name || ''}<br>
                                     {{ __('field.date') }}: ${svc.date || ''} &nbsp; ${(svc.from_time || '')} - ${(svc.to_time || '')} &nbsp; ${servicePrice.toFixed(2)} {{ get_currency() }}
@@ -2610,6 +2636,7 @@
                         if (item.packages && item.packages.length) {
                             item.packages.forEach(function(pkg) {
                                 var pkgPrice = parseFloat(pkg.price || 0);
+                                displayPrice += pkgPrice;
                                 itemHtml += `<small class="text-muted d-block">
                                     <i class="ti ti-package me-1"></i> ${pkg.name || ''} &nbsp; ${pkgPrice.toFixed(2)} {{ get_currency() }}
                                 </small>`;
@@ -2625,6 +2652,9 @@
                             itemHtml += `<br>{{ __('field.commission') }}: ${item.commission}%`;
                         }
                         itemHtml += `</small>`;
+                        const price = parseFloat(item.price || 0);
+                        const quantity = parseInt(item.quantity || 1);
+                        displayPrice = price * quantity;
                     } else if (item.type === 'user_wallet') {
                         itemHtml += `<small class="text-muted">
                             {{ __('field.code') }}: ${item.code || ''}<br>
@@ -2642,31 +2672,7 @@
                             itemHtml += `<br>{{ __('field.commission') }}: ${item.commission}%`;
                         }
                         itemHtml += `</small>`;
-                    }
-                    
-                    // Calculate and display price
-                    let displayPrice = 0;
-                    if (item.type === 'user_wallet') {
                         displayPrice = parseFloat(item.invoiced_amount || item.amount || 0);
-                    } else if (item.type === 'service') {
-                        if (item.services && item.services.length) {
-                            item.services.forEach(function(svc) {
-                                // Use original_price if available, otherwise use price
-                                var originalPrice = parseFloat(svc.original_price || svc.price || 0);
-                                // Recalculate discounted price based on current discount selection
-                                var discountedPrice = calculateDiscountedServicePrice(originalPrice);
-                                displayPrice += discountedPrice;
-                            });
-                        }
-                        if (item.packages && item.packages.length) {
-                            item.packages.forEach(function(pkg) {
-                                displayPrice += parseFloat(pkg.price || 0);
-                            });
-                        }
-                    } else {
-                        const price = parseFloat(item.price || 0);
-                        const quantity = parseInt(item.quantity || 1);
-                        displayPrice = price * quantity;
                     }
                     
                     itemHtml += `<div class="mt-1">
