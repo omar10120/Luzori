@@ -499,6 +499,10 @@
                                 <div class="card mb-4">
                                     <div class="card-header d-flex justify-content-between align-items-center">
                                         <h5 class="mb-0">{{ __('locale.packages') }} ({{ __('field.available') ?? 'Available' }})</h5>
+                                        <button type="button" class="btn btn-primary btn-sm" id="addPackageBtn" data-bs-toggle="modal" data-bs-target="#addPackageModal">
+                                            <i class="ti ti-plus me-1"></i>
+                                            {{ __('general.add') }} {{ __('locale.packages') }}
+                                        </button>
                                     </div>
                                     <div class="card-body">
                                         <div class="table-responsive">
@@ -1068,6 +1072,60 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('general.cancel') }}</button>
                     <button type="button" class="btn btn-primary" id="save-quick-coupon-btn">
+                        <i class="ti ti-check me-1"></i>
+                        {{ __('general.save') }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Package Quick Modal -->
+    <div class="modal fade" id="addPackageModal" tabindex="-1" aria-labelledby="addPackageModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addPackageModalLabel">{{ __('general.add') }} {{ __('locale.packages') }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="quick-add-package-form">
+                        @csrf
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="quick_package_name_en" class="form-label">{{ __('field.name') }} (EN) <span class="text-danger">*</span></label>
+                                <input type="text" id="quick_package_name_en" class="form-control" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="quick_package_name_ar" class="form-label">{{ __('field.name') }} (AR) <span class="text-danger">*</span></label>
+                                <input type="text" id="quick_package_name_ar" class="form-control" dir="rtl" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="quick_package_price" class="form-label">{{ __('field.price') }} <span class="text-danger">*</span></label>
+                                <input type="number" id="quick_package_price" class="form-control" step="0.01" min="0" required>
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label for="quick_package_paid_services" class="form-label">{{ __('field.paid_services') }} <span class="text-danger">*</span></label>
+                                <select id="quick_package_paid_services" class="select2 form-control" multiple required>
+                                    @foreach ($services as $service)
+                                        <option value="{{ $service->id }}">{{ $service->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label for="quick_package_free_services" class="form-label">{{ __('field.free_services') }}</label>
+                                <select id="quick_package_free_services" class="select2 form-control" multiple>
+                                    @foreach ($services as $service)
+                                        <option value="{{ $service->id }}">{{ $service->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('general.cancel') }}</button>
+                    <button type="button" class="btn btn-primary" id="save-quick-package-btn">
                         <i class="ti ti-check me-1"></i>
                         {{ __('general.save') }}
                     </button>
@@ -3491,6 +3549,87 @@
                     });
                 }
                 $('#modal-package-user').val(null).trigger('change');
+            });
+
+            $('#addPackageModal').on('shown.bs.modal', function() {
+                if (!$('#quick_package_paid_services').hasClass('select2-hidden-accessible')) {
+                    $('#quick_package_paid_services').select2({
+                        dropdownParent: $('#addPackageModal')
+                    });
+                }
+                if (!$('#quick_package_free_services').hasClass('select2-hidden-accessible')) {
+                    $('#quick_package_free_services').select2({
+                        dropdownParent: $('#addPackageModal')
+                    });
+                }
+            });
+
+            $(document).on('click', '#save-quick-package-btn', function(e) {
+                e.preventDefault();
+                const $btn = $(this);
+                const originalHtml = $btn.html();
+
+                const nameEn = $('#quick_package_name_en').val();
+                const nameAr = $('#quick_package_name_ar').val();
+                const price = $('#quick_package_price').val();
+                const paidServices = $('#quick_package_paid_services').val() || [];
+                const freeServices = $('#quick_package_free_services').val() || [];
+
+                if (!nameEn || !nameAr || !price || paidServices.length === 0) {
+                    if (typeof toastr !== 'undefined') {
+                        toastr.error('{{ __('admin.an_error_occurred') }}');
+                    }
+                    return false;
+                }
+
+                $btn.prop('disabled', true).html('<i class="ti ti-loader-2 me-1"></i>{{ __('admin.sending') }}');
+
+                $.ajax({
+                    url: '{{ route("center_user.packages.updateOrCreate") }}',
+                    type: 'POST',
+                    data: {
+                        _token: '{{ csrf_token() }}',
+                        en: { name: nameEn },
+                        ar: { name: nameAr },
+                        price: price,
+                        paid_services: paidServices,
+                        free_services: freeServices
+                    },
+                    success: function(response) {
+                        if (response.message === 'redirect_to_home' || response.data) {
+                            $('#addPackageModal').modal('hide');
+                            $('#quick-add-package-form')[0].reset();
+                            $('#quick_package_paid_services').val(null).trigger('change');
+                            $('#quick_package_free_services').val(null).trigger('change');
+
+                            if (typeof toastr !== 'undefined') {
+                                toastr.success('{{ __('admin.operation_done_successfully') }}');
+                            }
+
+                            setTimeout(function() {
+                                location.reload();
+                            }, 400);
+                        } else if (typeof toastr !== 'undefined') {
+                            toastr.error(response.message || '{{ __('admin.an_error_occurred') }}');
+                        }
+                    },
+                    error: function(xhr) {
+                        if (xhr.status === 422 && xhr.responseJSON?.errors) {
+                            const errors = xhr.responseJSON.errors;
+                            const errorMessages = Object.values(errors).map(function(values) {
+                                return values[0];
+                            });
+                            if (typeof toastr !== 'undefined') {
+                                toastr.error(errorMessages.join('<br>'));
+                            }
+                        } else if (typeof toastr !== 'undefined') {
+                            toastr.error(xhr.responseJSON?.message || '{{ __('admin.an_error_occurred') }}');
+                        }
+                    },
+                    complete: function() {
+                        $btn.prop('disabled', false).html(originalHtml);
+                    }
+                });
             });
 
             $(document).on('click', '#save-package-user-btn', function(e) {

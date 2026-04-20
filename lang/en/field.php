@@ -342,4 +342,5 @@ return [
     'packages'                        => 'Packages',
     'package'                         => 'Package',
     'total_services_price'            => 'Total Services Price',
+    'add_users_to'                    => 'Add Users To Package',
 ];

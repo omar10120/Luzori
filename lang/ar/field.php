@@ -334,6 +334,7 @@ return [
     'packages'                        => 'الباقات',
     'package'                         => 'الباقة',
     'total_services_price'            => 'إجمالي سعر الخدمات',
+    'add_users_to'                    => 'إضافة مستخدمين إلى الباقة',
 
     
     
