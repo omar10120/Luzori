@@ -12,6 +12,7 @@ use App\Models\UserUsedCard;
 use App\Models\UserUsedDiscount;
 use App\Models\BuyProduct;
 use App\Models\UserWallet;
+use App\Models\UserPackage;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use niklasravnsborg\LaravelPdf\Facades\Pdf;
@@ -393,10 +394,26 @@ class DailyReportController extends Controller
                     if (isset($users_with_commission[$get_wallet->worker_id])) {
                         array_push($users_with_commission[$get_wallet->worker_id], $get_wallet->commission);
                     }
-
                     if (isset($users_with_tips[$get_wallet->worker_id])) {
                         array_push($users_with_tips[$get_wallet->worker_id], $get_wallet->tip);
                     }
+                }
+            }
+
+            $temp_get_packages = UserPackage::whereRaw('DATE(users_packages.created_at)="' . $date . '"');
+            if (get_user_role() == 1 || $selected_branch) {
+                $branch_id = $selected_branch ? $selected_branch : auth('center_user')->user()->branch_id;
+                $temp_get_packages = $temp_get_packages->join('users', 'users.id', '=', 'users_packages.user_id')->where('users.branch_id', $branch_id);
+            }
+
+            $get_packages = $temp_get_packages->get();
+            if (!$get_packages->isEmpty()) {
+                foreach ($get_packages as $get_package) {
+                    // We sum all package sales into the 'package' key as requested
+                    if (!isset($wallet_details_prices['package'])) {
+                        $wallet_details_prices['package'] = 0;
+                    }
+                    $wallet_details_prices['package'] += $get_package->price;
                 }
             }
         }

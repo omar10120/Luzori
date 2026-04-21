@@ -92,7 +92,19 @@ class DailyReportResource extends JsonResource
             }
         }
 
-        $total['total'] = array_sum($total);
+        // Calculate final total sum, excluding specific categories as requested
+        $sumTotal = 0;
+        // The user wants 'package' removed from total.
+        // They also noted that 'free' should be kept but handled similarly.
+        $excludedFromTotal = ['package', 'free', 'commission', 'tips'];
+        
+        foreach ($total as $key => $value) {
+            if (!in_array($key, $excludedFromTotal)) {
+                $sumTotal += (float) $value;
+            }
+        }
+        
+        $total['total'] = $sumTotal;
         $res['total'] = $total;
         return $res;
     }

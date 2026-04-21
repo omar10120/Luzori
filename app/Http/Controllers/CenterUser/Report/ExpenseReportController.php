@@ -9,6 +9,7 @@ use App\Models\Branch;
 use App\Models\Booking;
 use App\Models\BuyProduct;
 use App\Models\UserWallet;
+use App\Models\UserPackage;
 use Carbon\Carbon;
 use niklasravnsborg\LaravelPdf\Facades\Pdf;
 
@@ -298,6 +299,35 @@ class ExpenseReportController extends Controller
                 $incomeByType[$walletType] = 0;
             }
             $incomeByType[$walletType] += $amount;
+        }
+
+        // Get package income
+        $temp_packages = UserPackage::whereBetween('created_at', [$start_date . ' 00:00:00', $end_date . ' 23:59:59']);
+        if ($selected_branch) {
+            $temp_packages->whereHas('user', function ($query) use ($selected_branch) {
+                return $query->where('branch_id', $selected_branch);
+            });
+        } elseif (get_user_role() != 1) {
+            $temp_packages->whereHas('user', function ($query) {
+                return $query->where('branch_id', auth('center_user')->user()->branch_id);
+            });
+        }
+
+        $packages = $temp_packages->get();
+        foreach ($packages as $package) {
+            $date = date('Y-m-d', strtotime($package->created_at));
+            if (!isset($incomeByDate[$date])) {
+                $incomeByDate[$date] = 0;
+            }
+
+            $amount = $package->price;
+            $incomeByDate[$date] += $amount;
+            $totalIncome += $amount;
+
+            if (!isset($incomeByType['package'])) {
+                $incomeByType['package'] = 0;
+            }
+            $incomeByType['package'] += $amount;
         }
 
         return [

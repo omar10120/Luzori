@@ -10,6 +10,7 @@ use App\Models\UserUsedCard;
 use App\Models\UserUsedDiscount;
 use App\Models\BuyProduct;
 use App\Models\UserWallet;
+use App\Models\UserPackage;
 use Illuminate\Support\Facades\DB;
 use niklasravnsborg\LaravelPdf\Facades\Pdf;
 
@@ -51,6 +52,9 @@ class SalesReportController extends Controller
             // Add 'wallet' to payment types list if not already present (for bookings with empty payment_type)
             if (!isset($payments_type['wallet'])) {
                 $payments_type['wallet'] = __('locale.wallets');
+            }
+            if (!isset($payments_type['package'])) {
+                $payments_type['package'] = __('locale.packages');
             }
             // Merge dynamic wallet methods used in the selected month so columns exist
             $dynamicWalletTypesQuery = UserWallet::select('users_wallets.wallet_type')
@@ -281,6 +285,24 @@ class SalesReportController extends Controller
                     if (!empty($users_wallet->commission)) {
                         $result[$date]['commission'] += $users_wallet->commission;
                     }
+                }
+            }
+
+            $temp_users_packages = UserPackage::whereRaw('YEAR(users_packages.created_at)="' . $request->get('year') . '" and MONTH(users_packages.created_at)="' . $request->get('month') . '"');
+            if (get_user_role() == 1 || $selected_branch) {
+                $branch_id = $selected_branch ? $selected_branch : auth('center_user')->user()->branch_id;
+                $temp_users_packages->whereHas('user', function ($query) use ($branch_id) {
+                    return $query->where('branch_id', $branch_id);
+                });
+            }
+            $users_packages = $temp_users_packages->get();
+            if (!empty($users_packages)) {
+                foreach ($users_packages as $users_package) {
+                    $date = date('Y-m-d', strtotime($users_package->created_at));
+                    if (!isset($result[$date]['package'])) {
+                        $result[$date]['package'] = 0;
+                    }
+                    $result[$date]['package'] += $users_package->price;
                 }
             }
 
