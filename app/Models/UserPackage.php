@@ -7,6 +7,7 @@ use App\Traits\UpdatedAtTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class UserPackage extends Model
 {
@@ -32,9 +33,14 @@ class UserPackage extends Model
     {
         return $this->belongsTo(Package::class);
     }
+    
 
     public function created_by_user()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+    public function translation(): HasMany
+    {
+        return $this->hasMany(PackageTranslation::class, 'package_id');
     }
 }

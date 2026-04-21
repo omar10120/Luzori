@@ -39,6 +39,16 @@ class CenterResource extends JsonResource
         if (isset($this->services)) {
             $res['services'] = ServiceResource::collection($this->services);
         }
+        if (isset($this->packages)) {
+            $res['packages'] = PackageResource::collection($this->packages);
+        }
+        if (isset($this->user_packages)) {
+            $res['user_packages'] = UserPackageResource::collection($this->user_packages);
+        }
+
+        if (isset($this->workers)) {
+            $res['workers'] = WorkerResource::collection($this->workers);
+        }
 
         return $res;
     }

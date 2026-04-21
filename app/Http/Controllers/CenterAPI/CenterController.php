@@ -11,6 +11,8 @@ use App\Models\Center;
 use App\Models\Branch;
 use App\Models\CategoryService;
 use App\Models\Service;
+use App\Models\Package;
+use App\Models\UserPackage;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Config;
@@ -64,6 +66,14 @@ class CenterController extends Controller
                 $center->branches = Branch::all();
                 $center->categories = CategoryService::with('services.workers.vacations')->get();
                 $center->services = Service::with('workers.vacations')->where('is_top', true)->get();
+                $center->packages = Package::all();
+                
+                $userId = auth('center_api')->id();
+                if ($userId) {
+                    $center->user_packages = UserPackage::where('user_id', $userId)
+                        ->with(['package.translation'])
+                        ->get();
+                }
               
             }
 
