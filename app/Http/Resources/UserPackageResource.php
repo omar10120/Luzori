@@ -23,7 +23,8 @@ class UserPackageResource extends JsonResource
             'price' => (double) $this->price,
             'status' => $this->status,
             'package_type' => $this->package_type,
-            'created_at' => $this->created_at ? $this->created_at->toDateTimeString() : null,
+            'created_at' => ($this->created_at instanceof \Carbon\Carbon) ? $this->created_at->toDateTimeString() : $this->created_at,
+            'used_packages' => UserUsedPackageResource::collection($this->whenLoaded('usedPackages')),
         ];
     }
 }

@@ -807,26 +807,26 @@ class CenterUserPermissionSeeder extends Seeder
             'name' => 'VIEW_SERVICES_CATEGORIES',
             'name_ar' => 'عرض فئات الخدمات',
             'group' => 'Services Categories',
-            'guard_name' => 'center',
+            'guard_name' => 'center_api',
         ]);
         // END SERVICES CATEGORIES
         Permission::create([
             'name' => 'CREATE_SERVICES_CATEGORIES',
             'name_ar' => 'إضافة فئة خدمة',
             'group' => 'Services Categories',
-            'guard_name' => 'center',
+            'guard_name' => 'center_api',
         ]);
         Permission::create([
             'name' => 'UPDATE_SERVICES_CATEGORIES',
             'name_ar' => 'تعديل فئة خدمة',
             'group' => 'Services Categories',
-            'guard_name' => 'center',
+            'guard_name' => 'center_api',
         ]);
         Permission::create([
             'name' => 'DELETE_SERVICES_CATEGORIES',
             'name_ar' => 'حذف فئة خدمة',
             'group' => 'Services Categories',
-            'guard_name' => 'center',
+            'guard_name' => 'center_api',
         ]);
         // END SERVICES CATEGORIES
 
@@ -835,25 +835,25 @@ class CenterUserPermissionSeeder extends Seeder
             'name' => 'VIEW_USERS_PACKAGES',
             'name_ar' => 'عرض حزم المستخدمين',
             'group' => 'Users Packages',
-            'guard_name' => 'center',
+            'guard_name' => 'center_api',
         ]);
         Permission::create([
             'name' => 'CREATE_USERS_PACKAGES',
             'name_ar' => 'إضافة حزمة مستخدم',
             'group' => 'Users Packages',
-            'guard_name' => 'center',
+            'guard_name' => 'center_api',
         ]);
         Permission::create([
             'name' => 'UPDATE_USERS_PACKAGES',
             'name_ar' => 'تعديل حزمة مستخدم',
             'group' => 'Users Packages',
-            'guard_name' => 'center',
+            'guard_name' => 'center_api',
         ]);
         Permission::create([
             'name' => 'DELETE_USERS_PACKAGES',
             'name_ar' => 'حذف حزمة مستخدم',
             'group' => 'Users Packages',
-            'guard_name' => 'center',
+            'guard_name' => 'center_api',
         ]);
         // END USERS PACKAGES
     }

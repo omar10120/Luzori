@@ -13,6 +13,7 @@ use App\Models\CategoryService;
 use App\Models\Service;
 use App\Models\Package;
 use App\Models\UserPackage;
+use App\Models\UserUsedPackage;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Config;
@@ -72,6 +73,10 @@ class CenterController extends Controller
                 if ($userId) {
                     $center->user_packages = UserPackage::where('user_id', $userId)
                         ->with(['package.translation'])
+                        ->get();
+                    
+                    $center->user_used_packages = UserUsedPackage::where('user_id', $userId)
+                        ->with(['service.translation'])
                         ->get();
                 }
               

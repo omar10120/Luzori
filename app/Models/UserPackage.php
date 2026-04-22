@@ -24,6 +24,11 @@ class UserPackage extends Model
         'created_by',
     ];
 
+    protected $casts = [
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+    ];
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
@@ -42,5 +47,10 @@ class UserPackage extends Model
     public function translation(): HasMany
     {
         return $this->hasMany(PackageTranslation::class, 'package_id');
+    }
+
+    public function usedPackages(): HasMany
+    {
+        return $this->hasMany(UserUsedPackage::class, 'user_package_id');
     }
 }

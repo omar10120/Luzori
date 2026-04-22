@@ -341,12 +341,15 @@ class BookingController extends Controller
         $request->validate([
             'center_id' => 'required|exists:central.centers,id',
             'branch_id' => 'required',
-            'services' => 'required|array|min:1',
+            'services' => 'required_without:packages|array',
             'services.*.id' => 'required',
             'services.*.worker_id' => 'required',
             'services.*.date' => 'required|date_format:Y-m-d',
             'services.*.from_time' => 'required|date_format:H:i',
             'services.*.to_time' => 'required|date_format:H:i',
+            'services.*.user_package_ids' => 'nullable|array',
+            'packages' => 'required_without:services|array',
+            'packages.*.id' => 'required', // Note: manual check after DB switch
             'payment_type' => 'nullable|string',
         ]);
 
@@ -382,28 +385,60 @@ class BookingController extends Controller
             // 3. Calculate Total Price and Check Wallet
             $totalPrice = 0;
             $cartItems = [];
-            foreach ($request->services as $svc) {
-                $service = Service::find($svc['id']);
-                if (!$service) {
-                    return MyHelper::responseJSON('Service not found: ' . $svc['id'], Response::HTTP_NOT_FOUND);
+
+            // Process services
+            if ($request->filled('services')) {
+                foreach ($request->services as $svc) {
+                    $service = Service::find($svc['id']);
+                    if (!$service) {
+                        return MyHelper::responseJSON('Service not found: ' . $svc['id'], Response::HTTP_NOT_FOUND);
+                    }
+
+                    $isUsingPackage = !empty($svc['user_package_ids']);
+                    $itemPrice = $isUsingPackage ? 0 : (float) $service->price;
+                    $totalPrice += $itemPrice;
+
+                    $cartItems[] = [
+                        'type' => 'service',
+                        'id' => $service->id,
+                        'name' => $service->name,
+                        'price' => $itemPrice,
+                        'worker_id' => $svc['worker_id'],
+                        'date' => $svc['date'],
+                        'from_time' => $svc['from_time'],
+                        'to_time' => $svc['to_time'],
+                        'payment_type' => $request->payment_type ?? ($isUsingPackage ? 'package' : 'service_cash'),
+                        'client_name' => $tenantUser->name,
+                        'client_mobile' => $tenantUser->phone,
+                        'booking_source' => 'outside_booking',
+                        'user_package_ids' => $svc['user_package_ids'] ?? null,
+                    ];
+                }
+            }
+
+            // Process package purchases
+            if ($request->filled('packages')) {
+                $packageItems = [];
+                foreach ($request->packages as $pkg) {
+                    $package = \App\Models\Package::find($pkg['id']);
+                    if (!$package) {
+                        return MyHelper::responseJSON('Package not found: ' . $pkg['id'], Response::HTTP_NOT_FOUND);
+                    }
+
+                    $totalPrice += (float) $package->price;
+                    $packageItems[] = [
+                        'id' => $package->id,
+                        'price' => $package->price,
+                    ];
                 }
 
-                $totalPrice += (float) $service->price;
-
-                $cartItems[] = [
-                    'type' => 'service',
-                    'id' => $service->id,
-                    'name' => $service->name,
-                    'price' => $service->price,
-                    'worker_id' => $svc['worker_id'],
-                    'date' => $svc['date'],
-                    'from_time' => $svc['from_time'],
-                    'to_time' => $svc['to_time'],
-                    'payment_type' => $request->payment_type ?? 'service_cash',
-                    'client_name' => $tenantUser->name,
-                    'client_mobile' => $tenantUser->phone,
-                    'booking_source' => 'outside_booking',
-                ];
+                if (!empty($packageItems)) {
+                    $cartItems[] = [
+                        'type' => 'service', // SalesService expects 'service' type which can contain 'packages'
+                        'packages' => $packageItems,
+                        'client_mobile' => $tenantUser->phone,
+                    ];
+                }
             }
 
             // Check and Deduct Wallet (from Central database)
