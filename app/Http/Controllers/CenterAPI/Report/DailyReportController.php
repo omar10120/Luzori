@@ -14,6 +14,7 @@ use App\Models\UserUsedCard;
 use App\Models\UserUsedDiscount;
 use App\Models\BuyProduct;
 use App\Models\UserWallet;
+use App\Models\UserPackage;
 use Carbon\Carbon;
 
 class DailyReportController extends Controller
@@ -22,6 +23,7 @@ class DailyReportController extends Controller
     {
         $date = $request->date ?? now()->format('Y-m-d');
         $selected_branch = $request->branch_id;
+        $branch_id_filter = $selected_branch ?: (get_user_role() != 1 ? auth('center_api')->user()->branch_id : null);
 
         $result = [];
         $firstusers = [];
@@ -52,8 +54,8 @@ class DailyReportController extends Controller
         if (!empty($date)) {
             $date = date('Y-m-d', strtotime($date));
             $temp_report = Booking::whereRaw('booking_date="' . $date . '"')->with('details');
-            if ($selected_branch) {
-                $temp_report->where('branch_id', $selected_branch);
+            if ($branch_id_filter) {
+                $temp_report->where('branch_id', $branch_id_filter);
             }
             $report = $temp_report->get();
 
@@ -102,10 +104,9 @@ class DailyReportController extends Controller
 
 
             $temp_memberShipCards = UserUsedCard::with('booking', 'booking.details')->whereRaw('DATE(created_at)="' . $date . '"');
-            if (get_user_role() == 1 || $selected_branch) {
-                $branch_id = $selected_branch ? $selected_branch : auth('center_api')->user()->branch_id;
-                $temp_memberShipCards->whereHas('booking', function ($query) use ($branch_id) {
-                    return $query->where('branch_id', $branch_id);
+            if ($branch_id_filter) {
+                $temp_memberShipCards->whereHas('booking', function ($query) use ($branch_id_filter) {
+                    return $query->where('branch_id', $branch_id_filter);
                 });
             }
 
@@ -145,10 +146,9 @@ class DailyReportController extends Controller
             }
 
             $temp_discount = UserUsedDiscount::with('booking', 'booking.details')->whereRaw('DATE(created_at)="' . $date . '"');
-            if (get_user_role() == 1 || $selected_branch) {
-                $branch_id = $selected_branch ? $selected_branch : auth('center_api')->user()->branch_id;
-                $temp_discount->whereHas('booking', function ($query) use ($branch_id) {
-                    return $query->where('branch_id', $branch_id);
+            if ($branch_id_filter) {
+                $temp_discount->whereHas('booking', function ($query) use ($branch_id_filter) {
+                    return $query->where('branch_id', $branch_id_filter);
                 });
             }
 
@@ -305,11 +305,8 @@ class DailyReportController extends Controller
                 ->join('workers', 'workers.id', '=', 'buy_products.worker_id')
                 ->whereRaw('DATE(buy_products.created_at)="' . $date . '"');
 
-            if (get_user_role() == 1 || $selected_branch) {
-                $branch_id = $selected_branch ? $selected_branch : auth('center_api')->user()->branch_id;
-                if ($branch_id) {
-                    $temp_BuyProduct = $temp_BuyProduct->where('workers.branch_id', $branch_id);
-                }
+            if ($branch_id_filter) {
+                $temp_BuyProduct = $temp_BuyProduct->where('workers.branch_id', $branch_id_filter);
             }
 
             $BuyProduct = $temp_BuyProduct->get();
@@ -356,9 +353,8 @@ class DailyReportController extends Controller
             }
 
             $temp_get_wallets = UserWallet::whereRaw('DATE(users_wallets.created_at)="' . $date . '"');
-            if (get_user_role() == 1 || $selected_branch) {
-                $branch_id = $selected_branch ? $selected_branch : auth('center_api')->user()->branch_id;
-                $temp_get_wallets = $temp_get_wallets->join('users', 'users.id', '=', 'users_wallets.created_by')->where('users.branch_id', $branch_id);
+            if ($branch_id_filter) {
+                $temp_get_wallets = $temp_get_wallets->join('users', 'users.id', '=', 'users_wallets.created_by')->where('users.branch_id', $branch_id_filter);
             }
 
             $get_wallets = $temp_get_wallets->get();
@@ -377,6 +373,21 @@ class DailyReportController extends Controller
                         array_push($users_with_tips[$get_wallet->worker_id], $get_wallet->tip);
                     }
                     }
+                }
+            }
+
+            $temp_get_packages = UserPackage::whereRaw('DATE(users_packages.created_at)="' . $date . '"');
+            if ($branch_id_filter) {
+                $temp_get_packages = $temp_get_packages->join('users', 'users.id', '=', 'users_packages.user_id')->where('users.branch_id', $branch_id_filter);
+            }
+
+            $get_packages = $temp_get_packages->get();
+            if (!$get_packages->isEmpty()) {
+                foreach ($get_packages as $get_package) {
+                    if (!isset($wallet_details_prices['package'])) {
+                        $wallet_details_prices['package'] = 0;
+                    }
+                    $wallet_details_prices['package'] += $get_package->price;
                 }
             }
         }

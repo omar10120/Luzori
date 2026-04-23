@@ -28,6 +28,7 @@ class DailyReportController extends Controller
 
         $date = $request->date ?? now()->format('Y-m-d');
         $selected_branch = $request->branch_id;
+        $branch_id_filter = $selected_branch ?: (get_user_role() != 1 ? auth('center_user')->user()->branch_id : null);
 
         $result = [];
         $users = [];
@@ -67,8 +68,8 @@ class DailyReportController extends Controller
                 }]);
             // $temp_report = Booking::whereRaw('booking_date="' . $date . '"')->with('details');
             Log::info($temp_report->get());
-            if ($selected_branch) {
-                $temp_report->where('branch_id', $selected_branch);
+            if ($branch_id_filter) {
+                $temp_report->where('branch_id', $branch_id_filter);
             }
             $report = $temp_report->get();
 
@@ -122,10 +123,9 @@ class DailyReportController extends Controller
 
 
             $temp_memberShipCards = UserUsedCard::with('booking', 'booking.details')->whereRaw('DATE(created_at)="' . $date . '"');
-            if (get_user_role() == 1 || $selected_branch) {
-                $branch_id = $selected_branch ? $selected_branch : auth('center_user')->user()->branch_id;
-                $temp_memberShipCards->whereHas('booking', function ($query) use ($branch_id) {
-                    return $query->where('branch_id', $branch_id);
+            if ($branch_id_filter) {
+                $temp_memberShipCards->whereHas('booking', function ($query) use ($branch_id_filter) {
+                    return $query->where('branch_id', $branch_id_filter);
                 });
             }
 
@@ -165,10 +165,9 @@ class DailyReportController extends Controller
             }
 
             $temp_discount = UserUsedDiscount::with('booking', 'booking.details')->whereRaw('DATE(created_at)="' . $date . '"');
-            if (get_user_role() == 1 || $selected_branch) {
-                $branch_id = $selected_branch ? $selected_branch : auth('center_user')->user()->branch_id;
-                $temp_discount->whereHas('booking', function ($query) use ($branch_id) {
-                    return $query->where('branch_id', $branch_id);
+            if ($branch_id_filter) {
+                $temp_discount->whereHas('booking', function ($query) use ($branch_id_filter) {
+                    return $query->where('branch_id', $branch_id_filter);
                 });
             }
 
@@ -401,9 +400,8 @@ class DailyReportController extends Controller
             }
 
             $temp_get_packages = UserPackage::whereRaw('DATE(users_packages.created_at)="' . $date . '"');
-            if (get_user_role() == 1 || $selected_branch) {
-                $branch_id = $selected_branch ? $selected_branch : auth('center_user')->user()->branch_id;
-                $temp_get_packages = $temp_get_packages->join('users', 'users.id', '=', 'users_packages.user_id')->where('users.branch_id', $branch_id);
+            if ($branch_id_filter) {
+                $temp_get_packages = $temp_get_packages->join('users', 'users.id', '=', 'users_packages.user_id')->where('users.branch_id', $branch_id_filter);
             }
 
             $get_packages = $temp_get_packages->get();
