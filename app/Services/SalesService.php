@@ -168,7 +168,7 @@ class SalesService
                 } elseif (!empty($item['membership_id'])) {
                     $paymentType = $item['payment_type'];
                 }
-                $is_free = !empty($item['membership_id']) ? true : false;
+                $is_free = $item['is_free'] ?? null;
                 
                 // --- 1. Process Services ---
                 if (!empty($item['services']) || (!isset($item['packages']) && isset($item['id']))) {

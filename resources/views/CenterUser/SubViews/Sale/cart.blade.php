@@ -1913,10 +1913,10 @@
                 } else {
                     const paymentType = $('#booking-payment_type').val();
                     const hasWalletSelected = $('input[name="discount_id"].booking-wallet-radio:checked').length > 0;
-                    const hasMembershipSelected = $('input[name="discount_id"].booking-membership-radio:checked').length > 0;
                     
-                    // If no wallet or membership is selected, a payment method MUST be selected (even if a discount code is used)
-                    if (!hasWalletSelected && !hasMembershipSelected && (!paymentType || paymentType === '')) {
+                    // Only a wallet is considered a full payment source here. 
+                    // Memberships and Discount Codes only provide discounts and require a payment method for the remaining balance.
+                    if (!hasWalletSelected && (!paymentType || paymentType === '')) {
                         isValid = false;
                     }
                     $errorMsg.hide();
@@ -3170,8 +3170,8 @@
                         $('#booking-payment-method-container').hide();
                         $('#booking-payment_type').val('').removeClass('is-invalid');
                         $('#booking-payment_type').prop('required', false);
-                    } else if (hasDiscountSelected) {
-                        // Show payment method but make it optional when discount code is selected
+                    } else if (hasDiscountSelected || hasMembershipSelected) {
+                        // Show payment method when discount code or membership is selected (they only give discounts)
                         $('#booking-payment-method-container').show();
                         $('#booking-payment_type').prop('required', false);
                         $('#booking-payment_type').removeClass('is-invalid');
