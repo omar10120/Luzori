@@ -1807,14 +1807,15 @@
                 }
 
                 bookingStepper.next();
+                
+                // Trigger validation immediately to ensure Next button starts in correct state
+                if (typeof validateBookingPayments === 'function') {
+                    validateBookingPayments();
+                }
                 } // End of finishStep2Validation
             });
 
-            // Booking Step 3: Customer Details - validation removed as it relies on global customer now
-            // Just ensure payment type is selected if needed, though mostly review now
-            
-            // Enable next button by default since customer is already pre-validated coming into this step
-            $('#booking-nextStep3').prop('disabled', false);
+            // Enable next button will be handled by validateBookingPayments based on selections
 
             // Handle Multiple Payments Toggle
             $(document).on('change', '#booking-multiple_payments_toggle', function() {
@@ -1912,8 +1913,10 @@
                 } else {
                     const paymentType = $('#booking-payment_type').val();
                     const hasWalletSelected = $('input[name="discount_id"].booking-wallet-radio:checked').length > 0;
+                    const hasMembershipSelected = $('input[name="discount_id"].booking-membership-radio:checked').length > 0;
                     
-                    if (!hasWalletSelected && (!paymentType || paymentType === '')) {
+                    // If no wallet or membership is selected, a payment method MUST be selected (even if a discount code is used)
+                    if (!hasWalletSelected && !hasMembershipSelected && (!paymentType || paymentType === '')) {
                         isValid = false;
                     }
                     $errorMsg.hide();
@@ -3152,8 +3155,7 @@
                     // Wallets and memberships are payment methods - they don't change displayed prices
                     // The backend will deduct the booking amount from wallet/membership balance
                     
-                    // Ensure Next button is enabled when discount/wallet/membership is selected
-                    $('#booking-nextStep3').prop('disabled', false);
+                    // Step 3 Next button state is updated via togglePaymentMethodVisibility which calls updateStep3NextButtonState
                 });
 
                 // Function to toggle payment method visibility based on wallet/membership/discount selection
@@ -3177,7 +3179,12 @@
                         $('#booking-payment-method-container').show();
                         $('#booking-payment_type').prop('required', true);
                     }
+                    
+                    if (typeof validateBookingPayments === 'function') {
+                        validateBookingPayments();
+                    }
                 }
+
 
                 // Listen for payment method changes to clear wallet selection
                 $(document).off('change', '#booking-payment_type').on('change', '#booking-payment_type', function() {
@@ -3185,6 +3192,9 @@
                         $('input[name="discount_id"].booking-wallet-radio:checked').prop('checked', false);
                         toggleClearButtons();
                         togglePaymentMethodVisibility();
+                    }
+                    if (typeof validateBookingPayments === 'function') {
+                        validateBookingPayments();
                     }
                 });
 
