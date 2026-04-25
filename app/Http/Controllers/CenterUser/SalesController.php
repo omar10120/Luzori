@@ -19,6 +19,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Str;
 use niklasravnsborg\LaravelPdf\Facades\Pdf;
+use Illuminate\Support\Facades\Log;
 
 class SalesController extends Controller
 {
@@ -100,6 +101,7 @@ class SalesController extends Controller
         $services = $data['services'];
         $products = $data['products'];
         $discounts = $data['discounts'];
+        Log::info('discounts', [$discounts]);
         $packages = $data['packages'];
         $paymentMethods = $data['paymentMethods'];
         $productPaymentMethods = $data['productPaymentMethods'];
@@ -330,6 +332,7 @@ class SalesController extends Controller
 
         try {
             $sale = $this->salesService->processSale($cart);
+            Log::info('sale', [$sale]);
 
             // Clear cart
             session()->forget('sales_cart');
@@ -337,6 +340,7 @@ class SalesController extends Controller
             return MyHelper::responseJSON('redirect_to_home', Response::HTTP_CREATED, route('center_user.sales.index'));
         } catch (\Exception $e) {
             return MyHelper::responseJSON($e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
+            
         }
     }
 
@@ -369,7 +373,7 @@ class SalesController extends Controller
         $menu = __('locale.' . $this->plural);
         $menu_link = route($this->indexRoute);
         $title = __('general.show') . ' ' . __('locale.' . $this->plural);
-
+        Log::info('sale show', [$sale]);
         $view = 'CenterUser.SubViews.' . $this->model . '.show';
         return view($view, compact('sale', 'title', 'menu', 'menu_link'));
     }

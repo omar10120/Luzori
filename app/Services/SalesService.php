@@ -609,7 +609,7 @@ class SalesService
 
                 UserUsedCard::create([
                     'code' => $membership->membership_no,
-                    'amount' => $discountAmountAED, // Save actual monetary amount instead of percentage
+                    'amount' => $membership->percent,
                     'user_id' => $userId,
                     'membershipcards_id' => $membership->id,
                     'booking_id' => $booking->id,
@@ -688,7 +688,7 @@ class SalesService
 
         UserUsedDiscount::create([
             'code' => $discount->code,
-            'amount' => $discountAmountAED !== null ? $discountAmountAED : $discount->amount, // Save actual monetary amount
+            'amount' => $discount->amount,
             'type' => $discount->type,
             'user_id' => $userId,
             'discountcode_id' => $discount->id,
