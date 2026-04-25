@@ -16,6 +16,7 @@ class PackageResource extends JsonResource
     {
         $res['id'] = $this->id;
         $res['name'] = $this->translate(app()->getLocale())->name;
+        $res['price'] = $this->price;
         $res['ServicePaid'] = PackageServiceResource::collection($this->packageServicePaid);
         $res['ServiceFree'] = PackageServiceResource::collection($this->packageServiceFree);
         $res['created_at'] = $this->created_at;
