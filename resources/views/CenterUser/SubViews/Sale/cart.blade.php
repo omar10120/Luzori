@@ -270,7 +270,7 @@
                                                     <div id="booking-membershipsElement"></div>
                                                     <div id="booking-packagesElement"></div>
                                                     <div id="booking-servicesTable"></div>
-                                                    <div class="row mb-2">
+                                                    <div class="row mb-2" id="booking-multiple-payments-container">
                                                         <div class="col-md-12">
                                                             <div class="form-check form-switch mb-2">
                                                                 <input class="form-check-input" type="checkbox" id="booking-multiple_payments_toggle">
@@ -2965,7 +2965,7 @@
                                         </div>
                                     </div>
                                 </div>
-`;
+                            `;
                             });
 
                             packagesElement += `</div>`;
@@ -2974,7 +2974,18 @@
                             // Attach event listeners for packages
                             $('.booking-package-radio').on('change', function() {
                                 $('.clear-package-selection').toggle($('.booking-package-radio:checked').length > 0);
-                                syncBookingPaymentUiByPackageSelection();
+                                if ($('.booking-package-radio:checked').length > 0) {
+                                    $('input[name="discount_id"]').prop('checked', false);
+                                    $('.clear-wallet-selection').hide();
+                                    $('.clear-membership-selection').hide();
+                                    $('#clear-discount-selection').hide();
+                                }
+                                if (typeof window.togglePaymentMethodVisibility === 'function') {
+                                    window.togglePaymentMethodVisibility();
+                                }
+                                if (typeof syncBookingPaymentUiByPackageSelection === 'function') {
+                                    syncBookingPaymentUiByPackageSelection();
+                                }
                                 updateBookingReviewServicePrices();
                                 renderCart();
                                 calculateTotals();
@@ -2983,7 +2994,12 @@
                             $('.clear-package-selection').on('click', function() {
                                 $('.booking-package-radio').prop('checked', false);
                                 $(this).hide();
-                                syncBookingPaymentUiByPackageSelection();
+                                if (typeof window.togglePaymentMethodVisibility === 'function') {
+                                    window.togglePaymentMethodVisibility();
+                                }
+                                if (typeof syncBookingPaymentUiByPackageSelection === 'function') {
+                                    syncBookingPaymentUiByPackageSelection();
+                                }
                                 updateBookingReviewServicePrices();
                                 renderCart();
                                 calculateTotals();
@@ -3132,7 +3148,9 @@
                 $(document).off('click', '#clear-discount-selection').on('click', '#clear-discount-selection', function() {
                     $('input[name="discount_id"].booking-discount-radio').prop('checked', false);
                     toggleClearButtons();
-                    togglePaymentMethodVisibility();
+                    if (typeof window.togglePaymentMethodVisibility === 'function') {
+                        window.togglePaymentMethodVisibility();
+                    }
                     // Update service prices in review table (remove discount)
                     updateBookingReviewServicePrices();
                     // Re-render cart to update prices (reset to original)
@@ -3144,7 +3162,9 @@
                 $(document).off('click', '.clear-wallet-selection').on('click', '.clear-wallet-selection', function() {
                     $('input[name="discount_id"].booking-wallet-radio').prop('checked', false);
                     toggleClearButtons();
-                    togglePaymentMethodVisibility();
+                    if (typeof window.togglePaymentMethodVisibility === 'function') {
+                        window.togglePaymentMethodVisibility();
+                    }
                     // Wallet is a payment method, doesn't affect prices - no need to re-render cart
                 });
 
@@ -3152,7 +3172,9 @@
                 $(document).off('click', '.clear-membership-selection').on('click', '.clear-membership-selection', function() {
                     $('input[name="discount_id"].booking-membership-radio').prop('checked', false);
                     toggleClearButtons();
-                    togglePaymentMethodVisibility();
+                    if (typeof window.togglePaymentMethodVisibility === 'function') {
+                        window.togglePaymentMethodVisibility();
+                    }
                     updateBookingReviewServicePrices();
                     renderCart();
                     calculateTotals();
@@ -3160,8 +3182,18 @@
 
                 // Listen for radio button changes (discount, wallet, membership)
                 $(document).off('change', 'input[name="discount_id"]').on('change', 'input[name="discount_id"]', function() {
+                    if ($('input[name="discount_id"]:checked').length > 0) {
+                        $('.booking-package-radio').prop('checked', false);
+                        $('.clear-package-selection').hide();
+                        if (typeof syncBookingPaymentUiByPackageSelection === 'function') {
+                            syncBookingPaymentUiByPackageSelection();
+                        }
+                    }
+
                     toggleClearButtons();
-                    togglePaymentMethodVisibility();
+                    if (typeof window.togglePaymentMethodVisibility === 'function') {
+                        window.togglePaymentMethodVisibility();
+                    }
                     
                     var isDiscountCode = $(this).hasClass('booking-discount-radio');
                     var isMembership = $(this).hasClass('booking-membership-radio');
@@ -3177,14 +3209,22 @@
                 });
 
                 // Function to toggle payment method visibility based on wallet/membership/discount selection
-                function togglePaymentMethodVisibility() {
+                window.togglePaymentMethodVisibility = function() {
                     var hasWalletSelected = $('input[name="discount_id"].booking-wallet-radio:checked').length > 0;
                     var hasMembershipSelected = $('input[name="discount_id"].booking-membership-radio:checked').length > 0;
                     var hasDiscountSelected = $('input[name="discount_id"].booking-discount-radio:checked').length > 0;
+                    var hasPackageSelected = $('.booking-package-radio:checked').length > 0;
                     
+                    if (hasWalletSelected || hasMembershipSelected || hasDiscountSelected || hasPackageSelected) {
+                        $('#booking-multiple-payments-container').hide();
+                        $('#booking-multiple_payments_toggle').prop('checked', false);
+                    } else {
+                        $('#booking-multiple-payments-container').show();
+                    }
+
                     // Hide payment method if wallet or membership is selected (they act as payment methods)
                     // For discount codes, keep payment method visible but make it optional to allow proceeding
-                    if (hasWalletSelected) {
+                    if (hasWalletSelected || hasPackageSelected) {
                         $('#booking-payment-method-container').hide();
                         $('#booking-payment_type').val('').removeClass('is-invalid');
                         $('#booking-payment_type').prop('required', false);
@@ -3201,7 +3241,7 @@
                     if (typeof validateBookingPayments === 'function') {
                         validateBookingPayments();
                     }
-                }
+                };
 
 
                 // Listen for payment method changes to clear wallet selection
@@ -3209,7 +3249,9 @@
                     if ($(this).val() && $(this).val() !== '') {
                         $('input[name="discount_id"].booking-wallet-radio:checked').prop('checked', false);
                         toggleClearButtons();
-                        togglePaymentMethodVisibility();
+                        if (typeof window.togglePaymentMethodVisibility === 'function') {
+                            window.togglePaymentMethodVisibility();
+                        }
                     }
                     if (typeof validateBookingPayments === 'function') {
                         validateBookingPayments();
@@ -3218,7 +3260,9 @@
 
                 // Initial check
                 toggleClearButtons();
-                togglePaymentMethodVisibility();
+                if (typeof window.togglePaymentMethodVisibility === 'function') {
+                    window.togglePaymentMethodVisibility();
+                }
             }
 
             // Attach handlers on page load
