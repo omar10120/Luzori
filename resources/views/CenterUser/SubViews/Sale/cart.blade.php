@@ -88,7 +88,7 @@
 
         <div class="row">
             <!-- Left Panel: Add Items -->
-            <div class="col-lg-8">
+            <div class="col-12 col-xl-8 mb-4">
                 <div class="card">
                     <div class="card-header">
                         <h2>{{ $title }}</h2>
@@ -584,7 +584,7 @@
             </div>
 
             <!-- Right Panel: Cart Summary -->
-            <div class="col-lg-4">
+            <div class="col-12 col-xl-4">
                 <div class="card">
                     <div class="card-header">
                         <h5>{{ __('field.cart') }}</h5>
@@ -615,7 +615,7 @@
                             </li>
                         </ul>
 
-                        <div class="tab-content p-0">
+                        <div class="tab-content">
                             <!-- Bookings/Services Pane -->
                             <div class="tab-pane fade show active" id="cart-booking-pane" role="tabpanel">
                                 <div id="cart-items-service"></div>
@@ -2936,7 +2936,7 @@
                                 const packageType = userPackage.package_type || '';
 
                           packagesElement += `
-                                <div class="col-12 col-sm-6 col-lg-6 mb-3">
+                                <div class="col-12 col-md-11 mx-auto mb-3">
                                     <div class="package-card" style="background-color: #f2e9de; border-radius: 12px; padding: 14px 16px; cursor: pointer; transition: all 0.2s ease; border: 1px solid transparent;">
                                         <div class="d-flex align-items-start gap-3">
                                             <input 
