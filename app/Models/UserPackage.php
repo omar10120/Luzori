@@ -24,7 +24,7 @@ class UserPackage extends Model
         'created_by',
     ];
 
-    protected $casts = [
+    protected $casts = [    
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

@@ -7,9 +7,11 @@ use App\Http\Resources\PackageResource;
 use App\Http\Resources\UserPackageResource;
 use App\Models\Center;
 use App\Models\Package;
+use App\Models\PackageServicePaid;
 use App\Models\User as TenantUser;
 use App\Models\UserPackage;
 use App\Models\UserUsedPackage;
+
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Config;
@@ -43,7 +45,12 @@ class PackageController extends Controller
 
                 if ($tenantUser) {
                     $userPackages = UserPackage::where('user_id', $tenantUser->id)
-                        ->with(['package.translation', 'usedPackages.service.translation'])
+                        ->with([
+                            'package.translation', 
+                            'package.packageServicePaid.service.translation', 
+                            'package.packageServiceFree.service.translation', 
+                            'usedPackages.service.translation'
+                        ])
                         ->get();
                     
                     if ($userPackages->count() > 0) {
@@ -103,7 +110,12 @@ class PackageController extends Controller
             }
 
             $userPackages = UserPackage::where('user_id', $tenantUser->id)
-                ->with(['package.translation', 'usedPackages.service.translation'])
+                ->with([
+                    'package.translation', 
+                    'package.packageServicePaid.service.translation', 
+                    'package.packageServiceFree.service.translation', 
+                    'usedPackages.service.translation'
+                ])
                 ->get();
             
 

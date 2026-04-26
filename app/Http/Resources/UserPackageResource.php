@@ -20,6 +20,7 @@ class UserPackageResource extends JsonResource
             'user_name' => $this->user ? $this->user->name : null,
             'package_id' => $this->package_id,
             'package_name' => $this->package ? $this->package->name : null,
+            'package_details' => new PackageResource($this->whenLoaded('package')),
             'price' => (double) $this->price,
             'status' => $this->status,
             'package_type' => $this->package_type,
