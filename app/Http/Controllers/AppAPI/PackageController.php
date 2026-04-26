@@ -19,6 +19,61 @@ use Illuminate\Support\Facades\Log;
 class PackageController extends Controller
 {
     /**
+     * Get purchased packages for the authenticated user across all centers
+     */
+    public function userPurchased(Request $request)
+    {
+        $appUser = auth('sanctum')->user();
+        if (!$appUser) {
+            return MyHelper::responseJSON('Unauthorized', Response::HTTP_UNAUTHORIZED);
+        }
+
+        $allUserPackages = [];
+        $centers = Center::whereNotNull('database')->get();
+
+        foreach ($centers as $center) {
+            try {
+                Config::set('database.connections.mysql.database', $center->database);
+                DB::purge('mysql');
+                DB::reconnect('mysql');
+
+                $tenantUser = TenantUser::where('email', $appUser->email)
+                    ->orWhere('phone', $appUser->phone)
+                    ->first();
+
+                if ($tenantUser) {
+                    $userPackages = UserPackage::where('user_id', $tenantUser->id)
+                        ->with(['package.translation', 'usedPackages.service.translation'])
+                        ->get();
+                    
+                    if ($userPackages->count() > 0) {
+                        foreach ($userPackages as $pkg) {
+                            $pkgArray = (new UserPackageResource($pkg))->resolve();
+                            $pkgArray['center'] = [
+                                'id' => $center->id,
+                                'name' => $center->name,
+                                'domain' => $center->domain,
+                                'logo' => $center->logo ? url('storage/' . $center->logo) : null,
+                            ];
+                            $allUserPackages[] = $pkgArray;
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                // Ignore connection errors for inactive databases
+                continue;
+            }
+        }
+
+        // Restore central database connection
+        Config::set('database.connections.mysql.database', env('DB_DATABASE'));
+        DB::purge('mysql');
+        DB::reconnect('mysql');
+
+        return MyHelper::responseJSON(__('api.doneSuccessfully'), Response::HTTP_OK, $allUserPackages);
+    }
+
+    /**
      * Get purchased packages for the authenticated user at a center
      */
     public function index($center_id)

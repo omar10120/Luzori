@@ -35,6 +35,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::prefix('packages')->group(function () {
+        Route::get('/', [PackageController::class, 'userPurchased']);
         Route::get('{center_id}', [PackageController::class, 'index']);
         Route::get('available/{center_id}', [PackageController::class, 'available']);
         Route::post('store/{center_id}', [PackageController::class, 'store']);

@@ -2935,37 +2935,37 @@
 
                                 const packageType = userPackage.package_type || '';
 
-                              packagesElement += `
-                            <div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-3">
-                                <div class="d-flex align-items-center gap-2 package-card">
-                                    <input 
-                                        class="form-check-input booking-package-radio flex-shrink-0" 
-                                        type="radio" 
-                                        name="user_package_ids[]" 
-                                        value="${userPackage.id}" 
-                                        data-package-type="${packageType}" 
-                                        id="booking-package${userPackage.id}"
-                                        style="margin-top: 0; cursor: pointer; width: 1.2rem; height: 1.2rem; border-color: #1e5351;"
-                                    >
+                          packagesElement += `
+                                <div class="col-12 col-sm-6 col-lg-6 mb-3">
+                                    <div class="package-card" style="background-color: #f2e9de; border-radius: 12px; padding: 14px 16px; cursor: pointer; transition: all 0.2s ease; border: 1px solid transparent;">
+                                        <div class="d-flex align-items-start gap-3">
+                                            <input 
+                                                class="form-check-input booking-package-radio flex-shrink-0 mt-1" 
+                                                type="radio" 
+                                                name="user_package_ids[]" 
+                                                value="${userPackage.id}" 
+                                                data-package-type="${packageType}" 
+                                                id="booking-package${userPackage.id}"
+                                                style="cursor: pointer; width: 1.2rem; height: 1.2rem; border-color: #1e5351; accent-color: #1e5351;"
+                                            >
 
-                                    <label 
-                                        class="form-check-label w-100 m-0" 
-                                        for="booking-package${userPackage.id}"
-                                        style="cursor: pointer;"
-                                    >
-                                        <div class="package-content" style="background-color: #f2e9de; border-radius: 12px; padding: 14px 16px; min-height: 100px;">
-                                            <div class="package-title" style="color: #1e5351; font-weight: 600; font-size: 12px; margin-bottom: 8px;">
-                                                ${userPackage.package ? userPackage.package.name : 'Package #' + userPackage.id}
-                                            </div>
+                                            <label 
+                                                class="form-check-label w-100" 
+                                                for="booking-package${userPackage.id}"
+                                                style="cursor: pointer;"
+                                            >
+                                                <div class="package-title" style="color: #1e5351; font-weight: 600; font-size: 14px; margin-bottom: 8px;">
+                                                    ${userPackage.package ? userPackage.package.name : 'Package #' + userPackage.id}
+                                                </div>
 
-                                            <ul class="package-services" style="list-style: none; padding: 0; margin: 0;">
-                                                ${servicesList}
-                                            </ul>
+                                                <ul class="package-services" style="list-style: none; padding: 0; margin: 0;">
+                                                    ${servicesList}
+                                                </ul>
+                                            </label>
                                         </div>
-                                    </label>
+                                    </div>
                                 </div>
-                            </div>
-                            `;
+`;
                             });
 
                             packagesElement += `</div>`;
