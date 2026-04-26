@@ -2923,31 +2923,49 @@
                                     var svcName = srv.service ? srv.service.name : '';
                                     var isMatch = selectedServiceIds.includes(String(srv.service_id)) && srv.remaining > 0;
                                     if (isMatch) {
-                                        servicesList += `<div style="color:#d4ffd4;font-weight:bold;">
-                                            <i class="ti ti-check me-1"></i>${svcName} (${srv.remaining} left)
-                                        </div>`;
+                                        servicesList += `<li style="color:#6c757d; margin-bottom: 3px; font-size: 12px;">
+                                            <i class="ti ti-circle-check" style="color: #1e5351; font-size: 12px; margin-right: 2px;"></i> ${svcName} (${srv.remaining} left).
+                                        </li>`;
                                     } else {
-                                        servicesList += `<div style="opacity:0.55;">
-                                            <i class="ti ti-point"></i> ${svcName} (${srv.remaining} left)
-                                        </div>`;
+                                        servicesList += `<li style="color:#8a8a8a; margin-bottom: 3px; font-size: 12px;">
+                                            <span style="font-size: 14px; line-height: 0; vertical-align: middle; margin-right: 4px;">•</span> ${svcName} (${srv.remaining} left).
+                                        </li>`;
                                     }
                                 });
 
                                 const packageType = userPackage.package_type || '';
 
-                                packagesElement += `<div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-2">
-                                    <div class="form-check package-item" style="padding: 10px;color: #fff;background-color: #28a745;border-color: #28a745;border-radius: 4px;min-height: 50px;width: 100%;">
-                                        <div class="d-flex align-items-center gap-2 mb-2">
-                                            <input class="form-check-input flex-shrink-0 booking-package-radio" type="radio" name="user_package_ids[]" value="${userPackage.id}" data-package-type="${packageType}" id="booking-package${userPackage.id}" style="margin-top: 0;width: 18px;height: 18px;flex-shrink: 0;margin-right: 8px;">
-                                            <label class="form-check-label flex-grow-1 text-start" for="booking-package${userPackage.id}" style="word-break: break-word;white-space: normal;font-size: 14px;margin: 0;font-weight: bold;cursor:pointer;">
+                              packagesElement += `
+                            <div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-3">
+                                <div class="d-flex align-items-center gap-2 package-card">
+                                    <input 
+                                        class="form-check-input booking-package-radio flex-shrink-0" 
+                                        type="radio" 
+                                        name="user_package_ids[]" 
+                                        value="${userPackage.id}" 
+                                        data-package-type="${packageType}" 
+                                        id="booking-package${userPackage.id}"
+                                        style="margin-top: 0; cursor: pointer; width: 1.2rem; height: 1.2rem; border-color: #1e5351;"
+                                    >
+
+                                    <label 
+                                        class="form-check-label w-100 m-0" 
+                                        for="booking-package${userPackage.id}"
+                                        style="cursor: pointer;"
+                                    >
+                                        <div class="package-content" style="background-color: #f2e9de; border-radius: 12px; padding: 14px 16px; min-height: 100px;">
+                                            <div class="package-title" style="color: #1e5351; font-weight: 600; font-size: 12px; margin-bottom: 8px;">
                                                 ${userPackage.package ? userPackage.package.name : 'Package #' + userPackage.id}
-                                            </label>
+                                            </div>
+
+                                            <ul class="package-services" style="list-style: none; padding: 0; margin: 0;">
+                                                ${servicesList}
+                                            </ul>
                                         </div>
-                                        <div style="font-size: 12px;margin-left: 26px;">
-                                            ${servicesList}
-                                        </div>
-                                    </div>
-                                </div>`;
+                                    </label>
+                                </div>
+                            </div>
+                            `;
                             });
 
                             packagesElement += `</div>`;
