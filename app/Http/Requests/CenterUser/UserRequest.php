@@ -27,7 +27,7 @@ class UserRequest extends FormRequest
             return [
                 'id' => 'required|exists:users,id',
                 'first_name' => 'required|string',
-                'last_name' => 'required|string',
+                'last_name' => 'nullable|string',
                 'email' => 'nullable|email|unique:users,email,' . $this->id,
                 'country_code' => 'required|max:4',
                 'phone' => 'required|numeric|digits_between:6,10|unique:users,phone,' . $this->id,
@@ -36,7 +36,7 @@ class UserRequest extends FormRequest
         } else {
             return [
                 'first_name' => 'required|string',
-                'last_name' => 'required|string',
+                'last_name' => 'nullable|string',
                 'email' => 'nullable|email|unique:users',
                 'country_code' => 'required|max:4',
                 'phone' => 'required|numeric|digits_between:6,10|unique:users',

@@ -16,10 +16,10 @@ class AuthController extends Controller
     {
         $request->validate([
             'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
+            'last_name' => 'nullable|string|max:255',
             'email' => 'nullable|string|email|max:255|unique:users,email',
             'country_code' => 'nullable|string|max:20',
-            'phone' => 'required|string|unique:users,phone',
+            'phone' => 'required|string|unique:users,phone',    
             'password' => 'required|string|min:6|confirmed',
             'address' => 'nullable|string|max:255',
             'birth' => 'nullable|date',

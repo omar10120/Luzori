@@ -17,7 +17,7 @@ class AppUserRequest extends FormRequest
         return [
             'id' => 'nullable|integer',
             'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
+            'last_name' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255|unique:users,email,' . $id,
             'phone' => 'nullable|string|max:20|unique:users,phone,' . $id,
             'country_code' => 'nullable|string|max:20',
