@@ -120,9 +120,10 @@
             border: 1px solid var(--border-color);
             padding: 2rem;
             width: 100%;
-            max-width: 2000px;
+            max-width: 780px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.05);
             margin-top: -45px;
+            
         }
 
         @media (min-width: 768px) {
@@ -131,8 +132,19 @@
                 border: none;
                 background: white;
                 box-shadow: none;
+                
+                
             }
         }
+        
+        @media (max-width: 768px) {
+            .register-card {
+                height: 1250px;
+                
+                
+            }
+        }
+
 
         .register-title {
             color: var(--brand-dark);
@@ -900,7 +912,7 @@
                     ibanValue = 'AE7' + ibanValue;
                     formData.set('bank_name', ibanValue);
                 }
-                
+
 
                 $.ajax({
                     url: "{{ url('/center_api/auth/register') }}",
