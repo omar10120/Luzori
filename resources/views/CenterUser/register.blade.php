@@ -142,7 +142,8 @@
         
         @media (max-width: 768px) {
             .register-card {
-                height: 1250px;
+                height: auto;
+                overflow:scroll
                 
                 
             }
