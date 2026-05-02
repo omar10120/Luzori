@@ -422,7 +422,7 @@
             color: var(--brand-dark);
         }
         .primary-slot-hint {
-            font-size: 0.65rem;
+            font-size: 8px;
             color: var(--text-muted);
             margin-top: 0.15rem;
             max-width: 100%;
@@ -752,7 +752,7 @@
                             <div class="primary-upload-meta">
                                 <div class="file-upload-icon"><i class="ti ti-upload"></i></div>
                                 <div class="primary-slot-label">Image ${idx}</div>
-                                <div class="primary-slot-hint">JPG, PNG, GIF · max 4MB</div>
+                                <div class="primary-slot-hint ">JPG, PNG, GIF · max 4MB</div>
                             </div>
                             <input type="file" name="primary_image[]" accept="image/jpeg,image/png,image/gif,.jpg,.jpeg,.png,.gif" class="primary-img-input">
                             <img class="img-preview d-none" alt="">
