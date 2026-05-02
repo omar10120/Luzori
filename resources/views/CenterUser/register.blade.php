@@ -5,7 +5,7 @@
 
 @extends('layouts/blankLayout')
 
-@section('title', 'Register - Become Business')
+@section('title', __('center_register.page_title'))
 
 @section('vendor-style')
     @vite('resources/assets/vendor/libs/@form-validation/umd/styles/index.min.css')
@@ -30,18 +30,52 @@
             align-items: stretch;
             background-color: white;
             font-family: 'cairo', sans-serif;
+            position: relative;
+        }
+
+        .register-lang-fixed {
+            position: fixed;
+            top: 0.75rem;
+            right: 0.75rem;
+            z-index: 1080;
+        }
+
+        [dir="rtl"] .register-lang-fixed {
+            right: auto;
+            left: 0.75rem;
+        }
+
+        .lang-switcher-register .register-lang-btn {
+            border: 1px solid var(--brand-dark);
+            color: var(--brand-dark);
+            background: #fff;
+            border-radius: 50rem;
+            font-weight: 600;
+            font-size: 0.8rem;
+            padding: 0.35rem 0.85rem;
+        }
+
+        .lang-switcher-register .register-lang-btn:hover,
+        .lang-switcher-register .register-lang-btn:focus {
+            background: var(--brand-dark);
+            color: var(--brand-peach);
+            border-color: var(--brand-dark);
         }
 
         /* Left panel (desktop) */
         .register-left {
-            background-image: url('/fogleft.png');
+            background-image: url("{{ asset('fogleft.png') }}");
             background-size: cover;
             background-position: right center;
             color: var(--brand-peach);
             display: none;
             position: relative;
         }
-        
+
+        [dir="rtl"] .register-left {
+            background-image: url("{{ asset('fogright.png') }}");
+            background-position: left center;
+        }
 
         @media (min-width: 992px) {
             .register-left {
@@ -106,7 +140,8 @@
             align-items: center;
             justify-content: center;
             padding: 2rem 1rem;
-            background: var(--brand-light);
+            /* background: var(--brand-light); */
+            background: white;
        
         }
 
@@ -143,7 +178,7 @@
         @media (max-width: 768px) {
             .register-card {
                 height: auto;
-                overflow:scroll
+                overflow:scroll;
                 
                 
             }
@@ -526,11 +561,14 @@
         /* Mobile top banner */
         .mobile-welcome {
             background: var(--brand-dark) !important;
-            color: var(--brand-peach) !important;
             border-radius: 0 0 34px 34px !important;
             padding: 1rem 1rem 1.5rem !important;
             text-align: center;
             display: block  !important;
+            
+        }
+        .mobile-welcome h2{
+            color: var(--brand-peach) !important;
         }
 
         @media (min-width: 992px) {
@@ -986,28 +1024,30 @@
 @endsection
 
 @section('content')
-<div class="register-wrapper">
+<div class="register-wrapper" dir="{{ app()->getLocale() === 'ar' ? 'rtl' : 'ltr' }}">
+    <div class="register-lang-fixed">
+        @include('components.lang_switcher', ['variant' => 'register'])
+    </div>
+
     <!-- Mobile Welcome Banner -->
     <div class="mobile-welcome w-100">
         <div class="logo-sm">
-            <img src="{{ asset('logo.svg') }}" alt="Luzori">
+            <img src="{{ asset('logo.svg') }}" alt="{{ __('center_register.meta_title') }}">
         </div>
-        <h2 class="h5 fw-bold mt-2">Welcome to</h2>
-        <p class="small mb-0" style="color:#F2E8DC;">Your journey starts here</p>
+        <h2 class="h5 fw-bold mt-2">{{ __('center_register.mobile_welcome_h2') }}</h2>
+        <p class="small mb-0" style="color:#F2E8DC;">{{ __('center_register.mobile_welcome_sub') }}</p>
     </div>
 
     <!-- Left panel (desktop) -->
     <div class="register-left">
         <div class="register-left-content">
-            <h2>Welcome to </h2>
-            <div class="logo-circle">           
-                <img src="{{ asset('logo.svg') }}" alt="Luzori">
+            <h2>{{ __('center_register.left_panel_title') }}</h2>
+            <div class="logo-circle">
+                <img src="{{ asset('logo.svg') }}" alt="{{ __('center_register.meta_title') }}">
             </div>
-            <p>
-                Luzori is an all-in-one salon and spa management system that streamlines bookings, client organization, staff scheduling, and enhances your business growth efficiently and securely. Note: Luzori is one of the projects of Techno Code IT LLC.
-            </p>
+            <p>{{ __('center_register.left_panel_text') }}</p>
             <div class="bottom-links fw-bold">
-                <span>Contact Us</span> <span class="mx-2">|</span> <span>Discover More</span>
+                <span>{{ __('center_register.contact_us') }}</span> <span class="mx-2">|</span> <span>{{ __('center_register.discover_more') }}</span>
             </div>
         </div>
     </div>
@@ -1015,7 +1055,7 @@
     <!-- Right panel (form) -->
     <div class="register-right">
         <div class="register-card">
-            <h1 class="register-title">Create Your Account</h1>
+            <h1 class="register-title">{{ __('center_register.create_account') }}</h1>
 
             <!-- Alerts -->
             <div id="alertError" class="alert alert-danger alert-status d-none" role="alert">
@@ -1030,34 +1070,34 @@
                     <!-- Left column -->
                     <div class="col-md-6">
                         <!-- Name Center -->
-                        <label class="form-label-bs">Name Center <span class="text-danger">*</span></label>
+                        <label class="form-label-bs">{{ __('center_register.label_name') }} <span class="text-danger">*</span></label>
                         <div class="input-group-icon mb-1">
                             <i class="ti ti-user icon icon-left"></i>
-                            <input type="text" name="name" class="form-control-custom ps-icon" placeholder="Name of center" required minlength="2" maxlength="255" autocomplete="organization">
+                            <input type="text" name="name" class="form-control-custom ps-icon" placeholder="{{ __('center_register.placeholder_name') }}" required minlength="2" maxlength="255" autocomplete="organization">
                         </div>
                         <div class="invalid-feedback-field mb-2" data-field-error="name"></div>
 
                         <!-- Email -->
-                        <label class="form-label-bs">Email Center <span class="text-danger">*</span></label>
+                        <label class="form-label-bs">{{ __('center_register.label_email') }} <span class="text-danger">*</span></label>
                         <div class="input-group-icon mb-1">
                             <i class="ti ti-mail icon icon-left"></i>
-                            <input type="email" name="email" id="emailInput" class="form-control-custom ps-icon " placeholder="example@email.com" required maxlength="255" autocomplete="email">
+                            <input type="email" name="email" id="emailInput" class="form-control-custom ps-icon " placeholder="{{ __('center_register.placeholder_email') }}" required maxlength="255" autocomplete="email">
                         </div>
                         <div class="invalid-feedback-field mb-2" data-field-error="email"></div>
                         <!-- Password -->
-                        <label class="form-label-bs">Password <span class="text-danger">*</span> <small class="text-muted fw-normal">(6–15 characters)</small></label>
+                        <label class="form-label-bs">{{ __('center_register.label_password') }} <span class="text-danger">*</span> <small class="text-muted fw-normal">{{ __('center_register.password_hint') }}</small></label>
                         <div class="input-group-icon mb-1">
                             <i class="ti ti-lock icon icon-left"></i>
-                            <input type="password" name="password" class="form-control-custom ps-icon pe-icon" placeholder="********" required minlength="6" maxlength="15" autocomplete="new-password">
+                            <input type="password" name="password" class="form-control-custom ps-icon pe-icon" placeholder="{{ __('center_register.placeholder_password') }}" required minlength="6" maxlength="15" autocomplete="new-password">
                             <span class="icon icon-right toggle-password" style="cursor:pointer;"><i class="ti ti-eye-off"></i></span>
                         </div>
                         <div class="invalid-feedback-field mb-2" data-field-error="password"></div>
 
                         <!-- Logo Center -->
-                        <label class="form-label-bs">Logo Center <small class="text-muted fw-normal">(optional · JPG, PNG, GIF · max 4MB)</small></label>
+                        <label class="form-label-bs">{{ __('center_register.label_logo') }} <small class="text-muted fw-normal">{{ __('center_register.logo_hint') }}</small></label>
                         <div class="logo-upload-circle mb-1">
-                            <i class="ti ti-camera" id="logo-camera-icon" style="font-size:1.5rem; color:var(--brand-dark);"></i>
-                            <img id="logo-preview" class="preview d-none" src="/camera.svg" alt="Logo preview">
+                            <img id="logo-camera-icon" src="{{ asset('camera.svg') }}" alt="" width="28" height="28" class="logo-camera-placeholder" style="object-fit:contain; position:relative; z-index:1;">
+                            <img id="logo-preview" class="preview d-none" src="" alt="{{ __('center_register.label_logo') }}">
                             <input type="file" id="image" name="image" accept="image/jpeg,image/png,image/gif,.jpg,.jpeg,.png,.gif">
                         </div>
                         <div class="invalid-feedback-field mb-2" data-field-error="image"></div>
@@ -1066,12 +1106,12 @@
                     <!-- Right column -->
                     <div class="col-md-6">
                         <!-- Domain -->
-                        <label class="form-label-bs">Domain Center <span class="text-danger">*</span> <small class="text-muted fw-normal">(lowercase, no spaces)</small></label>
-                        <input type="text" name="domain" class="form-control-custom mb-1" placeholder="my-center" required minlength="3" maxlength="20" pattern="[a-z0-9]([a-z0-9-]*[a-z0-9])?" title="Lowercase letters, numbers, hyphens. 3–50 characters." autocapitalize="none" spellcheck="false" autocomplete="off">
+                        <label class="form-label-bs">{{ __('center_register.label_domain') }} <span class="text-danger">*</span> <small class="text-muted fw-normal">{{ __('center_register.domain_hint') }}</small></label>
+                        <input type="text" name="domain" class="form-control-custom mb-1" placeholder="{{ __('center_register.placeholder_domain') }}" required minlength="3" maxlength="20" pattern="[a-z0-9]([a-z0-9-]*[a-z0-9])?" title="Lowercase letters, numbers, hyphens. 3–50 characters." autocapitalize="none" spellcheck="false" autocomplete="off">
                         <div class="invalid-feedback-field mb-2" data-field-error="domain"></div>
 
                         <!-- Phone Center -->
-                        <label class="form-label-bs">Phone Center <span class="text-danger">*</span></label>
+                        <label class="form-label-bs">{{ __('center_register.label_phone') }} <span class="text-danger">*</span></label>
                         <div class="phone-group mb-1">
                             <select name="country_code" required>
                                 <option value="971">🇦🇪 +971</option>
@@ -1081,18 +1121,18 @@
                                 <option value="968">🇴🇲 +968</option>
                                 <option value="973">🇧🇭 +973</option>
                             </select>
-                            <input type="text" name="phone" class="form-control-custom" inputmode="numeric" placeholder="503140232" required minlength="8" maxlength="9" pattern="[0-9]{6,15}" autocomplete="tel">
+                            <input type="text" name="phone" class="form-control-custom" inputmode="numeric" placeholder="{{ __('center_register.placeholder_phone') }}" required minlength="6" maxlength="15" pattern="[0-9]{6,15}" autocomplete="tel">
                         </div>
                         <div class="invalid-feedback-field mb-2" data-field-error="phone"></div>
 
                         <!-- IBAN Number -->
-                        <label class="form-label-bs">IBAN Number 
-                        <small class="text-muted fw-normal">(optional)</small>
+                        <label class="form-label-bs">{{ __('center_register.label_iban') }}
+                        <small class="text-muted fw-normal">{{ __('center_register.iban_optional') }}</small>
                         </label>
-                        <input type="text" name="bank_name" class="form-control-custom mb-3" placeholder="xxxx xxxx xxxx xxxx xxx" maxlength="21" autocomplete="off">
+                        <input type="text" name="bank_name" class="form-control-custom mb-3" placeholder="{{ __('center_register.placeholder_iban') }}" maxlength="21" autocomplete="off">
 
                         <!-- Currency -->
-                        <label class="form-label-bs">Currency</label>
+                        <label class="form-label-bs">{{ __('center_register.label_currency') }}</label>
                         <select name="currency" class="form-select form-control-custom mb-3 bg-custom">
                             <option value="AED">AED</option>
                             <option value="USD">USD</option>
@@ -1101,8 +1141,8 @@
                         </select>
 
                         <!-- Primary Images -->
-                        <label class="form-label-bs d-block">Primary images 
-                            <small class="text-muted fw-normal">(optional · up to 4 · JPG, PNG, GIF · max 4MB each)</small>
+                        <label class="form-label-bs d-block">{{ __('center_register.label_primary_images') }}
+                            <small class="text-muted fw-normal">{{ __('center_register.primary_images_hint') }}</small>
                         </label>
                         <div class="primary-images-section mb-2">
                             <div id="primaryImagesContainer" class="primary-images-grid">
@@ -1110,8 +1150,8 @@
                                     <div class="primary-upload-card position-relative">
                                         <div class="primary-upload-meta">
                                             <div class="file-upload-icon"><i class="ti ti-upload"></i></div>
-                                            <div class="primary-slot-label">Image 1</div>
-                                            <div class="primary-slot-hint">JPG, PNG, GIF · max 4MB</div>
+                                            <div class="primary-slot-label">{{ __('center_register.primary_image_label', ['n' => 1]) }}</div>
+                                            <div class="primary-slot-hint">{{ __('center_register.primary_slot_hint') }}</div>
                                         </div>
                                         <input type="file" name="primary_image[]" accept="image/jpeg,image/png,image/gif,.jpg,.jpeg,.png,.gif" class="primary-img-input">
                                         <img class="img-preview d-none" alt="">

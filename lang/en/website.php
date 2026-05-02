@@ -10,7 +10,9 @@ return [
     'login' => 'Login',
     'signup' => 'Signup',
     'get_in_touch' => 'Get in Touch',
-    
+    'lang_en' => 'English',
+    'lang_ar' => 'Arabic',
+
     // Hero Section
     'hero_title' => 'Run Your Salon Smarter.',
     'hero_subtitle' => 'Transform Your Salon Business With Our Comprehensive Management System. Streamline Operations, Boost Revenue, and Delight Your Customers!',
