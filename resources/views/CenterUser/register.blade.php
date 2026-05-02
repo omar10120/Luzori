@@ -1160,7 +1160,8 @@
                             </div>
                         </div>
                         <button type="button" id="addPrimaryImage" class="btn btn-sm btn-outline-secondary mt-1">
-                            <i class="ti ti-plus"></i> Add image
+                            <i class="ti ti-plus"></i> 
+                            {{ __('center_register.add_image') }}
                         </button>
                     </div>
                 </div>
@@ -1169,7 +1170,14 @@
                 <div class="d-flex align-items-start gap-2 mt-3">
                     <input type="checkbox" name="terms_accept" class="form-check-input mt-1" required>
                     <small class="text-muted">
-                        I agree to the <strong class="text-dark">Terms of Service</strong> and <strong class="text-dark">Privacy Policy</strong>
+                    {{ __('center_register.i_agree_to_the') }}
+                         <strong class="text-dark">
+                            {{ __('center_register.terms_of_service') }}
+                        </strong> 
+                        {{ __('center_register.and') }}
+                         <strong class="text-dark">
+                            {{ __('center_register.privacy_policy') }}
+                        </strong>
                     </small>
                 </div>
                 <div class="invalid-feedback-field ms-4" data-field-error="terms_accept"></div>
@@ -1177,7 +1185,7 @@
                 <!-- Submit -->
                 <div class="text-center mt-4">
                     <button type="submit" class="btn btn-register">
-                        <span>Register</span>
+                        <span>{{ __('center_register.register') }}</span>
                     </button>
                 </div>
 

@@ -68,4 +68,9 @@ return [
     'js_domain_format' => 'Use lowercase letters, numbers, and hyphens only. No spaces or leading/trailing hyphens.',
     'js_phone_len' => 'Phone must be 6–15 digits.',
     'js_terms' => 'You must accept the terms to continue.',
+    'i_agree_to_the' => 'I agree to the',
+    'terms_of_service' => 'Terms of Service',
+    'and' => 'and',
+    'privacy_policy' => 'Privacy Policy',
+    'register' => 'Register',
 ];
