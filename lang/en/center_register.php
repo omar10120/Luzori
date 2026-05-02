@@ -34,7 +34,7 @@ return [
 
     'label_iban' => 'IBAN',
     'iban_optional' => '(optional)',
-    'placeholder_iban' => 'AE7x xxxx xxxx xxxx xxx',
+    'placeholder_iban' => 'AExx xxxx xxxx xxxx xxx',
 
     'label_currency' => 'Currency',
 

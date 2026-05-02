@@ -214,12 +214,15 @@
             z-index: 5;
         }
 
-        .input-group-icon .icon-left {
-            left: 12px;
+        /* Logical positions: follow text direction (LTR vs RTL) */
+        .input-group-icon .icon-inline-start {
+            inset-inline-start: 12px;
+            inset-inline-end: auto;
         }
 
-        .input-group-icon .icon-right {
-            right: 12px;
+        .input-group-icon .icon-inline-end {
+            inset-inline-end: 12px;
+            inset-inline-start: auto;
         }
 
         .form-control-custom {
@@ -245,12 +248,12 @@
             }
         }
 
-        .form-control-custom.ps-icon {
-            padding-left: 2.2rem;
+        .form-control-custom.pad-inline-start {
+            padding-inline-start: 2.35rem;
         }
 
-        .form-control-custom.pe-icon {
-            padding-right: 2.2rem;
+        .form-control-custom.pad-inline-end {
+            padding-inline-end: 2.35rem;
         }
 
         /* Phone select + input */
@@ -599,7 +602,7 @@
             
         }
         input[type='checkbox']:checked{
-            background-color: var(--text-muted) !important;
+            background-color: var(--brand-dark) !important;
         }
         select , option{
             background-color: var(--brand-light) !important;
@@ -950,8 +953,8 @@
 
                 // Handle IBAN - add AE7 prefix if not present
                 let ibanValue = formData.get('bank_name');
-                if (ibanValue && !ibanValue.startsWith('AE7')) {
-                    ibanValue = 'AE7' + ibanValue;
+                if (ibanValue && !ibanValue.startsWith('AE')) {
+                    ibanValue = 'AE' + ibanValue;
                     formData.set('bank_name', ibanValue);
                 }
 
@@ -1072,43 +1075,38 @@
                         <!-- Name Center -->
                         <label class="form-label-bs">{{ __('center_register.label_name') }} <span class="text-danger">*</span></label>
                         <div class="input-group-icon mb-1">
-                            <i class="ti ti-user icon icon-left"></i>
-                            <input type="text" name="name" class="form-control-custom ps-icon" placeholder="{{ __('center_register.placeholder_name') }}" required minlength="2" maxlength="255" autocomplete="organization">
+                            <i class="ti ti-user icon icon-inline-start"></i>
+                            <input type="text" name="name" class="form-control-custom pad-inline-start" placeholder="{{ __('center_register.placeholder_name') }}" required minlength="2" maxlength="255" autocomplete="organization">
                         </div>
                         <div class="invalid-feedback-field mb-2" data-field-error="name"></div>
+
+                           <!-- Domain -->
+                           <label class="form-label-bs">{{ __('center_register.label_domain') }} <span class="text-danger">*</span> <small class="text-muted fw-normal">{{ __('center_register.domain_hint') }}</small></label>
+                        <input type="text" name="domain" class="form-control-custom mb-1" placeholder="{{ __('center_register.placeholder_domain') }}" required minlength="3" maxlength="20" pattern="[a-z0-9]([a-z0-9-]*[a-z0-9])?" title="Lowercase letters, numbers, hyphens. 3–50 characters." autocapitalize="none" spellcheck="false" autocomplete="off">
+                        <div class="invalid-feedback-field mb-2" data-field-error="domain"></div>
 
                         <!-- Email -->
                         <label class="form-label-bs">{{ __('center_register.label_email') }} <span class="text-danger">*</span></label>
                         <div class="input-group-icon mb-1">
-                            <i class="ti ti-mail icon icon-left"></i>
-                            <input type="email" name="email" id="emailInput" class="form-control-custom ps-icon " placeholder="{{ __('center_register.placeholder_email') }}" required maxlength="255" autocomplete="email">
+                            <i class="ti ti-mail icon icon-inline-start"></i>
+                            <input type="email" name="email" id="emailInput" class="form-control-custom pad-inline-start" placeholder="{{ __('center_register.placeholder_email') }}" required maxlength="255" autocomplete="email">
                         </div>
                         <div class="invalid-feedback-field mb-2" data-field-error="email"></div>
                         <!-- Password -->
                         <label class="form-label-bs">{{ __('center_register.label_password') }} <span class="text-danger">*</span> <small class="text-muted fw-normal">{{ __('center_register.password_hint') }}</small></label>
                         <div class="input-group-icon mb-1">
-                            <i class="ti ti-lock icon icon-left"></i>
-                            <input type="password" name="password" class="form-control-custom ps-icon pe-icon" placeholder="{{ __('center_register.placeholder_password') }}" required minlength="6" maxlength="15" autocomplete="new-password">
-                            <span class="icon icon-right toggle-password" style="cursor:pointer;"><i class="ti ti-eye-off"></i></span>
+                            <i class="ti ti-lock icon icon-inline-start"></i>
+                            <input type="password" name="password" class="form-control-custom pad-inline-start pad-inline-end" placeholder="{{ __('center_register.placeholder_password') }}" required minlength="6" maxlength="15" autocomplete="new-password">
+                            <span class="icon icon-inline-end toggle-password" style="cursor:pointer;"><i class="ti ti-eye-off"></i></span>
                         </div>
                         <div class="invalid-feedback-field mb-2" data-field-error="password"></div>
 
-                        <!-- Logo Center -->
-                        <label class="form-label-bs">{{ __('center_register.label_logo') }} <small class="text-muted fw-normal">{{ __('center_register.logo_hint') }}</small></label>
-                        <div class="logo-upload-circle mb-1">
-                            <img id="logo-camera-icon" src="{{ asset('camera.svg') }}" alt="" width="28" height="28" class="logo-camera-placeholder" style="object-fit:contain; position:relative; z-index:1;">
-                            <img id="logo-preview" class="preview d-none" src="" alt="{{ __('center_register.label_logo') }}">
-                            <input type="file" id="image" name="image" accept="image/jpeg,image/png,image/gif,.jpg,.jpeg,.png,.gif">
-                        </div>
-                        <div class="invalid-feedback-field mb-2" data-field-error="image"></div>
+         
                     </div>
 
                     <!-- Right column -->
                     <div class="col-md-6">
-                        <!-- Domain -->
-                        <label class="form-label-bs">{{ __('center_register.label_domain') }} <span class="text-danger">*</span> <small class="text-muted fw-normal">{{ __('center_register.domain_hint') }}</small></label>
-                        <input type="text" name="domain" class="form-control-custom mb-1" placeholder="{{ __('center_register.placeholder_domain') }}" required minlength="3" maxlength="20" pattern="[a-z0-9]([a-z0-9-]*[a-z0-9])?" title="Lowercase letters, numbers, hyphens. 3–50 characters." autocapitalize="none" spellcheck="false" autocomplete="off">
-                        <div class="invalid-feedback-field mb-2" data-field-error="domain"></div>
+                     
 
                         <!-- Phone Center -->
                         <label class="form-label-bs">{{ __('center_register.label_phone') }} <span class="text-danger">*</span></label>
@@ -1121,7 +1119,7 @@
                                 <option value="968">🇴🇲 +968</option>
                                 <option value="973">🇧🇭 +973</option>
                             </select>
-                            <input type="text" name="phone" class="form-control-custom" inputmode="numeric" placeholder="{{ __('center_register.placeholder_phone') }}" required minlength="6" maxlength="15" pattern="[0-9]{6,15}" autocomplete="tel">
+                            <input type="tel" name="phone" class="form-control-custom" inputmode="numeric" placeholder="{{ __('center_register.placeholder_phone') }}" required minlength="8" maxlength="9" pattern="[0-9]{6,15}" autocomplete="tel">
                         </div>
                         <div class="invalid-feedback-field mb-2" data-field-error="phone"></div>
 
@@ -1139,6 +1137,15 @@
                             <option value="SAR">SAR</option>
                             <option value="EUR">EUR</option>
                         </select>
+
+                        <!-- Logo Center -->
+                        <label class="form-label-bs">{{ __('center_register.label_logo') }} <small class="text-muted fw-normal">{{ __('center_register.logo_hint') }}</small></label>
+                        <div class="logo-upload-circle mb-1">
+                            <img id="logo-camera-icon" src="{{ asset('camera.svg') }}" alt="" width="28" height="28" class="logo-camera-placeholder" style="object-fit:contain; position:relative; z-index:1;">
+                            <img id="logo-preview" class="preview d-none" src="" alt="{{ __('center_register.label_logo') }}">
+                            <input type="file" id="image" name="image" accept="image/jpeg,image/png,image/gif,.jpg,.jpeg,.png,.gif">
+                        </div>
+                        <div class="invalid-feedback-field mb-2" data-field-error="image"></div>
 
                         <!-- Primary Images -->
                         <label class="form-label-bs d-block">{{ __('center_register.label_primary_images') }}
