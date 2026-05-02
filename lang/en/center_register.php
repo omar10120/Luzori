@@ -73,4 +73,5 @@ return [
     'and' => 'and',
     'privacy_policy' => 'Privacy Policy',
     'register' => 'Register',
+    'iban_warning' => 'dont include AE with you iban (only the numbers after AE )'
 ];
