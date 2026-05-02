@@ -256,6 +256,59 @@
             padding-inline-end: 2.35rem;
         }
 
+        /* IBAN: fixed AE prefix + editable suffix (always submit AE…) */
+        .iban-field {
+            direction: ltr;
+        }
+
+        .iban-inner {
+            display: flex;
+            align-items: stretch;
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            overflow: hidden;
+            background: var(--brand-light);
+        }
+
+        @media (min-width: 768px) {
+            .iban-inner {
+                background: rgba(255, 214, 168, 0.3);
+            }
+        }
+
+        .iban-inner:focus-within {
+            border-color: var(--brand-dark);
+            box-shadow: 0 0 0 0.2rem rgba(34, 93, 92, 0.2);
+            background-color: #fff;
+        }
+
+        .iban-prefix {
+            display: flex;
+            align-items: center;
+            padding: 0 0.65rem;
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--brand-dark);
+            background: rgba(34, 93, 92, 0.08);
+            border-inline-end: 1px solid var(--border-color);
+            flex-shrink: 0;
+            user-select: none;
+        }
+
+        .iban-inner .iban-rest {
+            border: none !important;
+            border-radius: 0 !important;
+            flex: 1;
+            min-width: 0;
+            box-shadow: none !important;
+            background: transparent !important;
+        }
+
+        .iban-inner .iban-rest:focus {
+            outline: none;
+            box-shadow: none !important;
+        }
+
         /* Phone select + input */
         .phone-group {
             display: flex;
@@ -918,6 +971,28 @@
                 this.value = this.value.replace(/\D/g, '');
             });
 
+            function normalizeIbanSuffix(v) {
+                return String(v || '')
+                    .replace(/\s/g, '')
+                    .replace(/^AE/gi, '')
+                    .substring(0, 19);
+            }
+
+            function syncBankNameFromIban() {
+                const rest = normalizeIbanSuffix($('#iban_rest').val());
+                $('#iban_rest').val(rest);
+                $('#bank_name').val('AE' + rest);
+            }
+
+            $('#iban_rest').on('input blur paste', function(e) {
+                if (e.type === 'paste') {
+                    setTimeout(syncBankNameFromIban, 0);
+                } else {
+                    syncBankNameFromIban();
+                }
+            });
+            syncBankNameFromIban();
+
             $('#frmRegister').on('input change', 'input[name="name"], input[name="email"], input[name="password"], input[name="domain"], input[name="phone"], input[name="terms_accept"]', function() {
                 const name = $(this).attr('name');
                 const value = $(this).val();
@@ -950,18 +1025,11 @@
                 }
 
 
-                //add AE7 for iban if not exsist 
+                syncBankNameFromIban();
+
                 let formData = new FormData(this);
                 formData.set('phone', ($('input[name="phone"]').val() || '').replace(/\D/g, ''));
                 formData.append('password_confirmation', formData.get('password'));
-
-                // Handle IBAN - add AE7 prefix if not present
-                let ibanValue = formData.get('bank_name');
-                if (ibanValue && !ibanValue.startsWith('AE')) {
-                    ibanValue = 'AE' + ibanValue;
-                    formData.set('bank_name', ibanValue);
-                }
-
 
                 $.ajax({
                     url: "{{ url('/center_api/auth/register') }}",
@@ -1127,12 +1195,26 @@
                         </div>
                         <div class="invalid-feedback-field mb-2" data-field-error="phone"></div>
 
-                        <!-- IBAN Number -->
+                        <!-- IBAN Number (fixed AE prefix, cannot be removed) -->
                         <label class="form-label-bs">{{ __('center_register.label_iban') }}
-                            <span class="warning"> - {{__('center_register.iban_warning')}} </span>
+                            <span class="warning"> - {{ __('center_register.iban_warning') }} </span>
                         </label>
-                        <small class="text-muted fw-normal">{{ __('center_register.iban_optional') }}</small>
-                        <input type="tel" name="bank_name" class="form-control-custom mb-3" placeholder="{{ __('center_register.placeholder_iban') }}"  maxlength=21 autocomplete="off">
+                        <small class="text-muted fw-normal d-block mb-1">{{ __('center_register.iban_optional') }}</small>
+                        <div class="iban-field mb-3">
+                            <div class="iban-inner">
+                                <span class="iban-prefix" aria-hidden="true">AE</span>
+                                <input type="text"
+                                    id="iban_rest"
+                                    class="form-control-custom iban-rest"
+                                    maxlength="19"
+                                    placeholder="{{ __('center_register.placeholder_iban_suffix') }}"
+                                    autocomplete="off"
+                                    inputmode="text"
+                                    aria-describedby="iban-prefix-hint">
+                            </div>
+                            <input type="hidden" name="bank_name" id="bank_name" value="AE">
+                            <span id="iban-prefix-hint" class="visually-hidden">{{ __('center_register.iban_ae_fixed') }}</span>
+                        </div>
 
                         <!-- Currency -->
                         <label class="form-label-bs">{{ __('center_register.label_currency') }}</label>
