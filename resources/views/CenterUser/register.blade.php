@@ -1128,7 +1128,7 @@
                         <label class="form-label-bs">{{ __('center_register.label_iban') }}
                         <small class="text-muted fw-normal">{{ __('center_register.iban_optional') }}</small>
                         </label>
-                        <input type="text" name="bank_name" class="form-control-custom mb-3" placeholder="{{ __('center_register.placeholder_iban') }}" maxlength="21" autocomplete="off">
+                        <input type="number" name="bank_name" class="form-control-custom mb-3" placeholder="{{ __('center_register.placeholder_iban') }}" maxlength="21" autocomplete="off">
 
                         <!-- Currency -->
                         <label class="form-label-bs">{{ __('center_register.label_currency') }}</label>
