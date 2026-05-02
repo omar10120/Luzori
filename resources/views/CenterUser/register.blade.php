@@ -594,6 +594,7 @@
         .mobile-welcome .logo-sm img {
             width: 36px;
             height: 36px;
+          
         }
         /* EDIT */
         input[type='checkbox'] {
@@ -1035,7 +1036,7 @@
     <!-- Mobile Welcome Banner -->
     <div class="mobile-welcome w-100">
         <div class="logo-sm">
-            <img src="{{ asset('logo.svg') }}" alt="{{ __('center_register.meta_title') }}">
+            <img src="{{ asset('logo_test.svg') }}" alt="{{ __('center_register.meta_title') }}">
         </div>
         <h2 class="h5 fw-bold mt-2">{{ __('center_register.mobile_welcome_h2') }}</h2>
         <p class="small mb-0" style="color:#F2E8DC;">{{ __('center_register.mobile_welcome_sub') }}</p>
@@ -1046,7 +1047,7 @@
         <div class="register-left-content">
             <h2>{{ __('center_register.left_panel_title') }}</h2>
             <div class="logo-circle">
-                <img src="{{ asset('logo.svg') }}" alt="{{ __('center_register.meta_title') }}">
+                <img src="{{ asset('logo_test.svg') }}" alt="{{ __('center_register.meta_title') }}">
             </div>
             <p>{{ __('center_register.left_panel_text') }}</p>
             <div class="bottom-links fw-bold">
