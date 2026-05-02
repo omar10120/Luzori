@@ -69,6 +69,12 @@ class RegisterRequest extends FormRequest
                 'string',
                 'max:10'
             ],
+
+            'bank_name' => [
+                'nullable',
+                'string',
+                'max:21',
+            ],
         ];
     }
 

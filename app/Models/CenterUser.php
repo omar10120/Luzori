@@ -39,6 +39,7 @@ class CenterUser extends Authenticatable implements HasMedia
         'statusWeb',
         'language_id',
         'branch_id',
+        'bank_name',
     ];
     protected $hidden = ['password'];
 

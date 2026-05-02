@@ -13,6 +13,7 @@
 
 @section('page-style')
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Tajawal:wght@200;300;400;500;700;800;900&display=swap');
         :root {
             --brand-dark: #225D5C;
             --brand-light: #F2E8DC;
@@ -28,6 +29,7 @@
             display: flex;
             align-items: stretch;
             background-color: white;
+            font-family: 'cairo', sans-serif;
         }
 
         /* Left panel (desktop) */
@@ -296,6 +298,167 @@
             top: 0;
             left: 0;
             cursor: pointer;
+            z-index: 2;
+        }
+
+        .form-control-custom.is-invalid,
+        .phone-group.is-invalid {
+            border-color: #dc3545 !important;
+        }
+        .phone-group.is-invalid select,
+        .phone-group.is-invalid input {
+            background-color: #fff5f5 !important;
+        }
+        .invalid-feedback-field {
+            font-size: 0.75rem;
+            color: #dc3545;
+            margin-top: 0.25rem;
+            display: none;
+        }
+        .invalid-feedback-field.is-visible {
+            display: block;
+        }
+
+        /* Primary images — grid + cards */
+        .primary-images-section {
+            border: 1px solid var(--border-color);
+            border-radius: 0.85rem;
+            padding: 0.75rem;
+            background: rgba(255, 251, 247, 0.9);
+            overflow: hidden;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .primary-images-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0.65rem;
+            width: 100%;
+            min-width: 0;
+        }
+        @media (min-width: 400px) {
+            .primary-images-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+        .primary-image-slot {
+            min-width: 0;
+            width: 100%;
+        }
+        .primary-upload-card {
+            position: relative;
+            border: 2px dashed var(--border-color);
+            border-radius: 0.75rem;
+            min-height: 118px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0.65rem 0.5rem 0.5rem;
+            background: var(--brand-light);
+            transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+            overflow: hidden;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        /* File input must overlay the card (not in document flow) — was only styled under .file-upload-box */
+        .primary-upload-card input[type="file"] {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            min-height: 118px;
+            margin: 0;
+            padding: 0;
+            border: 0;
+            opacity: 0;
+            cursor: pointer;
+            z-index: 4;
+            font-size: 0;
+        }
+        @media (min-width: 768px) {
+            .primary-upload-card {
+                background: rgba(255, 214, 168, 0.25);
+            }
+        }
+        .primary-upload-card:hover {
+            border-color: var(--brand-dark);
+            background: rgba(255, 214, 168, 0.45);
+            box-shadow: 0 4px 12px rgba(34, 93, 92, 0.08);
+        }
+        .primary-upload-card.has-preview {
+            border-style: solid;
+            border-color: var(--brand-dark);
+            padding: 0.35rem;
+        }
+        .primary-upload-card.has-preview .primary-upload-meta {
+            display: none;
+        }
+        .primary-upload-card .img-preview {
+            position: relative;
+            z-index: 1;
+            pointer-events: none;
+            width: 100%;
+            max-height: 100px;
+            object-fit: cover;
+            border-radius: 0.5rem;
+            margin-top: 0;
+        }
+        .primary-upload-card .file-upload-icon {
+            font-size: 1.35rem;
+            color: var(--brand-dark);
+            opacity: 0.85;
+            margin-bottom: 0.2rem;
+        }
+        .primary-upload-meta {
+            text-align: center;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .primary-slot-label {
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            color: var(--brand-dark);
+        }
+        .primary-slot-hint {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            margin-top: 0.15rem;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            padding: 0 4px;
+        }
+        .remove-primary-slot {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            z-index: 6;
+            width: 26px;
+            height: 26px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-size: 0.75rem;
+            line-height: 1;
+        }
+        #addPrimaryImage {
+            border-color: var(--brand-dark);
+            color: var(--brand-dark);
+            font-weight: 600;
+            border-radius: 50rem;
+        }
+        #addPrimaryImage:hover {
+            background: var(--brand-dark);
+            color: var(--brand-peach);
+        }
+
+        .logo-upload-circle.is-invalid {
+            border-color: #dc3545;
         }
 
         .btn-register {
@@ -408,6 +571,117 @@
 @section('page-script')
     <script>
         $(document).ready(function() {
+            const MAX_IMAGE_BYTES = 4096 * 1024; // matches RegisterRequest max:4096 (KB)
+            const ALLOWED_IMAGE_MIMES = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+            const DOMAIN_RE = /^(?!-)[a-z0-9-]+(?<!-)$/;
+
+            function showFieldError(name, message) {
+                const $el = $('[data-field-error="' + name + '"]');
+                $el.text(message).addClass('is-visible');
+                const $input = $('[name="' + name + '"]');
+                if (name === 'phone' || name === 'country_code') {
+                    $input.closest('.phone-group').addClass('is-invalid');
+                } else if (name === 'image') {
+                    $input.addClass('is-invalid');
+                    $input.closest('.logo-upload-circle').addClass('is-invalid');
+                } else {
+                    $input.addClass('is-invalid');
+                }
+            }
+            function clearFieldErrors() {
+                $('.invalid-feedback-field').removeClass('is-visible').text('');
+                $('.form-control-custom, .form-check-input').removeClass('is-invalid');
+                $('.phone-group').removeClass('is-invalid');
+                $('#image').closest('.logo-upload-circle').removeClass('is-invalid');
+            }
+            function validateImageFile(file) {
+                if (!file) return { ok: true };
+                if (file.size > MAX_IMAGE_BYTES) {
+                    return { ok: false, message: 'Image must be 4MB or smaller.' };
+                }
+                if (file.type && !ALLOWED_IMAGE_MIMES.includes(file.type)) {
+                    return { ok: false, message: 'Use JPG, PNG, or GIF only.' };
+                }
+                const ext = file.name.split('.').pop().toLowerCase();
+                if (!['jpg', 'jpeg', 'png', 'gif'].includes(ext)) {
+                    return { ok: false, message: 'Use JPG, PNG, or GIF only.' };
+                }
+                return { ok: true };
+            }
+
+            function validateForm() {
+                clearFieldErrors();
+                let ok = true;
+                const name = ($('input[name="name"]').val() || '').trim();
+                if (name.length < 2) {
+                    showFieldError('name', 'Enter a center name (at least 2 characters).');
+                    ok = false;
+                } else if (name.length > 255) {
+                    showFieldError('name', 'Name is too long (max 255 characters).');
+                    ok = false;
+                }
+
+                const email = ($('input[name="email"]').val() || '').trim();
+                const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!email || !emailRe.test(email)) {
+                    showFieldError('email', 'Enter a valid email address.');
+                    ok = false;
+                }
+
+                const password = $('input[name="password"]').val() || '';
+                if (password.length < 6) {
+                    showFieldError('password', 'Password must be at least 6 characters.');
+                    ok = false;
+                } else if (password.length > 15) {
+                    showFieldError('password', 'Password must be at most 15 characters.');
+                    ok = false;
+                }
+
+                const domain = ($('input[name="domain"]').val() || '').trim().toLowerCase();
+                $('input[name="domain"]').val(domain);
+                if (domain.length < 3 || domain.length > 50) {
+                    showFieldError('domain', 'Domain must be 3-20 characters.');
+                    ok = false;
+                } else if (!DOMAIN_RE.test(domain)) {
+                    showFieldError('domain', 'Use lowercase letters, numbers, and hyphens only. No spaces or leading/trailing hyphens.');
+                    ok = false;
+                }
+
+                const phoneDigits = ($('input[name="phone"]').val() || '').replace(/\D/g, '');
+                if (phoneDigits.length < 6 || phoneDigits.length > 15) {
+                    showFieldError('phone', 'Phone must be 8-9 digits.');
+                    ok = false;
+                }
+
+                const logo = document.getElementById('image')?.files?.[0];
+                const logoCheck = validateImageFile(logo);
+                if (!logoCheck.ok) {
+                    showFieldError('image', logoCheck.message);
+                    $('#image').closest('.logo-upload-circle').addClass('is-invalid');
+                    ok = false;
+                }
+
+                $('.primary-img-input').each(function() {
+                    const f = this.files && this.files[0];
+                    if (f) {
+                        const chk = validateImageFile(f);
+                        if (!chk.ok) {
+                            const $slot = $(this).closest('.primary-image-slot');
+                            $slot.find('.primary-slot-hint').text(chk.message).css('color', '#dc3545');
+                            $slot.find('.primary-upload-card').addClass('border-danger');
+                            ok = false;
+                        }
+                    }
+                });
+
+                if (!$('input[name="terms_accept"]').is(':checked')) {
+                    showFieldError('terms_accept', 'You must accept the terms to continue.');
+                    ok = false;
+                }
+
+                return ok;
+            }
+
             // Password toggle
             $('.toggle-password').click(function() {
                 let input = $(this).siblings('input');
@@ -426,7 +700,19 @@
                 let file = e.target.files[0];
                 let preview = $('#logo-preview');
                 let cameraIcon = $('#logo-camera-icon');
+                const $circle = $(this).closest('.logo-upload-circle');
+                $circle.removeClass('is-invalid');
+                $('[data-field-error="image"]').removeClass('is-visible').text('');
                 if (file) {
+                    const chk = validateImageFile(file);
+                    if (!chk.ok) {
+                        showFieldError('image', chk.message);
+                        $circle.addClass('is-invalid');
+                        e.target.value = '';
+                        preview.addClass('d-none').attr('src', '');
+                        cameraIcon.removeClass('d-none');
+                        return;
+                    }
                     let reader = new FileReader();
                     reader.onload = function(ev) {
                         preview.attr('src', ev.target.result).removeClass('d-none');
@@ -443,53 +729,108 @@
             let primarySlotCount = 1;
             const maxPrimary = 4;
 
+            function renumberPrimarySlots() {
+                $('#primaryImagesContainer .primary-image-slot').each(function(i) {
+                    $(this).find('.primary-slot-label').text('Image ' + (i + 1));
+                });
+                primarySlotCount = $('#primaryImagesContainer .primary-image-slot').length;
+                if (primarySlotCount >= maxPrimary) {
+                    $('#addPrimaryImage').hide();
+                } else {
+                    $('#addPrimaryImage').show();
+                }
+            }
+
+            function primarySlotHtml(idx, withRemove) {
+                const removeBtn = withRemove
+                    ? '<button type="button" class="btn btn-sm btn-danger remove-primary-slot" aria-label="Remove image"><i class="ti ti-x"></i></button>'
+                    : '';
+                return `
+                    <div class="primary-image-slot" data-index="${idx}">
+                        <div class="primary-upload-card position-relative">
+                            ${removeBtn}
+                            <div class="primary-upload-meta">
+                                <div class="file-upload-icon"><i class="ti ti-upload"></i></div>
+                                <div class="primary-slot-label">Image ${idx}</div>
+                                <div class="primary-slot-hint">JPG, PNG, GIF · max 4MB</div>
+                            </div>
+                            <input type="file" name="primary_image[]" accept="image/jpeg,image/png,image/gif,.jpg,.jpeg,.png,.gif" class="primary-img-input">
+                            <img class="img-preview d-none" alt="">
+                        </div>
+                    </div>`;
+            }
+
+            renumberPrimarySlots();
+
             $('#addPrimaryImage').click(function() {
                 if (primarySlotCount >= maxPrimary) return;
                 primarySlotCount++;
-                let idx = primarySlotCount;
-                let html = `
-                    <div class="primary-image-slot mb-2" data-index="${idx}">
-                        <div class="file-upload-box position-relative">
-                            <div class="file-upload-icon"><i class="ti ti-upload"></i></div>
-                            <div class="file-upload-text text-uppercase small">IMAGE ${idx}</div>
-                            <input type="file" name="primary_image[]" accept="image/*" class="primary-img-input">
-                            <img class="img-preview d-none" style="max-height:60px; margin-top:6px; border-radius:4px;">
-                            <button type="button" class="btn btn-sm btn-danger remove-primary-slot" style="position:absolute; top:4px; right:4px; z-index:5; padding:2px 6px; font-size:0.7rem;">
-                                <i class="ti ti-x"></i>
-                            </button>
-                        </div>
-                    </div>`;
-                $('#primaryImagesContainer').append(html);
-                if (primarySlotCount >= maxPrimary) $(this).hide();
+                $('#primaryImagesContainer').append(primarySlotHtml(primarySlotCount, true));
+                renumberPrimarySlots();
             });
 
             $(document).on('click', '.remove-primary-slot', function() {
                 $(this).closest('.primary-image-slot').remove();
-                primarySlotCount--;
-                $('#addPrimaryImage').show();
+                renumberPrimarySlots();
             });
 
             $(document).on('change', '.primary-img-input', function(e) {
                 let file = e.target.files[0];
-                let preview = $(this).siblings('.img-preview');
-                let text = $(this).siblings('.file-upload-text');
+                let $card = $(this).closest('.primary-upload-card');
+                let preview = $card.find('.img-preview');
+                let hint = $card.find('.primary-slot-hint');
+                $card.removeClass('border-danger');
                 if (file) {
-                    text.text(file.name);
+                    const chk = validateImageFile(file);
+                    if (!chk.ok) {
+                        hint.text(chk.message).css('color', '#dc3545');
+                        $card.addClass('border-danger');
+                        e.target.value = '';
+                        preview.addClass('d-none').attr('src', '');
+                        $card.removeClass('has-preview');
+                        return;
+                    }
+                    hint.text(file.name).css('color', 'var(--text-muted)');
                     let reader = new FileReader();
                     reader.onload = function(ev) {
                         preview.attr('src', ev.target.result).removeClass('d-none');
+                        $card.addClass('has-preview');
                     };
                     reader.readAsDataURL(file);
                 } else {
-                    text.text('IMAGE');
+                    hint.text('JPG, PNG, GIF · max 4MB').css('color', 'var(--text-muted)');
                     preview.addClass('d-none').attr('src', '');
+                    $card.removeClass('has-preview');
+                }
+            });
+
+            $('input[name="domain"]').on('blur', function() {
+                const v = ($(this).val() || '').trim().toLowerCase();
+                $(this).val(v);
+            });
+
+            $('input[name="phone"]').on('input', function() {
+                this.value = this.value.replace(/\D/g, '');
+            });
+
+            $('#frmRegister').on('input change', 'input[name="name"], input[name="email"], input[name="password"], input[name="domain"], input[name="phone"], input[name="terms_accept"]', function() {
+                const name = $(this).attr('name');
+                $(this).removeClass('is-invalid');
+                $('[data-field-error="' + name + '"]').removeClass('is-visible').text('');
+                if (name === 'phone') {
+                    $(this).closest('.phone-group').removeClass('is-invalid');
                 }
             });
 
             // Form submission
             $("#frmRegister").on("submit", function(event) {
                 event.preventDefault();
+                if (!validateForm()) {
+                    $('html, body').animate({ scrollTop: $('.register-card').offset().top - 24 }, 300);
+                    return;
+                }
                 let formData = new FormData(this);
+                formData.set('phone', ($('input[name="phone"]').val() || '').replace(/\D/g, ''));
                 formData.append('password_confirmation', formData.get('password'));
 
                 $.ajax({
@@ -499,6 +840,7 @@
                     contentType: false,
                     processData: false,
                     beforeSend: function() {
+                        clearFieldErrors();
                         $('#alertError').addClass('d-none').find('ul').empty();
                         $('#alertSuccess').addClass('d-none').find('ul').empty();
                         $(".btn-register span").text('Processing...');
@@ -518,17 +860,33 @@
                     error: function(response) {
                         let errors = response.responseJSON?.errors;
                         let msg = response.responseJSON?.message;
-                        let ul = $('#alertError').removeClass('d-none').find('ul').empty();
+                        clearFieldErrors();
+                        let ul = $('#alertError').find('ul').empty();
+                        const inlineFields = ['name', 'email', 'domain', 'phone', 'password', 'country_code', 'image'];
                         if (errors) {
                             $.each(errors, function(key, val) {
-                                ul.append(`<li>${val[0]}</li>`);
+                                const fieldKey = key.split('.')[0];
+                                const text = val[0];
+                                if (inlineFields.indexOf(fieldKey) !== -1 && $('[data-field-error="' + fieldKey + '"]').length) {
+                                    showFieldError(fieldKey, text);
+                                } else {
+                                    ul.append('<li>' + text + '</li>');
+                                }
                             });
                         } else if (msg) {
-                            ul.append(`<li>${msg}</li>`);
+                            ul.append('<li>' + msg + '</li>');
                         } else {
-                            ul.append(`<li>Registration failed (status ${response.status})</li>`);
+                            ul.append('<li>Registration failed (status ' + response.status + ')</li>');
                         }
-                        $('html, body').animate({ scrollTop: 0 }, 300);
+                        if (ul.children().length) {
+                            $('#alertError').removeClass('d-none');
+                        } else if ($('.invalid-feedback-field.is-visible').length) {
+                            $('#alertError').addClass('d-none');
+                        } else {
+                            ul.append('<li>Could not complete registration.</li>');
+                            $('#alertError').removeClass('d-none');
+                        }
+                        $('html, body').animate({ scrollTop: $('.register-card').offset().top - 24 }, 300);
                         resetButton();
                     }
                 });
@@ -580,50 +938,55 @@
                 <ul class="mb-0 ps-3"></ul>
             </div>
 
-            <form id="frmRegister" enctype="multipart/form-data">
+            <form id="frmRegister" enctype="multipart/form-data" novalidate autocomplete="on">
                 <div class="row g-3">
                     <!-- Left column -->
                     <div class="col-md-6">
                         <!-- Name Center -->
                         <label class="form-label-bs">Name Center <span class="text-danger">*</span></label>
-                        <div class="input-group-icon mb-3">
+                        <div class="input-group-icon mb-1">
                             <i class="ti ti-user icon icon-left"></i>
-                            <input type="text" name="name" class="form-control-custom ps-icon" placeholder="Name of center" required>
+                            <input type="text" name="name" class="form-control-custom ps-icon" placeholder="Name of center" required minlength="2" maxlength="255" autocomplete="organization">
                         </div>
+                        <div class="invalid-feedback-field mb-2" data-field-error="name"></div>
 
                         <!-- Email -->
                         <label class="form-label-bs">Email Center <span class="text-danger">*</span></label>
-                        <div class="input-group-icon mb-3">
+                        <div class="input-group-icon mb-1">
                             <i class="ti ti-mail icon icon-left"></i>
-                            <input type="email" name="email" class="form-control-custom ps-icon " placeholder="example@email.com" required>
+                            <input type="email" name="email" class="form-control-custom ps-icon " placeholder="example@email.com" required maxlength="255" autocomplete="email">
                         </div>
+                        <div class="invalid-feedback-field mb-2" data-field-error="email"></div>
 
                         <!-- Password -->
-                        <label class="form-label-bs">Password <span class="text-danger">*</span></label>
-                        <div class="input-group-icon mb-3">
+                        <label class="form-label-bs">Password <span class="text-danger">*</span> <small class="text-muted fw-normal">(6–15 characters)</small></label>
+                        <div class="input-group-icon mb-1">
                             <i class="ti ti-lock icon icon-left"></i>
-                            <input type="password" name="password" class="form-control-custom ps-icon pe-icon" placeholder="••••••••" required>
+                            <input type="password" name="password" class="form-control-custom ps-icon pe-icon" placeholder="••••••••" required minlength="6" maxlength="15" autocomplete="new-password">
                             <span class="icon icon-right toggle-password" style="cursor:pointer;"><i class="ti ti-eye-off"></i></span>
                         </div>
+                        <div class="invalid-feedback-field mb-2" data-field-error="password"></div>
 
                         <!-- Logo Center -->
-                        <label class="form-label-bs">Logo Center</label>
-                        <div class="logo-upload-circle mb-3">
+                        <label class="form-label-bs">Logo Center <small class="text-muted fw-normal">(optional · JPG, PNG, GIF · max 4MB)</small></label>
+                        <div class="logo-upload-circle mb-1">
                             <i class="ti ti-camera" id="logo-camera-icon" style="font-size:1.5rem; color:var(--brand-dark);"></i>
                             <img id="logo-preview" class="preview d-none" src="" alt="Logo preview">
-                            <input type="file" id="image" name="image" accept="image/*">
+                            <input type="file" id="image" name="image" accept="image/jpeg,image/png,image/gif,.jpg,.jpeg,.png,.gif">
                         </div>
+                        <div class="invalid-feedback-field mb-2" data-field-error="image"></div>
                     </div>
 
                     <!-- Right column -->
                     <div class="col-md-6">
                         <!-- Domain -->
-                        <label class="form-label-bs">Domain Center <span class="text-danger">*</span></label>
-                        <input type="text" name="domain" class="form-control-custom mb-3" placeholder="center-name" required>
+                        <label class="form-label-bs">Domain Center <span class="text-danger">*</span> <small class="text-muted fw-normal">(lowercase, no spaces)</small></label>
+                        <input type="text" name="domain" class="form-control-custom mb-1" placeholder="my-center" required minlength="3" maxlength="20" pattern="[a-z0-9]([a-z0-9-]*[a-z0-9])?" title="Lowercase letters, numbers, hyphens. 3–50 characters." autocapitalize="none" spellcheck="false" autocomplete="off">
+                        <div class="invalid-feedback-field mb-2" data-field-error="domain"></div>
 
                         <!-- Phone Center -->
                         <label class="form-label-bs">Phone Center <span class="text-danger">*</span></label>
-                        <div class="phone-group mb-3">
+                        <div class="phone-group mb-1">
                             <select name="country_code" required>
                                 <option value="971">🇦🇪 +971</option>
                                 <option value="966">🇸🇦 +966</option>
@@ -632,8 +995,13 @@
                                 <option value="968">🇴🇲 +968</option>
                                 <option value="973">🇧🇭 +973</option>
                             </select>
-                            <input type="text" name="phone" class="form-control-custom" placeholder="503140232" required>
+                            <input type="text" name="phone" class="form-control-custom" inputmode="numeric" placeholder="503140232" required minlength="8" maxlength="9" pattern="[0-9]{6,15}" autocomplete="tel">
                         </div>
+                        <div class="invalid-feedback-field mb-2" data-field-error="phone"></div>
+
+                        <!-- IBAN Number -->
+                        <label class="form-label-bs">IBAN Number</label>
+                        <input type="text" name="bank_name" class="form-control-custom mb-3" placeholder="1234567890" maxlength="21" autocomplete="off">
 
                         <!-- Currency -->
                         <label class="form-label-bs">Currency</label>
@@ -645,30 +1013,36 @@
                         </select>
 
                         <!-- Primary Images -->
-                        <label class="form-label-bs">Primary Images <small class="text-muted">(1–4)</small></label>
-                        <div id="primaryImagesContainer">
-                            <div class="primary-image-slot mb-2" data-index="0">
-                                <div class="file-upload-box position-relative">
-                                    <div class="file-upload-icon"><i class="ti ti-upload"></i></div>
-                                    <div class="file-upload-text text-uppercase small">IMAGE 1</div>
-                                    <input type="file" name="primary_image[]" accept="image/*" class="primary-img-input">
-                                    <img class="img-preview d-none" style="max-height:60px; margin-top:6px; border-radius:4px;">
+                        <label class="form-label-bs d-block">Primary images <small class="text-muted fw-normal">(optional · up to 4 · JPG, PNG, GIF · max 4MB each)</small></label>
+                        <div class="primary-images-section mb-2">
+                            <div id="primaryImagesContainer" class="primary-images-grid">
+                                <div class="primary-image-slot" data-index="1">
+                                    <div class="primary-upload-card position-relative">
+                                        <div class="primary-upload-meta">
+                                            <div class="file-upload-icon"><i class="ti ti-upload"></i></div>
+                                            <div class="primary-slot-label">Image 1</div>
+                                            <div class="primary-slot-hint">JPG, PNG, GIF · max 4MB</div>
+                                        </div>
+                                        <input type="file" name="primary_image[]" accept="image/jpeg,image/png,image/gif,.jpg,.jpeg,.png,.gif" class="primary-img-input">
+                                        <img class="img-preview d-none" alt="">
+                                    </div>
                                 </div>
                             </div>
                         </div>
                         <button type="button" id="addPrimaryImage" class="btn btn-sm btn-outline-secondary mt-1">
-                            <i class="ti ti-plus"></i> Add Image
+                            <i class="ti ti-plus"></i> Add image
                         </button>
                     </div>
                 </div>
 
                 <!-- Terms (optional) -->
                 <div class="d-flex align-items-start gap-2 mt-3">
-                    <input type="checkbox" class="form-check-input mt-1 " required>
+                    <input type="checkbox" name="terms_accept" class="form-check-input mt-1" required>
                     <small class="text-muted">
                         I agree to the <strong class="text-dark">Terms of Service</strong> and <strong class="text-dark">Privacy Policy</strong>
                     </small>
                 </div>
+                <div class="invalid-feedback-field ms-4" data-field-error="terms_accept"></div>
 
                 <!-- Submit -->
                 <div class="text-center mt-4">
