@@ -51,19 +51,22 @@
                 width: 50%;
             }
         }
+ 
 
         .register-left-content {
             text-align: center;
             padding: 2rem;
-            max-width: 480px;
+            max-width: 450px;
             z-index: 2;
         }
+      
+ 
 
         .register-left h2 {
             font-size: 2.5rem;
             font-weight: 700;
             margin-bottom: 1.5rem;
-            color: #FFEED9;
+            color: var(--brand-peach);
         }
 
         .register-left .logo-circle {
@@ -87,7 +90,7 @@
         .register-left p {
             font-size: 0.95rem;
             line-height: 1.8;
-            color: #FFEED9;
+            color: var(--brand-peach);
             margin-bottom: 2rem;
         }
 
@@ -995,8 +998,8 @@
     <!-- Left panel (desktop) -->
     <div class="register-left">
         <div class="register-left-content">
-            <h2>Welcome to Luzori</h2>
-            <div class="logo-circle">
+            <h2>Welcome to </h2>
+            <div class="logo-circle">           
                 <img src="{{ asset('logo.svg') }}" alt="Luzori">
             </div>
             <p>
