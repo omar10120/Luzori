@@ -63,6 +63,7 @@
             font-size: 2.5rem;
             font-weight: 700;
             margin-bottom: 1.5rem;
+            color: #FFEED9;
         }
 
         .register-left .logo-circle {
@@ -81,6 +82,7 @@
             width: 70px;
             height: 70px;
         }
+        
 
         .register-left p {
             font-size: 0.95rem;
@@ -118,7 +120,7 @@
             border: 1px solid var(--border-color);
             padding: 2rem;
             width: 100%;
-            max-width: 550px;
+            max-width: 2000px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.05);
             margin-top: -45px;
         }
@@ -558,6 +560,23 @@
                 flex-direction: row;       /* side-by-side on desktop */
             }
         }
+
+                /* Modern browsers */
+        .form-control-custom::placeholder {
+            color: var(--brand-dark); /* Or any color */
+            opacity: 0.5; /* Adjust between 0 and 1 */
+        }
+
+        /* Specific support for Internet Explorer / Edge */
+        .form-control-custom:-ms-input-placeholder {
+            opacity: 0.5;
+        }
+
+        /* Specific support for Firefox */
+        .form-control-custom::-moz-placeholder {
+            opacity: 0.5;
+        }
+
       
      
      
@@ -574,6 +593,31 @@
             const MAX_IMAGE_BYTES = 4096 * 1024; // matches RegisterRequest max:4096 (KB)
             const ALLOWED_IMAGE_MIMES = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
             const DOMAIN_RE = /^(?!-)[a-z0-9-]+(?<!-)$/;
+
+            // Prevent Arabic characters in the email input field
+            const emailInput = document.getElementById('emailInput');
+            if (emailInput) {
+                emailInput.addEventListener('beforeinput', (event) => {
+                    // Check if the data being inserted contains any Arabic Unicode characters
+                    if (event.data && /[\u0600-\u06FF]/.test(event.data)) {
+                        event.preventDefault(); // Stop the input
+                        return false;
+                    }
+                });
+
+                // Also prevent pasting Arabic text
+                emailInput.addEventListener('paste', (event) => {
+                    let pastedText = (event.clipboardData || window.clipboardData).getData('text');
+                    if (/[\u0600-\u06FF]/.test(pastedText)) {
+                        event.preventDefault(); // Stop the paste
+                        // Optional: Show a small alert or the existing error message
+                        $(emailInput).addClass('is-invalid');
+                        $('[data-field-error="email"]').addClass('is-visible').text('Email cannot contain Arabic characters.');
+                        return false;
+                    }
+                });
+            }
+
 
             function showFieldError(name, message) {
                 const $el = $('[data-field-error="' + name + '"]');
@@ -815,12 +859,26 @@
 
             $('#frmRegister').on('input change', 'input[name="name"], input[name="email"], input[name="password"], input[name="domain"], input[name="phone"], input[name="terms_accept"]', function() {
                 const name = $(this).attr('name');
+                const value = $(this).val();
+                const arabicRegex = /[\u0600-\u06FF]/;
+
+                // 1. Always reset states for the field being changed
                 $(this).removeClass('is-invalid');
                 $('[data-field-error="' + name + '"]').removeClass('is-visible').text('');
+                
                 if (name === 'phone') {
                     $(this).closest('.phone-group').removeClass('is-invalid');
                 }
+
+                // 2. Specific Validation: Only check Arabic for the email field
+                if (name === 'email' && arabicRegex.test(value)) {
+                    $(this).addClass('is-invalid');
+                    $('[data-field-error="email"]')
+                        .addClass('is-visible')
+                        .text('Email cannot contain Arabic characters.');
+                }
             });
+
 
             // Form submission
             $("#frmRegister").on("submit", function(event) {
@@ -829,9 +887,20 @@
                     $('html, body').animate({ scrollTop: $('.register-card').offset().top - 24 }, 300);
                     return;
                 }
+
+
+                //add AE7 for iban if not exsist 
                 let formData = new FormData(this);
                 formData.set('phone', ($('input[name="phone"]').val() || '').replace(/\D/g, ''));
                 formData.append('password_confirmation', formData.get('password'));
+
+                // Handle IBAN - add AE7 prefix if not present
+                let ibanValue = formData.get('bank_name');
+                if (ibanValue && !ibanValue.startsWith('AE7')) {
+                    ibanValue = 'AE7' + ibanValue;
+                    formData.set('bank_name', ibanValue);
+                }
+                
 
                 $.ajax({
                     url: "{{ url('/center_api/auth/register') }}",
@@ -907,7 +976,7 @@
         <div class="logo-sm">
             <img src="{{ asset('logo.svg') }}" alt="Luzori">
         </div>
-        <h2 class="h5 fw-bold mt-2">Welcome to Luzori</h2>
+        <h2 class="h5 fw-bold mt-2">Welcome to</h2>
         <p class="small mb-0" style="color:#F2E8DC;">Your journey starts here</p>
     </div>
 
@@ -918,8 +987,10 @@
             <div class="logo-circle">
                 <img src="{{ asset('logo.svg') }}" alt="Luzori">
             </div>
-            <p>From our shelves to your homes, we plant your satisfaction with every shopping bag.</p>
-            <div class="bottom-links">
+            <p>
+                Luzori is an all-in-one salon and spa management system that streamlines bookings, client organization, staff scheduling, and enhances your business growth efficiently and securely. Note: Luzori is one of the projects of Techno Code IT LLC.
+            </p>
+            <div class="bottom-links fw-bold">
                 <span>Contact Us</span> <span class="mx-2">|</span> <span>Discover More</span>
             </div>
         </div>
@@ -954,15 +1025,14 @@
                         <label class="form-label-bs">Email Center <span class="text-danger">*</span></label>
                         <div class="input-group-icon mb-1">
                             <i class="ti ti-mail icon icon-left"></i>
-                            <input type="email" name="email" class="form-control-custom ps-icon " placeholder="example@email.com" required maxlength="255" autocomplete="email">
+                            <input type="email" name="email" id="emailInput" class="form-control-custom ps-icon " placeholder="example@email.com" required maxlength="255" autocomplete="email">
                         </div>
                         <div class="invalid-feedback-field mb-2" data-field-error="email"></div>
-
                         <!-- Password -->
                         <label class="form-label-bs">Password <span class="text-danger">*</span> <small class="text-muted fw-normal">(6–15 characters)</small></label>
                         <div class="input-group-icon mb-1">
                             <i class="ti ti-lock icon icon-left"></i>
-                            <input type="password" name="password" class="form-control-custom ps-icon pe-icon" placeholder="••••••••" required minlength="6" maxlength="15" autocomplete="new-password">
+                            <input type="password" name="password" class="form-control-custom ps-icon pe-icon" placeholder="********" required minlength="6" maxlength="15" autocomplete="new-password">
                             <span class="icon icon-right toggle-password" style="cursor:pointer;"><i class="ti ti-eye-off"></i></span>
                         </div>
                         <div class="invalid-feedback-field mb-2" data-field-error="password"></div>
@@ -971,7 +1041,7 @@
                         <label class="form-label-bs">Logo Center <small class="text-muted fw-normal">(optional · JPG, PNG, GIF · max 4MB)</small></label>
                         <div class="logo-upload-circle mb-1">
                             <i class="ti ti-camera" id="logo-camera-icon" style="font-size:1.5rem; color:var(--brand-dark);"></i>
-                            <img id="logo-preview" class="preview d-none" src="" alt="Logo preview">
+                            <img id="logo-preview" class="preview d-none" src="/camera.svg" alt="Logo preview">
                             <input type="file" id="image" name="image" accept="image/jpeg,image/png,image/gif,.jpg,.jpeg,.png,.gif">
                         </div>
                         <div class="invalid-feedback-field mb-2" data-field-error="image"></div>
@@ -1000,8 +1070,10 @@
                         <div class="invalid-feedback-field mb-2" data-field-error="phone"></div>
 
                         <!-- IBAN Number -->
-                        <label class="form-label-bs">IBAN Number</label>
-                        <input type="text" name="bank_name" class="form-control-custom mb-3" placeholder="1234567890" maxlength="21" autocomplete="off">
+                        <label class="form-label-bs">IBAN Number 
+                        <small class="text-muted fw-normal">(optional)</small>
+                        </label>
+                        <input type="text" name="bank_name" class="form-control-custom mb-3" placeholder="xxxx xxxx xxxx xxxx xxx" maxlength="21" autocomplete="off">
 
                         <!-- Currency -->
                         <label class="form-label-bs">Currency</label>
@@ -1013,7 +1085,9 @@
                         </select>
 
                         <!-- Primary Images -->
-                        <label class="form-label-bs d-block">Primary images <small class="text-muted fw-normal">(optional · up to 4 · JPG, PNG, GIF · max 4MB each)</small></label>
+                        <label class="form-label-bs d-block">Primary images 
+                            <small class="text-muted fw-normal">(optional · up to 4 · JPG, PNG, GIF · max 4MB each)</small>
+                        </label>
                         <div class="primary-images-section mb-2">
                             <div id="primaryImagesContainer" class="primary-images-grid">
                                 <div class="primary-image-slot" data-index="1">
