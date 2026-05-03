@@ -480,9 +480,9 @@
                         <!-- Password -->
                         <div class="d-flex justify-content-between">
                             <label class="form-label-bs">{{ __('field.password') }} <span class="text-danger">*</span></label>
-                            <a href="{{ url('auth/forgot-password-cover') }}" class="small text-muted">
+                            <!-- <a href="{{ url('auth/forgot-password-cover') }}" class="small text-muted">
                                 {{ __('admin.forgot_password') ?? 'Forgot Password?' }}
-                            </a>
+                            </a> -->
                         </div>
                         <div class="input-group-icon mb-1">
                             <i class="ti ti-lock icon icon-inline-start"></i>
