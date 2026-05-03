@@ -8,30 +8,364 @@
 @section('title', __('admin.login_page'))
 
 @section('vendor-style')
-    <!-- Vendor -->
     @vite('resources/assets/vendor/libs/@form-validation/umd/styles/index.min.css')
 @endsection
 
 @section('page-style')
-    <!-- Page -->
-    @vite('resources/assets/vendor/scss/pages/page-auth.scss')
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Tajawal:wght@200;300;400;500;700;800;900&display=swap');
+        
+        :root {
+            --brand-dark: #225D5C;
+            --brand-light: #F2E8DC;
+            --brand-peach: #FFD6A8;
+            --brand-darker: #1D4E4D;
+            --text-dark: #22403F;
+            --text-muted: #8B9A9A;
+            --border-color: #E9E2D8;
+        }
+
+        .register-wrapper {
+            min-height: 100vh;
+            display: flex;
+            align-items: stretch;
+            background-color: white;
+            font-family: 'cairo', sans-serif;
+            position: relative;
+            flex-direction: column;
+        }
+
+        @media (min-width: 992px) {
+            .register-wrapper {
+                flex-direction: row;
+            }
+        }
+
+        .register-lang-fixed {
+            position: fixed;
+            top: 0.75rem;
+            right: 0.75rem;
+            z-index: 1080;
+        }
+
+        [dir="rtl"] .register-lang-fixed {
+            right: auto;
+            left: 0.75rem;
+        }
+
+        .lang-switcher-register .register-lang-btn {
+            border: 1px solid var(--brand-dark);
+            color: var(--brand-dark);
+            background: #fff;
+            border-radius: 50rem;
+            font-weight: 600;
+            font-size: 0.8rem;
+            padding: 0.35rem 0.85rem;
+        }
+
+        .lang-switcher-register .register-lang-btn:hover,
+        .lang-switcher-register .register-lang-btn:focus {
+            background: var(--brand-dark);
+            color: var(--brand-peach);
+            border-color: var(--brand-dark);
+        }
+
+        /* Left panel (desktop) */
+        .register-left {
+            background-image: url("{{ asset('fogleft.png') }}");
+            background-size: cover;
+            background-position: right center;
+            color: var(--brand-peach);
+            display: none;
+            position: relative;
+        }
+
+        [dir="rtl"] .register-left {
+            background-image: url("{{ asset('fogright.png') }}");
+            background-position: left center;
+        }
+
+        @media (min-width: 992px) {
+            .register-left {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 50%;
+            }
+        }
+
+        .register-left-content {
+            text-align: center;
+            padding: 2rem;
+            max-width: 450px;
+            z-index: 2;
+        }
+
+        .register-left h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--brand-peach);
+        }
+
+        .register-left .logo-circle {
+            width: 100px;
+            height: 100px;
+            background: var(--brand-peach);
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .register-left .logo-circle img {
+            width: 70px;
+            height: 70px;
+        }
+
+        .register-left p {
+            font-size: 0.95rem;
+            line-height: 1.8;
+            color: var(--brand-peach);
+            margin-bottom: 2rem;
+        }
+
+        .register-left .bottom-links {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        /* Right panel (form) */
+        .register-right {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1rem;
+            background: white;
+        }
+
+        @media (min-width: 992px) {
+            .register-right {
+                width: 50%;
+                background: white;
+            }
+        }
+
+        .register-card {
+            background: #FFFBF7;
+            border-radius: 1.5rem;
+            border: 1px solid var(--border-color);
+            padding: 2rem;
+            width: 100%;
+            max-width: 780px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.05);
+            margin-top: -45px;
+        }
+
+        @media (min-width: 768px) {
+            .register-card {
+                padding: 2.5rem;
+                border: none;
+                background: white;
+                box-shadow: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .register-card {
+                height: auto;
+                overflow: visible;
+            }
+        }
+
+        .register-title {
+            color: var(--brand-dark);
+            font-weight: 800;
+            font-size: 1.8rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        /* Form styles */
+        .form-label-bs {
+            color: var(--brand-dark);
+            font-weight: 600;
+            font-size: 0.8rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .input-group-icon {
+            position: relative;
+        }
+
+        .input-group-icon .icon {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--brand-dark);
+            opacity: 0.7;
+            z-index: 5;
+        }
+
+        .input-group-icon .icon-inline-start {
+            inset-inline-start: 12px;
+            inset-inline-end: auto;
+        }
+
+        .input-group-icon .icon-inline-end {
+            inset-inline-end: 12px;
+            inset-inline-start: auto;
+        }
+
+        .form-control-custom {
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            background-color: var(--brand-light);
+            color: var(--text-dark);
+            font-size: 0.95rem;
+            padding: 0.65rem 1rem;
+            width: 100%;
+            transition: all 0.2s;
+        }
+
+        .form-control-custom:focus {
+            border-color: var(--brand-dark);
+            box-shadow: 0 0 0 0.2rem rgba(34,93,92,0.2);
+            background-color: white;
+        }
+
+        @media (min-width: 768px) {
+            .form-control-custom {
+                background-color: rgba(255,214,168,0.3);
+            }
+        }
+
+        .form-control-custom.pad-inline-start {
+            padding-inline-start: 2.35rem;
+        }
+
+        .form-control-custom.pad-inline-end {
+            padding-inline-end: 2.35rem;
+        }
+
+        .form-check-input {
+            background-color: white;
+            border-color: var(--brand-dark);
+        }
+
+        .form-check-input:checked {
+            background-color: var(--brand-dark) !important;
+            border-color: var(--brand-dark);
+        }
+
+        .btn-register {
+            background-color: var(--brand-dark) !important;
+            color: var(--brand-peach) !important;
+            font-weight: 700 !important;
+            border-radius: 50rem !important;
+            padding: 0.65rem 3rem !important;
+            transition: 0.2s !important;
+            border: none !important;
+        }
+
+        .btn-register:hover {
+            background-color: var(--brand-darker);
+            color: var(--brand-peach);
+        }
+
+        .btn-register:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .alert-status {
+            font-size: 0.85rem;
+            border-radius: 0.75rem;
+        }
+
+        /* Mobile top banner */
+        .mobile-welcome {
+            background: var(--brand-dark) !important;
+            border-radius: 0 0 34px 34px !important;
+            padding: 1rem 1rem 1.5rem !important;
+            text-align: center;
+            display: block !important;
+        }
+
+        .mobile-welcome h2 {
+            color: var(--brand-peach) !important;
+        }
+
+        @media (min-width: 992px) {
+            .mobile-welcome {
+                display: none !important;
+            }
+        }
+
+        .mobile-welcome .logo-sm {
+            width: 50px !important;
+            height: 50px !important;
+            background: var(--brand-peach) !important;
+            border-radius: 50% !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            margin-bottom: 0.5rem !important;
+        }
+
+        .mobile-welcome .logo-sm img {
+            width: 36px;
+            height: 36px;
+        }
+
+        .form-control-custom::placeholder {
+            color: var(--brand-dark);
+            opacity: 0.5;
+        }
+
+        .form-control-custom:-ms-input-placeholder {
+            opacity: 0.5;
+        }
+
+        .form-control-custom::-moz-placeholder {
+            opacity: 0.5;
+        }
+        input[type="checkbox"] , input[type="checkbox"]:checked {
+            background-color: var(--brand-dark);
+            border-color: var(--brand-dark);
+        }
+    </style>
 @endsection
 
 @section('vendor-script')
     <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
-
     @vite([
-    'resources/assets/vendor/libs/@form-validation/umd/bundle/popular.min.js',
-    'resources/assets/vendor/libs/@form-validation/umd/plugin-bootstrap5/index.min.js',
-    'resources/assets/vendor/libs/@form-validation/umd/plugin-auto-focus/index.min.js'
+        'resources/assets/vendor/libs/@form-validation/umd/bundle/popular.min.js',
+        'resources/assets/vendor/libs/@form-validation/umd/plugin-bootstrap5/index.min.js',
+        'resources/assets/vendor/libs/@form-validation/umd/plugin-auto-focus/index.min.js'
     ])
 @endsection
 
 @section('page-script')
     @vite('resources/assets/js/pages-auth.js')
-
     <script>
         $(document).ready(function() {
+            // Password toggle
+            $('.toggle-password').click(function() {
+                let input = $(this).siblings('input');
+                let icon = $(this).find('i');
+                if (input.attr('type') == 'password') {
+                    input.attr('type', 'text');
+                    icon.removeClass('ti-eye-off').addClass('ti-eye');
+                } else {
+                    input.attr('type', 'password');
+                    icon.removeClass('ti-eye').addClass('ti-eye-off');
+                }
+            });
+
             $("#frmLogin").on("submit", function(event) {
                 event.preventDefault();
 
@@ -56,20 +390,16 @@
                             window.location.href = "{{ route('admin.cp') }}";
                         } else {
                             $("#alertError").show();
-                            $('#listError').html(data.message);
+                            $('#listError').html(response.message || 'Login failed');
                         }
 
-                        $("html, body").animate({
-                            scrollTop: 0
-                        }, {
-                            duration: 1500,
-                        });
+                        $("html, body").animate({ scrollTop: 0 }, { duration: 1500 });
                         $(".submitFrom span").html('{{ __('admin.login') }}');
                         $('.submitFrom').prop('disabled', false);
                     },
                     error: function(response) {
                         $("#alertError").show();
-                        var errors = response.responseJSON.errors;
+                        var errors = response.responseJSON?.errors;
                         if (errors) {
                             for (var error in errors) {
                                 var ul = document.getElementById("listError");
@@ -78,14 +408,10 @@
                                 ul.appendChild(li);
                             }
                         } else {
-                            $('#listError').html(response.responseJSON.message);
+                            $('#listError').html(response.responseJSON?.message || 'Login failed with status ' + response.status);
                         }
 
-                        $("html, body").animate({
-                            scrollTop: 0
-                        }, {
-                            duration: 1500,
-                        });
+                        $("html, body").animate({ scrollTop: 0 }, { duration: 1500 });
                         $(".submitFrom span").html('{{ __('admin.login') }}');
                         $('.submitFrom').prop('disabled', false);
                     }
@@ -96,84 +422,97 @@
 @endsection
 
 @section('content')
-    <div class="authentication-wrapper authentication-cover authentication-bg">
-        <div class="authentication-inner row">
-            
-            <!-- /Left Text -->
-            <div class="d-none d-lg-flex col-lg-7 p-0">
-                <div class="auth-cover-bg auth-cover-bg-color d-flex justify-content-center align-items-center">
-                    <img src="{{ asset('assets/img/illustrations/auth-login-illustration-' . $configData['style'] . '.png') }}"
-                        alt="auth-login-cover" class="img-fluid my-5 auth-illustration"
-                        data-app-light-img="illustrations/auth-login-illustration-light.png"
-                        data-app-dark-img="illustrations/auth-login-illustration-dark.png">
+<div class="register-wrapper" dir="{{ app()->getLocale() === 'ar' ? 'rtl' : 'ltr' }}">
+    <div class="register-lang-fixed">
+        @include('components.lang_switcher', ['variant' => 'register'])
+    </div>
 
-                    <img src="{{ asset('assets/img/illustrations/bg-shape-image-' . $configData['style'] . '.png') }}"
-                        alt="auth-login-cover" class="platform-bg"
-                        data-app-light-img="illustrations/bg-shape-image-light.png"
-                        data-app-dark-img="illustrations/bg-shape-image-dark.png">
-                </div>
+    <!-- Mobile Welcome Banner -->
+    <div class="mobile-welcome w-100">
+        <div class="logo-sm">
+            <img src="{{ asset('logo_test.svg') }}" alt="{{ __('admin.meta_title') ?? 'Admin' }}">
+        </div>
+        <h2 class="h5 fw-bold mt-2">{{ __('admin.welcome_back_mobile') ?? 'Welcome Back' }}</h2>
+        <p class="small mb-0" style="color:#F2E8DC;">{{ __('admin.signin_prompt_mobile') ?? 'Login to your admin panel' }}</p>
+    </div>
+
+    <!-- Left panel (desktop) -->
+    <div class="register-left">
+        <div class="register-left-content">
+            <h2>{{ __('admin.welcome_left_title') ?? 'Admin Access' }}</h2>
+            <div class="logo-circle">
+                <img src="{{ asset('logo_test.svg') }}" alt="{{ __('admin.meta_title') ?? 'Admin' }}">
             </div>
-            <!-- /Left Text -->
-
-            <!-- Login -->
-            <div class="d-flex col-12 col-lg-5 align-items-center p-sm-5 p-4">
-                
-                <div class="w-px-400 mx-auto">
-                    <!-- Logo -->
-                    <div class="app-brand mb-4 text-center text-lg-start">
-                        <a href="#" class="app-brand-link gap-2 d-inline-flex justify-content-center justify-content-lg-start">
-                            <span class="app-brand-logo demo">@include('_partials.macros', ['height' => 20, 'withbg' => 'fill: #fff;'])</span>
-                        </a>
-                    </div>
-                    <!-- /Logo -->
-                    <h3 class=" mb-1">{{ __('admin.welcome_brand', ['brand' => $brand]) }}</h3>
-                    <p class="mb-4">{{ __('admin.signin_prompt') }}</p>
-
-                    <div id="alertError" class="alert alert-danger mt-4" role="alert" style="display:none;">
-                        <h4 class="alert-heading">{{ __('general.fail') }}</h4>
-                        <div class="alert-body">
-                            <div class="alert-text font-weight-bold">
-                                <div id="listError"></div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <form id="frmLogin" class="mb-3">
-                        @csrf
-                        <div class="mb-3">
-                            <label for="email" class="form-label">{{ __('field.email') }}</label>
-                            <input type="text" class="form-control" id="email" name="email"
-                                placeholder="{{ __('general.enter') . ' ' . __('field.email') }}" autofocus>
-                        </div>
-                        <div class="mb-3 form-password-toggle">
-                            <div class="d-flex justify-content-between">
-                                <label class="form-label" for="password">{{ __('field.password') }}</label>
-                                {{-- <a href="{{ url('auth/forgot-password-cover') }}">
-                                    <small>Forgot Password?</small>
-                                </a> --}}
-                            </div>
-                            <div class="input-group input-group-merge">
-                                <input type="password" id="password" class="form-control" name="password"
-                                    placeholder="{{ __('general.enter') . ' ' . __('field.password') }}"
-                                    aria-describedby="password" />
-                                <span class="input-group-text cursor-pointer"><i class="ti ti-eye-off"></i></span>
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="remember-me">
-                                <label class="form-check-label" for="remember-me">
-                                    {{ __('admin.remember_me') }}
-                                </label>
-                            </div>
-                        </div>
-                        <button type="submit" class="btn btn-primary d-grid w-100 submitFrom">
-                            <span>{{ __('admin.login') }}</span>
-                        </button>
-                    </form>
-                </div>
+            <p>{{ __('admin.left_panel_text') ?? 'Manage your platform, monitor activity, and control all settings from one dashboard.' }}</p>
+            <div class="bottom-links fw-bold">
+                <span>{{ __('admin.contact_support') ?? 'Contact Support' }}</span> 
+                <span class="mx-2">|</span> 
+                <span>{{ __('admin.learn_more') ?? 'Learn More' }}</span>
             </div>
-            <!-- /Login -->
         </div>
     </div>
+
+    <!-- Right panel (form) -->
+    <div class="register-right">
+        <div class="register-card">
+            <h1 class="register-title">{{ __('admin.signin_title') ?? 'Sign In' }}</h1>
+
+            <!-- Alert -->
+            <div id="alertError" class="alert alert-danger alert-status d-none" role="alert">
+                <div id="listError"></div>
+            </div>
+
+            <form id="frmLogin" class="mb-3" enctype="multipart/form-data" novalidate>
+                @csrf
+                <div class="row g-3">
+                    <div class="col-12">
+                        <!-- Email -->
+                        <label class="form-label-bs">{{ __('field.email') }} <span class="text-danger">*</span></label>
+                        <div class="input-group-icon mb-1">
+                            <i class="ti ti-mail icon icon-inline-start"></i>
+                            <input type="email" name="email" id="email" class="form-control-custom pad-inline-start" 
+                                   placeholder="{{ __('general.enter') . ' ' . __('field.email') }}" 
+                                   autofocus required>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <!-- Password -->
+                        <div class="d-flex justify-content-between">
+                            <label class="form-label-bs">{{ __('field.password') }} <span class="text-danger">*</span></label>
+                            <a href="{{ url('auth/forgot-password-cover') }}" class="small text-muted">
+                                {{ __('admin.forgot_password') ?? 'Forgot Password?' }}
+                            </a>
+                        </div>
+                        <div class="input-group-icon mb-1">
+                            <i class="ti ti-lock icon icon-inline-start"></i>
+                            <input type="password" name="password" id="password" class="form-control-custom pad-inline-start pad-inline-end" 
+                                   placeholder="{{ __('general.enter') . ' ' . __('field.password') }}" required>
+                            <span class="icon icon-inline-end toggle-password" style="cursor:pointer;">
+                                <i class="ti ti-eye-off"></i>
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <!-- Remember Me -->
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="remember-me" name="remember">
+                            <label class="form-check-label text-muted small" for="remember-me">
+                                {{ __('admin.remember_me') }}
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit -->
+                <div class="text-center mt-4">
+                    <button type="submit" class="btn btn-register submitFrom">
+                        <span>{{ __('admin.login') }}</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 @endsection
