@@ -11,7 +11,9 @@ return [
     'left_panel_text' => 'لوزوري نظام متكامل لإدارة الصالونات والسبا يسهّل الحجوزات، إدارة العملاء، جدولة الموظفين، ويعزز نمو أعمالك بكفاءة وأمان. ملاحظة: لوزوري أحد مشاريع Techno Code IT LLC.',
     'contact_us' => 'اتصل بنا',
     'discover_more' => 'اكتشف المزيد',
+
     'create_account' => 'أنشئ حسابك',
+
     'label_name' => 'اسم المركز',
     'placeholder_name' => 'اسم المركز',
     'label_email' => 'البريد الإلكتروني للمركز',
@@ -33,8 +35,6 @@ return [
     'label_iban' => 'رقم الآيبان IBAN',
     'iban_optional' => '(اختياري)',
     'placeholder_iban' => 'xxxx xxxx xxxx xxxx xxx',
-    'placeholder_iban_suffix' => 'xx xxxx xxxx xxxx xxx',
-    'iban_ae_fixed' => 'رمز الدولة AE مضمّن تلقائياً؛ أدخل باقي رقم الآيبان هنا.',
 
     'label_currency' => 'العملة',
 
@@ -72,6 +72,15 @@ return [
     'and' => 'و',
     'privacy_policy' => 'سياسة الخصوصية',
     'register' => 'تسجيل',
-    'iban_warning' => 'لا تقم بإضافة AE لرقم البنك فقط الأرقام التي تليه',
-    'placeholder_iban_suffix' => 'xx xxxx xxxx xxxx xxx',
+    'signin_title' => 'تسجيل الدخول',
+    'welcome_back' => 'مرحبا بعودتك',
+    'signin_prompt_mobile' => 'تسجيل الدخول إلى حسابك',
+    'welcome_left_title' => 'مرحبا بعودتك!',
+    'left_panel_text' => 'دخولك إلى لوحة التحكم الخاصة بمركزك، إدارة الفصول، وتتبع نمو عملك.',
+    'contact_support' => 'اتصل بالدعم',
+    'learn_more' => 'تعرف على المزيد',
+    'forgot_password' => 'هل نسيت كلمة المرور؟',
+    'remember_me' => 'تذكرني',
+    'login' => 'تسجيل الدخول',
+    'logining' => 'جاري التسجيل...',
 ];

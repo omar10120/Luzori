@@ -35,8 +35,6 @@ return [
     'label_iban' => 'IBAN',
     'iban_optional' => '(optional)',
     'placeholder_iban' => 'AExx xxxx xxxx xxxx xxx',
-    'placeholder_iban_suffix' => 'xx xxxx xxxx xxxx xxx',
-    'iban_ae_fixed' => 'Country code AE is always included; enter the rest of your IBAN here.',
 
     'label_currency' => 'Currency',
 
@@ -75,6 +73,15 @@ return [
     'and' => 'and',
     'privacy_policy' => 'Privacy Policy',
     'register' => 'Register',
-    'iban_warning' => 'dont include AE with you iban (only the numbers after AE )',
-    'placeholder_iban_suffix' => 'xx xxxx xxxx xxxx xxx',
+    'signin_title' => 'Sign In',
+    'welcome_back' => 'Welcome Back',
+    'signin_prompt_mobile' => 'Login to your account',
+    'welcome_left_title' => 'Welcome Back!',
+    
+    'contact_support' => 'Contact Support',
+    'learn_more' => 'Learn More',
+    'forgot_password' => 'Forgot Password?',
+    'remember_me' => 'Remember Me',
+    'login' => 'Login',
+    'logining' => 'Logging in...',
 ];

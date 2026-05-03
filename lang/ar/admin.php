@@ -31,7 +31,7 @@ return [
     'Choose Type'                           => 'أختر النوع',
     'expenses_providers'                    => 'مقدمي المصروفات',
     // Auth page additions
-    'welcome_brand'                         => 'مرحباً بك في :brand! 👋',
+    'welcome_brand'                         => 'مرحباً بك في :brand! ',
     'signin_prompt'                         => 'يرجى تسجيل الدخول إلى حسابك والبدء الآن',
     'remember_me'                           => 'تذكرني',
     'enter_verification_code'               => 'ادخل رمز التأكيد',
@@ -45,5 +45,15 @@ return [
     'Choose Commission'                     => 'اختر خصم',
     'searching'                             => 'جاري البحث',
     'sure_edit'                             => 'هل تريد تأكيد الحجز',
+    'lower_case_letters_numbers_and_hyphens' => 'أحرف صغيرة، أرقام، أحرف. 3–50 حرفاً.',
+    'js_domain_format' => 'استخدم أحرف صغيرة وأرقام وشرطات فقط. بدون مسافات أو شرطات في البداية أو النهاية.',
+    'js_phone_len' => 'يجب أن يتكون رقم الهاتف من 6 إلى 15 رقماً.',
+    'js_terms' => 'يجب الموافقة على الشروط للمتابعة.',
+    'i_agree_to_the' => 'أوافق على',
+    'terms_of_service' => 'شروط الخدمة',
+    'and' => 'و',
+    'privacy_policy' => 'سياسة الخصوصية',
+    'register' => 'تسجيل',
+    'mobile_welcome_sub' => 'نظام متكامل لإدارة الصالونات والسبا',
     
 ];

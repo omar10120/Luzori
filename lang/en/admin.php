@@ -45,6 +45,15 @@ return [
     'Choose Commission'                     => 'Choose Commission',
     'searching'                             => 'Searching',
     'you_do_not_have_permission_to_perform_this_action' => 'You do not have permission to perform this action',
-    'sure_edit'                             => 'are you sure you want to confirm booking'
+    'sure_edit'                             => 'are you sure you want to confirm booking',
+    'lower_case_letters_numbers_and_hyphens' => 'Lowercase letters, numbers, hyphens. 3–50 characters.',
+    'js_phone_len' => 'Phone must be 6–15 digits.',
+    'js_terms' => 'You must accept the terms to continue.',
+    'i_agree_to_the' => 'I agree to the',
+    'terms_of_service' => 'Terms of Service',
+    'and' => 'and',
+    'privacy_policy' => 'Privacy Policy',
+    'register' => 'Register',
+    'mobile_welcome_sub' => 'All-in one salon & spa management system',
     
 ];

@@ -975,7 +975,7 @@
                 return String(v || '')
                     .replace(/\s/g, '')
                     .replace(/^AE/gi, '')
-                    .substring(0, 19);
+                    .substring(0, 21);
             }
 
             function syncBankNameFromIban() {
@@ -1203,10 +1203,10 @@
                         <div class="iban-field mb-3">
                             <div class="iban-inner">
                                 <span class="iban-prefix" aria-hidden="true">AE</span>
-                                <input type="text"
+                                <input type="number"
                                     id="iban_rest"
                                     class="form-control-custom iban-rest"
-                                    maxlength="19"
+                                    maxlength="21"
                                     placeholder="{{ __('center_register.placeholder_iban_suffix') }}"
                                     autocomplete="off"
                                     inputmode="text"
