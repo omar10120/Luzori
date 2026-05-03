@@ -60,6 +60,6 @@ return [
     'left_panel_text'=>  'Lozouri is a comprehensive salon & spa management system that simplifies bookings, customer management, staff scheduling, and boosts your business efficiency and security. Note: Lozouri is one of Techno Code IT LLC\'s projects.',
     'learn_more' => 'Learn More',
     'contact_support' => 'Contact Support',
-    'welcome_left_title' => 'Welcome Back'
+    'welcome_left_title' => 'Welcome Back!'
     
 ];
