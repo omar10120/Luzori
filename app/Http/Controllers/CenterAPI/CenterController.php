@@ -28,20 +28,12 @@ class CenterController extends Controller
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function index(Request $request)
+    public function index(Request $request, CenterService $centerService)
     {
-        $query = Center::where('status', 'approve');
+        $filteredCenters = $centerService->getFilteredCenters($request);
 
-        if ($request->filled('rate')) {
-            $rate = trim($request->query('rate'), '"');
-            $query->where('rate', $rate);
-        }
-
-        $centers = $query->get();
-
-        if ($centers->count() > 0) {
-            $centers = CenterResource::collection($centers);
-            return MyHelper::responseJSON(__('api.doneSuccessfully'), Response::HTTP_OK, $centers);
+        if (count($filteredCenters) > 0) {
+            return MyHelper::responseJSON(__('api.doneSuccessfully'), Response::HTTP_OK, $filteredCenters);
         } else {
             return MyHelper::responseJSON(__('api.noDataFound'), Response::HTTP_NOT_FOUND);
         }

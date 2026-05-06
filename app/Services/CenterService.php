@@ -22,6 +22,113 @@ class CenterService
         return Center::withTrashed()->find($id);
     }
 
+    public function getFilteredCenters($request)
+    {
+        $query = Center::where('status', 'approve');
+
+        if ($request->filled('rate')) {
+            $rate = trim($request->query('rate'), '"');
+            $query->where('rate', $rate);
+        }
+
+        $centers = $query->get();
+        $filteredCenters = [];
+
+        $originalDb = Config::get('database.connections.mysql.database');
+
+        foreach ($centers as $center) {
+            if ($center->database) {
+                try {
+                    Config::set('database.connections.mysql.database', $center->database);
+                    DB::purge('mysql');
+                    DB::reconnect('mysql');
+
+                    // Fetch data from the switched mysql connection
+                    $center->categories = \App\Models\CategoryService::with('services.workers.vacations')->get();
+                    $center->services = \App\Models\Service::with('workers.vacations')->where('is_top', true)->get();
+                    $center->packages = \App\Models\Package::all();
+
+                    // Same user_packages logic as show()
+                    $userId = auth('center_api')->id();
+                    if ($userId) {
+                        $center->user_packages = \App\Models\UserPackage::where('user_id', $userId)
+                            ->with(['package.translation'])
+                            ->get();
+                        
+                        $center->user_used_packages = \App\Models\UserUsedPackage::where('user_id', $userId)
+                            ->with(['service.translation'])
+                            ->get();
+                    }
+
+                    $match = true;
+
+                    // Filter by specific category_id
+                    if ($request->filled('category_id')) {
+                        $matchCategory = false;
+                        foreach ($center->categories as $cat) {
+                            if ($cat->id == $request->category_id) {
+                                $matchCategory = true;
+                                break;
+                            }
+                        }
+                        if (!$matchCategory) {
+                            $match = false;
+                        }
+                    }
+
+                    // Generic search (matches center name, category name, or service name)
+                    if ($match && $request->filled('search')) {
+                        $matchSearch = false;
+                        $searchQuery = mb_strtolower($request->search);
+
+                        // Check Center Name
+                        if (str_contains(mb_strtolower($center->name ?? ''), $searchQuery)) {
+                            $matchSearch = true;
+                        }
+
+                        // Check Categories
+                        if (!$matchSearch) {
+                            foreach ($center->categories as $cat) {
+                                if (str_contains(mb_strtolower($cat->name ?? ''), $searchQuery)) {
+                                    $matchSearch = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        // Check Services
+                        if (!$matchSearch) {
+                            foreach ($center->services as $srv) {
+                                if (str_contains(mb_strtolower($srv->name ?? ''), $searchQuery)) {
+                                    $matchSearch = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (!$matchSearch) {
+                            $match = false;
+                        }
+                    }
+
+                    if ($match) {
+                        // RESOLVE the resource fully to a pure array NOW while the DB is still switched to this tenant!
+                        $filteredCenters[] = json_decode(\App\Http\Resources\CenterResource::make($center)->toJson(), true);
+                    }
+                } catch (\Exception $e) {
+                    // Skip center if database connection fails
+                }
+            }
+        }
+
+        // Restore original DB
+        Config::set('database.connections.mysql.database', $originalDb);
+        DB::purge('mysql');
+        DB::reconnect('mysql');
+
+        return $filteredCenters;
+    }
+
     public function add($request)
     {
         try {

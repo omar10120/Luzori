@@ -36,6 +36,7 @@ class CenterResource extends JsonResource
         if (isset($this->categories)) {
             $res['categories'] = CategoryServiceResource::collection($this->categories);
         }
+
         if (isset($this->services)) {
             $res['services'] = ServiceResource::collection($this->services);
         }
