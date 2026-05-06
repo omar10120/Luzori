@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\LoginController;
 use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\SettingController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\GlobalCategoryController;
 
 /*
 |--------------------------------------------------------------------------
@@ -120,6 +121,14 @@ Route::group(['middleware' => 'auth:admin'], function () {
         Route::controller(SettingController::class)->group(function () {
             Route::get('index', 'index')->name('index')->can('VIEW_SETTINGS');
             Route::post('updateOrCreate', 'updateOrCreate')->name('updateOrCreate')->can('UPDATE_SETTINGS');
+        });
+    });
+
+    Route::group(['prefix' => 'global-categories', 'as' => 'global-categories.'], function () {
+        Route::controller(GlobalCategoryController::class)->group(function () {
+            Route::get('index', 'index')->name('index');
+            Route::get('create', 'create')->name('create');
+            Route::post('updateOrCreate', 'updateOrCreate')->name('updateOrCreate');
         });
     });
 });

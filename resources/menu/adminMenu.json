@@ -15,7 +15,8 @@
                 "VIEW_INFOS",
                 "VIEW_PAGES",
                 "VIEW_SETTINGS",
-                "VIEW_USERS"
+                "VIEW_USERS",
+                "VIEW_GLOBALCATEGORIES"
             ]
         },
         {
@@ -46,6 +47,17 @@
             ],
             "permissions": [
                 "VIEW_CENTERS"
+            ]
+        },
+        {
+            "url": "admin/global-categories/index",
+            "name": "globalcategories",
+            "external_icon": "categories",
+            "slug": [
+                "global-categories"
+            ],
+            "permissions": [
+                "VIEW_GLOBALCATEGORIES"
             ]
         },
         {

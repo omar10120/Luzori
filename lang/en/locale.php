@@ -60,5 +60,7 @@ return [
     'sales'                             => 'Sales',
     'workers'                           => 'employees',
     'withdrawal_requests'               => 'Withdrawal Requests',
+    'globalcategories'                  => 'Global Categories',
+    'global-categories'                 => 'Global Categories',
 
 ];

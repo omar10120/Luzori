@@ -38,7 +38,8 @@ class GlobalCategoryService
             $center = Center::findOrFail($center);
         }
 
-        $center->globalCategories()->sync($categoryIds);
+        // $center->globalCategories()->sync($categoryIds);
+        $center->globalCategories()->syncWithoutDetaching($categoryIds);
     }
 
     /**
@@ -52,5 +53,25 @@ class GlobalCategoryService
         return Center::whereHas('globalCategories', function ($query) use ($slug) {
             $query->where('slug', $slug);
         })->where('status', 'approve')->get();
+    }
+
+
+    public function store(array $data)
+    {
+        if (empty($data['slug'])) {
+            $data['slug'] = Str::slug($data['name']);
+        }
+        return $this->crudService->updateOrCreate('GlobalCategory', $data);
+    }
+
+    public function update(array $data, $id)
+    {
+        $data['id'] = $id;
+        return $this->crudService->updateOrCreate('GlobalCategory', $data);
+    }
+
+    public function delete($id)
+    {
+        return $this->crudService->delete('GlobalCategory', $id);
     }
 }

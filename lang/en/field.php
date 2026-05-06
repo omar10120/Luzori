@@ -345,4 +345,5 @@ return [
     'add_users_to'                    => 'Add Users To Package',
     'matching_selected_services'      => 'Matching Selected Services',
     'package_type'                    => 'Package Type',
+    'slug'                            => 'Slug',
     ];

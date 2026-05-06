@@ -882,5 +882,31 @@ class CenterPermissionSeeder extends Seeder
             'guard_name' => 'center',
         ]);
         // END USERS PACKAGES
+        // START GLOBAL CATEGORIES
+        Permission::create([
+            'name' => 'VIEW_GLOBAL_CATEGORIES',
+            'name_ar' => 'عرض الفئات العامة',
+            'group' => 'Global Categories',
+            'guard_name' => 'center',
+        ]);
+        Permission::create([
+            'name' => 'CREATE_GLOBAL_CATEGORIES',
+            'name_ar' => 'إضافة فئة عامة',
+            'group' => 'Global Categories',
+            'guard_name' => 'center',
+        ]);
+        Permission::create([
+            'name' => 'UPDATE_GLOBAL_CATEGORIES',
+            'name_ar' => 'تعديل فئة عامة',
+            'group' => 'Global Categories',
+            'guard_name' => 'center',
+        ]);
+        Permission::create([
+            'name' => 'DELETE_GLOBAL_CATEGORIES',
+            'name_ar' => 'حذف فئة عامة',
+            'group' => 'Global Categories',
+            'guard_name' => 'center',
+        ]);
+        // END GLOBAL CATEGORIES
     }
 }
