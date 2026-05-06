@@ -31,6 +31,20 @@ class CenterService
             $query->where('rate', $rate);
         }
 
+        if ($request->filled('global_category_slug')) {
+            $slug = trim($request->query('global_category_slug'), '"');
+            $query->whereHas('globalCategories', function ($q) use ($slug) {
+                $q->where('slug', $slug);
+            });
+        }
+
+        if ($request->filled('global_category_id')) {
+            $id = $request->query('global_category_id');
+            $query->whereHas('globalCategories', function ($q) use ($id) {
+                $q->where('global_categories.id', $id);
+            });
+        }
+
         $centers = $query->get();
         $filteredCenters = [];
 

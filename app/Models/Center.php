@@ -86,4 +86,9 @@ class Center extends Authenticatable implements HasMedia
             $this->attributes['password'] = bcrypt($value);
         }
     }
+
+    public function globalCategories(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(GlobalCategory::class, 'center_global_category');
+    }
 }
