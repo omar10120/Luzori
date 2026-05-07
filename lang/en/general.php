@@ -164,5 +164,6 @@ return [
     'are_you_sure' => 'Are you sure?',
     'confirm_withdrawal_approval' => 'Are you sure you want to approve the withdrawal request? This means you have sent the money.',
     'new_purchase' => 'New Purchase',
-    'no_users' => 'No Users'
+    'no_users' => 'No Users',
+    'slug_hint' => 'slug hint'
 ];

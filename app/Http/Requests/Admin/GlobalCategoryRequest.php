@@ -4,7 +4,7 @@ namespace App\Http\Requests\Admin;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class UpdateGlobalCategoryRequest extends FormRequest
+class GlobalCategoryRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -21,11 +21,12 @@ class UpdateGlobalCategoryRequest extends FormRequest
      */
     public function rules(): array
     {
-        $id = $this->route('global_category') ?? $this->id;
+        $id = $this->input('id');
 
         return [
-            'name' => 'sometimes|string|max:255',
-            'slug' => 'sometimes|string|max:255|unique:global_categories,slug,' . $id,
+            'id' => 'nullable|integer',
+            'name' => 'required|string|max:255',
+            'slug' => 'required|string|max:255|unique:global_categories,slug,' . $id,
         ];
     }
 }

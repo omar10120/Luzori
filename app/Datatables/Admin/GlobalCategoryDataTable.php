@@ -52,7 +52,7 @@ class GlobalCategoryDataTable extends DataTable
 
     public function query(GlobalCategory $model): QueryBuilder
     {
-        return $model->query()->withTrashed()->orderBy($this->plural . '.id', 'DESC');
+        return $model->query()->withTrashed()->orderBy('global_categories.id', 'DESC');
     }
 
     public function html(): HtmlBuilder

@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\GlobalCategory;
 use App\Models\Center;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class GlobalCategoryService
 {

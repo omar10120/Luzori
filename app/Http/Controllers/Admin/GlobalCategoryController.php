@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Datatables\Admin\GlobalCategoryDataTable;
 use App\Helpers\MyHelper;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Admin\StoreGlobalCategoryRequest;
+use App\Http\Requests\Admin\GlobalCategoryRequest;
 use App\Services\GlobalCategoryService;
 use App\Services\CRUDService;
 use Illuminate\Http\Request;
@@ -37,16 +37,6 @@ class GlobalCategoryController extends Controller
 
     public function create(Request $request)
     {
-        // For GlobalCategories we might not have a specific VIEW/CREATE permission yet, 
-        // but following the pattern:
-        $canAction = isset($request->id) ? 'UPDATE' : 'CREATE';
-        $can = $canAction . '_GLOBAL_CATEGORIES';
-        
-        // Uncomment if permissions are seeded
-        if (!auth('admin')->user()->can($can)) {
-            return abort(401);
-        }
-
         $menu = __('locale.' . $this->plural);
         $menu_link = route($this->indexRoute);
 
@@ -63,19 +53,12 @@ class GlobalCategoryController extends Controller
             $requestUrl = route($this->updateOrCreateRoute, ['id' => $request->id]);
         }
 
-        $view = 'Admin.SubViews.' . $this->model . '.index';
+        $view = 'Admin.SubViews.GlobalCategories.index';
         return view($view, compact('item', 'requestUrl', 'title', 'menu', 'menu_link'));
     }
 
-    public function updateOrCreate(StoreGlobalCategoryRequest $request)
+    public function updateOrCreate(GlobalCategoryRequest $request)
     {
-        $canAction = isset($request->id) ? 'UPDATE' : 'CREATE';
-        $can = $canAction . '_GLOBAL_CATEGORIES';
-        
-        if (!auth('admin')->user()->can($can)) {
-            return abort(401);
-        }
-
         $item = $this->globalCategoryService->store($request->validated());
 
         if ($item) {
