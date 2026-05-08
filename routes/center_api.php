@@ -30,6 +30,7 @@ use App\Http\Controllers\CenterAPI\WeekDayController;
 use App\Http\Controllers\CenterAPI\WorkerController;
 use App\Http\Controllers\CenterAPI\CategoryServiceController;
 use App\Http\Controllers\CenterAPI\CenterController;
+use App\Http\Controllers\CenterAPI\GlobalCategoryController;
 use App\Http\Controllers\SMSController;
 use Illuminate\Support\Facades\Route;
 
@@ -49,6 +50,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('centers', [CenterController::class, 'index']);
 Route::get('centers/{id}', [CenterController::class, 'show']);
+Route::get('global-categories', [GlobalCategoryController::class, 'index']);
 
 Route::group(['prefix' => 'auth'], function () {
     Route::controller(AuthController::class)->group(function () {

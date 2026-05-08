@@ -40,7 +40,7 @@ class CenterGlobalCategoryController extends Controller
             ->where('database', $dbName)
             ->first();
 
-        $allCategories    = GlobalCategory::orderBy('name')->get();
+        $allCategories    = GlobalCategory::on('central')->orderBy('name')->get();
         $selectedIds      = $center ? $center->globalCategories->pluck('id')->toArray() : [];
         $requestUrl       = route($this->updateRoute);
 

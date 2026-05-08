@@ -36,6 +36,9 @@ class SetActiveCenter
         if ($request->is('app_api/info')) {
             return $next($request);
         }
+        if ($request->is('center_api/global-categories')) {
+            return $next($request);
+        }
             
 
         $domain = $request->header('domain');
