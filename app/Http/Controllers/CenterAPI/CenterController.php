@@ -47,7 +47,7 @@ class CenterController extends Controller
      */
     public function show($id)
     {
-        $center = Center::where('status', 'approve')->find($id);
+        $center = Center::where('status', 'approve')->with('globalCategories')->find($id);
 
         if ($center) {
             // Switch to center's database to fetch nested data
@@ -102,21 +102,5 @@ class CenterController extends Controller
         return MyHelper::responseJSON(__('api.unknownError'), Response::HTTP_INTERNAL_SERVER_ERROR);
     }
 
-    /**
-     * Sync global categories for a center.
-     *
-     * @param \App\Http\Requests\CenterAPI\SyncCenterGlobalCategoriesRequest $request
-     * @param \App\Services\GlobalCategoryService $globalCategoryService
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function syncGlobalCategories(\App\Http\Requests\CenterAPI\SyncCenterGlobalCategoriesRequest $request, \App\Services\GlobalCategoryService $globalCategoryService)
-    {
-        // Using center_id from request if provided (since auth is skipped for now), 
-        // fallback to auth if available
-        $centerId = $request->center_id ?? auth('center_user')->user()->center_id ?? auth('center_api')->id() ?? 1;
-
-        $globalCategoryService->syncCenterCategories($centerId, $request->category_ids);
-
-        return MyHelper::responseJSON(__('api.doneSuccessfully'), Response::HTTP_OK);
-    }
+    
 }

@@ -62,6 +62,8 @@ return [
     'withdrawal_requests'               => 'طلبات السحب',
     'globalcategories'                  => 'الفئات العامة',
     'global-categories'                 => 'الفئات العامة',
+    'global_categories'                 => 'الفئات العامة',
+    
     
     
     

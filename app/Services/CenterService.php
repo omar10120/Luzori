@@ -24,7 +24,7 @@ class CenterService
 
     public function getFilteredCenters($request)
     {
-        $query = Center::where('status', 'approve');
+        $query = Center::where('status', 'approve')->with('globalCategories');
 
         if ($request->filled('rate')) {
             $rate = trim($request->query('rate'), '"');

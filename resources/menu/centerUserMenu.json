@@ -162,6 +162,29 @@
       ]
     },
     {
+      "name": "global_categories",
+      "external_icon": "categories",
+      "slug": [
+        "global_categories"
+      ],
+      "permissions": [
+        "VIEW_CATEGORIES"
+      ],
+      "submenu": [
+        {
+          "url": "center_user/global_categories/index",
+          "name": "global_categories",
+          "icon": "categories",
+          "slug": [
+            "global-categories"
+          ],
+          "permissions": [
+            "VIEW_CATEGORIES"
+          ]
+        }
+      ]
+    },
+    {
       "name": "products",
       "external_icon": "products",
       "slug": [

@@ -27,6 +27,7 @@ class CenterResource extends JsonResource
             return $media->getUrl();
         })->toArray();
         $res['rate'] = $this->rate;
+        $res['global_categories'] = GlobalCategoryResource::collection($this->whenLoaded('globalCategories'));
         $res['created_at'] = $this->created_at;
 
         // Include nested data if provided via attributes or explicitly loaded

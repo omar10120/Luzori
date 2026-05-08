@@ -39,6 +39,7 @@ use App\Http\Controllers\CenterUser\PageController;
 use App\Http\Controllers\CenterUser\SettingController;
 use App\Http\Controllers\CenterUser\WeekDayController;
 use App\Http\Controllers\CenterUser\UserPackageController;
+use App\Http\Controllers\CenterUser\CenterGlobalCategoryController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -330,6 +331,13 @@ Route::group(['middleware' => 'auth_center_user:center_user'], function () {
 
     Route::group(['prefix' => 'settings', 'as' => 'settings.'], function () {
         Route::controller(SettingController::class)->group(function () {
+            Route::get('index', 'index')->name('index');
+            Route::post('updateOrCreate', 'updateOrCreate')->name('updateOrCreate');
+        });
+    });
+
+    Route::group(['prefix' => 'global_categories', 'as' => 'global_categories.'], function () {
+        Route::controller(CenterGlobalCategoryController::class)->group(function () {
             Route::get('index', 'index')->name('index');
             Route::post('updateOrCreate', 'updateOrCreate')->name('updateOrCreate');
         });

@@ -13,6 +13,7 @@ class GlobalCategory extends Model
 {
     use HasFactory, CreatedAtTrait, UpdatedAtTrait, SoftDeletes;
 
+    protected $connection = 'central';
     protected $table = 'global_categories';
 
     protected $fillable = [

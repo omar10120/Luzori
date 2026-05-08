@@ -62,5 +62,7 @@ return [
     'withdrawal_requests'               => 'Withdrawal Requests',
     'globalcategories'                  => 'Global Categories',
     'global-categories'                 => 'Global Categories',
+    'global_categories'                 => 'Global Categories',
+    
 
 ];

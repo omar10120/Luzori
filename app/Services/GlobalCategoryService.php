@@ -39,8 +39,7 @@ class GlobalCategoryService
             $center = Center::findOrFail($center);
         }
 
-        // $center->globalCategories()->sync($categoryIds);
-        $center->globalCategories()->syncWithoutDetaching($categoryIds);
+        $center->globalCategories()->sync($categoryIds);
     }
 
     /**
