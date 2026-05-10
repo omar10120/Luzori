@@ -46,7 +46,10 @@ class GlobalCategoryDataTable extends DataTable
             ->editColumn('name', function ($row) {
                 return \App\Helpers\MyHelper::truncateWithReadMore($row->name ?? '');
             })
-            ->rawColumns(['status', 'name', 'action'], true)
+              ->editColumn('image', function ($row) {
+                return '<img src="' . $row->image . '" style="width:75px;height:75px;" >';
+            })
+            ->rawColumns(['image','status', 'name', 'action'], true)
             ->setRowId('id');
     }
 
@@ -114,6 +117,7 @@ class GlobalCategoryDataTable extends DataTable
     {
         return [
             Column::make('id')->title('#'),
+            Column::computed('image')->searchable(false)->title(__('field.image')),
             Column::make('name')->title(__('field.name')),
             Column::make('nameAr')->title(__('field.nameAr')),
             Column::make('slug')->title(__('field.slug')),

@@ -8,6 +8,7 @@
 @section('content')
     <div class="container">
         @include('Admin.Components.breadcrumbs')
+          
 
         <div class="row">
             <form class="pt-0" id="frmSubmit">
@@ -71,6 +72,19 @@
                                     <small class="text-muted">{{ __('general.slug_hint', [], app()->getLocale()) ?? 'Used for filtering (e.g. hair-salon, spa)' }}</small>
                                 </div>
                             </div>
+                            <div class="col-md-6">
+                                <div class="mb-4">
+                               
+                                        @include('Admin.Components.image', [
+                                            'item' => $item,
+                                            'name' => 'image',
+                                            'model' => 'global-category',
+                                        ])
+                             
+                               
+                                </div>
+                            </div>
+
                         </div>
                     </div>
                     <div class="card-footer">
@@ -93,6 +107,9 @@
 @endsection
 
 @section('page-script')
+    @include('Admin.Components.image-js')
+
+    
     <script>
         // Auto-generate slug from name if slug is empty
         document.getElementById('name').addEventListener('input', function () {
@@ -110,6 +127,15 @@
         document.getElementById('slug').addEventListener('input', function () {
             this.dataset.touched = 'true';
         });
+
+        document.getElementById('image').onchange = evt => {
+            const [file] = document.getElementById('image').files
+            if (file) {
+                const showImage = document.getElementById("show_image");
+                showImage.style.display = "block";
+                showImage.src = URL.createObjectURL(file);
+            }
+        }
     </script>
 
     @include('Admin.Components.submit-form-ajax')

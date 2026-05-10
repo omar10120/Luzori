@@ -27,7 +27,8 @@ class GlobalCategoryRequest extends FormRequest
             'id' => 'nullable|integer',
             'name' => 'required|string|max:255',
             'nameAr' => 'required|string|max:255',
-            'slug' => 'required|string|max:255|unique:global_categories,slug,' . $id,
+            'slug' => 'required|string|max:255|unique:central.global_categories,slug,' . $id,
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ];
     }
 }
