@@ -19,6 +19,7 @@ class GlobalCategoryResource extends JsonResource
             'name' => $this->name,
             'nameAr' => $this->nameAr,
             'slug' => $this->slug,
+            'image' => $this->image,
         ];
     }
 }
