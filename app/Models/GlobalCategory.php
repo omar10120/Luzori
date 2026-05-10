@@ -18,6 +18,7 @@ class GlobalCategory extends Model
 
     protected $fillable = [
         'name',
+        'nameAr',
         'slug',
     ];
 

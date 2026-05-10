@@ -17,6 +17,7 @@ class GlobalCategoryResource extends JsonResource
         return [
             'id'   => $this->id,
             'name' => $this->name,
+            'nameAr' => $this->nameAr,
             'slug' => $this->slug,
         ];
     }

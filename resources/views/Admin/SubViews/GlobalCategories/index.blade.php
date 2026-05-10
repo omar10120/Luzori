@@ -38,6 +38,22 @@
                                     />
                                 </div>
                             </div>
+                                <div class="col-md-6">
+                                <div class="mb-4">
+                                    <label class="form-label">
+                                        {{ __('field.nameAr') }}
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        class="form-control"
+                                        name="nameAr"
+                                        id="nameAr"
+                                        placeholder="{{ __('field.nameAr') }}"
+                                        value="{{ $item ? $item->nameAr : '' }}"
+                                    />
+                                </div>
+                            </div>
                             <div class="col-md-6">
                                 <div class="mb-4">
                                     <label class="form-label">

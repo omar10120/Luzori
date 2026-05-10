@@ -11,13 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('global_categories', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-
-            $table->string('slug')->unique(); 
-            $table->timestamps();
-            $table->softDeletes();
+       Schema::table('global_categories', function (Blueprint $table) {
+            $table->string('nameAr')->after('name'); 
         });
     }
 
@@ -26,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('global_categories');
+        Schema::table('global_categories', function (Blueprint $table) {
+            $table->dropColumn('nameAr');
+        });
     }
 };

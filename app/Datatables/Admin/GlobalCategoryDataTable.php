@@ -115,6 +115,7 @@ class GlobalCategoryDataTable extends DataTable
         return [
             Column::make('id')->title('#'),
             Column::make('name')->title(__('field.name')),
+            Column::make('nameAr')->title(__('field.nameAr')),
             Column::make('slug')->title(__('field.slug')),
             Column::computed('status')->title(__('field.status')),
             Column::make('created_at')->title(__('field.created_at')),

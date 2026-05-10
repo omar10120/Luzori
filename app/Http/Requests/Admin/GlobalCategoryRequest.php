@@ -26,6 +26,7 @@ class GlobalCategoryRequest extends FormRequest
         return [
             'id' => 'nullable|integer',
             'name' => 'required|string|max:255',
+            'nameAr' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:global_categories,slug,' . $id,
         ];
     }
