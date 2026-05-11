@@ -27,7 +27,7 @@ class WorkerRequest extends FormRequest
             return [
                 'id' => 'required|exists:workers,id',
                 'branch_id' => 'required|exists:branches,id',
-                'services' => 'required|array',
+                'services' => 'required|array', 
                 'services.*' => 'required|exists:services,id',
                 'shift_id' => 'required|exists:shifts,id',
                 'is_professional' => 'required|boolean',

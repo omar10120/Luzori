@@ -62,6 +62,10 @@ class CenterService
 
                     // Fetch data from the switched mysql connection
                     $center->categories =CategoryService::with('services.workers.vacations')->get();
+
+                  
+
+
                     $center->services = Service::with('workers.vacations')->where('is_top', true)->get();
                     $center->packages = Package::all();
                     $center->branches = Branch::all();
