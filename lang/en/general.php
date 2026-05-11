@@ -166,5 +166,6 @@ return [
     'new_purchase' => 'New Purchase',
     'no_users' => 'No Users',
     'slug_hint' => 'slug hint',
-    'no_data' =>  'no data'
+    'no_data' =>  'no data',
+    'select_if_the_employee_is_professional ' => 'select if the employee is professional'
 ];

@@ -20,6 +20,7 @@ class WorkerResource extends JsonResource
         $res['country_code'] = $this->country_code;
         $res['phone'] = $this->phone;
         $res['has_commission'] = $this->has_commission;
+        $res['is_professional'] = $this->is_professional;
         $res['image'] = $this->image;
         $res['branch'] = BranchResource::make($this->branch);
         $res['shift'] = ShiftResource::make($this->shift);

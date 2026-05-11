@@ -79,6 +79,20 @@
                             </div>
                             <div class="col-md-12 mb-2">
                                 <div class="mb-1">
+                                    <label for="is_professional" class="form-label">{{ __('field.is_professional') }}  <span class="text-danger">*</span></label>
+                                    <div class="form-check form-switch form-check-primary">
+                                        <input type="hidden" name="is_professional" value="0">
+                                        <input type="checkbox" class="form-check-input" name="is_professional" id="is_professional" value="1" {{ $item && $item->is_professional == '1' ? 'checked' : null }}>
+                                        <label class="form-check-label" for="is_professional">
+                                            <span class="switch-icon-left"><i data-feather="check"></i></span>
+                                            <span class="switch-icon-right"><i data-feather="x"></i></span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-12 mb-2">
+                                <div class="mb-1">
                                     <label for="phone" class="form-label">{{ __('field.phone') }}  <span class="text-danger">*</span></label>
                                     <small class="text-muted">{{__('general.enter_the_phone_number_of_the_employee')}}</small>
                                     <div class="row">

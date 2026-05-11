@@ -164,6 +164,8 @@ return [
     'new_purchase' => 'شراء جديد',
     'no_users' => 'لا يوجد مستخدمين',
     'slug_hint' => 'اختياري - تستخدم في الروابط',
-    'no_data' =>  'لا يوجد بيانات'
+    'no_data' =>  'لا يوجد بيانات',
+    'select_if_the_employee_is_professional ' => 'حالة الموظف محترف'
+    
     
 ];

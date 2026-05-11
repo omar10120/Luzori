@@ -5,6 +5,9 @@ namespace App\Services;
 use App\Models\Branch;
 use App\Models\Center;
 use App\Models\CenterUser;
+use App\Models\Package;
+use App\Models\Service;
+use App\Models\CategoryService;
 use Exception;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Config;
@@ -58,9 +61,9 @@ class CenterService
                     DB::reconnect('mysql');
 
                     // Fetch data from the switched mysql connection
-                    $center->categories = \App\Models\CategoryService::with('services.workers.vacations')->get();
-                    $center->services = \App\Models\Service::with('workers.vacations')->where('is_top', true)->get();
-                    $center->packages = \App\Models\Package::all();
+                    $center->categories =CategoryService::with('services.workers.vacations')->get();
+                    $center->services = Service::with('workers.vacations')->where('is_top', true)->get();
+                    $center->packages = Package::all();
                     $center->branches = Branch::all();
 
 

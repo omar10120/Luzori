@@ -346,5 +346,6 @@ return [
     'matching_selected_services'      => 'Matching Selected Services',
     'package_type'                    => 'Package Type',
     'slug'                            => 'Slug',
-    'nameAr'                          => 'nameAr'
+    'nameAr'                          => 'nameAr',
+    'is_professional'                 => 'is professional'
     ];

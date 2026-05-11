@@ -339,6 +339,8 @@ return [
     'package_type'                    => 'نوع الباقة',
     'slug'                            => 'الرمز',
     'nameAr'                          => 'الاسم عربي',
+    'is_professional'                 => 'محترف'
+    
     
 
     

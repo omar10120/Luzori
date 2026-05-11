@@ -157,6 +157,7 @@ class WorkerDataTable extends DataTable
             Column::computed('name')->searchable(true)->title(__('field.name')),
             Column::computed('email')->searchable(true)->title(__('field.email')),
             Column::computed('phone')->searchable(true)->title(__('field.phone')),
+            Column::computed('is_professional')->searchable(true)->title(__('field.is_professional')),
             Column::computed('status')->searchable(false)->title(__('field.status')),
             Column::make('created_at')->searchable(true)->title(__('field.created_at')),
         ];

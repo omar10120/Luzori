@@ -23,6 +23,7 @@ class Worker extends Model implements HasMedia
         'country_code',
         'phone',
         'has_commission',
+        'is_professional',
         'branch_id',
         'shift_id',
         'is_center_user',
