@@ -31,6 +31,7 @@ class CenterController extends Controller
     public function index(Request $request, CenterService $centerService)
     {
         $filteredCenters = $centerService->getFilteredCenters($request);
+        
 
         if (count($filteredCenters) > 0) {
             return MyHelper::responseJSON(__('api.doneSuccessfully'), Response::HTTP_OK, $filteredCenters);

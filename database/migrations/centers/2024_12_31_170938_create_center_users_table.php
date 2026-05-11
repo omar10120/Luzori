@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('center_users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('bank_name', 21)->nullable()->after('name');
+            $table->string('bank_name', 21)->nullable();
             $table->string('email')->unique()->nullable();
             $table->string('country_code', 20);
             $table->string('phone')->unique();

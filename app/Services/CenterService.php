@@ -61,6 +61,10 @@ class CenterService
                     $center->categories = \App\Models\CategoryService::with('services.workers.vacations')->get();
                     $center->services = \App\Models\Service::with('workers.vacations')->where('is_top', true)->get();
                     $center->packages = \App\Models\Package::all();
+                    $center->branches = Branch::all();
+
+
+                    
 
                     // Same user_packages logic as show()
                     $userId = auth('center_api')->id();
