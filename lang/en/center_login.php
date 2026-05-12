@@ -83,5 +83,6 @@ return [
     'forgot_password' => 'Forgot Password?',
     'remember_me' => 'Remember Me',
     'login' => 'Login',
+    'login_page' => 'Login',
     'logining' => 'Logging in...',
 ];

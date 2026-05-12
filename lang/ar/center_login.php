@@ -82,5 +82,6 @@ return [
     'forgot_password' => 'هل نسيت كلمة المرور؟',
     'remember_me' => 'تذكرني',
     'login' => 'تسجيل الدخول',
+    'login_page' => 'تسجيل الدخول',
     'logining' => 'جاري التسجيل...',
 ];
