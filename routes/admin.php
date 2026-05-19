@@ -14,6 +14,9 @@ use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\SettingController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\GlobalCategoryController;
+use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\WithdrawalRequestController;
+use \App\Http\Controllers\Admin\BookingControlle;
 
 /*
 |--------------------------------------------------------------------------
@@ -64,13 +67,13 @@ Route::group(['middleware' => 'auth:admin'], function () {
     });
 
     Route::group(['prefix' => 'bookings', 'as' => 'bookings.'], function () {
-        Route::controller(\App\Http\Controllers\Admin\BookingController::class)->group(function () {
+        Route::controller(BookingController::class)->group(function () {
             Route::get('index', 'index')->name('index')->can('VIEW_CENTERS');
         });
     });
 
     Route::group(['prefix' => 'withdrawal_requests', 'as' => 'withdrawal_requests.'], function () {
-        Route::controller(\App\Http\Controllers\Admin\WithdrawalRequestController::class)->group(function () {
+        Route::controller(WithdrawalRequestController::class)->group(function () {
             Route::get('index', 'index')->name('index')->can('VIEW_CENTERS'); // Usually if they can view centers they can view financials, or use a new permission
             Route::post('{id}/approve', 'approve')->name('approve')->can('VIEW_CENTERS');
             Route::post('{id}/reject', 'reject')->name('reject')->can('VIEW_CENTERS');
@@ -78,7 +81,7 @@ Route::group(['middleware' => 'auth:admin'], function () {
     });
 
     Route::group(['prefix' => 'users', 'as' => 'users.'], function () {
-        Route::controller(\App\Http\Controllers\Admin\UserController::class)->group(function () {
+        Route::controller(UserController::class)->group(function () {
             Route::get('index', 'index')->name('index')->can('VIEW_USERS');
             Route::get('create', 'create')->name('create');
             Route::post('updateOrCreate', 'updateOrCreate')->name('updateOrCreate');
