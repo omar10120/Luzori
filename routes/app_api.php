@@ -55,5 +55,6 @@ Route::middleware('auth:sanctum')->prefix('wallet')->controller(WalletController
     Route::get('balance', 'balance');
     Route::get('payment-methods', 'paymentMethods');
     Route::post('top-up', 'topUp');
+    Route::post('buy', 'buy');
     Route::get('transactions', 'transactions');
 });

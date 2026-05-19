@@ -62,6 +62,33 @@ class WalletController extends Controller
         ]);
     }
 
+    public function buy(Request $request)
+    {
+        $request->validate([
+            'amount' => 'required|numeric|min:1',
+        ]);
+
+        $user = $request->user();
+
+        // Increase user's wallet balance
+        $user->wallet += $request->amount;
+        $user->save();
+
+        // Record the top-up in users_wallets
+        $userWallet = AppUserWallet::create([
+            'user_id' => $user->id,
+            'amount' => $request->amount,
+            'wallet_type' => 'buy_wallet',
+            'invoiced_amount' => $request->amount,
+        ]);
+
+        return MyHelper::responseJSON(__('api.doneSuccessfully'), Response::HTTP_OK, [
+            'wallet' => $user->wallet,
+            'transaction' => $userWallet
+        ]);
+    }
+
+
     public function transactions(Request $request)
     {
         $user = $request->user();
