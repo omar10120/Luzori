@@ -31,6 +31,7 @@ use App\Http\Controllers\CenterAPI\WorkerController;
 use App\Http\Controllers\CenterAPI\CategoryServiceController;
 use App\Http\Controllers\CenterAPI\CenterController;
 use App\Http\Controllers\CenterAPI\GlobalCategoryController;
+use App\Http\Controllers\CenterAPI\PaymentController;
 use App\Http\Controllers\SMSController;
 use Illuminate\Support\Facades\Route;
 
@@ -97,7 +98,17 @@ Route::group(['prefix' => 'infos'], function () {
     });
 });
 
+
+    
 Route::group(['middleware' => 'auth:center_api'], function () {
+
+    
+    // Route::group(['prefix' => 'payment'], function () {
+    //     Route::controller(PaymentController::class)->group(function () {
+    //         Route::post('create-session', 'createSession');
+    //     });
+    // });
+
 
     Route::group(['prefix' => 'auth'], function () {
         Route::controller(AuthController::class)->group(function () {
@@ -105,6 +116,7 @@ Route::group(['middleware' => 'auth:center_api'], function () {
             Route::post('delete', 'delete');
         });
     });
+
 
     Route::group(['prefix' => 'profile'], function () {
         Route::controller(ProfileController::class)->group(function () {

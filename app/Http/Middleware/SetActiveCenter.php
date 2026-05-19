@@ -39,7 +39,9 @@ class SetActiveCenter
         if ($request->is('center_api/global-categories')) {
             return $next($request);
         }
-            
+        if ($request->is('center_api/payment/*')) {
+            return $next($request);
+        }   
 
         $domain = $request->header('domain');
         if ($domain) {

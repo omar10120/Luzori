@@ -7,7 +7,7 @@ use App\Http\Controllers\AppAPI\FirebaseAuthController;
 use App\Http\Controllers\AppAPI\BookingController;
 use App\Http\Controllers\AppAPI\InfoController;
 use App\Http\Controllers\AppAPI\PackageController;
-
+use App\Http\Controllers\AppAPI\PaymentController;
 /*
 |--------------------------------------------------------------------------
 | App API Routes (Main Database)
@@ -28,11 +28,13 @@ Route::prefix('auth')->group(function () {
     });
 });
 
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('booking')->group(function () {
         Route::post('store', [BookingController::class, 'store']);
         Route::get('list', [BookingController::class, 'list']);
     });
+
 
     Route::prefix('packages')->group(function () {
         Route::get('/', [PackageController::class, 'userPurchased']);
@@ -40,6 +42,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('available/{center_id}', [PackageController::class, 'available']);
         Route::post('store/{center_id}', [PackageController::class, 'store']);
     });
+
+    
+    Route::prefix('payment')->group(function () {
+        Route::post('create-session', [PaymentController::class, 'createSession']);
+    });
+
+    
 });
 
 Route::middleware('auth:sanctum')->prefix('wallet')->controller(WalletController::class)->group(function () {
