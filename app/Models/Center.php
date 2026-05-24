@@ -41,14 +41,16 @@ class Center extends Authenticatable implements HasMedia
         'is_setup',
         'wallet',
         'bank_name',
-        'admin_discount'
+        'admin_discount',
+        'expire_date'
     ];
     protected $hidden = ['password'];
 
     protected $casts = [
         'wallet' => 'decimal:2',
         'admin_discount' => 'decimal:2',
-        'is_setup' => 'boolean'
+        'is_setup' => 'boolean',
+        'expire_date' => 'datetime'
     ];
 
     /**

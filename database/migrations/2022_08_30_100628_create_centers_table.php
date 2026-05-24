@@ -27,6 +27,7 @@ return new class extends Migration
             $table->string('reject_reason')->nullable();
             $table->enum('rate', ['recently_viewed', 'recommended', 'new_to', 'trending'])->nullable();
             $table->boolean('is_setup')->default(false);
+            $table->timestamp('expire_date')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

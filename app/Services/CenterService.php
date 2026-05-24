@@ -27,7 +27,11 @@ class CenterService
 
     public function getFilteredCenters($request)
     {
-        $query = Center::where('status', 'approve')->with('globalCategories');
+        $query = Center::where('status', 'approve')
+            ->where(function ($q) {
+                $q->whereNull('expire_date')->orWhere('expire_date', '>', now());
+            })
+            ->with('globalCategories');
 
         if ($request->filled('rate')) {
             $rate = trim($request->query('rate'), '"');
@@ -158,6 +162,7 @@ class CenterService
     {
         try {
             $request['database'] = $request['domain'];
+            $request['expire_date'] = now()->addDays(15);
             $center = Center::create($request);
             if (isset($request['image'])) {
                 $center->addMedia($request['image'])->toMediaCollection('Center');

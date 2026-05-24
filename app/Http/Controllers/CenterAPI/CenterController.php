@@ -48,7 +48,12 @@ class CenterController extends Controller
      */
     public function show($id)
     {
-        $center = Center::where('status', 'approve')->with('globalCategories')->find($id);
+        $center = Center::where('status', 'approve')
+            ->where(function ($q) {
+                $q->whereNull('expire_date')->orWhere('expire_date', '>', now());
+            })
+            ->with('globalCategories')
+            ->find($id);
 
         if ($center) {
             // Switch to center's database to fetch nested data

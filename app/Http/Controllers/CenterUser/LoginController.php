@@ -54,6 +54,9 @@ class LoginController extends Controller
                             \Log::info("Cross-domain auth attempt. Domain: " . $userData['center_domain']);
                             $center = Center::where('domain', $userData['center_domain'])->first();
                             if ($center) {
+                                if ($center->expire_date && now()->gt($center->expire_date)) {
+                                    return view('CenterUser.login')->with('error', 'Expired center subscription');
+                                }
                                 \Log::info("Switching to database: " . $center->database);
                                 \Config::set('database.connections.mysql.database', $center->database);
                                 \DB::purge('mysql');
@@ -134,6 +137,12 @@ class LoginController extends Controller
                         ->first();
     
                     if ($centerUser && \Hash::check($request->password, $centerUser->password)) {
+                        if ($center->expire_date && now()->gt($center->expire_date)) {
+                            \Config::set('database.connections.mysql.database', $originalDatabase);
+                            \DB::purge('mysql');
+                            \DB::reconnect('mysql');
+                            return MyHelper::responseJSON('انتهت فترة صلاحية هذا المركز. يرجى التواصل مع الدعم الفني.', 400);
+                        }
                         \Log::info("User found in database: " . $center->database);
                         // Generate a signed URL with user data for cross-domain authentication
                         $userData = [
@@ -187,6 +196,9 @@ class LoginController extends Controller
             $dbName = \Config::get('database.connections.mysql.database');
             $center = Center::where('database', $dbName)->first();
             if ($center) {
+                if ($center->expire_date && now()->gt($center->expire_date)) {
+                    return MyHelper::responseJSON('انتهت فترة صلاحية هذا المركز. يرجى التواصل مع الدعم الفني.', 400);
+                }
                 session(['active_center_domain' => $center->domain]);
             }
 

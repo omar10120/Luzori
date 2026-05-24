@@ -360,6 +360,9 @@ class BookingController extends Controller
         if (!$center || !$center->database) {
             return MyHelper::responseJSON('Center database configuration missing', Response::HTTP_BAD_REQUEST);
         }
+        if ($center->expire_date && now()->gt($center->expire_date)) {
+            return MyHelper::responseJSON('انتهت فترة صلاحية هذا المركز. يرجى التواصل مع الدعم الفني.', Response::HTTP_BAD_REQUEST);
+        }
 
         try {
             // Switch connection to tenant database

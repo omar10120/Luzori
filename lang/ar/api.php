@@ -66,4 +66,5 @@ return [
     'request_withdrawal'                            => 'طلب السحب',
     'confirm_withdrawal_request'                    => 'تأكيد طلب السحب',
     'confirm_withdrawal_approval'                   => 'تأكيد الموافقة على السحب',
+    'center_expired'                                => 'انتهت فترة صلاحية هذا المركز. يرجى التواصل مع الدعم الفني لتبديل الخطة أو التجديد.',
 ];

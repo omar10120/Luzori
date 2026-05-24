@@ -89,6 +89,9 @@ class PackageController extends Controller
         if (!$center || !$center->database) {
             return MyHelper::responseJSON('Center not found or database missing', Response::HTTP_NOT_FOUND);
         }
+        if ($center->expire_date && now()->gt($center->expire_date)) {
+            return MyHelper::responseJSON('انتهت فترة صلاحية هذا المركز. يرجى التواصل مع الدعم الفني.', Response::HTTP_BAD_REQUEST);
+        }
 
         try {
             Config::set('database.connections.mysql.database', $center->database);
@@ -135,6 +138,9 @@ class PackageController extends Controller
         if (!$center || !$center->database) {
             return MyHelper::responseJSON('Center not found or database missing', Response::HTTP_NOT_FOUND);
         }
+        if ($center->expire_date && now()->gt($center->expire_date)) {
+            return MyHelper::responseJSON('انتهت فترة صلاحية هذا المركز. يرجى التواصل مع الدعم الفني.', Response::HTTP_BAD_REQUEST);
+        }
 
         try {
             Config::set('database.connections.mysql.database', $center->database);
@@ -167,6 +173,9 @@ class PackageController extends Controller
         $center = Center::find($center_id);
         if (!$center || !$center->database) {
             return MyHelper::responseJSON('Center not found or database missing', Response::HTTP_NOT_FOUND);
+        }
+        if ($center->expire_date && now()->gt($center->expire_date)) {
+            return MyHelper::responseJSON('انتهت فترة صلاحية هذا المركز. يرجى التواصل مع الدعم الفني.', Response::HTTP_BAD_REQUEST);
         }
 
         try {

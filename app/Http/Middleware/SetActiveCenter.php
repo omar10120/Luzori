@@ -47,6 +47,9 @@ class SetActiveCenter
         if ($domain) {
             $center = Center::where('domain', $domain)->first();
             if ($center) {
+                if ($center->expire_date && now()->gt($center->expire_date)) {
+                    return MyHelper::responseJSON(__('api.center_expired'), Response::HTTP_PAYMENT_REQUIRED);
+                }
                 Config::set('database.connections.mysql.database', $center->database);
                 DB::reconnect();
                 return $next($request);
