@@ -60,7 +60,7 @@
 @endif
 
 <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
-
+    
     @if (!isset($menuHorizontal))
         <!-- Search -->
         {{-- <div class="navbar-nav align-items-center">
@@ -114,6 +114,17 @@
             </ul>
         </li>
         <!--/ Language -->
+
+        @if (auth('center_user')->check() && !str_contains(url()->current(), 'admin'))
+            <!-- Payment portal -->
+            <li class="nav-item me-2 me-xl-0">
+                <a class="nav-link hide-arrow" href="javascript:void(0);" data-bs-toggle="modal"
+                    data-bs-target="#paymentPortalModal" title="{{ __('field.payment') }}">
+                    <i class="ti ti-credit-card ti-md"></i>
+                </a>
+            </li>
+            <!--/ Payment portal -->
+        @endif
 
         @if (isset($menuHorizontal))
             <!-- Search -->
@@ -543,3 +554,166 @@
 @endif
 </nav>
 <!-- / Navbar -->
+
+@if (auth('center_user')->check() && !str_contains(url()->current(), 'admin'))
+    @php
+        $myfatoorahSessionJsUrl = env(
+            'MYFATOORAH_SESSION_JS_URL',
+            'https://demo.myfatoorah.com/sessions/v1/session.js',
+        );
+        // Placeholder until POST /v3/sessions is wired; replace via create-session API response.
+        $myfatoorahTestSessionId = env(
+            'MYFATOORAH_TEST_SESSION_ID',
+            'KWT-445b7a1f-b21a-416f-959f-3cb7dc544de5',
+        );
+    @endphp
+
+    <div class="modal fade" id="paymentPortalModal" tabindex="-1" aria-labelledby="paymentPortalModalLabel"
+        aria-hidden="true" data-session-js="{{ $myfatoorahSessionJsUrl }}"
+        data-placeholder-session-id="{{ $myfatoorahTestSessionId }}">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="paymentPortalModalLabel">{{ __('field.payment') }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="myfatoorah-payment-loading" class="text-center py-5 d-none">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading</span>
+                        </div>
+                        <p class="text-muted mt-2 mb-0">{{ __('field.continue_to_payment') }}</p>
+                    </div>
+                    <div id="myfatoorah-payment-error" class="alert alert-danger d-none mb-0" role="alert"></div>
+                    <div id="embedded-sessions"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @push('scripts')
+        <script>
+            (function() {
+                const modalEl = document.getElementById('paymentPortalModal');
+                if (!modalEl) {
+                    return;
+                }
+
+                const sessionJsUrl = modalEl.dataset.sessionJs;
+                const placeholderSessionId = modalEl.dataset.placeholderSessionId;
+                const loadingEl = document.getElementById('myfatoorah-payment-loading');
+                const errorEl = document.getElementById('myfatoorah-payment-error');
+                const containerEl = document.getElementById('embedded-sessions');
+
+                let sessionScriptPromise = null;
+
+                function showLoading(show) {
+                    loadingEl.classList.toggle('d-none', !show);
+                }
+
+                function showError(message) {
+                    errorEl.textContent = message;
+                    errorEl.classList.remove('d-none');
+                }
+
+                function hideError() {
+                    errorEl.classList.add('d-none');
+                    errorEl.textContent = '';
+                }
+
+                function resetContainer() {
+                    containerEl.innerHTML = '';
+                }
+
+                function loadMyFatoorahScript() {
+                    if (window.myfatoorah) {
+                        return Promise.resolve();
+                    }
+
+                    if (sessionScriptPromise) {
+                        return sessionScriptPromise;
+                    }
+
+                    sessionScriptPromise = new Promise(function(resolve, reject) {
+                        const existing = document.querySelector('script[data-myfatoorah-session="1"]');
+                        if (existing) {
+                            existing.addEventListener('load', function() {
+                                resolve();
+                            });
+                            existing.addEventListener('error', function() {
+                                reject(new Error('Failed to load MyFatoorah payment SDK.'));
+                            });
+                            return;
+                        }
+
+                        const script = document.createElement('script');
+                        script.src = sessionJsUrl;
+                        script.setAttribute('data-myfatoorah-session', '1');
+                        script.onload = function() {
+                            resolve();
+                        };
+                        script.onerror = function() {
+                            reject(new Error('Failed to load MyFatoorah payment SDK.'));
+                        };
+                        document.head.appendChild(script);
+                    });
+
+                    return sessionScriptPromise;
+                }
+
+                function onPaymentComplete(response) {
+                    console.log(JSON.stringify(response));
+                    // TODO: POST paymentData + encryptionKey to center_user payment callback route.
+                }
+
+                function initEmbeddedSession(sessionId) {
+                    if (!window.myfatoorah || typeof window.myfatoorah.init !== 'function') {
+                        throw new Error('MyFatoorah SDK is not available.');
+                    }
+
+                    window.myfatoorah.init({
+                        sessionId: sessionId,
+                        callback: onPaymentComplete,
+                        containerId: 'embedded-sessions',
+                        shouldHandlePaymentUrl: true,
+                    });
+                }
+
+                /**
+                 * Replace with fetch(createSessionUrl) when backend route is registered.
+                 */
+                function resolveSessionId() {
+                    return Promise.resolve(placeholderSessionId);
+                }
+
+                async function startPaymentPortal() {
+                    hideError();
+                    resetContainer();
+                    showLoading(true);
+
+                    try {
+                        const sessionId = await resolveSessionId();
+                        if (!sessionId) {
+                            throw new Error('Payment session could not be created.');
+                        }
+
+                        await loadMyFatoorahScript();
+                        showLoading(false);
+                        initEmbeddedSession(sessionId);
+                    } catch (error) {
+                        showLoading(false);
+                        showError(error.message || 'Unable to start payment.');
+                    }
+                }
+
+                modalEl.addEventListener('shown.bs.modal', startPaymentPortal);
+
+                modalEl.addEventListener('hidden.bs.modal', function() {
+                    showLoading(false);
+                    hideError();
+                    resetContainer();
+                });
+            })();
+        </script>
+    @endpush
+@endif
