@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\CenterUser;
 
 use App\Http\Controllers\Controller;
+use App\Models\Center;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -37,9 +38,14 @@ class PaymentController extends Controller
 
     public function plans()
     {
+        $center    = $this->resolveActiveCenter();
+        $isExpired = $center && $center->expire_date && now()->gt($center->expire_date);
+
         return view('CenterUser.SubViews.Subscription.plans', [
             'title'                  => __('field.payment'),
             'plans'                  => self::subscriptionPlans(),
+            'isExpired'              => $isExpired,
+            'expireDate'             => $center?->expire_date,
             'myfatoorahSessionJsUrl' => env(
                 'MYFATOORAH_SESSION_JS_URL',
                 'https://demo.myfatoorah.com/sessions/v1/session.js'
@@ -47,6 +53,26 @@ class PaymentController extends Controller
             'createSessionUrl' => route('center_user.subscription.create-session'),
             'callbackUrl'      => route('center_user.subscription.callback'),
         ]);
+    }
+
+    private function resolveActiveCenter(): ?Center
+    {
+        $host = request()->getHost();
+
+        if (in_array($host, ['127.0.0.1', 'localhost'], true)) {
+            return Center::where('domain', 'center8')->first();
+        }
+
+        $domain = session('active_center_domain');
+
+        if ($domain) {
+            return Center::where('domain', $domain)->first();
+        }
+
+        $parts     = explode('.', $host);
+        $subdomain = count($parts) > 2 && $parts[0] !== 'www' ? $parts[0] : null;
+
+        return $subdomain ? Center::where('domain', $subdomain)->first() : null;
     }
 
     /**

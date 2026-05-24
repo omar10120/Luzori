@@ -4,12 +4,34 @@
 
 @section('content')
     <div class="container-xxl flex-grow-1 container-p-y">
-        @include('CenterUser.Components.breadcrumbs')
+        @if ($isExpired || session('center_expired'))
+            <div class="alert alert-warning alert-dismissible d-flex align-items-center mb-4" role="alert">
+                <i class="ti ti-alert-triangle ti-sm me-2"></i>
+                <div>
+                    <strong>{{ __('api.center_expired') }}</strong>
+                    @if ($expireDate)
+                        <div class="small mt-1 text-muted">
+                            {{ __('validation.attributes.expire_date') }}:
+                            {{ \Carbon\Carbon::parse($expireDate)->format('Y-m-d H:i') }}
+                        </div>
+                    @endif
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @else
+            @include('CenterUser.Components.breadcrumbs')
+        @endif
 
         <div id="subscription-plans-step">
             <div class="card mb-4">
                 <div class="card-header">
-                    <h4 class="mb-0">{{ __('field.payment') }} — {{ __('general.choose') }} {{ __('field.payment') }}</h4>
+                    <h4 class="mb-0">
+                        @if ($isExpired || session('center_expired'))
+                            {{ __('field.complete_payment') }}
+                        @else
+                            {{ __('field.payment') }} — {{ __('general.choose') }} {{ __('field.payment') }}
+                        @endif
+                    </h4>
                 </div>
                 <div class="card-body">
                     <div class="row g-4">
@@ -38,9 +60,11 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h4 class="mb-0" id="selected-plan-title">{{ __('field.complete_payment') }}</h4>
-                    <button type="button" class="btn btn-sm btn-label-secondary" id="btn-back-to-plans">
-                        <i class="ti ti-arrow-left me-1"></i>{{ __('general.back') }}
-                    </button>
+                    @if (!($isExpired || session('center_expired')))
+                        <button type="button" class="btn btn-sm btn-label-secondary" id="btn-back-to-plans">
+                            <i class="ti ti-arrow-left me-1"></i>{{ __('general.back') }}
+                        </button>
+                    @endif
                 </div>
                 <div class="card-body">
                     <div id="myfatoorah-payment-loading" class="text-center py-5 d-none">
@@ -232,6 +256,11 @@
                     showLoading(false);
                     containerEl.innerHTML = '';
                     showSuccess(result.message + (result.new_expiry ? ' — ' + result.new_expiry : ''));
+                    @if ($isExpired || session('center_expired'))
+                        setTimeout(function() {
+                            window.location.href = @json(route('center_user.cp'));
+                        }, 2500);
+                    @endif
                 } catch (error) {
                     callbackHandled = false;
                     showLoading(false);
@@ -262,12 +291,19 @@
                 });
             });
 
-            document.getElementById('btn-back-to-plans').addEventListener('click', function() {
-                resetPaymentUi();
-                showLoading(false);
-                paymentStep.classList.add('d-none');
-                plansStep.classList.remove('d-none');
-            });
+            const btnBackToPlans = document.getElementById('btn-back-to-plans');
+            if (btnBackToPlans) {
+                btnBackToPlans.addEventListener('click', function() {
+                    resetPaymentUi();
+                    showLoading(false);
+                    paymentStep.classList.add('d-none');
+                    plansStep.classList.remove('d-none');
+                });
+            }
+
+            @if ($isExpired || session('center_expired'))
+                document.querySelector('.btn-select-plan')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            @endif
         })();
     </script>
 @endpush

@@ -7,67 +7,114 @@ use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
+use Symfony\Component\HttpFoundation\Response;
 
 class SetActiveCenterCp
 {
-    public function handle(Request $request, Closure $next)
+    /** Routes allowed while the center subscription is expired. */
+    private const EXPIRED_ALLOWED_ROUTES = [
+        'center_user.subscription.plans',
+        'center_user.subscription.create-session',
+        'center_user.subscription.callback',
+        'center_user.logout',
+        'center_user.swap',
+    ];
+
+    public function handle(Request $request, Closure $next): Response
     {
-        $host = $request->getHost(); // e.g., www.luzori.com or 127.0.0.1
+        $host = $request->getHost();
         $parts = explode('.', $host);
-        $subdomain = null;
+        $subdomain = $this->resolveSubdomain($host, $parts);
 
-        if (in_array($host, ['127.0.0.1', 'localhost'])) {
-            // 🔹 Local dev: set a default test center
-            $center = Center::where('domain', 'center8')->first(); // or specify manually
-            if ($center) {
-                if ($center->expire_date && now()->gt($center->expire_date)) {
-                    abort(402, 'انتهت فترة صلاحية هذا المركز. يرجى التواصل مع الدعم الفني لتجديد الاشتراك.');
-                }
-                Config::set('database.connections.mysql.database', $center->database);
-                DB::purge('mysql');
-                DB::reconnect('mysql');
-            }
+        if (in_array($host, ['127.0.0.1', 'localhost'], true)) {
+            $center = Center::where('domain', 'center8')->first();
 
-            return $next($request);
-        }
-
-        if (count($parts) > 2 && $parts[0] !== 'www') {
-            $subdomain = $parts[0];
-        } elseif (count($parts) > 3 && $parts[0] === 'www') {
-            $subdomain = $parts[1];
+            return $this->applyCenter($request, $next, $center);
         }
 
         if ($subdomain && $subdomain !== 'dashboard') {
-            $center = Center::where('domain', $subdomain)->first(); 
+            $center = Center::where('domain', $subdomain)->first();
 
-            if ($center) {
-                if ($center->expire_date && now()->gt($center->expire_date)) {
-                    abort(402, 'انتهت فترة صلاحية هذا المركز. يرجى التواصل مع الدعم الفني لتجديد الاشتراك.');
-                }
-                Config::set('database.connections.mysql.database', $center->database);
-                DB::purge('mysql');
-                DB::reconnect('mysql');
-                return $next($request);
+            if (!$center) {
+                abort(404, 'Center not found');
             }
 
-            return abort(404, 'Center not found');
+            return $this->applyCenter($request, $next, $center);
         }
 
-        // Handle dashboard or root domain for authenticated users (or those mid-2FA)
         if (($subdomain === 'dashboard' || !$subdomain) && session()->has('active_center_domain')) {
             $center = Center::where('domain', session('active_center_domain'))->first();
-            if ($center) {
-                if ($center->expire_date && now()->gt($center->expire_date)) {
-                    abort(402, 'انتهت فترة صلاحية هذا المركز. يرجى التواصل مع الدعم الفني لتجديد الاشتراك.');
-                }
-                Config::set('database.connections.mysql.database', $center->database);
-                DB::purge('mysql');
-                DB::reconnect('mysql');
-            }
+
+            return $this->applyCenter($request, $next, $center);
         }
 
         return $next($request);
     }
 
+    private function applyCenter(Request $request, Closure $next, ?Center $center): Response
+    {
+        if (!$center) {
+            return $next($request);
+        }
+
+        $this->configureCenterDatabase($center);
+
+        if ($this->centerIsExpired($center) && !$this->isSubscriptionRenewalRoute($request)) {
+            return $this->redirectToRenewal($request);
+        }
+
+        return $next($request);
+    }
+
+    private function configureCenterDatabase(Center $center): void
+    {
+        Config::set('database.connections.mysql.database', $center->database);
+        DB::purge('mysql');
+        DB::reconnect('mysql');
+    }
+
+    private function centerIsExpired(Center $center): bool
+    {
+        return $center->expire_date && now()->gt($center->expire_date);
+    }
+
+    private function isSubscriptionRenewalRoute(Request $request): bool
+    {
+        $routeName = $request->route()?->getName();
+
+        return $routeName && in_array($routeName, self::EXPIRED_ALLOWED_ROUTES, true);
+    }
+
+    private function redirectToRenewal(Request $request): Response
+    {
+        $message = __('api.center_expired');
+        $plansUrl = route('center_user.subscription.plans');
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success'  => false,
+                'expired'  => true,
+                'redirect' => $plansUrl,
+                'message'  => $message,
+            ], 402);
+        }
+
+        return redirect()
+            ->to($plansUrl)
+            ->with('center_expired', true)
+            ->with('warning', $message);
+    }
+
+    private function resolveSubdomain(string $host, array $parts): ?string
+    {
+        if (count($parts) > 2 && $parts[0] !== 'www') {
+            return $parts[0];
+        }
+
+        if (count($parts) > 3 && $parts[0] === 'www') {
+            return $parts[1];
+        }
+
+        return null;
+    }
 }
