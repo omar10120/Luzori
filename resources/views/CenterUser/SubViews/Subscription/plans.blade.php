@@ -5,21 +5,12 @@
 @section('content')
     <div class="container-xxl flex-grow-1 container-p-y">
         @if ($isExpired || session('center_expired'))
-            <div class="alert alert-warning alert-dismissible d-flex align-items-center mb-4" role="alert">
-                <i class="ti ti-alert-triangle ti-sm me-2"></i>
-                <div>
-                    <strong>{{ __('api.center_expired') }}</strong>
-                    @if ($expireDate)
-                        <div class="small mt-1 text-muted">
-                            {{ __('validation.attributes.expire_date') }}:
-                            {{ \Carbon\Carbon::parse($expireDate)->format('Y-m-d H:i') }}
-                        </div>
-                    @endif
-                </div>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
+            @include('CenterUser.SubViews.Subscription.partials.subscription-status')
         @else
             @include('CenterUser.Components.breadcrumbs')
+            @if ($hasSubscription)
+                @include('CenterUser.SubViews.Subscription.partials.subscription-status')
+            @endif
         @endif
 
         <div id="subscription-plans-step">
@@ -67,6 +58,11 @@
                     @endif
                 </div>
                 <div class="card-body">
+                    @if ($hasSubscription)
+                        <div id="subscription-status-payment" class="mb-4">
+                            @include('CenterUser.SubViews.Subscription.partials.subscription-status')
+                        </div>
+                    @endif
                     <div id="myfatoorah-payment-loading" class="text-center py-5 d-none">
                         <div class="spinner-border text-primary" role="status">
                             <span class="visually-hidden">Loading</span>

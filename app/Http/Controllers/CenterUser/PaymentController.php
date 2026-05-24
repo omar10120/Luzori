@@ -40,12 +40,15 @@ class PaymentController extends Controller
     {
         $center    = $this->resolveActiveCenter();
         $isExpired = $center && $center->expire_date && now()->gt($center->expire_date);
+        $expireAt  = $center?->expire_date ? Carbon::parse($center->expire_date) : null;
 
         return view('CenterUser.SubViews.Subscription.plans', [
             'title'                  => __('field.payment'),
             'plans'                  => self::subscriptionPlans(),
             'isExpired'              => $isExpired,
-            'expireDate'             => $center?->expire_date,
+            'hasSubscription'        => (bool) $expireAt,
+            'expireDate'             => $expireAt,
+            'expireDateFormatted'    => $expireAt?->format('Y-m-d H:i'),
             'myfatoorahSessionJsUrl' => env(
                 'MYFATOORAH_SESSION_JS_URL',
                 'https://demo.myfatoorah.com/sessions/v1/session.js'
