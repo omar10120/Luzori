@@ -66,7 +66,7 @@ class PaymentController extends Controller
                 'Authorization' => 'Bearer ' . env('MYFATOORAH_TOKEN'),
                 'Content-Type'  => 'application/json',
             ])->post(rtrim(env('MYFATOORAH_BASE_URL'), '/') . '/v3/sessions', [
-                'PaymentMode' => 'COLLECT_DETAILS',
+                'PaymentMode' => 'COMPLETE_PAYMENT',
                 'Order'       => [
                     'Amount' => $amount,
                 ],
@@ -124,14 +124,42 @@ class PaymentController extends Controller
         }
 
         try {
-            $decrypted     = $this->decryptPaymentData($paymentData, $encryptionKey);
+            
+            $decrypted = $this->decryptPaymentData($paymentData, $encryptionKey);
             $paymentResult = json_decode($decrypted, true);
-
-            if (json_last_error() !== JSON_ERROR_NONE || empty($paymentResult['IsSuccess'])) {
-                Log::warning('Payment verification failed — decrypted payload', ['raw' => $decrypted]);
-
-                return response()->json(['success' => false, 'message' => 'Payment verification failed.'], 400);
+            
+            Log::info('paymentResult', ['paymentResult' => $paymentResult]);
+            // $paymentSucceeded = !empty($paymentResult['"Transaction.']) || !empty($paymentResult['isSuccess']);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                Log::warning('Invalid payment JSON', [
+                    'raw' => $decrypted
+                ]);
+            
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid payment data.'
+                ], 400);
             }
+            $invoiceStatus = data_get($paymentResult, 'Invoice.Status');
+            $transactionStatus = data_get($paymentResult, 'Transaction.Status');
+
+            $paymentSucceeded =
+                $invoiceStatus === 'PAID' &&
+                $transactionStatus === 'SUCCESS';
+
+            if (!$paymentSucceeded) {
+                Log::warning('Payment not successful', [
+                    'invoice_status' => $invoiceStatus,
+                    'transaction_status' => $transactionStatus,
+                    'paymentResult' => $paymentResult,
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Payment failed.'
+                ], 400);
+            }
+
 
             $centerDomain = session('active_center_domain');
             if (!$centerDomain) {

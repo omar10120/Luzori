@@ -76,6 +76,7 @@
 
             let sessionScriptPromise = null;
             let encryptionKey = null;
+            let callbackHandled = false;
 
             function showLoading(show) {
                 loadingEl.classList.toggle('d-none', !show);
@@ -106,6 +107,7 @@
                 hideSuccess();
                 containerEl.innerHTML = '';
                 encryptionKey = null;
+                callbackHandled = false;
             }
 
             function loadMyFatoorahScript() {
@@ -210,7 +212,18 @@
             }
 
             async function onPaymentComplete(response) {
-                console.log(JSON.stringify(response));
+                const paymentCompleted = !!(response.paymentCompleted ?? response.PaymentCompleted);
+                const paymentData = response.paymentData ?? response.PaymentData ?? null;
+
+                // SDK invokes callback during the flow (e.g. card entry) — wait for final completion.
+                if (!paymentCompleted || !paymentData) {
+                    return;
+                }
+
+                if (callbackHandled) {
+                    return;
+                }
+                callbackHandled = true;
 
                 try {
                     showLoading(true);
@@ -220,6 +233,7 @@
                     containerEl.innerHTML = '';
                     showSuccess(result.message + (result.new_expiry ? ' — ' + result.new_expiry : ''));
                 } catch (error) {
+                    callbackHandled = false;
                     showLoading(false);
                     showError(error.message || 'Payment callback failed.');
                 }
