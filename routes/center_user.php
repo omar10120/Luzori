@@ -40,6 +40,7 @@ use App\Http\Controllers\CenterUser\SettingController;
 use App\Http\Controllers\CenterUser\WeekDayController;
 use App\Http\Controllers\CenterUser\UserPackageController;
 use App\Http\Controllers\CenterUser\CenterGlobalCategoryController;
+use App\Http\Controllers\CenterUser\PaymentController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -72,6 +73,14 @@ Route::group(['middleware' => 'auth_center_user:center_user'], function () {
     Route::get('dashboard/details/{type}', [HomeController::class, 'getDetails'])->name('dashboard.details');
 
     Route::get('swap', [LanguageController::class, 'swap'])->name('swap');
+
+    Route::group(['prefix' => 'subscription', 'as' => 'subscription.'], function () {
+        Route::controller(PaymentController::class)->group(function () {
+            Route::get('plans', 'plans')->name('plans');
+            Route::post('create-session', 'createSession')->name('create-session');
+            Route::post('callback', 'callback')->name('callback');
+        });
+    });
 
     Route::delete('delete', DeleteController::class)->name('delete');
 

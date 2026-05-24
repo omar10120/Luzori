@@ -12,54 +12,113 @@ use Illuminate\Support\Facades\Log;
 class PaymentController extends Controller
 {
     /**
+     * Subscription plans: amount => renewal period in days.
+     */
+    public static function subscriptionPlans(): array
+    {
+        return [
+            '1_month' => [
+                'amount' => 100,
+                'days'   => 30,
+                'label'  => '1 Month',
+            ],
+            '2_months' => [
+                'amount' => 200,
+                'days'   => 60,
+                'label'  => '2 Months',
+            ],
+            '1_year' => [
+                'amount' => 1000,
+                'days'   => 365,
+                'label'  => '1 Year',
+            ],
+        ];
+    }
+
+    public function plans()
+    {
+        return view('CenterUser.SubViews.Subscription.plans', [
+            'title'                  => __('field.payment'),
+            'plans'                  => self::subscriptionPlans(),
+            'myfatoorahSessionJsUrl' => env(
+                'MYFATOORAH_SESSION_JS_URL',
+                'https://demo.myfatoorah.com/sessions/v1/session.js'
+            ),
+            'createSessionUrl' => route('center_user.subscription.create-session'),
+            'callbackUrl'      => route('center_user.subscription.callback'),
+        ]);
+    }
+
+    /**
      * Create a MyFatoorah payment session for subscription renewal.
      */
     public function createSession(Request $request)
     {
-        $amount   = (float) env('SUBSCRIPTION_AMOUNT', 10);
-        $currency = env('SUBSCRIPTION_CURRENCY', 'AED');
+        $request->validate([
+            'plan' => 'required|string|in:' . implode(',', array_keys(self::subscriptionPlans())),
+        ]);
+
+        $plan   = self::subscriptionPlans()[$request->plan];
+        $amount = (float) $plan['amount'];
 
         try {
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer ' . env('MYFATOORAH_TOKEN'),
                 'Content-Type'  => 'application/json',
             ])->post(rtrim(env('MYFATOORAH_BASE_URL'), '/') . '/v3/sessions', [
-                'PaymentMode' => 'COMPLETE_PAYMENT',
+                'PaymentMode' => 'COLLECT_DETAILS',
                 'Order'       => [
-                    'Amount'   => $amount,
-                    'Currency' => $currency,
+                    'Amount' => $amount,
                 ],
             ]);
-
+            Log::info(' ', ['response' => $response->json()]);
             if ($response->successful() && ($response->json('IsSuccess') === true)) {
                 $data = $response->json('Data');
+
+                session([
+                    'pending_subscription_plan' => [
+                        'key'    => $request->plan,
+                        'amount' => $amount,
+                        'days'   => $plan['days'],
+                    ],
+                    'myfatoorah_encryption_key' => $data['EncryptionKey'],
+                ]);
+                Log::info(' ', ['data' => $data]);
                 return response()->json([
                     'success'        => true,
                     'session_id'     => $data['SessionId'],
                     'encryption_key' => $data['EncryptionKey'],
                     'amount'         => $amount,
-                    'currency'       => $currency,
+                    'days'           => $plan['days'],
+                    'label'          => $plan['label'],
                 ]);
             }
 
             Log::error('MyFatoorah createSession failed', ['response' => $response->json()]);
-            return response()->json(['success' => false, 'message' => __('api.unknownError')], 500);
+
+            return response()->json([
+                'success' => false,
+                'message' => $response->json('Message') ?? __('api.unknownError'),
+            ], 500);
         } catch (\Exception $e) {
             Log::error('MyFatoorah createSession exception: ' . $e->getMessage());
+
             return response()->json(['success' => false, 'message' => __('api.unknownError')], 500);
         }
     }
 
     /**
      * Handle the embedded payment callback and extend the center's subscription.
-     * Decrypts paymentData using AES-128-CBC (key = IV = first 16 bytes of EncryptionKey).
      */
     public function callback(Request $request)
     {
         $paymentData      = $request->input('paymentData');
-        $encryptionKey    = $request->input('encryptionKey');
+        $encryptionKey    = $request->input('encryptionKey') ?: session('myfatoorah_encryption_key');
         $paymentCompleted = (bool) $request->input('paymentCompleted', false);
 
+        Log::info('paymentCompleted', ['paymentCompleted' => $paymentCompleted]);
+        Log::info('paymentData', ['paymentData' => $paymentData]);
+        Log::info('encryptionKey', ['encryptionKey' => $encryptionKey]);
         if (!$paymentCompleted || !$paymentData || !$encryptionKey) {
             return response()->json(['success' => false, 'message' => 'Payment not completed or missing data.'], 400);
         }
@@ -70,6 +129,7 @@ class PaymentController extends Controller
 
             if (json_last_error() !== JSON_ERROR_NONE || empty($paymentResult['IsSuccess'])) {
                 Log::warning('Payment verification failed — decrypted payload', ['raw' => $decrypted]);
+
                 return response()->json(['success' => false, 'message' => 'Payment verification failed.'], 400);
             }
 
@@ -88,16 +148,19 @@ class PaymentController extends Controller
                 return response()->json(['success' => false, 'message' => 'Center not found.'], 404);
             }
 
-            $days          = (int) env('SUBSCRIPTION_PLAN_DAYS', 30);
+            $pendingPlan = session('pending_subscription_plan', []);
+            $days        = (int) ($pendingPlan['days'] ?? 30);
+
             $currentExpire = $centerRow->expire_date ? Carbon::parse($centerRow->expire_date) : null;
-            // Extend from current expiry if still active, otherwise extend from now
-            $base      = ($currentExpire && now()->lt($currentExpire)) ? $currentExpire : now();
-            $newExpire = (clone $base)->addDays($days);
+            $base          = ($currentExpire && now()->lt($currentExpire)) ? $currentExpire : now();
+            $newExpire     = (clone $base)->addDays($days);
 
             DB::connection('central')
                 ->table('centers')
                 ->where('domain', $centerDomain)
                 ->update(['expire_date' => $newExpire]);
+
+            session()->forget(['pending_subscription_plan', 'myfatoorah_encryption_key']);
 
             return response()->json([
                 'success'    => true,
@@ -106,14 +169,11 @@ class PaymentController extends Controller
             ]);
         } catch (\Exception $e) {
             Log::error('Payment callback error: ' . $e->getMessage());
+
             return response()->json(['success' => false, 'message' => 'An error occurred.'], 500);
         }
     }
 
-    /**
-     * Decrypt MyFatoorah paymentData.
-     * Algorithm: AES-128-CBC, key = IV = first 16 bytes of the EncryptionKey string.
-     */
     private function decryptPaymentData(string $encryptedText, string $encryptionKey): string
     {
         $key  = str_pad(substr($encryptionKey, 0, 16), 16, "\0");
