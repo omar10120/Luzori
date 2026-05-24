@@ -97,7 +97,7 @@ class CenterController extends Controller
     {
         $data = $request->validated();
         $data['role'] = 'Super Admin';
-        $data['status'] = 'pending';
+        $data['status'] = 'approve';
 
         $center = $centerService->add($data);
 
