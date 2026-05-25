@@ -19,16 +19,19 @@ class PaymentController extends Controller
     {
         return [
             '1_month' => [
+                'symbol' => 'AED',
                 'amount' => 100,
                 'days'   => 30,
                 'label'  => '1 Month',
             ],
             '2_months' => [
+                'symbol' => 'AED',
                 'amount' => 200,
                 'days'   => 60,
                 'label'  => '2 Months',
             ],
             '1_year' => [
+                'symbol' => 'AED',
                 'amount' => 1000,
                 'days'   => 365,
                 'label'  => '1 Year',

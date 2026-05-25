@@ -31,7 +31,7 @@
                                 <div class="card h-100 border shadow-none plan-card cursor-pointer"
                                     data-plan="{{ $planKey }}" role="button" tabindex="0">
                                     <div class="card-body text-center d-flex flex-column">
-                                        <h3 class="text-primary mb-1">{{ number_format($plan['amount']) }}</h3>
+                                        <h3 class="text-primary mb-1">{{ $plan['symbol'] }} {{ number_format($plan['amount']) }}</h3>
                                         <p class="text-muted mb-3">{{ $plan['label'] }}</p>
                                         <button type="button"
                                             class="btn btn-primary mt-auto btn-select-plan"
