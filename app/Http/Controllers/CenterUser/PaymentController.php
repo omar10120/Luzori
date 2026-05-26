@@ -121,6 +121,7 @@ class PaymentController extends Controller
                     'session_id'     => $data['SessionId'],
                     'encryption_key' => $data['EncryptionKey'],
                     'amount'         => $amount,
+                    'symbol'         => $plan['symbol'],
                     'days'           => $plan['days'],
                     'label'          => $plan['label'],
                 ]);
