@@ -20,7 +20,7 @@ class PaymentController extends Controller
         return [
             '1_month' => [
                 'symbol' => 'AED',
-                'amount' => 100,
+                'amount' => 149,
                 'days'   => 30,
                 'label'  => '1 Month',
             ],
@@ -32,7 +32,7 @@ class PaymentController extends Controller
             ],
             '1_year' => [
                 'symbol' => 'AED',
-                'amount' => 1000,
+                'amount' => 1499,
                 'days'   => 365,
                 'label'  => '1 Year',
             ],
