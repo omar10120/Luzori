@@ -26,7 +26,7 @@ class PaymentController extends Controller
             ],
             '2_months' => [
                 'symbol' => 'AED',
-                'amount' => 200,
+                'amount' => 249,
                 'days'   => 60,
                 'label'  => '2 Months',
             ],
