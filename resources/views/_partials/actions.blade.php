@@ -223,4 +223,54 @@
             }
         });
     }
+
+    /**
+     * Register a center as a MyFatoorah supplier (admin manual action).
+     * Called from the centers DataTable action column.
+     */
+    function createCenterSupplier(id, url) {
+        Swal.fire({
+            title: "Create MyFatoorah Supplier?",
+            html: "This will register the center on MyFatoorah.<br><small class='text-muted'>Commission: 1 fixed + 3% &nbsp;|&nbsp; Deposits: Daily</small>",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: "{{ __('general.confirm') ?? 'Create' }}",
+            cancelButtonText: "{{ __('general.cancel') }}",
+            confirmButtonColor: '#f4a53a',
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire({
+                    title: 'Processing…',
+                    allowOutsideClick: false,
+                    didOpen: function() { Swal.showLoading(); }
+                });
+                $.ajax({
+                    url: url,
+                    type: 'POST',
+                    dataType: 'json',
+                    data: {
+                        _token: '{{ csrf_token() }}',
+                    },
+                    success: function(response) {
+                        Swal.fire({
+                            title: "{{ __('general.success') }}",
+                            text: response.message || 'Supplier created successfully.',
+                            icon: 'success',
+                            timer: 3000
+                        });
+                        if ($('.table').DataTable().ajax.json())
+                            $('.table').DataTable().ajax.reload();
+                        else
+                            window.location.reload();
+                    },
+                    error: function(xhr) {
+                        var msg = (xhr.responseJSON && xhr.responseJSON.message)
+                            ? xhr.responseJSON.message
+                            : "{{ __('admin.an_error_occurred') }}";
+                        fireMessage("{{ __('admin.ok') }}", msg, "", 'error');
+                    }
+                });
+            }
+        });
+    }
 </script>

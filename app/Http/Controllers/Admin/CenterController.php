@@ -13,6 +13,8 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
@@ -160,5 +162,72 @@ class CenterController extends Controller
         }
 
         return MyHelper::responseJSON('redirect_to_home', Response::HTTP_CREATED, route('admin.centers.index'));
+    }
+
+    /**
+     * Manually register a center as a MyFatoorah supplier (admin-triggered).
+     * Uses static commission/deposit values as agreed.
+     */
+    public function createSupplier(Request $request, $id)
+    {
+        $center = Center::find($id);
+
+        if (!$center) {
+            return MyHelper::responseJSON('Center not found.', Response::HTTP_NOT_FOUND);
+        }
+
+        if ($center->is_supplier) {
+            return MyHelper::responseJSON('Center is already registered as a supplier.', Response::HTTP_OK, [
+                'supplier_code' => $center->supplier_code,
+            ]);
+        }
+
+        try {
+            $payload = [
+                'SupplierName'          => $center->name,
+                'Mobile'                => $center->phone ?? '',
+                'Email'                 => $center->email ?? '',
+                'CommissionValue'       => 1,
+                'CommissionPercentage'  => 3,
+                'DepositTerms'          => 'Daily',
+                'BankId'                => 1,
+                'BankAccountHolderName' => $center->name,
+                'Iban'                  => $center->bank_name ?? '',
+                'IsActive'              => true,
+                'BusinessName'          => $center->name,
+            ];
+
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . env('MYFATOORAH_TOKEN'),
+                'Content-Type'  => 'application/json',
+            ])->post(rtrim(env('MYFATOORAH_BASE_URL'), '/') . '/v2/CreateSupplier', $payload);
+
+            Log::info('Admin CreateSupplier response', [
+                'center'   => $center->domain,
+                'response' => $response->json(),
+            ]);
+
+            if ($response->successful() && ($response->json('IsSuccess') === true)) {
+                $data = $response->json('Data');
+                $center->update([
+                    'supplier_code'  => $data['SupplierCode'],
+                    'supplier_email' => $data['SupplierEmail'],
+                    'supplier_date'  => $data['Date'],
+                    'is_supplier'    => true,
+                ]);
+
+                return MyHelper::responseJSON(
+                    __('admin.operation_done_successfully'),
+                    Response::HTTP_OK,
+                    ['supplier_code' => $data['SupplierCode']]
+                );
+            }
+
+            $apiMessage = $response->json('Message') ?? __('admin.an_error_occurred');
+            return MyHelper::responseJSON($apiMessage, Response::HTTP_INTERNAL_SERVER_ERROR);
+        } catch (\Exception $e) {
+            Log::error('Admin CreateSupplier exception: ' . $e->getMessage(), ['center' => $center->domain]);
+            return MyHelper::responseJSON(__('admin.an_error_occurred'), Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 }

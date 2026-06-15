@@ -34,6 +34,18 @@ class CenterDataTable extends DataTable
                     'with_trashed' => 1,
                 ];
                 $html = view()->make('_partials.actions', compact('id', 'route', 'options', 'model'))->render();
+
+                // "Create Supplier" button — only shown when not yet registered on MyFatoorah
+                if (!$item->is_supplier) {
+                    $supplierUrl = route('admin.centers.create-supplier', ['id' => $item->id]);
+                    $html .= '<button type="button"
+                                class="btn btn-sm btn-warning mt-1 w-100"
+                                onclick="createCenterSupplier(' . $item->id . ', \'' . $supplierUrl . '\')"
+                                title="Register as MyFatoorah supplier">
+                                <i class="ti ti-building-store me-1"></i>Create Supplier
+                              </button>';
+                }
+
                 return $html;
             })
             ->editColumn('status', function ($row) {
@@ -70,7 +82,15 @@ class CenterDataTable extends DataTable
             ->editColumn('name', function ($row) {
                 return \App\Helpers\MyHelper::truncateWithReadMore($row->name ?? '');
             })
-            ->rawColumns(['status', 'name', 'approval_status', 'primary_image'], true)
+            ->addColumn('is_supplier', function ($row) {
+                if ($row->is_supplier) {
+                    return '<span class="badge bg-label-success">
+                                <i class="ti ti-check me-1"></i>#' . ($row->supplier_code ?? '') . '
+                            </span>';
+                }
+                return '<span class="badge bg-label-danger"><i class="ti ti-x me-1"></i>Not Registered</span>';
+            })
+            ->rawColumns(['status', 'name', 'approval_status', 'primary_image', 'is_supplier'], true)
             ->setRowId('id');
     }
 
@@ -148,6 +168,7 @@ class CenterDataTable extends DataTable
             Column::make('bank_name')->title(__('field.bank_name')),
             Column::computed('role')->title(__('field.role')),
             Column::computed('approval_status')->title(__('field.status')),
+            Column::computed('is_supplier')->title('Supplier'),
             Column::make('rate')->title(__('field.rate')),
             Column::computed('status')->title(__('field.active')),
             Column::make('created_at')->title(__('field.created_at')),
