@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Center;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -152,74 +151,58 @@ class PaymentController extends Controller
         Log::info('paymentCompleted', ['paymentCompleted' => $paymentCompleted]);
         Log::info('paymentData', ['paymentData' => $paymentData]);
         Log::info('encryptionKey', ['encryptionKey' => $encryptionKey]);
+
         if (!$paymentCompleted || !$paymentData || !$encryptionKey) {
             return response()->json(['success' => false, 'message' => 'Payment not completed or missing data.'], 400);
         }
 
         try {
-            
-            $decrypted = $this->decryptPaymentData($paymentData, $encryptionKey);
+            $decrypted     = $this->decryptPaymentData($paymentData, $encryptionKey);
             $paymentResult = json_decode($decrypted, true);
-            
-            Log::info('paymentResult', ['paymentResult' => $paymentResult]);
-            // $paymentSucceeded = !empty($paymentResult['"Transaction.']) || !empty($paymentResult['isSuccess']);
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                Log::warning('Invalid payment JSON', [
-                    'raw' => $decrypted
-                ]);
-            
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Invalid payment data.'
-                ], 400);
-            }
-            $invoiceStatus = data_get($paymentResult, 'Invoice.Status');
-            $transactionStatus = data_get($paymentResult, 'Transaction.Status');
 
-            $paymentSucceeded =
-                $invoiceStatus === 'PAID' &&
-                $transactionStatus === 'SUCCESS';
+            Log::info('paymentResult', ['paymentResult' => $paymentResult]);
+
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                Log::warning('Invalid payment JSON', ['raw' => $decrypted]);
+                return response()->json(['success' => false, 'message' => 'Invalid payment data.'], 400);
+            }
+
+            $invoiceStatus     = data_get($paymentResult, 'Invoice.Status');
+            $transactionStatus = data_get($paymentResult, 'Transaction.Status');
+            $paymentSucceeded  = $invoiceStatus === 'PAID' && $transactionStatus === 'SUCCESS';
 
             if (!$paymentSucceeded) {
                 Log::warning('Payment not successful', [
-                    'invoice_status' => $invoiceStatus,
+                    'invoice_status'     => $invoiceStatus,
                     'transaction_status' => $transactionStatus,
-                    'paymentResult' => $paymentResult,
+                    'paymentResult'      => $paymentResult,
                 ]);
-
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Payment failed.'
-                ], 400);
+                return response()->json(['success' => false, 'message' => 'Payment failed.'], 400);
             }
-
 
             $centerDomain = session('active_center_domain');
             if (!$centerDomain) {
                 return response()->json(['success' => false, 'message' => 'Center not identified.'], 400);
             }
 
-            $centerRow = DB::connection('central')
-                ->table('centers')
-                ->where('domain', $centerDomain)
-                ->select('id', 'expire_date')
-                ->first();
-
-            if (!$centerRow) {
+            // Center model always queries the 'central' connection
+            $center = Center::where('domain', $centerDomain)->first();
+            if (!$center) {
                 return response()->json(['success' => false, 'message' => 'Center not found.'], 404);
             }
 
-            $pendingPlan = session('pending_subscription_plan', []);
-            $days        = (int) ($pendingPlan['days'] ?? 30);
-
-            $currentExpire = $centerRow->expire_date ? Carbon::parse($centerRow->expire_date) : null;
+            // Extend subscription
+            $pendingPlan   = session('pending_subscription_plan', []);
+            $days          = (int) ($pendingPlan['days'] ?? 30);
+            $currentExpire = $center->expire_date;
             $base          = ($currentExpire && now()->lt($currentExpire)) ? $currentExpire : now();
             $newExpire     = (clone $base)->addDays($days);
 
-            DB::connection('central')
-                ->table('centers')
-                ->where('domain', $centerDomain)
-                ->update(['expire_date' => $newExpire]);
+            $center->expire_date = $newExpire;
+            $center->save();
+
+            // Create MyFatoorah supplier on first successful payment
+            $this->createSupplierIfNeeded($center);
 
             session()->forget(['pending_subscription_plan', 'myfatoorah_encryption_key']);
 
@@ -230,10 +213,73 @@ class PaymentController extends Controller
             ]);
         } catch (\Exception $e) {
             Log::error('Payment callback error: ' . $e->getMessage());
-
             return response()->json(['success' => false, 'message' => 'An error occurred.'], 500);
         }
     }
+
+    /**
+     * Call MyFatoorah /v2/CreateSupplier for a center if it has not been registered yet.
+     * Uses static values as specified: CommissionValue=1, CommissionPercentage=3,
+     * DepositTerms=Daily, BankId=1, IsActive=true.
+     * The center's bank_name field stores the IBAN.
+     * Failure is logged but does NOT abort the payment flow.
+     */
+    private function createSupplierIfNeeded(Center $center): void
+    {
+        if ($center->is_supplier) {
+            return;
+        }
+
+        try {
+            $payload = [
+                'SupplierName'          => $center->name,
+                'Mobile'                => $center->phone ?? '',
+                'Email'                 => $center->email ?? '',
+                'CommissionValue'       => 1,
+                'CommissionPercentage'  => 3,
+                'DepositTerms'          => 'Daily',
+                'BankId'                => 1,
+                'BankAccountHolderName' => $center->name,
+                'Iban'                  => $center->bank_name ?? '',
+                'IsActive'              => true,
+                'BusinessName'          => $center->name,
+            ];
+
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . env('MYFATOORAH_TOKEN'),
+                'Content-Type'  => 'application/json',
+            ])->post(rtrim(env('MYFATOORAH_BASE_URL'), '/') . '/v2/CreateSupplier', $payload);
+
+            Log::info(' e', [
+                'center'   => $center->domain,
+                'response' => $response->json(),
+            ]);
+
+            if ($response->successful() && ($response->json('IsSuccess') === true)) {
+                $data = $response->json('Data');
+                $center->update([
+                    'supplier_code'  => $data['SupplierCode'],
+                    'supplier_email' => $data['SupplierEmail'],
+                    'supplier_date'  => $data['Date'],
+                    'is_supplier'    => true,
+                ]);
+                Log::info('Supplier created', [
+                    'center'        => $center->domain,
+                    'supplier_code' => $data['SupplierCode'],
+                ]);
+            } else {
+                Log::error('CreateSupplier API failed', [
+                    'center'   => $center->domain,
+                    'response' => $response->json(),
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error('CreateSupplier exception: ' . $e->getMessage(), [
+                'center' => $center->domain,
+            ]);
+        }
+    }
+
 
     private function decryptPaymentData(string $encryptedText, string $encryptionKey): string
     {

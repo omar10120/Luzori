@@ -42,15 +42,23 @@ class Center extends Authenticatable implements HasMedia
         'wallet',
         'bank_name',
         'admin_discount',
-        'expire_date'
+        'expire_date',
+        // Supplier (MyFatoorah)
+        'supplier_code',
+        'supplier_email',
+        'supplier_date',
+        'is_supplier',
     ];
     protected $hidden = ['password'];
 
     protected $casts = [
-        'wallet' => 'decimal:2',
+        'wallet'        => 'decimal:2',
         'admin_discount' => 'decimal:2',
-        'is_setup' => 'boolean',
-        'expire_date' => 'datetime'
+        'is_setup'      => 'boolean',
+        'expire_date'   => 'datetime',
+        'supplier_date' => 'datetime',
+        'is_supplier'   => 'boolean',
+        'supplier_code' => 'integer',
     ];
 
     /**
