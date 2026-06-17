@@ -16,7 +16,7 @@ class CenterController extends Controller
         $host = request()->getHost();
 
         if (in_array($host, ['127.0.0.1', 'localhost'], true)) {
-            return Center::where('domain', 'center4')->first();
+            return Center::where('domain', 'center5')->first();
         }
 
         $domain = session('active_center_domain');
@@ -66,6 +66,8 @@ class CenterController extends Controller
             'BankAccountHolderName' => 'required|string|max:100',
             'BusinessName'          => 'required|string|max:100',
             'BankAccount'           => 'required|string|max:100',
+            'bank_name'           => 'required|string|max:100',
+            
         ]);
 
         $center->update($validated);

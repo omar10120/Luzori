@@ -48,6 +48,14 @@
                             <div class="row">
                                 <div class="col-md-12 mb-4">
                                     <div class="mb-1">
+                                        <label class="form-label" for="iban">{{ __('field.bank_name') }} <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="bank_name" name="bank_name"
+                                            placeholder="{{ __('field.bank_name') }}" value="{{ $center->bank_name }}" required />
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-12 mb-4">
+                                    <div class="mb-1">
                                         <label class="form-label" for="iban">{{ __('field.iban') }} <span class="text-danger">*</span></label>
                                         <input type="text" class="form-control" id="iban" name="iban"
                                             placeholder="{{ __('field.iban') }}" value="{{ $center->iban }}" required />

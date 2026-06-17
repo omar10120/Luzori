@@ -83,7 +83,7 @@ class PaymentController extends Controller
         $host = request()->getHost();
 
         if (in_array($host, ['127.0.0.1', 'localhost'], true)) {
-            return Center::where('domain', 'center4')->first();
+            return Center::where('domain', 'center5')->first();
         }
 
         $domain = session('active_center_domain');
@@ -112,7 +112,7 @@ class PaymentController extends Controller
             empty($center->iban) || 
             empty($center->BankAccountHolderName) || 
             empty($center->BusinessName) || 
-            empty($center->BankAccount)
+            empty($center->BankAccount) 
         )) {
             $msg = app()->getLocale() == 'ar' 
                 ? 'يرجى ملء تفاصيل البنك أولاً (رقم الآيبان، اسم صاحب الحساب، الاسم التجاري، رقم الحساب) قبل الاشتراك.' 
@@ -274,7 +274,6 @@ class PaymentController extends Controller
                 'CommissionPercentage'  => 3,
                 'DepositTerms'          => 'Daily',
                 'BankId'                => 1,
-                'BankAccountHolderName' => $center->name,
                 'Iban'                  => $center->iban ?? '',
                 'IsActive'              => true,
                 'BankAccount'           => $center->bank_name ?? '',
