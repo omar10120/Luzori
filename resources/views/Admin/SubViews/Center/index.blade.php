@@ -183,15 +183,44 @@
                             <div class="col-md-4">
                                 <div class="mb-1">
                                     <label class="form-label">Bank Name</label>
-                                    <input type="text" class="form-control" name="bank_name" maxlength="21"
-                                        placeholder="Bank Name (max 21 chars)" value="{{ $item ? $item->bank_name : '' }}" />
+                                    <input type="text" class="form-control" name="bank_name" maxlength="40" disabled
+                                        placeholder="Bank Name (max 40 chars)" value="{{ $item ? $item->bank_name : '' }}" />
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="mb-1">
                                     <label class="form-label">Admin Commission (%)</label>
-                                    <input type="number" step="0.01" min="0" max="100" class="form-control" name="admin_discount"
+                                    <input type="number" step="0.01" min="0" max="100" class="form-control" name="admin_discount" 
                                         placeholder="e.g. 10.00" value="{{ $item ? $item->admin_discount : '0.00' }}" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-1">
+                                    <label class="form-label">Iban</label>
+                                    <input type="text" class="form-control" name="iban" disabled
+                                        placeholder="" value="{{ $item ? $item->iban : '' }}" />
+                                </div>
+                            </div>
+                        
+                            <div class="col-md-4">
+                                <div class="mb-1">
+                                    <label class="form-label">BankAccountHolderName</label>
+                                    <input type="text"  class="form-control" name="BankAccountHolderName" disabled
+                                        placeholder="" value="{{ $item ? $item->BankAccountHolderName : '' }}" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-1">
+                                    <label class="form-label">BusinessName</label>
+                                    <input type="text"class="form-control" name="BusinessName" disabled
+                                        placeholder="" value="{{ $item ? $item->BusinessName : '' }}" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-1">
+                                    <label class="form-label">BankAccount</label>
+                                    <input type="text" class="form-control" name="BankAccount" disabled
+                                        placeholder="" value="{{ $item ? $item->BankAccount : '' }}" />
                                 </div>
                             </div>
                         </div>
@@ -238,7 +267,7 @@
                                     {{-- Hidden field for images to delete --}}
                                     <input type="hidden" name="delete_primary_images" id="deletePrimaryImages" value="">
                                 </div>
-                            </div>
+                            </div>  
                         </div>
                     </div>
                     <div class="card-footer">

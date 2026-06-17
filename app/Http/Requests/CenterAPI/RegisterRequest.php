@@ -75,6 +75,7 @@ class RegisterRequest extends FormRequest
                 'string',
                 'max:21',
             ],
+            
         ];
     }
 

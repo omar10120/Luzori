@@ -43,8 +43,12 @@ class CenterRequest extends FormRequest
                 'status' => 'nullable|in:pending,approve,reject',
                 'reject_reason' => 'nullable|string',
                 'rate' => 'nullable|in:recently_viewed,recommended,new_to,trending',
-                'bank_name' => 'nullable|string|max:21',
+                'bank_name' => 'nullable|string|max:40',
                 'admin_discount' => 'nullable|numeric|min:0|max:100',
+                'iban' => 'nullable|string',
+                'BankAccountHolderName' => 'nullable|string',
+                'BusinessName' => 'nullable|string',
+                'BankAccount' => 'nullable|string',
             ];
         } else {
             return [
@@ -63,8 +67,13 @@ class CenterRequest extends FormRequest
                 'status' => 'nullable|in:pending,approve,reject',
                 'reject_reason' => 'nullable|string',
                 'rate' => 'nullable|in:recently_viewed,recommended,new_to,trending',
-                'bank_name' => 'nullable|string|max:21',
+                'bank_name' => 'nullable|string|max:40',
                 'admin_discount' => 'nullable|numeric|min:0|max:100',
+                'iban' => 'nullable|string',
+                'BankAccountHolderName' => 'nullable|string',
+                'BusinessName' => 'nullable|string',
+                'BankAccount' => 'nullable|string',
+
             ];
         }
     }
