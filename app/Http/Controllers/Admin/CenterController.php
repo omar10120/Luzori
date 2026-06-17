@@ -89,6 +89,7 @@ class CenterController extends Controller
             return abort(401);
         }
 
+        
         if (isset($request->id)) {
             $item = $centerService->edit($request->validated());
         } else {
