@@ -63,6 +63,5 @@ return [
     'globalcategories'                  => 'Global Categories',
     'global-categories'                 => 'Global Categories',
     'global_categories'                 => 'Global Categories',
-    
-
+    'center_info'                       => 'Center Details',
 ];

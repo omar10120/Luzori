@@ -182,6 +182,13 @@ class CenterController extends Controller
             ]);
         }
 
+        if (empty($center->iban) || empty($center->BankAccountHolderName) || empty($center->BusinessName) || empty($center->BankAccount)) {
+            $errMsg = app()->getLocale() == 'ar'
+                ? 'لا يمكن إنشاء مورد. المركز لم يقم بتعبئة بياناته البنكية بعد.'
+                : 'Cannot create supplier. The center has not filled in their bank details yet.';
+            return MyHelper::responseJSON($errMsg, Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
         try {
             $payload = [
                 'SupplierName'          => $center->name,
@@ -191,11 +198,11 @@ class CenterController extends Controller
                 'CommissionPercentage'  => 3,
                 'DepositTerms'          => 'Daily',
                 'BankId'                => 1,
-                'BankAccountHolderName' => $center->name,
                 'Iban'                  => $center->bank_name ?? '',
                 'IsActive'              => true,
-                'BusinessName'          => $center->name,
-                
+                'BankAccount'           => $center->iban ?? '',
+                'BankAccountHolderName' => $center->BankAccountHolderName ?? '',
+                'BusinessName'          => $center->BusinessName ?? '',
             ];
 
             $response = Http::withHeaders([

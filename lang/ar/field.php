@@ -339,13 +339,9 @@ return [
     'package_type'                    => 'نوع الباقة',
     'slug'                            => 'الرمز',
     'nameAr'                          => 'الاسم عربي',
-    'is_professional'                 => 'محترف'
-    
-    
-
-    
-    
-
-    
-    
+    'is_professional'                 => 'محترف',
+    'iban'                            => 'رقم الآيبان (IBAN)',
+    'BankAccountHolderName'           => 'اسم صاحب الحساب البنكي',
+    'BusinessName'                    => 'الاسم التجاري للعمل',
+    'BankAccount'                     => 'رقم الحساب البنكي',
 ];

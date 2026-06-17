@@ -41,6 +41,7 @@ use App\Http\Controllers\CenterUser\WeekDayController;
 use App\Http\Controllers\CenterUser\UserPackageController;
 use App\Http\Controllers\CenterUser\CenterGlobalCategoryController;
 use App\Http\Controllers\CenterUser\PaymentController;
+use App\Http\Controllers\CenterUser\CenterController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -342,6 +343,13 @@ Route::group(['middleware' => 'auth_center_user:center_user'], function () {
         Route::controller(SettingController::class)->group(function () {
             Route::get('index', 'index')->name('index');
             Route::post('updateOrCreate', 'updateOrCreate')->name('updateOrCreate');
+        });
+    });
+
+    Route::group(['prefix' => 'center', 'as' => 'center.'], function () {
+        Route::controller(CenterController::class)->group(function () {
+            Route::get('index', 'index')->name('index');
+            Route::post('update', 'update')->name('update');
         });
     });
 

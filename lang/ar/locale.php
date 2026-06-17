@@ -63,11 +63,5 @@ return [
     'globalcategories'                  => 'الفئات العامة',
     'global-categories'                 => 'الفئات العامة',
     'global_categories'                 => 'الفئات العامة',
-    
-    
-    
-    
-    
-    
-    
+    'center_info'                       => 'بيانات المركز',
 ];

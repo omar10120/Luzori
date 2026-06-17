@@ -524,7 +524,8 @@
       "slug": [
         "infos",
         "pages",
-        "settings"
+        "settings",
+        "center"
       ],
       "permissions": [
         "VIEW_INFOS",
@@ -541,6 +542,17 @@
           ],
           "permissions": [
             "VIEW_INFOS"
+          ]
+        },
+        {
+          "url": "center_user/center/index",
+          "name": "center_info",
+          "icon": "settings",
+          "slug": [
+            "center"
+          ],
+          "permissions": [
+            "VIEW_SETTINGS"
           ]
         },
         {

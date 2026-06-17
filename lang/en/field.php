@@ -347,5 +347,9 @@ return [
     'package_type'                    => 'Package Type',
     'slug'                            => 'Slug',
     'nameAr'                          => 'nameAr',
-    'is_professional'                 => 'is professional'
-    ];
+    'is_professional'                 => 'is professional',
+    'iban'                            => 'IBAN',
+    'BankAccountHolderName'           => 'Bank Account Holder Name',
+    'BusinessName'                    => 'Business Name',
+    'BankAccount'                     => 'Bank Account Number',
+];

@@ -41,6 +41,24 @@ class PaymentController extends Controller
     public function plans()
     {
         $center    = $this->resolveActiveCenter();
+
+        if ($center && (
+            empty($center->iban) || 
+            empty($center->BankAccountHolderName) || 
+            empty($center->BusinessName) || 
+            empty($center->BankAccount)
+        )) {
+            $warningMsg = app()->getLocale() == 'ar'
+                ? 'يرجى ملء تفاصيل البنك أولاً (رقم الآيبان، اسم صاحب الحساب، الاسم التجاري، رقم الحساب البنكي) قبل الاشتراك.'
+                : 'Please fill in your bank details (IBAN, Bank Account Holder Name, Business Name, Bank Account Number) first before subscribing.';
+
+            return redirect()
+                ->route('center_user.center.index')
+                ->with('warning', $warningMsg);
+        }
+        
+        
+
         $isExpired = $center && $center->expire_date && now()->gt($center->expire_date);
         $expireAt  = $center?->expire_date ? Carbon::parse($center->expire_date) : null;
 
@@ -65,7 +83,7 @@ class PaymentController extends Controller
         $host = request()->getHost();
 
         if (in_array($host, ['127.0.0.1', 'localhost'], true)) {
-            return Center::where('domain', 'center8')->first();
+            return Center::where('domain', 'center4')->first();
         }
 
         $domain = session('active_center_domain');
@@ -88,6 +106,23 @@ class PaymentController extends Controller
         $request->validate([
             'plan' => 'required|string|in:' . implode(',', array_keys(self::subscriptionPlans())),
         ]);
+
+        $center = $this->resolveActiveCenter();
+        if ($center && (
+            empty($center->iban) || 
+            empty($center->BankAccountHolderName) || 
+            empty($center->BusinessName) || 
+            empty($center->BankAccount)
+        )) {
+            $msg = app()->getLocale() == 'ar' 
+                ? 'يرجى ملء تفاصيل البنك أولاً (رقم الآيبان، اسم صاحب الحساب، الاسم التجاري، رقم الحساب) قبل الاشتراك.' 
+                : 'Please fill in your bank details (IBAN, Bank Account Holder Name, Business Name, Bank Account Number) first before subscribing.';
+            return response()->json([
+                'success' => false,
+                'message' => $msg,
+            ], 422);
+        }
+        
 
         $plan   = self::subscriptionPlans()[$request->plan];
         $amount = (float) $plan['amount'];
