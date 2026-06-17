@@ -242,7 +242,9 @@ class PaymentController extends Controller
                 'BankAccountHolderName' => $center->name,
                 'Iban'                  => $center->bank_name ?? '',
                 'IsActive'              => true,
-                'BusinessName'          => $center->name,
+                'BankAccount'           => $center->iban ?? '',
+                'BankAccountHolderName' => $center->BankAccountHolderName ?? '',
+                'BusinessName'          => $center->BusinessName ?? '',
             ];
 
             $response = Http::withHeaders([
@@ -261,7 +263,8 @@ class PaymentController extends Controller
                     'supplier_code'  => $data['SupplierCode'],
                     'supplier_email' => $data['SupplierEmail'],
                     'supplier_date'  => $data['Date'],
-                    'is_supplier'    => true,
+                    'is_supplier'    => true
+                    
                 ]);
                 Log::info('Supplier created', [
                     'center'        => $center->domain,

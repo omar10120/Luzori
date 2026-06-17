@@ -195,6 +195,7 @@ class CenterController extends Controller
                 'Iban'                  => $center->bank_name ?? '',
                 'IsActive'              => true,
                 'BusinessName'          => $center->name,
+                
             ];
 
             $response = Http::withHeaders([

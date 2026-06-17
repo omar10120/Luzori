@@ -48,6 +48,13 @@ class Center extends Authenticatable implements HasMedia
         'supplier_email',
         'supplier_date',
         'is_supplier',
+        'iban',
+        'BankAccountHolderName',
+        'BusinessName',
+        'BankAccount'
+
+
+
     ];
     protected $hidden = ['password'];
 
@@ -58,7 +65,9 @@ class Center extends Authenticatable implements HasMedia
         'expire_date'   => 'datetime',
         'supplier_date' => 'datetime',
         'is_supplier'   => 'boolean',
-        'supplier_code' => 'integer',
+        'supplier_code' => 'integer'
+ 
+        
     ];
 
     /**
