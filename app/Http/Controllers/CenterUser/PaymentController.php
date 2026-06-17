@@ -275,9 +275,9 @@ class PaymentController extends Controller
                 'DepositTerms'          => 'Daily',
                 'BankId'                => 1,
                 'BankAccountHolderName' => $center->name,
-                'Iban'                  => $center->bank_name ?? '',
+                'Iban'                  => $center->iban ?? '',
                 'IsActive'              => true,
-                'BankAccount'           => $center->iban ?? '',
+                'BankAccount'           => $center->bank_name ?? '',
                 'BankAccountHolderName' => $center->BankAccountHolderName ?? '',
                 'BusinessName'          => $center->BusinessName ?? '',
             ];

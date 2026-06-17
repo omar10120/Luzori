@@ -316,7 +316,7 @@ return [
     'booking_status_rejected'         => 'مرفوض',
     'booking_status_cancelled'        => 'ملغي',
     'admin_discount'                  => 'خصم الادمن',
-    'bank_name'                       => 'رقم البنك',
+    'bank_name'                       => 'اسم البنك',
     'center'                          => 'المركز',
     'admin_notes'                     => 'ملاحظات الادمن',
     'wallet_balance'                  => 'رصيد المحفظة',
