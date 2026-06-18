@@ -42,6 +42,7 @@ use App\Http\Controllers\CenterUser\UserPackageController;
 use App\Http\Controllers\CenterUser\CenterGlobalCategoryController;
 use App\Http\Controllers\CenterUser\PaymentController;
 use App\Http\Controllers\CenterUser\CenterController;
+use App\Http\Controllers\CenterUser\GetBanksController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -352,6 +353,8 @@ Route::group(['middleware' => 'auth_center_user:center_user'], function () {
             Route::post('update', 'update')->name('update');
         });
     });
+
+    Route::get('get-banks', [GetBanksController::class, 'index'])->name('get-banks.index');
 
     Route::group(['prefix' => 'global_categories', 'as' => 'global_categories.'], function () {
         Route::controller(CenterGlobalCategoryController::class)->group(function () {

@@ -2,6 +2,10 @@
 
 @section('title', $title)
 
+@section('vendor-style')
+    @vite(['resources/assets/vendor/libs/select2/select2.scss'])
+@endsection
+
 @section('content')
     <div class="container">
         @include('CenterUser.Components.breadcrumbs')
@@ -78,8 +82,12 @@
                                 <div class="col-md-12 mb-4">
                                     <div class="mb-1">
                                         <label class="form-label" for="BankId">{{ __('field.BankId') }} <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="BankId" name="BankId"
-                                            placeholder="{{ __('field.BankId') }}" value="{{ $center->BankId }}" required />
+                                        <select class="form-control select2" id="BankId" name="BankId" required>
+                                            <option value="">{{ __('general.choose') }}</option>
+                                            @if ($center->BankId)
+                                                <option value="{{ $center->BankId }}" selected>{{ $center->bank_name ?: $center->BankId }}</option>
+                                            @endif
+                                        </select>
                                     </div>
                                 </div>
                                 <div class="col-md-12 mb-4">
@@ -104,6 +112,59 @@
     </div>
 @endsection
 
+@section('vendor-script')
+    @vite(['resources/assets/vendor/libs/select2/select2.js'])
+@endsection
+
 @section('page-script')
     @include('CenterUser.Components.submit-form-ajax')
+    <script>
+        $(document).ready(function() {
+            const selectedBankId = @json($center->BankId);
+            const $bankSelect = $('#BankId');
+
+            $bankSelect.select2({
+                placeholder: "{{ __('general.choose') }}",
+                allowClear: true,
+                width: '100%'
+            });
+
+            $.get('{{ route('center_user.get-banks.index') }}', function(banks) {
+                const currentValue = selectedBankId ? String(selectedBankId) : '';
+
+                $bankSelect.empty().append(
+                    $('<option>', { value: '', text: "{{ __('general.choose') }}" })
+                );
+
+                banks.forEach(function(bank) {
+                    $bankSelect.append(
+                        $('<option>', {
+                            value: bank.Value,
+                            text: bank.Text,
+                            selected: String(bank.Value) === currentValue
+                        })
+                    );
+                });
+
+                if (currentValue) {
+                    $bankSelect.val(currentValue).trigger('change');
+                }
+            }).fail(function(xhr) {
+                const message = xhr.responseJSON?.message || "{{ __('admin.an_error_occurred') }}";
+                const $alert = $('#alertError');
+                const $list = $('#listError');
+
+                $list.empty().append($('<li>').text(message));
+                $alert.show();
+            });
+
+            $bankSelect.on('change', function() {
+                const selectedText = $(this).find('option:selected').text();
+                if ($(this).val()) {
+                    $('#bank_name').val(selectedText);
+                }
+            });
+        });
+    </script>
 @endsection
+
