@@ -204,6 +204,9 @@ class CenterController extends Controller
                 'BankAccount'           => $center->bank_name ?? '',
                 'BankAccountHolderName' => $center->BankAccountHolderName ?? '',
                 'BusinessName'          => $center->BusinessName ?? '',
+                'BankId'                => 1,
+                'BusinessType'          => 1,
+                'LogoFile'              => $center->logo ?? '',
             ];
 
             $response = Http::withHeaders([

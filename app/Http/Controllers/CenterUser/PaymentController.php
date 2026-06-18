@@ -83,7 +83,7 @@ class PaymentController extends Controller
         $host = request()->getHost();
 
         if (in_array($host, ['127.0.0.1', 'localhost'], true)) {
-            return Center::where('domain', 'center5')->first();
+            return Center::where('domain', 'center')->first();
         }
 
         $domain = session('active_center_domain');
@@ -279,6 +279,10 @@ class PaymentController extends Controller
                 'BankAccount'           => $center->bank_name ?? '',
                 'BankAccountHolderName' => $center->BankAccountHolderName ?? '',
                 'BusinessName'          => $center->BusinessName ?? '',
+                'BankId'                => 1,
+                'BusinessType'          => 1,
+                'LogoFile'              => $center->logo ?? '',
+                
             ];
 
             $response = Http::withHeaders([
