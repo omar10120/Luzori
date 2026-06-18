@@ -205,7 +205,7 @@ class CenterController extends Controller
                 'BankAccountHolderName' => $center->BankAccountHolderName ?? '',
                 'BusinessName'          => $center->BusinessName ?? '',
                 'BankId'                => 1,
-                'BusinessType'          => 1,
+                'BusinessType'          => $$center->BankId,
                 'LogoFile'              => $center->logo ?? '',
             ];
 
