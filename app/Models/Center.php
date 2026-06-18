@@ -51,7 +51,8 @@ class Center extends Authenticatable implements HasMedia
         'iban',
         'BankAccountHolderName',
         'BusinessName',
-        'BankAccount'
+        'BankAccount',
+        'BankId'
 
 
 

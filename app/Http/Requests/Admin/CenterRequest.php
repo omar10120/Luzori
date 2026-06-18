@@ -49,6 +49,7 @@ class CenterRequest extends FormRequest
                 'BankAccountHolderName' => 'nullable|string',
                 'BusinessName' => 'nullable|string',
                 'BankAccount' => 'nullable|string',
+                'BankId' => 'nullable|string',
             ];
         } else {
             return [
@@ -74,6 +75,7 @@ class CenterRequest extends FormRequest
                 'BusinessName' => 'nullable|string',
                 'BankAccount' => 'nullable|string',
 
+                'BankId' => 'nullable|string',
             ];
         }
     }

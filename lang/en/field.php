@@ -352,4 +352,5 @@ return [
     'BankAccountHolderName'           => 'Bank Account Holder Name',
     'BusinessName'                    => 'Business Name',
     'BankAccount'                     => 'Bank Account Number',
+    'BankId'                          => 'Bank Id',
 ];

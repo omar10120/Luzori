@@ -198,14 +198,13 @@ class CenterController extends Controller
                 'CommissionValue'       => 1,
                 'CommissionPercentage'  => 3,
                 'DepositTerms'          => 'Daily',
-                'BankId'                => 1,
                 'Iban'                  => $center->iban ?? '',
                 'IsActive'              => true,
                 'BankAccount'           => $center->bank_name ?? '',
                 'BankAccountHolderName' => $center->BankAccountHolderName ?? '',
                 'BusinessName'          => $center->BusinessName ?? '',
-                'BankId'                => 1,
-                'BusinessType'          => $$center->BankId,
+                'BankId'                => $center->BankId ?? '',
+                'BusinessType'          => 1,
                 'LogoFile'              => $center->logo ?? '',
             ];
 

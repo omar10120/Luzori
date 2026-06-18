@@ -66,7 +66,8 @@ class CenterController extends Controller
             'BankAccountHolderName' => 'required|string|max:100',
             'BusinessName'          => 'required|string|max:100',
             'BankAccount'           => 'required|string|max:100',
-            'bank_name'           => 'required|string|max:100',
+            'bank_name'             => 'required|string|max:100',
+            'BankId'                => 'required|string|max:100',
             
         ]);
 

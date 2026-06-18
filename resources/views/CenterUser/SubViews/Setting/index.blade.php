@@ -110,12 +110,7 @@
                                             value="{{ $item['tips']->value }}" placeholder="{{ __('admin.Tips (%)') }}">
                                     </div>
                                 </div>
-                                <!-- <div class="col-md-12 mb-4">
-                                    <div class="mb-1">
-                                        <label class="form-label">{{ __('field.invoice_info') }}</label>
-                                        <textarea class="summernote" name="invoice_info">{{ $item['invoice_info']->value }}</textarea>
-                                    </div>
-                                </div> -->
+                            
                                 <div class="col-md-12">
                                     <div class="mb-1">
                                         <div class="mb-1">
@@ -162,3 +157,5 @@
     @include('Admin.Components.image-js')
     @include('Admin.Components.submit-form-ajax')
 @endsection
+
+

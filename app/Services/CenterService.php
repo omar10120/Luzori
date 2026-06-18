@@ -180,7 +180,8 @@ class CenterService
             empty($center->iban) || 
             empty($center->BankAccountHolderName) || 
             empty($center->BusinessName) || 
-            empty($center->BankAccount)
+            empty($center->BankAccount) ||
+            empty($center->BankId)
         )) {
             Log::info("test");
             $msg = app()->getLocale() == 'ar' 

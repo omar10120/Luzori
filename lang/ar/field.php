@@ -344,4 +344,5 @@ return [
     'BankAccountHolderName'           => 'اسم صاحب الحساب البنكي',
     'BusinessName'                    => 'الاسم التجاري للعمل',
     'BankAccount'                     => 'رقم الحساب البنكي',
+    'BankId'                          => 'رقم البنك',
 ];

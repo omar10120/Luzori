@@ -77,6 +77,13 @@
                                 </div>
                                 <div class="col-md-12 mb-4">
                                     <div class="mb-1">
+                                        <label class="form-label" for="BankId">{{ __('field.BankId') }} <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="BankId" name="BankId"
+                                            placeholder="{{ __('field.BankId') }}" value="{{ $center->BankId }}" required />
+                                    </div>
+                                </div>
+                                <div class="col-md-12 mb-4">
+                                    <div class="mb-1">
                                         <label class="form-label" for="BankAccount">{{ __('field.BankAccount') }} <span class="text-danger">*</span></label>
                                         <input type="text" class="form-control" id="BankAccount" name="BankAccount"
                                             placeholder="{{ __('field.BankAccount') }}" value="{{ $center->BankAccount }}" required />

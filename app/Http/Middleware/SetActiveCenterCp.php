@@ -34,7 +34,7 @@ class SetActiveCenterCp
 
         if ($subdomain && $subdomain !== 'dashboard') {
             $center = Center::where('domain', $subdomain)->first();
-
+            
             if (!$center) {
                 abort(404, 'Center not found');
             }

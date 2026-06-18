@@ -170,6 +170,7 @@ class CenterDataTable extends DataTable
             Column::make('BankAccountHolderName')->title(__('field.BankAccountHolderName')),
             Column::make('BusinessName')->title(__('field.BusinessName')),
             Column::make('BankAccount')->title(__('field.BankAccount')),
+            Column::make('BankId')->title(__('field.BankId')),
             Column::computed('role')->title(__('field.role')),
             Column::computed('approval_status')->title(__('field.status')),
             Column::computed('is_supplier')->title('Supplier'),

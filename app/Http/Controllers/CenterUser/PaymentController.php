@@ -46,7 +46,8 @@ class PaymentController extends Controller
             empty($center->iban) || 
             empty($center->BankAccountHolderName) || 
             empty($center->BusinessName) || 
-            empty($center->BankAccount)
+            empty($center->BankAccount) ||
+            empty($center->BankId)
         )) {
             $warningMsg = app()->getLocale() == 'ar'
                 ? 'يرجى ملء تفاصيل البنك أولاً (رقم الآيبان، اسم صاحب الحساب، الاسم التجاري، رقم الحساب البنكي) قبل الاشتراك.'
@@ -112,7 +113,8 @@ class PaymentController extends Controller
             empty($center->iban) || 
             empty($center->BankAccountHolderName) || 
             empty($center->BusinessName) || 
-            empty($center->BankAccount) 
+            empty($center->BankAccount) ||
+            empty($center->BankId)
         )) {
             $msg = app()->getLocale() == 'ar' 
                 ? 'يرجى ملء تفاصيل البنك أولاً (رقم الآيبان، اسم صاحب الحساب، الاسم التجاري، رقم الحساب) قبل الاشتراك.' 
@@ -273,13 +275,12 @@ class PaymentController extends Controller
                 'CommissionValue'       => 1,
                 'CommissionPercentage'  => 3,
                 'DepositTerms'          => 'Daily',
-                'BankId'                => 1,
                 'Iban'                  => $center->iban ?? '',
                 'IsActive'              => true,
                 'BankAccount'           => $center->bank_name ?? '',
                 'BankAccountHolderName' => $center->BankAccountHolderName ?? '',
                 'BusinessName'          => $center->BusinessName ?? '',
-                'BankId'                => 1,
+                'BankId'                => $center->BankId ?? '',
                 'BusinessType'          => 1,
                 'LogoFile'              => $center->logo ?? '',
                 
