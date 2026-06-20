@@ -33,9 +33,11 @@ class CenterUserRoleDataTable extends DataTable
             })
             ->editColumn('permission', function ($row) {
                 $permissions = '';
+                $locale = app()->getLocale();
                 foreach ($row->permissions as $permission) {
+                    $name = ($locale == 'ar') ? ($permission->name_ar ?? $permission->name) : $permission->name;
                     $permissions .= '<span class="badge"
-                        style="border-radius:10px;background-color:blue;margin:5px;padding:7px;">' . $permission->name_ar . '</span>';
+                        style="border-radius:10px;background-color:blue;margin:5px;padding:7px;">' . htmlspecialchars($name) . '</span>';
                 }
                 return $permissions;
             })

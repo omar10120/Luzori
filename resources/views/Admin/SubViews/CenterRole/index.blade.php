@@ -33,7 +33,7 @@
                                                 name="permissions[]"
                                                 {{ $item ? (in_array($perm->id, array_column($item->permissions->toArray(), 'id')) ? 'checked' : null) : null }} />
                                             <label class="form-check-label" for="flexCheckDefault">
-                                                {{ $perm->name_ar }}
+                                                {{ app()->getLocale() == 'ar' ? ($perm->name_ar ?? $perm->name) : $perm->name }}
                                             </label>
                                         </div>
                                     </div>

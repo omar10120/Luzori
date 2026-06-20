@@ -32,10 +32,12 @@ class AdminRoleDataTable extends DataTable
                 return $html;
             })
             ->editColumn('permission', function ($row) {
+                $locale = app()->getLocale();
                 $permissions = '';
                 foreach ($row->permissions as $permission) {
+                    $name = ($locale == 'ar') ? ($permission->name_ar) : $permission->name;
                     $permissions .= '<span class="badge"
-                        style="border-radius:10px;background-color:blue;margin:5px;padding:7px;">' . $permission->name_ar . '</span>';
+                        style="border-radius:10px;background-color:blue;margin:5px;padding:7px;">' . $name . '</span>';
                 }
                 return $permissions;
             })
