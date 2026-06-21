@@ -1,5 +1,13 @@
 <div style="text-align: center;">
-    <img src="{{ public_path('assets/img/bg-logo.png') }}" style="width: 80px; height: auto;" alt="logo" />
+    @php
+        $logoPath = public_path('assets/img/bg-logo.png');
+        $centerLogo = $center?->getFirstMedia('Center');
+
+        if ($centerLogo && file_exists($centerLogo->getPath())) {
+            $logoPath = $centerLogo->getPath();
+        }
+    @endphp
+    <img src="{{ $logoPath }}" style="width: 80px; height: auto;" alt="logo" />
 
     @if (isset($center) || isset($invoiceSettings))
         <div style="margin-top: 8px; line-height: 1.5; font-size: 13px;">

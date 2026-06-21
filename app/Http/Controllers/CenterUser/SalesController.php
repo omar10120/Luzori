@@ -429,19 +429,19 @@ class SalesController extends Controller
         $host = request()->getHost();
 
         if (in_array($host, ['127.0.0.1', 'localhost'], true)) {
-            return Center::where('domain', 'center')->first();
+            return Center::with('media')->where('domain', 'center')->first();
         }
 
         $domain = session('active_center_domain');
 
         if ($domain) {
-            return Center::where('domain', $domain)->first();
+            return Center::with('media')->where('domain', $domain)->first();
         }
 
         $parts     = explode('.', $host);
         $subdomain = count($parts) > 2 && $parts[0] !== 'www' ? $parts[0] : null;
 
-        return $subdomain ? Center::where('domain', $subdomain)->first() : null;
+        return $subdomain ? Center::with('media')->where('domain', $subdomain)->first() : null;
     }
 }
 
