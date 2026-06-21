@@ -7,12 +7,14 @@ use App\Enums\SettingEnum;
 use App\Helpers\MyHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Branch;
+use App\Models\Center;
 use App\Models\Product;
 use App\Models\Service;
 use App\Models\Setting;
 use App\Models\Sale;
 use App\Models\User;
 use App\Models\Worker;
+use App\Services\InvoiceSettingsService;
 use App\Services\SalesService;
 use App\Traits\CategoryTreeTrait;
 use Illuminate\Http\Request;
@@ -381,7 +383,7 @@ class SalesController extends Controller
     /**
      * Print sale receipt
      */
-    public function print($id)
+    public function print($id, InvoiceSettingsService $invoiceSettingsService)
     {
         $sale = Sale::with([
             'worker',
@@ -409,11 +411,37 @@ class SalesController extends Controller
         ];
 
         $invoice_info = Setting::where('key', SettingEnum::invoice_info->value)->first()->value ?? '';
-        $template = (string)view('CenterUser.SubViews.Report.template.invoice_info', compact('invoice_info'));
+        $center = $this->resolveActiveCenter();
+        $invoiceSettings = $invoiceSettingsService->first();
+        $template = (string) view('CenterUser.SubViews.Report.template.invoice_info', compact(
+            'invoice_info',
+            'center',
+            'invoiceSettings'
+        ));
 
         $view = 'CenterUser.SubViews.' . $this->model . '.print';
         $pdf = Pdf::loadView($view, compact('sale', 'template'), [], $options);
         return $pdf->stream('sale_' . $id . '.pdf');
+    }
+
+    private function resolveActiveCenter(): ?Center
+    {
+        $host = request()->getHost();
+
+        if (in_array($host, ['127.0.0.1', 'localhost'], true)) {
+            return Center::where('domain', 'center')->first();
+        }
+
+        $domain = session('active_center_domain');
+
+        if ($domain) {
+            return Center::where('domain', $domain)->first();
+        }
+
+        $parts     = explode('.', $host);
+        $subdomain = count($parts) > 2 && $parts[0] !== 'www' ? $parts[0] : null;
+
+        return $subdomain ? Center::where('domain', $subdomain)->first() : null;
     }
 }
 
