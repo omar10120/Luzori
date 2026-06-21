@@ -64,4 +64,5 @@ return [
     'global-categories'                 => 'Global Categories',
     'global_categories'                 => 'Global Categories',
     'center_info'                       => 'Center Details',
+    'invoice_settings'                  => 'Invoice Settings',
 ];

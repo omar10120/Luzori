@@ -33,6 +33,7 @@ use App\Http\Controllers\CenterAPI\CenterController;
 use App\Http\Controllers\CenterAPI\GlobalCategoryController;
 use App\Http\Controllers\CenterAPI\PaymentController;
 use App\Http\Controllers\SMSController;
+use App\Http\Controllers\CenterAPI\InvoiceSettingController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -98,6 +99,11 @@ Route::group(['prefix' => 'infos'], function () {
     });
 });
 
+Route::group(['prefix' => 'invoice_settings'], function () {
+    Route::controller(InvoiceSettingController::class)->group(function () {
+        Route::get('all', 'all');
+    });
+});
 
     
 Route::group(['middleware' => 'auth:center_api'], function () {

@@ -153,6 +153,8 @@ return [
     'salary'                        => 'الراتب',
     'fast_expense'                  => 'مصروف سريع',
     'phone_number'                  => 'رقم الهاتف',
+    'emirate'                       => 'الإمارة',
+    'tax_number'                    => 'الرقم الضريبي',
     'select_branch'                 => 'اختر الفرع',
     'select_payment_type'           => 'اختر نوع الدفع',
     'select_expense_name'           => 'اختر نوع المصروف',

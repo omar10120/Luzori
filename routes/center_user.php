@@ -43,6 +43,7 @@ use App\Http\Controllers\CenterUser\CenterGlobalCategoryController;
 use App\Http\Controllers\CenterUser\PaymentController;
 use App\Http\Controllers\CenterUser\CenterController;
 use App\Http\Controllers\CenterUser\GetBanksController;
+use App\Http\Controllers\CenterUser\InvoiceSettingController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -337,6 +338,13 @@ Route::group(['middleware' => 'auth_center_user:center_user'], function () {
             Route::get('index', 'index')->name('index');
             Route::post('updateOrCreate', 'updateOrCreate')->name('updateOrCreate');
             Route::post('update-sender-email', 'updateSenderEmail')->name('updateSenderEmail');
+        });
+    });
+
+    Route::group(['prefix' => 'InvoiceSettings', 'as' => 'invoice_settings.'], function () {
+        Route::controller(InvoiceSettingController::class)->group(function () {
+            Route::get('index', 'index')->name('index');
+            Route::post('updateOrCreate', 'updateOrCreate')->name('updateOrCreate');
         });
     });
 

@@ -157,6 +157,8 @@ return [
     'salary'                        => 'Salary',
     'fast_expense'                  => 'Fast Expense',
     'phone_number'                  => 'Phone Number',
+    'emirate'                       => 'Emirate',
+    'tax_number'                    => 'Tax Number',
     'select_branch'                 => 'Select Branch',
     'select_payment_type'           => 'Select Payment Type',
     'select_expense_name'           => 'Select Expense Type',

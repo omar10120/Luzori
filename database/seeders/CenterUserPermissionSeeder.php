@@ -882,5 +882,20 @@ class CenterUserPermissionSeeder extends Seeder
             'guard_name' => 'center_api',
         ]);
         // END GLOBAL CATEGORIES
+
+        // START INVOICE SETTINGS
+        Permission::create([
+            'name' => 'VIEW_INVOICE_SETTINGS',
+            'name_ar' => 'عرض إعدادات الفاتورة',
+            'group' => 'Invoice Settings',
+            'guard_name' => 'center_api',
+        ]);
+        Permission::create([
+            'name' => 'UPDATE_INVOICE_SETTINGS',
+            'name_ar' => 'تعديل إعدادات الفاتورة',
+            'group' => 'Invoice Settings',
+            'guard_name' => 'center_api',
+        ]);
+        // END INVOICE SETTINGS
     }
 }
