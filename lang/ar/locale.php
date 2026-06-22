@@ -64,5 +64,6 @@ return [
     'global-categories'                 => 'الفئات العامة',
     'global_categories'                 => 'الفئات العامة',
     'center_info'                       => 'بيانات المركز',
-    'InvoiceSettings'                  => 'إعدادات الفاتورة',
+    'InvoiceSettings'                   => 'إعدادات الفاتورة',
+    'nvoice_settings'                   => 'إعدادات الفاتورة',
 ];
