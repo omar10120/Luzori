@@ -347,4 +347,6 @@ return [
     'BusinessName'                    => 'الاسم التجاري للعمل',
     'BankAccount'                     => 'رقم الحساب البنكي',
     'BankId'                          => 'رقم البنك',
+    'select_user'                     => 'اختر مستخدم'
+    
 ];

@@ -95,11 +95,19 @@ class DailyReportResource extends JsonResource
         // Calculate final total sum, excluding specific categories as requested
         $sumTotal = 0;
         // The user wants 'package' removed from total.
-        // They also noted that 'free' should be kept but handled similarly.
-        $excludedFromTotal = ['package', 'free', 'commission', 'tips'];
-        
+        // Used-wallet amounts (wallet_details_prices) are shown but excluded from grand total.
+        $excludedFromTotal = ['package', 'free', 'commission', 'tips', 'wallet'];
+        $usedWalletAmountKeys = [];
+        if (isset($this['wallet_details_prices'])) {
+            foreach ($this['wallet_details_prices'] as $key => $value) {
+                if ($value > 0 && $key !== 'package') {
+                    $usedWalletAmountKeys[] = $key;
+                }
+            }
+        }
+
         foreach ($total as $key => $value) {
-            if (!in_array($key, $excludedFromTotal)) {
+            if (!in_array($key, $excludedFromTotal) && !in_array($key, $usedWalletAmountKeys)) {
                 $sumTotal += (float) $value;
             }
         }

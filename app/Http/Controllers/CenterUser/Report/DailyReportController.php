@@ -388,6 +388,7 @@ class DailyReportController extends Controller
                     if (!isset($wallet_details_prices[$get_wallet->wallet_type])) {
                         $wallet_details_prices[$get_wallet->wallet_type] = 0;
                     }
+                    // Display in report; excluded from grand total in daily_report template.
                     $wallet_details_prices[$get_wallet->wallet_type] += $get_wallet->invoiced_amount;
 
                     if (isset($users_with_commission[$get_wallet->worker_id])) {

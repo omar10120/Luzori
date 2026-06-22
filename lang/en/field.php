@@ -355,4 +355,5 @@ return [
     'BusinessName'                    => 'Business Name',
     'BankAccount'                     => 'Bank Account Number',
     'BankId'                          => 'Bank Id',
+    'select_user'                     => 'select user'
 ];
