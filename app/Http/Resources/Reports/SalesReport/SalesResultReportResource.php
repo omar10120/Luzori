@@ -6,6 +6,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class SalesResultReportResource extends JsonResource
 {
+    public array $usedWalletAmountKeys = [];
+
     /**
      * Transform the resource into an array.
      *
@@ -16,26 +18,36 @@ class SalesResultReportResource extends JsonResource
     {
         $res = [];
         $paymentMethods = get_payment_method_names();
-        
+        $usedWalletAmountKeys = $this->usedWalletAmountKeys;
+
         foreach ($this->resource as $date => $item) {
             $row = ['date' => $date];
-            
-            // Add all payment methods dynamically
+
             foreach ($paymentMethods as $method) {
                 $row[$method] = $item[$method] ?? 0;
             }
-            
+
             $row['commission'] = $item['commission'];
-            
-            // Calculate total without free dynamically
+
             $total_without_free = $item['commission'];
             foreach ($paymentMethods as $method) {
-                if ($method !== 'free' && $method !== 'wallet') {
+                if ($method !== 'free' && $method !== 'wallet' && !in_array($method, $usedWalletAmountKeys, true)) {
                     $total_without_free += $item[$method] ?? 0;
                 }
             }
+            foreach ($item as $key => $value) {
+                if (
+                    !in_array($key, $paymentMethods, true)
+                    && $key !== 'commission'
+                    && $key !== 'free'
+                    && $key !== 'wallet'
+                    && !in_array($key, $usedWalletAmountKeys, true)
+                ) {
+                    $total_without_free += $value;
+                }
+            }
             $row['total_without_free'] = $total_without_free;
-            
+
             $res[] = $row;
         }
         return $res;

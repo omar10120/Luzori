@@ -1,5 +1,6 @@
 @php
     $fontFamily = App::getLocale() == 'ar' ? 'Cairo' : 'Poppins';
+    $usedWalletAmountKeys = $usedWalletAmountKeys ?? [];
 @endphp
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&family=Poppins:wght@400;700&display=swap" rel="stylesheet">
 <style>
@@ -48,7 +49,10 @@
                         <td>{{ date('d-M-Y', strtotime($date)) }}</td>
                         @foreach ($payments_type as $index => $value)
                             @php
-                                if ($index != 'free' && $index != 'wallet') {
+                                $excludeFromRowTotal = $index === 'free'
+                                    || $index === 'wallet'
+                                    || !empty($usedWalletAmountKeys[$index]);
+                                if (!$excludeFromRowTotal) {
                                     $total += $result[$date][$index];
                                 }
                                 $last_total[$index] += $result[$date][$index];
@@ -74,17 +78,7 @@
             </tr>
             <tr>
                 <td colspan="11" style="background-color: #666;color: #fff;text-align: center">
-                    @php
-                        $footer_total = 0;
-                    @endphp
-                    @foreach ($last_total as $index => $value)
-                        @php
-                            if ($index != 'total_without_free') {
-                                $footer_total += $value;
-                            }
-                        @endphp
-                    @endforeach
-                    <strong>AED {{ number_format($footer_total, 2, '.', '') }}</strong>
+                    <strong>AED {{ number_format($last_total['total_without_free'] ?? 0, 2, '.', '') }}</strong>
                 </td>
             </tr>
         </tfoot>
