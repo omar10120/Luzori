@@ -172,5 +172,7 @@ return [
     'no_data' =>  'no data',
     'select_if_the_employee_is_professional ' => 'select if the employee is professional',
     'manage_your_invoice_settings' => 'Manage Your Invoice Settings',
-    'manage_your_contact_info_settings' => 'Manage Your Contact Info Settings'
+    'manage_your_contact_info_settings' => 'Manage Your Contact Info Settings',
+    'social_media_links' => 'Social Media Links',
+    'contact_info' => 'Contact Information'
 ];

@@ -170,7 +170,9 @@ return [
     'no_data' =>  'لا يوجد بيانات',
     'select_if_the_employee_is_professional ' => 'حالة الموظف محترف',
     'manage_your_invoice_settings' => 'إدارة تفاصيل الفاتورة',
-    'manage_your_contact_info_settings' => 'إدارة تفاصيل التواصل'
+    'manage_your_contact_info_settings' => 'إدارة تفاصيل التواصل',
+    'social_media_links' => 'روابط التواصل الاجتماعي',
+    'contact_info' => 'معلومات التواصل'
     
     
 ];

@@ -27,6 +27,12 @@
                     </div>
                     <div class="card-body">
                         <div class="container">
+                            <div class="input-group justify-center d-flex my-4  ">
+                                <img src="{{ asset('assets/icons/contact-info.svg') }}" alt="icon" style="width: 25px; height: 25px; object-fit: contain; display: block;">    
+                                <div class="mx-2">
+                                    <label  for="">{{__('general.contact_info')}}</label>
+                                </div>
+                            </div>
                             <div class="row">
                                 <div class="col-md-2">
                                     @include('Admin.Components.country_code', ['item' => $item])
@@ -92,6 +98,13 @@
                                                 placeholder="{{__('field.email')}}" />
                                         </div>
                                     </div>
+                                </div>
+                            </div>
+
+                            <div class="input-group justify-center d-flex my-4 mx-0  ">
+                                <img src="{{ asset('assets/icons/social-media.svg') }}" alt="icon" style="width: 25px; height: 25px; object-fit: contain; display: block;">    
+                                <div class="mx-2">
+                                    <label  for="">{{__('general.social_media_links')}}</label>
                                 </div>
                             </div>
                             <div class="row">
