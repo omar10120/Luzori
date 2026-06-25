@@ -532,7 +532,7 @@
       "permissions": [
         "VIEW_INFOS",
         "VIEW_PAGES",
-        "VIEW_SETTINGS",  
+        "VIEW_SETTINGS",
         "VIEW_INVOICE_SETTINGS"
       ],
       "submenu": [
@@ -570,17 +570,6 @@
           ]
         },
         {
-          "url": "center_user/settings/index",
-          "name": "settings",
-          "icon": "settings",
-          "slug": [
-            "settings"
-          ],
-          "permissions": [
-            "VIEW_SETTINGS"
-          ]
-        },
-        {
           "url": "center_user/InvoiceSettings/index",
           "name": "InvoiceSettings",
           "icon": "invoice-settings",
@@ -589,6 +578,17 @@
           ],
           "permissions": [
             "VIEW_INVOICE_SETTINGS"
+          ]
+        },
+        {
+          "url": "center_user/settings/index",
+          "name": "settings",
+          "icon": "settings",
+          "slug": [
+            "settings"
+          ],
+          "permissions": [
+            "VIEW_SETTINGS"
           ]
         }
       ]

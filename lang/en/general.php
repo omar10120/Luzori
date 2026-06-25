@@ -115,7 +115,7 @@ return [
     'enter_the_name_of_the_customer' => 'Enter the name of the customer',
     'enter_the_mobile_of_the_customer' => 'Enter the mobile of the customer',
     'enter_the_name_of_the_role' => 'Enter the name of the role',
-    'enter_the_phone_number' => 'Enter the phone number',
+    'enter_the_phone_number' => 'phone number',
     'enter_the_email_address' => 'Enter the email address',
     'enter_the_facebook_url' => 'Enter the facebook url',
     'enter_the_instagram_url' => 'Enter the instagram url',
@@ -170,5 +170,6 @@ return [
     'no_users' => 'No Users',
     'slug_hint' => 'slug hint',
     'no_data' =>  'no data',
-    'select_if_the_employee_is_professional ' => 'select if the employee is professional'
+    'select_if_the_employee_is_professional ' => 'select if the employee is professional',
+    'manage_your_invoice_settings' => 'Manage Your Invoice Settings'
 ];

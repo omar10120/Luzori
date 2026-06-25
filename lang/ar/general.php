@@ -68,7 +68,7 @@ return [
     'select_a_shift_from_the_list' => 'اختر ساعة من القائمة',
     'enter_the_full_name_of_the_employee' => 'أدخل الاسم الكامل للموظف',
     'enter_the_email_of_the_employee' => 'أدخل البريد الإلكتروني للموظف',
-    'enter_the_phone_number_of_the_employee' => 'أدخل رقم الهاتف للموظف',
+    'enter_the_phone_number_of_the_employee' => ' الهاتف للموظف',
     'enter_the_name_of_the_product' => 'أدخل اسم المنتج',
     'enter_the_description_of_the_product' => 'أدخل وصف المنتج',
     'enter_the_barcode_of_the_product' => 'أدخل الباركود للمنتج',
@@ -168,7 +168,8 @@ return [
     'no_users' => 'لا يوجد مستخدمين',
     'slug_hint' => 'اختياري - تستخدم في الروابط',
     'no_data' =>  'لا يوجد بيانات',
-    'select_if_the_employee_is_professional ' => 'حالة الموظف محترف'
+    'select_if_the_employee_is_professional ' => 'حالة الموظف محترف',
+    'manage_your_invoice_settings' => 'إدارة تفاصيل الفاتورة'
     
     
 ];

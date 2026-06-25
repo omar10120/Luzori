@@ -355,5 +355,6 @@ return [
     'BusinessName'                    => 'Business Name',
     'BankAccount'                     => 'Bank Account Number',
     'BankId'                          => 'Bank Id',
-    'select_user'                     => 'select user'
+    'select_user'                     => 'Select User',
+    'invoice_details'                 => 'Invoice Details'
 ];
