@@ -14,7 +14,16 @@
                 @csrf
                 <div class="card">
                     <div class="card-header">
-                        <h2>{{ $title }}</h2>
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 class="mb-0">{{ $title }}</h2>
+                            <small class="text-muted">{{ __('general.manage_your_contact_info_settings') ?? 'Manage your invoice contact details.' }}</small>
+                        </div>
+                        <button type="submit" class="btn btn-primary submitFrom d-flex align-items-center gap-1">
+                            <i class="ti ti-check"></i>
+                            <span>{{ __('general.save') }}</span>
+                        </button>
+                    </div>
                     </div>
                     <div class="card-body">
                         <div class="container">
@@ -65,7 +74,7 @@
                                         <input type="tel" class="form-control" name="phone" id="phone" value="{{ $phoneWithoutPrefix }}"
                                             placeholder="5XXXXXXX" 
                                             required
-                                            maxlength="7"
+                                            maxlength="8"
                                             pattern="5[0-9]{7}"
                                             title="Phone number must start with 5 and be exactly 8 digits" />
                                           </div>
@@ -170,12 +179,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="card-footer">
-                        <button type="submit" class="btn btn-primary submitFrom">
-                            <i class="menu-icon tf-icons ti ti-check"></i>
-                            <span>{{ __('general.save') }}</span>
-                        </button>
-                    </div>
+                  
                 </div>
             </form>
         </div>
