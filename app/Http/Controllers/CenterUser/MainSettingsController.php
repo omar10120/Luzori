@@ -19,6 +19,6 @@ class MainSettingsController extends Controller
         
         $title = __('locale.settings');
         $menu = __('locale.mainsettings');
-        return view("CenterUser.SubViews.mainSettings.index", compact('title', 'menu'));
+        return view("CenterUser.SubViews.MainSettings.index", compact('title', 'menu'));
     }
 }
