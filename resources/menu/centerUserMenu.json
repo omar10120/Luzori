@@ -523,6 +523,7 @@
       "name": "settings",
       "external_icon": "infos",
       "slug": [
+        "mainsettings",
         "infos",
         "pages",
         "settings",
@@ -537,55 +538,11 @@
       ],
       "submenu": [
         {
-          "url": "center_user/infos/index",
-          "name": "infos",
-          "external_icon": "infos",
-          "slug": [
-            "infos"
-          ],
-          "permissions": [
-            "VIEW_INFOS"
-          ]
-        },
-        {
-          "url": "center_user/center/index",
-          "name": "center_info",
+          "url": "center_user/mainsettings/index",
+          "name": "mainsettings",
           "icon": "settings",
           "slug": [
-            "center"
-          ],
-          "permissions": [
-            "VIEW_SETTINGS"
-          ]
-        },
-        {
-          "url": "center_user/pages/index",
-          "name": "pages",
-          "icon": "book",
-          "slug": [
-            "pages"
-          ],
-          "permissions": [
-            "VIEW_PAGES"
-          ]
-        },
-        {
-          "url": "center_user/InvoiceSettings/index",
-          "name": "InvoiceSettings",
-          "icon": "invoice-settings",
-          "slug": [
-            "invoice_settings"
-          ],
-          "permissions": [
-            "VIEW_INVOICE_SETTINGS"
-          ]
-        },
-        {
-          "url": "center_user/settings/index",
-          "name": "settings",
-          "icon": "settings",
-          "slug": [
-            "settings"
+            "mainsettings"
           ],
           "permissions": [
             "VIEW_SETTINGS"

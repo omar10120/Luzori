@@ -174,5 +174,12 @@ return [
     'manage_your_invoice_settings' => 'Manage Your Invoice Settings',
     'manage_your_contact_info_settings' => 'Manage Your Contact Info Settings',
     'social_media_links' => 'Social Media Links',
-    'contact_info' => 'Contact Information'
+    'contact_info' => 'Contact Information',
+    'contact_infos_desc'=> 'Contact Infos Desc',
+    'center_details_desc'=> 'Center Details Desc',
+    'pages_desc'=> 'Pages Desc',
+    'settings_desc'=> 'Settings Desc',
+    'invoices_settings_desc'=> 'Invoices Settings Desc',
+    'manage_all_system_preferences'=> 'Manage All System Preferences',
+    
 ];

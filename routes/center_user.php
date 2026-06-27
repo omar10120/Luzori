@@ -44,6 +44,7 @@ use App\Http\Controllers\CenterUser\PaymentController;
 use App\Http\Controllers\CenterUser\CenterController;
 use App\Http\Controllers\CenterUser\GetBanksController;
 use App\Http\Controllers\CenterUser\InvoiceSettingController;
+use App\Http\Controllers\CenterUser\MainSettingsController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -348,6 +349,12 @@ Route::group(['middleware' => 'auth_center_user:center_user'], function () {
         });
     });
 
+    Route::group(['prefix' => 'mainsettings', 'as' => 'mainsettings.'], function () {
+        Route::controller(MainSettingsController::class)->group(function () {
+            Route::get('index', 'index')->name('index');
+        });
+    });
+
     Route::group(['prefix' => 'settings', 'as' => 'settings.'], function () {
         Route::controller(SettingController::class)->group(function () {
             Route::get('index', 'index')->name('index');
@@ -399,4 +406,6 @@ Route::group(['middleware' => 'auth_center_user:center_user'], function () {
             Route::get('expense-report', 'expense_report')->name('expense-report');
         });
     });
+
+    
 });

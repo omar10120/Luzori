@@ -172,7 +172,15 @@ return [
     'manage_your_invoice_settings' => 'إدارة تفاصيل الفاتورة',
     'manage_your_contact_info_settings' => 'إدارة تفاصيل التواصل',
     'social_media_links' => 'روابط التواصل الاجتماعي',
-    'contact_info' => 'معلومات التواصل'
+    'contact_info' => 'معلومات التواصل',
+    'contact_infos_desc'=> 'قسم معلومات التواصل',
+    'center_details_desc'=> 'قسم تفاصيل المركز',
+    'pages_desc'=> 'قسم الصفحات',
+    'settings_desc'=> 'قسم الإعدادات',
+    'invoices_settings_desc'=> 'قسم إعدادات الفاتورة',
+    'manage_all_system_preferences'=> 'إدارة جميع تفضيلات النظام'
+
+
     
     
 ];
