@@ -536,16 +536,7 @@
         "VIEW_SETTINGS",
         "VIEW_INVOICE_SETTINGS"
       ],
-      "submenu": [
-        {
-          "url": "center_user/mainsettings/index",
-          "name": "mainsettings",
-          "icon": "settings",
-          "slug": [
-            "settings"
-          ]
-        }
-      ]
+      "url": "center_user/mainsettings/index"
     }
   ]
 }
