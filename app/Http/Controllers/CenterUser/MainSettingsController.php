@@ -4,7 +4,7 @@ namespace App\Http\Controllers\CenterUser;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-
+use Illuminate\Support\Str;
 
 class MainSettingsController extends Controller
 {
