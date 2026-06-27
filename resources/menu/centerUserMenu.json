@@ -543,6 +543,9 @@
           "icon": "settings",
           "slug": [
             "settings"
+          ],
+          "permissions": [
+            "VIEW_SETTINGS"
           ]
         }
       ]

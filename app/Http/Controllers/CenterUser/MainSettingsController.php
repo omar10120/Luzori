@@ -12,10 +12,10 @@ class MainSettingsController extends Controller
     private $plural = 'settings';
     public function index(Request $request)
     {
-        // $can = 'VIEW_' . Str::upper($this->plural);
-        // if (!auth('center_user')->user()->can($can, 'center_api')) {
-        //     return abort(403);
-        // }
+        $can = 'VIEW_' . Str::upper($this->plural);
+        if (!auth('center_user')->user()->can($can, 'center_api')) {
+            return abort(403);
+        }
         
         $title = __('locale.settings');
         $menu = __('locale.mainsettings');
