@@ -542,7 +542,7 @@
           "name": "mainsettings",
           "icon": "settings",
           "slug": [
-            "mainsettings"
+            "settings"
           ],
           "permissions": [
             "VIEW_SETTINGS"
