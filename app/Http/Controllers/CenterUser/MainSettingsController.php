@@ -4,25 +4,15 @@ namespace App\Http\Controllers\CenterUser;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-
+use Illuminate\Support\Str;
 
 class MainSettingsController extends Controller
 {
-    private CRUDService $crudService;
-    private $model = 'MainSetting';
-    private $plural = 'mainsettings';
-    private $indexRoute;
-    private $updateOrCreateRoute;
-    // public function __construct(CRUDService $crudService)
-    // {
-    //     $this->crudService = $crudService;
-    //     $this->indexRoute = 'center_user.' . $this->plural . '.index';
-    //     $this->updateOrCreateRoute = 'center_user.' . $this->plural . '.updateOrCreate';
-    // }
-    
+
+    private $plural = 'settings';
     public function index(Request $request)
     {
-        $can = 'VIEW_SETTINGS';
+        $can = 'VIEW_' . Str::upper($this->plural);
         if (!auth('center_user')->user()->can($can, 'center_api')) {
             return abort(403);
         }
