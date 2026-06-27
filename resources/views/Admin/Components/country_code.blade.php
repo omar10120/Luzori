@@ -2,7 +2,8 @@
     <label class="form-label">{{ __('field.country_code') }} <span class="text-danger">*</span></label>
     <div class="input-group">
         <span class="input-group-text">
-            <i class="ti ti-phone"></i>
+            <!-- <i class="bi bi-flag-fill text-danger"></i> -->
+             <img src="{{ asset('assets/icons/united-arab-emirates.png') }}" alt="icon" style="width: 25px; height: 25px; object-fit: contain;">    
         </span> 
         <select class="form-control" name="country_code" required>
             <option {{ $item ? ($item->country_code == '+971' ? 'selected' : null) : null }} value="+971">

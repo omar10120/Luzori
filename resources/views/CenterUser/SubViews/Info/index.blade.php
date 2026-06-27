@@ -163,33 +163,39 @@
                                         
                                     </div>
                                 </div>
+                                
                             </div>
-                            <div class="row">
+
+                                  <div class="row">
                                 <div class="col-md-6">
                                     <div class="mb-4">
-                                        <label class="form-label">{{__('field.youtube')}} <small class="text-muted">{{__('general.enter_the_youtube_url')}}</small> <span class="text-danger">*</span></label>
-                                        <div class="input-group">
+                                        <label class="form-label">{{__('field.youtube')}} <small class="text-muted">{{__('general.enter_the_twitter_url')}}</small> <span class="text-danger">*</span></label>
+                                           <div class="input-group">
                                             <span class="input-group-text">
                                                 <img src="{{ asset('assets/icons/youtube.svg') }}" alt="icon" style="width: 25px; height: 25px; object-fit: contain;">    
                                             </span> 
-                                        <input type="text" class="form-control" name="youtube" value="{{ $item->youtube }}"
+                                            <input type="text" class="form-control" name="youtube" value="{{ $item->youtube }}"
                                             placeholder="{{__('field.youtube')}}" />
+                                        </div>
                                         
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-4">
-                                        <label class="form-label">{{__('field.linkedin')}} <small class="text-muted">{{__('general.enter_the_linkedin_url')}}</small> <span class="text-danger">*</span></label>
-                                        <div class="input-group">
+                                        <label class="form-label">{{__('field.linkedin')}} <small class="text-muted">{{__('general.linkedin')}}</small> <span class="text-danger">*</span></label>
+                                           <div class="input-group">
                                             <span class="input-group-text">
                                                 <img src="{{ asset('assets/icons/linkedin.svg') }}" alt="icon" style="width: 25px; height: 25px; object-fit: contain;">    
                                             </span> 
-                                        <input type="text" class="form-control" name="linkedin" value="{{ $item->linkedin }}"
-                                            placeholder="{{__('field.linkedin')}}" />
+                                            <input type="text" class="form-control" name="linkedin" value="{{ $item->linkedin }}"
+                                                placeholder="{{__('field.linkedin')}}" />
+                                        </div>
                                         
                                     </div>
                                 </div>
+                                
                             </div>
+                       
                         </div>
                     </div>
                   
