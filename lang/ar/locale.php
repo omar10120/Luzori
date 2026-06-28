@@ -66,6 +66,6 @@ return [
     'center_info'                       => 'بيانات المركز',
     'InvoiceSettings'                   => 'إعدادات الفاتورة',
     'invoice_settings'                  => 'إعدادات الفاتورة',
-    'mainsettings'                      => 'الإعدادات العامة',
-    'wallet'                            => 'Coupon',
+    'mainsettings'                      => 'الإعدادات العامة'
+
 ];
