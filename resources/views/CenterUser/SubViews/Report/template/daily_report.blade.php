@@ -367,7 +367,8 @@
                             @if (isset($payments_with_prices[$index]) && !empty($payments_with_prices[$index]))
                                 <tr>
                                     <td colspan="{{ count($secondusers) }}">
-                                        <strong>{{ $value }}</strong>
+                                        <strong>{{ __('field.'.$value) }}</strong>
+                                        
                                     </td>
                                 </tr>
                                 <tr>
@@ -605,7 +606,7 @@
                         @if (isset($payments_with_prices[$index]) && !empty($payments_with_prices[$index]))
                             <tr>
                                 <td colspan="{{ count($restusers) }}">
-                                    <strong>{{ $value }}</strong>
+                                    <strong>{{ __('field.'.$value) }}</strong>
                                 </td>
                             </tr>
                             <tr>
