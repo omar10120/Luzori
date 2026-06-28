@@ -142,7 +142,7 @@ return [
     'website_description'           => 'Website Description',
     'auther'                        => 'Auther',
     'footer_text'                   => 'Footer Text',
-    'wallet'                        => 'Package',
+    'wallet'                        => 'Coupon',
     'sales_cash_cp'                 => 'Sales Cash (CP)',
     'sales_visa_cp'                 => 'Sales Visa (CP)',
     'invoice_info'                  => 'Invoice Info',
