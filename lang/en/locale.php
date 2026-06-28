@@ -66,6 +66,7 @@ return [
     'center_info'                       => 'Center Details',
     'InvoiceSettings'                   => 'Invoice Settings',
     'invoice_settings'                  => 'Invoice Settings',
-    'mainsettings'                      => 'Main Settings'
+    'mainsettings'                      => 'Main Settings',
+    'wallet'                            => 'Coupon',
     
 ];

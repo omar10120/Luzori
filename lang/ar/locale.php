@@ -67,4 +67,5 @@ return [
     'InvoiceSettings'                   => 'إعدادات الفاتورة',
     'invoice_settings'                  => 'إعدادات الفاتورة',
     'mainsettings'                      => 'الإعدادات العامة',
+    'wallet'                            => 'Coupon',
 ];
