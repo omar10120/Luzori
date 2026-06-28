@@ -121,7 +121,9 @@
                         @if (isset($payments_with_prices[$index]) && !empty($payments_with_prices[$index]))
                             <tr>
                                 <td colspan="{{ count($firstusers) }}">
-                                    <strong>{{ $value }}</strong>
+                                
+                                    <strong>{{ __('field.'.$value) }}</strong>
+                                    
                                 </td>
                             </tr>
                             <tr>
@@ -801,7 +803,7 @@
                             }
                         @endphp
                         <td style="width: 50px;background-color: #666;color: #fff;text-align: center">
-                            <strong>{{ $type }}</strong>
+                            <strong>{{ __('field.'.$type) }}</storng>
                         </td>
                         <td style="width:50px;">
                             <strong>{{ get_currency() . get_num_format($total_payments_types[$getPaymentsType]) }}</strong>

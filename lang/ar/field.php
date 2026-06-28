@@ -137,7 +137,7 @@ return [
     'website_description'           => 'وصف الموقع',
     'auther'                        => 'الكاتب',
     'footer_text'                   => 'نص الفوتر',
-    'wallet'                        => 'المحفظة',
+    'wallet'                        => 'الحزمة',
     'sales_cash_cp'                 => 'Sales Cash (CP)',
     'sales_visa_cp'                 => 'Sales Visa (CP)',
     'invoice_info'                  => 'معلومات الفاتورة',
