@@ -348,6 +348,15 @@ return [
     'BankAccount'                     => 'رقم الحساب البنكي',
     'BankId'                          => 'رقم البنك',
     'select_user'                     => 'اختر مستخدم',
-    'invoice_details'                 => 'تفاصيل الفاتورة'
+    'invoice_details'                 => 'تفاصيل الفاتورة',
+    'service_cash'                    => 'خدمة نقدية',
+    'service_visa'                    => 'خدمة فيزا',
+    'sales_cash'                      => 'مبيعات نقدية',
+    'sales_visa'                      => 'بيعات الفيزا',
+    'tips_visa'                       => 'بقشيش الفيزا',
+    'tips'                            => 'بقشيش ',
+    'general_cash'                    => 'عمليات نقدية عامة',
+    'Commission'                      => 'العمولة',
+    
     
 ];

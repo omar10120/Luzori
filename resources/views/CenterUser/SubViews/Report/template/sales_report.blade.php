@@ -34,7 +34,8 @@
             <tr>
                 <th style="width: 150px">{{ __('field.date') }}</th>
                 @foreach ($payments_type as $index => $value)
-                    <th>{{ $value }}</th>
+                    <!-- <th>{{ $value }}</th> -->
+                    <th>{{ __('field.'.$value) }}</th>
                 @endforeach
                 <th>{{ 'Total Without Free' }}</th>
             </tr>

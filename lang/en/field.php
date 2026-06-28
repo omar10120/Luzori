@@ -357,5 +357,13 @@ return [
     'BankAccount'                     => 'Bank Account Number',
     'BankId'                          => 'Bank Id',
     'select_user'                     => 'Select User',
-    'invoice_details'                 => 'Invoice Details'
+    'invoice_details'                 => 'Invoice Details',
+    'service_cash'                    => 'Service Cash',
+    'service_visa'                    => 'Service Visa',
+    'sales_cash'                      => 'Sales Cash',
+    'sales_visa'                      => 'Sales Visa',
+    'tips_visa'                       => 'Tips visa',
+    'tips'                            => 'Ttips',
+    'general_cash'                    => 'General Cash',
+    'Commission'                      => 'Commission',
 ];
