@@ -34,6 +34,7 @@ class SalesReportController extends Controller
 
         $branches = $temp_branches->get();
         $selected_branch = $request->get('branch_id');
+        $branch_id_filter = !empty($selected_branch) ? $selected_branch : null;
         $template = "";
         if (!empty($request->year)) {
             $temp_report = Booking::whereYear('booking_date', $request->get('year'))
@@ -44,8 +45,11 @@ class SalesReportController extends Controller
                 ->with(['details' => function ($query) {
                     $query->where('status', 'confirmed');
                 }]);
-            if (!empty($request->get('branch_id'))) {
-                $temp_report->where('branch_id', $request->get('branch_id'));
+            // if (!empty($request->get('branch_id'))) {
+            //     $temp_report->where('branch_id', $request->get('branch_id'));
+            // }
+            if ($branch_id_filter) {
+                $temp_report->where('branch_id', $branch_id_filter);
             }
             $report = $temp_report->get();
             $payments_type = get_payment_types();
@@ -59,13 +63,18 @@ class SalesReportController extends Controller
             // Merge dynamic wallet methods used in the selected month so columns exist
             $dynamicWalletTypesQuery = UserWallet::select('users_wallets.wallet_type')
                 ->whereRaw('YEAR(users_wallets.created_at)="' . $request->get('year') . '" and MONTH(users_wallets.created_at)="' . $request->get('month') . '"');
-            if (get_user_role() == 1 || $selected_branch) {
-                $branch_id = $selected_branch ? $selected_branch : auth('center_user')->user()->branch_id;
-                $dynamicWalletTypesQuery = $dynamicWalletTypesQuery
-                    ->whereHas('user', function ($query) use ($branch_id) {
-                        return $query->where('branch_id', $branch_id);
-                    });
-                }
+            // if (get_user_role() == 1 || $selected_branch) {
+            //     $branch_id = $selected_branch ? $selected_branch : auth('center_user')->user()->branch_id;
+            //     $dynamicWalletTypesQuery = $dynamicWalletTypesQuery
+            //         ->whereHas('user', function ($query) use ($branch_id) {
+            //             return $query->where('branch_id', $branch_id);
+            //         });
+            // }
+            if ($branch_id_filter) {
+                $dynamicWalletTypesQuery->whereHas('user', function ($query) use ($branch_id_filter) {
+                    $query->where('branch_id', $branch_id_filter);
+                });
+            }
                 $dynamicWalletTypes = $dynamicWalletTypesQuery->pluck('wallet_type')->unique()->toArray();
             foreach ($dynamicWalletTypes as $walletTypeName) {
                 if (!array_key_exists($walletTypeName, $payments_type)) {
@@ -158,10 +167,15 @@ class SalesReportController extends Controller
                 ->whereHas('booking.details', function($q) { $q->where('status', 'confirmed'); })
                 ->whereYear('created_at', $request->get('year'))
                 ->whereMonth('created_at', $request->get('month'));
-            if (get_user_role() == 1 || $selected_branch) {
-                $branch_id = $selected_branch ? $selected_branch : auth('center_user')->user()->branch_id;
-                $temp_memberShipCards->whereHas('booking', function ($query) use ($branch_id) {
-                    return $query->where('branch_id', $branch_id);
+            // if (get_user_role() == 1 || $selected_branch) {
+            //     $branch_id = $selected_branch ? $selected_branch : auth('center_user')->user()->branch_id;
+            //     $temp_memberShipCards->whereHas('booking', function ($query) use ($branch_id) {
+            //         return $query->where('branch_id', $branch_id);
+            //     });
+            // }
+            if ($branch_id_filter) {
+                $temp_memberShipCards->whereHas('booking', function ($query) use ($branch_id_filter) {
+                    $query->where('branch_id', $branch_id_filter);
                 });
             }
             $memberShipCards = $temp_memberShipCards->get();
@@ -212,10 +226,15 @@ class SalesReportController extends Controller
                 ->whereHas('booking.details', function($q) { $q->where('status', 'confirmed'); })
                 ->whereYear('created_at', $request->get('year'))
                 ->whereMonth('created_at', $request->get('month'));
-            if (get_user_role() == 1 || $selected_branch) {
-                $branch_id = $selected_branch ? $selected_branch : auth('center_user')->user()->branch_id;
-                $temp_discount->whereHas('booking', function ($query) use ($branch_id) {
-                    return $query->where('branch_id', $branch_id);
+            // if (get_user_role() == 1 || $selected_branch) {
+            //     $branch_id = $selected_branch ? $selected_branch : auth('center_user')->user()->branch_id;
+            //     $temp_discount->whereHas('booking', function ($query) use ($branch_id) {
+            //         return $query->where('branch_id', $branch_id);
+            //     });
+            // }
+            if ($branch_id_filter) {
+                $temp_discount->whereHas('booking', function ($query) use ($branch_id_filter) {
+                    $query->where('branch_id', $branch_id_filter);
                 });
             }
             $discount = $temp_discount->get();
@@ -266,10 +285,15 @@ class SalesReportController extends Controller
             }
 
             $temp_users_wallets = UserWallet::whereRaw('YEAR(users_wallets.created_at)="' . $request->get('year') . '" and MONTH(users_wallets.created_at)="' . $request->get('month') . '"');
-            if (get_user_role() == 1 || $branch_id) {
-                $branch_id = $selected_branch ? $selected_branch : auth('center_user')->user()->branch_id;
-                $temp_users_wallets->whereHas('user', function ($query) use ($branch_id) {
-                    return $query->where('branch_id', $branch_id);
+            // if (get_user_role() == 1 || $branch_id) {
+            //     $branch_id = $selected_branch ? $selected_branch : auth('center_user')->user()->branch_id;
+            //     $temp_users_wallets->whereHas('user', function ($query) use ($branch_id) {
+            //         return $query->where('branch_id', $branch_id);
+            //     });
+            // }
+            if ($branch_id_filter) {
+                $dynamicWalletTypesQuery->whereHas('user', function ($query) use ($branch_id_filter) {
+                    $query->where('branch_id', $branch_id_filter);
                 });
             }
             $users_wallets = $temp_users_wallets->get();
@@ -311,11 +335,14 @@ class SalesReportController extends Controller
                 ->with('details')
                 ->join('workers', 'workers.id', '=', 'buy_products.worker_id');
                 
-            if (get_user_role() == 1 || $selected_branch) {
-                $branch_id = $selected_branch ? $selected_branch : auth('center_user')->user()->branch_id;
-                if ($branch_id) {
-                    $temp_BuyProduct->where('workers.branch_id', $branch_id);
-                }
+            // if (get_user_role() == 1 || $selected_branch) {
+            //     $branch_id = $selected_branch ? $selected_branch : auth('center_user')->user()->branch_id;
+            //     if ($branch_id) {
+            //         $temp_BuyProduct->where('workers.branch_id', $branch_id);
+            //     }
+            // }
+            if ($branch_id_filter) {
+                $temp_BuyProduct->where('workers.branch_id', $branch_id_filter);
             }
             $BuyProduct = $temp_BuyProduct->get();
             if (!empty($BuyProduct)) {
