@@ -30,6 +30,7 @@ class DailyReportController extends Controller
         $selected_branch = $request->branch_id;
         $branch_id_filter = $selected_branch ?: (get_user_role() != 1 ? auth('center_user')->user()->branch_id : null);
 
+
         $result = [];
         $users = [];
         $firstusers = [];
@@ -324,11 +325,14 @@ class DailyReportController extends Controller
                 ->join('workers', 'workers.id', '=', 'buy_products.worker_id')
                 ->whereRaw('DATE(buy_products.created_at)="' . $date . '"');
 
-            if (get_user_role() == 1 || $selected_branch) {
-                $branch_id = $selected_branch ? $selected_branch : auth('center_user')->user()->branch_id;
-                if ($branch_id) {
-                    $temp_BuyProduct = $temp_BuyProduct->where('workers.branch_id', $branch_id);
-                }
+            // if (get_user_role() == 1 || $selected_branch) {
+            //     $branch_id = $selected_branch ? $selected_branch : auth('center_user')->user()->branch_id;
+            //     if ($branch_id) {
+            //         $temp_BuyProduct = $temp_BuyProduct->where('workers.branch_id', $branch_id);
+            //     }
+            // }
+            if ($branch_id_filter) {
+                $temp_BuyProduct->where('workers.branch_id', $branch_id_filter);
             }
 
             $BuyProduct = $temp_BuyProduct->get();
@@ -376,9 +380,14 @@ class DailyReportController extends Controller
             }
 
             $temp_get_wallets = UserWallet::whereRaw('DATE(users_wallets.created_at)="' . $date . '"');
-            if (get_user_role() == 1 || $selected_branch) {
-                $branch_id = $selected_branch ? $selected_branch : auth('center_user')->user()->branch_id;
-                $temp_get_wallets = $temp_get_wallets->join('users', 'users.id', '=', 'users_wallets.user_id')->where('users.branch_id', $branch_id);
+            // if (get_user_role() == 1 || $selected_branch) {
+            //     $branch_id = $selected_branch ? $selected_branch : auth('center_user')->user()->branch_id;
+            //     $temp_get_wallets = $temp_get_wallets->join('users', 'users.id', '=', 'users_wallets.user_id')->where('users.branch_id', $branch_id);
+            // }
+            if ($branch_id_filter) {
+                $temp_get_wallets = $temp_get_wallets
+                    ->join('users', 'users.id', '=', 'users_wallets.user_id')
+                    ->where('users.branch_id', $branch_id_filter);
             }
 
             $get_wallets = $temp_get_wallets->get();
@@ -388,7 +397,6 @@ class DailyReportController extends Controller
                     if (!isset($wallet_details_prices[$get_wallet->wallet_type])) {
                         $wallet_details_prices[$get_wallet->wallet_type] = 0;
                     }
-                    // Display in report; excluded from grand total in daily_report template.
                     $wallet_details_prices[$get_wallet->wallet_type] += $get_wallet->invoiced_amount;
 
                     if (isset($users_with_commission[$get_wallet->worker_id])) {
