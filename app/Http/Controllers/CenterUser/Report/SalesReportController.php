@@ -260,8 +260,13 @@ class SalesReportController extends Controller
                             }
             
                             if ($static->type == 'fixed') {
-                                $user_amount = $amount;
+
+                                $user_amount = $bookingTotal > 0
+                                    ? ($detail->price / $bookingTotal) * $amount
+                                    : 0;
+                            
                             } else {
+                            
                                 $user_amount = ($detail->price * $amount) / 100;
                             }
             
