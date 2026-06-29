@@ -240,48 +240,64 @@ class SalesReportController extends Controller
             $discount = $temp_discount->get();
             $discountsArr = [];
             if (!$discount->isEmpty()) {
+                foreach ($discount as $static) {
+            
                     if (!empty($static->booking) && !empty($static->booking->details)) {
+            
                         $selected_payment_type = $static->booking->payment_type;
-                        if (empty($static->booking->payment_type)) {
-                            $selected_payment_type = "wallet";
+                        if (empty($selected_payment_type)) {
+                            $selected_payment_type = 'wallet';
                         }
+            
                         $amount = $static->amount;
                         $bookingTotal = collect($static->booking->details)->sum('price');
                         $booking_date_str = $static->booking->booking_date->format('Y-m-d');
-
+            
                         foreach ($static->booking->details as $detail) {
-                            if (isset($result[$booking_date_str])) {
-                                if ($static->type == "fixed") {
-                                    $user_amount = $amount;
-                                } else {
-                                    $user_amount = ($detail->price * $amount) / 100;
-                                }
-
-                                if ($selected_payment_type === 'multiple' && !empty($static->booking->payment_methods)) {
-                                    if ($bookingTotal > 0) {
-                                        foreach ($static->booking->payment_methods as $pm) {
-                                            $method = $pm['method'] ?? null;
-                                            $pmAmount = floatval($pm['amount'] ?? 0);
-                                            if ($method && $pmAmount > 0) {
-                                                $proportion = $pmAmount / $bookingTotal;
-                                                $distributedDiscount = $user_amount * $proportion;
-                                                if (!isset($result[$booking_date_str][$method])) {
-                                                    $result[$booking_date_str][$method] = 0;
-                                                }
-                                                $result[$booking_date_str][$method] -= $distributedDiscount;
+            
+                            if (!isset($result[$booking_date_str])) {
+                                continue;
+                            }
+            
+                            if ($static->type == 'fixed') {
+                                $user_amount = $amount;
+                            } else {
+                                $user_amount = ($detail->price * $amount) / 100;
+                            }
+            
+                            if ($selected_payment_type === 'multiple' && !empty($static->booking->payment_methods)) {
+            
+                                if ($bookingTotal > 0) {
+                                    foreach ($static->booking->payment_methods as $pm) {
+            
+                                        $method = $pm['method'] ?? null;
+                                        $pmAmount = floatval($pm['amount'] ?? 0);
+            
+                                        if ($method && $pmAmount > 0) {
+            
+                                            $proportion = $pmAmount / $bookingTotal;
+                                            $distributedDiscount = $user_amount * $proportion;
+            
+                                            if (!isset($result[$booking_date_str][$method])) {
+                                                $result[$booking_date_str][$method] = 0;
                                             }
+            
+                                            $result[$booking_date_str][$method] -= $distributedDiscount;
                                         }
                                     }
-                                } else {
-                                    // Ensure the payment type key exists in the result array
-                                    if (!isset($result[$booking_date_str][$selected_payment_type])) {
-                                        $result[$booking_date_str][$selected_payment_type] = 0;
-                                    }
-                                    $result[$booking_date_str][$selected_payment_type] -= $user_amount;
                                 }
+            
+                            } else {
+            
+                                if (!isset($result[$booking_date_str][$selected_payment_type])) {
+                                    $result[$booking_date_str][$selected_payment_type] = 0;
+                                }
+            
+                                $result[$booking_date_str][$selected_payment_type] -= $user_amount;
                             }
                         }
                     }
+                }
             }
 
             $temp_users_wallets = UserWallet::whereRaw('YEAR(users_wallets.created_at)="' . $request->get('year') . '" and MONTH(users_wallets.created_at)="' . $request->get('month') . '"');
