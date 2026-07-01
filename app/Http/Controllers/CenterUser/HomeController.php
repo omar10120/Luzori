@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\CenterUser;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 use App\Models\Booking;
+use App\Models\BookingDetail;
 use App\Models\Worker;
 use App\Models\UserWallet;
 use App\Models\BuyProduct;
@@ -16,15 +18,27 @@ use App\Datatables\CenterUser\ServiceDataTable;
 
 class HomeController extends Controller
 {
-    public function cp()
+    public function cp(Request $request)
     {
         $today = now()->format('Y-m-d');
         $thisMonth = now()->format('Y-m');
-        
-        // Get statistics
+        $salesPeriod = in_array($request->input('period'), ['day', 'week', 'month'], true)
+            ? $request->input('period')
+            : 'day';
+
         $statistics = $this->getStatistics($today, $thisMonth);
-        
-        return view('CenterUser.SubViews.cp', compact('statistics'));
+        $year = now()->year;
+        $month = now()->month;
+
+        $chartData = [
+            'popular_services' => $this->getPopularServices($thisMonth),
+            'revenue_trends' => $this->getRevenueTrends($year, $month),
+            'earnings_per_week' => $this->getEarningsPerWeek(),
+            'latest_sales' => $this->getLatestSales($salesPeriod),
+            'rating_stats' => $this->getRatingStats($statistics),
+        ];
+
+        return view('CenterUser.SubViews.cp', compact('statistics', 'chartData', 'salesPeriod'));
     }
     
     private function getStatistics($today, $thisMonth)
@@ -231,6 +245,157 @@ class HomeController extends Controller
         }
         
         return ['name' => 'No Data', 'count' => 0];
+    }
+
+    private function getPopularServices($thisMonth)
+    {
+        $serviceCounts = Booking::with('details.service')
+            ->whereRaw('DATE_FORMAT(booking_date, "%Y-%m")="' . $thisMonth . '"')
+            ->get()
+            ->flatMap(function ($booking) {
+                return $booking->details
+                    ->where('status', 'confirmed')
+                    ->pluck('service_id');
+            })
+            ->countBy()
+            ->sortDesc()
+            ->take(6);
+
+        return $serviceCounts->map(function ($count, $serviceId) {
+            $service = Service::find($serviceId);
+
+            return [
+                'name' => $service ? ($service->name ?? 'Unknown') : 'Unknown',
+                'count' => $count,
+            ];
+        })->values()->toArray();
+    }
+
+    private function getRevenueTrends($year, $month)
+    {
+        $days = cal_days_in_month(CAL_GREGORIAN, (int) $month, (int) $year);
+        $data = [];
+
+        for ($i = 1; $i <= $days; $i++) {
+            $date = sprintf('%04d-%02d-%02d', $year, $month, $i);
+            $data[] = [
+                'day' => $i,
+                'revenue' => $this->getTodayRevenue($date),
+            ];
+        }
+
+        return $data;
+    }
+
+    private function getEarningsPerWeek()
+    {
+        $startOfWeek = now()->startOfWeek()->format('Y-m-d');
+        $endOfWeek = now()->endOfWeek()->format('Y-m-d');
+
+        $details = BookingDetail::whereHas('booking', function ($query) use ($startOfWeek, $endOfWeek) {
+            $query->whereBetween('booking_date', [$startOfWeek, $endOfWeek]);
+        })->where('status', 'confirmed')->get();
+
+        $inside = 0;
+        $outside = 0;
+
+        foreach ($details as $detail) {
+            if (($detail->booking_source ?? 'inside_booking') === 'outside_booking') {
+                $outside += $detail->price;
+            } else {
+                $inside += $detail->price;
+            }
+        }
+
+        $all = $inside + $outside;
+
+        return [
+            'inside' => $inside,
+            'outside' => $outside,
+            'all' => $all,
+            'inside_pct' => $all > 0 ? round(($inside / $all) * 100) : 0,
+            'outside_pct' => $all > 0 ? round(($outside / $all) * 100) : 0,
+        ];
+    }
+
+    private function getLatestSales($period = 'day')
+    {
+        $query = Booking::with(['details.service', 'details.worker', 'user'])
+            ->whereHas('details', function ($q) {
+                $q->where('status', 'confirmed');
+            })
+            ->orderByDesc('booking_date')
+            ->orderByDesc('id');
+
+        if ($period === 'day') {
+            $query->whereDate('booking_date', now()->format('Y-m-d'));
+        } elseif ($period === 'week') {
+            $query->whereBetween('booking_date', [now()->startOfWeek(), now()->endOfWeek()]);
+        } else {
+            $query->whereRaw('DATE_FORMAT(booking_date, "%Y-%m")="' . now()->format('Y-m') . '"');
+        }
+
+        $rows = [];
+
+        foreach ($query->limit(12)->get() as $booking) {
+            foreach ($booking->details->where('status', 'confirmed') as $detail) {
+                if (count($rows) >= 8) {
+                    break 2;
+                }
+
+                $customerName = $booking->user
+                    ? trim($booking->user->first_name . ' ' . $booking->user->last_name)
+                    : ($booking->full_name ?: 'Walk-in');
+
+                $rows[] = [
+                    'service_name' => $detail->service?->name ?? 'N/A',
+                    'service_image' => $detail->service?->image ?? asset('assets/img/bg-logo.png'),
+                    'customer_name' => $customerName,
+                    'customer_email' => $booking->user?->email ?? '',
+                    'phone' => $booking->user
+                        ? trim(($booking->user->country_code ?? '') . ($booking->user->phone ?? ''))
+                        : ($booking->mobile ?? '-'),
+                    'worker' => $detail->worker?->name ?? 'N/A',
+                    'payment_type' => $booking->payment_type ?: 'wallet',
+                    'total' => $detail->price,
+                    'status' => $detail->status ?? 'confirmed',
+                ];
+            }
+        }
+
+        return $rows;
+    }
+
+    private function getRatingStats($statistics)
+    {
+        $service = (int) ($statistics['best_service']['count'] ?? 0);
+        $worker = (int) ($statistics['best_worker']['count'] ?? 0);
+        $customer = (int) ($statistics['best_customer']['count'] ?? 0);
+        $max = max($service, $worker, $customer, 1);
+
+        return [
+            [
+                'label' => $statistics['best_service']['name'] ?? __('field.best_service'),
+                'subtitle' => __('field.best_service'),
+                'value' => $service,
+                'pct' => min(100, round(($service / $max) * 100)),
+                'color' => '#f4a5a0',
+            ],
+            [
+                'label' => $statistics['best_worker']['name'] ?? __('field.best_worker'),
+                'subtitle' => __('field.best_worker'),
+                'value' => $worker,
+                'pct' => min(100, round(($worker / $max) * 100)),
+                'color' => '#f0a060',
+            ],
+            [
+                'label' => $statistics['best_customer']['name'] ?? __('field.best_customer'),
+                'subtitle' => __('field.best_customer'),
+                'value' => $customer,
+                'pct' => min(100, round(($customer / $max) * 100)),
+                'color' => '#0a4a44',
+            ],
+        ];
     }
     
     public function getDetails($type)

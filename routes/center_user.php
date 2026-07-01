@@ -73,7 +73,7 @@ Route::post('verify/resend', [LoginController::class, 'resendCode'])->name('veri
 
 Route::group(['middleware' => 'auth_center_user:center_user'], function () {
     Route::get('logout', [LoginController::class, 'logout'])->name('logout');
-    Route::get('cp', [HomeController::class, 'cp'])->name('cp');
+    Route::match(['get', 'post'], 'cp', [HomeController::class, 'cp'])->name('cp');
     Route::get('dashboard/details/{type}', [HomeController::class, 'getDetails'])->name('dashboard.details');
 
     Route::get('swap', [LanguageController::class, 'swap'])->name('swap');
