@@ -202,6 +202,7 @@ class HomeController extends Controller
     }
     
 
+
     private function getBestCustomer($thisMonth)
     {
         $bestCustomer = Booking::whereRaw('DATE_FORMAT(booking_date, "%Y-%m")="' . $thisMonth . '"')
@@ -480,7 +481,8 @@ class HomeController extends Controller
     
     public function getCustomersDetails()
     {
-        $customers = User::where('role_id', 3)->paginate(10);
+        // $customers = User::where('role_id', 3)->paginate(10);
+        $customers = User::orderBy('created_at', 'desc')->paginate(10);
         
         $html = '<div class="table-responsive">';
         $html .= '<table class="table table-bordered table-hover">';
@@ -497,6 +499,7 @@ class HomeController extends Controller
         $html .= '<tbody>';
         
         foreach ($customers as $index => $customer) {
+
             $html .= '<tr>';
             $html .= '<td>' . ($customers->firstItem() + $index) . '</td>';
             $html .= '<td>' . ($customer->first_name . ' ' . $customer->last_name) . '</td>';
@@ -516,6 +519,12 @@ class HomeController extends Controller
         $html .= '</div>';
         
         // Add pagination
+        // Log::info($customers);
+        // Log::info($customers->firstItem());
+        // Log::info($customers->lastItem());
+        // Log::info($customers->total());
+        // Log::info($customers->links('pagination::bootstrap-4'));
+        // Log::info($customers->links('pagination::bootstrap-4'));
         $html .= '<div class="d-flex justify-content-between align-items-center mt-3">';
         $html .= '<div class="text-muted">';
         $html .= __('general.showing') . ' ' . $customers->firstItem() . ' ' . __('general.to') . ' ' . $customers->lastItem() . ' ' . __('general.of') . ' ' . $customers->total() . ' ' . __('field.customers');
