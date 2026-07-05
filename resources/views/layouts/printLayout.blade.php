@@ -20,7 +20,7 @@
                 font-size: 14px;
                 font-weight: bolder;
                 line-height: 20px;
-                font-family: 'Courier-Bold', sans-serif;
+               font-family: 'Cairo', sans-srif;, sans-serif;
                 color: #555;
                 padding-bottom: 50px;
             }

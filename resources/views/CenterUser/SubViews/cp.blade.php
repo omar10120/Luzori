@@ -9,6 +9,8 @@
 @section('content')
 @push('styles')
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Tajawal:wght@200;300;400;500;700;800;900&display=swap');
+
     .luzori-dashboard {
         /* --luzori-teal: #0a4a44; */
         --luzori-peach: #fde8d8;
@@ -17,6 +19,7 @@
         --luzori-lavender: #e8e0f5;
         --luzori-chart-mint: #b8e4d4;
         --luzori-muted: #6b7c79;
+        font-family: 'Cairo', sans-serif;
     }
 
     .luzori-dashboard .dashboard-title {
