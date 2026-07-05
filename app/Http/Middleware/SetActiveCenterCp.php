@@ -23,11 +23,11 @@ class SetActiveCenterCp
     public function handle(Request $request, Closure $next): Response
     {
         $host = $request->getHost();
-        $parts = explode('.', $host);
+        $parts = explode('.', $host); 
         $subdomain = $this->resolveSubdomain($host, $parts);
 
         if (in_array($host, ['127.0.0.1', 'localhost'], true)) {
-            $center = Center::where('domain', 'center')->first();
+            $center = Center::where('domain', 'center24')->first();
 
             return $this->applyCenter($request, $next, $center);
         }   

@@ -273,7 +273,9 @@ class CenterService
                     'PageSeeder',
                     'SettingSeeder',
                     'PaymentMethodSeeder',
-                    'WorkerSeeder'
+                    'WorkerSeeder',
+                    'BranchSeeder',
+                    'BranchTranslationSeeder'
                 ];
 
                 foreach ($seeders as $seeder) {

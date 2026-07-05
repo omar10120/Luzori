@@ -14,6 +14,11 @@ class BranchSeeder extends Seeder
      */
     public function run()
     {
-        Branch::factory()->count(15)->create();
+        Branch::create([
+            'longitude' => '',
+            'latitude' => '',    
+        ]);
+
+        // Branch::factory()->count(15)->create();
     }
 }
