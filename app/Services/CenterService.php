@@ -275,7 +275,6 @@ class CenterService
                     'PaymentMethodSeeder',
                     'WorkerSeeder',
                     'BranchSeeder',
-                    'BranchTranslationSeeder'
                 ];
 
                 foreach ($seeders as $seeder) {
@@ -284,6 +283,8 @@ class CenterService
                         '--database' => 'tenant',
                     ]);
                 }
+
+                $this->seedDefaultBranchTranslations($center);
 
                 // Create Center User in the new database
                 $userData = $center->only(['name', 'email', 'country_code', 'phone', 'currency']);
@@ -311,6 +312,30 @@ class CenterService
             $center->update(['is_setup' => true]);
             
             \Log::info("Center setup completed successfully: " . $dbName);
+        }
+    }
+
+    private function seedDefaultBranchTranslations(Center $center): void
+    {
+        $branchId = DB::connection('tenant')->table('branches')->orderBy('id')->value('id');
+
+        if (!$branchId) {
+            return;
+        }
+
+        $centerName = $center->name;
+        $now = now();
+
+        foreach (['en', 'ar'] as $locale) {
+            DB::connection('tenant')->table('branch_translations')->insert([
+                'branch_id' => $branchId,
+                'name' => $centerName,
+                'city' => $centerName,
+                'address' => $centerName,
+                'locale' => $locale,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
         }
     }
 

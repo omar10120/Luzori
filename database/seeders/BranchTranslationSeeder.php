@@ -14,20 +14,20 @@ class BranchTranslationSeeder extends Seeder
      */
     public function run()
     {
-        
         BranchTranslation::create([
             'branch_id' => 1,
             'name' => 'Branch 1',
             'city' => 'City 1',
-            'address' => 'Address 2',
+            'address' => 'Address 1',
             'locale' => 'en',
         ]);
+
         BranchTranslation::create([
             'branch_id' => 1,
             'name' => 'Branch 1',
             'city' => 'Branch 1',
-            'address' => 'Address 2',
-            'locale' => 'ar',   
+            'address' => 'Address 1',
+            'locale' => 'ar',
         ]);
     }
 }

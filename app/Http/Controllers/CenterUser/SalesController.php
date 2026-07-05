@@ -429,7 +429,7 @@ class SalesController extends Controller
         $host = request()->getHost();
 
         if (in_array($host, ['127.0.0.1', 'localhost'], true)) {
-            return Center::with('media')->where('domain', 'center24')->first();
+            return Center::with('media')->where('domain', 'center26')->first();
         }
 
         $domain = session('active_center_domain');
