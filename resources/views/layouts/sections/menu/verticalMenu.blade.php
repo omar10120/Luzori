@@ -1,7 +1,7 @@
-@php
+<!-- @php
     $fontFamily = App::getLocale() == 'ar' ? 'Cairo' : 'Poppins';
-@endphp
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+@endphp -->
+<!-- <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&family=Poppins:wght@400;700&display=swap" rel="stylesheet"> -->
 
 @php
     $configData = Helper::appClasses();
@@ -102,3 +102,10 @@
         @endforeach
     </ul>
 </aside>
+
+
+<style>
+    .menu-item a {
+        font-family: 'cairo', sans-serif;
+    }
+</style>

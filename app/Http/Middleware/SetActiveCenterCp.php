@@ -27,7 +27,7 @@ class SetActiveCenterCp
         $subdomain = $this->resolveSubdomain($host, $parts);
 
         if (in_array($host, ['127.0.0.1', 'localhost'], true)) {
-            $center = Center::where('domain', 'center26')->first();
+            $center = Center::where('domain', 'center')->first();
 
             return $this->applyCenter($request, $next, $center);
         }   
