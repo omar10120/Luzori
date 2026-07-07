@@ -10,6 +10,8 @@ use App\Models\Booking;
 use App\Models\BuyProduct;
 use App\Models\UserWallet;
 use App\Models\UserPackage;
+use App\Models\UserUsedCard;
+use App\Models\UserUsedDiscount;
 use Carbon\Carbon;
 use niklasravnsborg\LaravelPdf\Facades\Pdf;
 
@@ -134,9 +136,67 @@ class ExpenseReportController extends Controller
         $totalIncome = 0;
         $incomeByDate = [];
         $incomeByType = [];
+        $branch_id_filter = $selected_branch ?: (get_user_role() != 1 ? auth('center_user')->user()->branch_id : null);
+        $bookingWithDiscount = [];
 
-        // Get bookings income
-        $temp_bookings = Booking::whereBetween('booking_date', [$start_date, $end_date])
+        $membershipCardsQuery = UserUsedCard::with(['booking', 'booking.details' => function ($query) {
+            $query->where('status', 'confirmed');
+        }])
+            ->whereHas('booking.details', function ($query) {
+                $query->where('status', 'confirmed');
+            })
+            ->whereBetween('created_at', [$start_date . ' 00:00:00', $end_date . ' 23:59:59']);
+
+        if ($branch_id_filter) {
+            $membershipCardsQuery->whereHas('booking', function ($query) use ($branch_id_filter) {
+                $query->where('branch_id', $branch_id_filter);
+            });
+        }
+
+        foreach ($membershipCardsQuery->get() as $memberShipCard) {
+            if (empty($memberShipCard->booking) || empty($memberShipCard->booking->details)) {
+                continue;
+            }
+
+            foreach ($memberShipCard->booking->details as $detail) {
+                $userAmount = ($detail->price * $memberShipCard->amount) / 100;
+                $bookingId = $memberShipCard->booking->id;
+                $bookingWithDiscount[$bookingId][$detail->worker_id][$detail->service_id] =
+                    ($bookingWithDiscount[$bookingId][$detail->worker_id][$detail->service_id] ?? 0) + $userAmount;
+            }
+        }
+
+        $discountQuery = UserUsedDiscount::with(['booking', 'booking.details' => function ($query) {
+            $query->where('status', 'confirmed');
+        }])
+            ->whereHas('booking.details', function ($query) {
+                $query->where('status', 'confirmed');
+            })
+            ->whereBetween('created_at', [$start_date . ' 00:00:00', $end_date . ' 23:59:59']);
+
+        if ($branch_id_filter) {
+            $discountQuery->whereHas('booking', function ($query) use ($branch_id_filter) {
+                $query->where('branch_id', $branch_id_filter);
+            });
+        }
+
+        foreach ($discountQuery->get() as $discount) {
+            if (empty($discount->booking) || empty($discount->booking->details)) {
+                continue;
+            }
+
+            foreach ($discount->booking->details as $detail) {
+                $userAmount = $discount->type === 'fixed'
+                    ? $discount->amount
+                    : ($detail->price * $discount->amount) / 100;
+
+                $bookingId = $discount->booking->id;
+                $bookingWithDiscount[$bookingId][$detail->worker_id][$detail->service_id] =
+                    ($bookingWithDiscount[$bookingId][$detail->worker_id][$detail->service_id] ?? 0) + $userAmount;
+            }
+        }
+
+        $bookingsQuery = Booking::whereBetween('booking_date', [$start_date, $end_date])
             ->whereHas('details', function ($query) {
                 $query->where('status', 'confirmed');
             })
@@ -144,31 +204,27 @@ class ExpenseReportController extends Controller
                 $query->where('status', 'confirmed');
             }]);
 
-        if ($selected_branch) {
-            $temp_bookings->where('branch_id', $selected_branch);
-        } elseif (get_user_role() != 1) {
-            $temp_bookings->where('branch_id', auth('center_user')->user()->branch_id);
+        if ($branch_id_filter) {
+            $bookingsQuery->where('branch_id', $branch_id_filter);
         }
 
-        $bookings = $temp_bookings->get();
-
-        foreach ($bookings as $booking) {
+        foreach ($bookingsQuery->get() as $booking) {
             $date = $booking->booking_date->format('Y-m-d');
-            if (!isset($incomeByDate[$date])) {
-                $incomeByDate[$date] = 0;
-            }
+            $incomeByDate[$date] = $incomeByDate[$date] ?? 0;
+            $paymentType = empty($booking->payment_type) ? 'wallet' : $booking->payment_type;
 
             foreach ($booking->details as $detail) {
-                $amount = $detail->price;
-                if (!empty($detail->discount)) {
-                    $amount -= ($amount * $detail->discount) / 100;
+                $price = $detail->price;
+                $freePrice = $bookingWithDiscount[$booking->id][$detail->worker_id][$detail->service_id] ?? 0;
+
+                if ($detail->is_free == 1) {
+                    $freePrice += $detail->price;
                 }
-                
+
+                $amount = $price - $freePrice;
                 $incomeByDate[$date] += $amount;
                 $totalIncome += $amount;
 
-                // Group by payment type
-                $paymentType = $booking->payment_type ?? 'cash';
                 if ($paymentType === 'multiple' && !empty($booking->payment_methods)) {
                     $bookingTotal = collect($booking->details)->sum('price');
                     if ($bookingTotal > 0) {
@@ -178,110 +234,55 @@ class ExpenseReportController extends Controller
                             if ($method && $pmAmount > 0) {
                                 $proportion = $pmAmount / $bookingTotal;
                                 $distributedAmount = $amount * $proportion;
-                                if (!isset($incomeByType[$method])) {
-                                    $incomeByType[$method] = 0;
-                                }
-                                $incomeByType[$method] += $distributedAmount;
+                                $incomeByType[$method] = ($incomeByType[$method] ?? 0) + $distributedAmount;
                             }
                         }
                     }
                 } else {
-                    if (!isset($incomeByType[$paymentType])) {
-                        $incomeByType[$paymentType] = 0;
-                    }
-                    $incomeByType[$paymentType] += $amount;
+                    $incomeByType[$paymentType] = ($incomeByType[$paymentType] ?? 0) + $amount;
                 }
             }
         }
 
-        // Get product sales income
-        $temp_products = BuyProduct::select('buy_products.*')
+        $productsQuery = BuyProduct::select('buy_products.*')
             ->whereRaw('DATE(buy_products.created_at) BETWEEN ? AND ?', [$start_date, $end_date])
-            ->with('details');
+            ->with('details')
+            ->join('workers', 'workers.id', '=', 'buy_products.worker_id');
 
-        // Handle branch filtering - use LEFT JOIN to handle null created_by
-        if ($selected_branch) {
-            $temp_products->leftJoin('center_users', 'center_users.id', '=', 'buy_products.created_by')
-                ->where(function($query) use ($selected_branch) {
-                    $query->where('center_users.branch_id', $selected_branch)
-                          ->orWhereNull('buy_products.created_by'); // Include records with null created_by
-                });
-        } elseif (get_user_role() != 1) {
-            $temp_products->leftJoin('center_users', 'center_users.id', '=', 'buy_products.created_by')
-                ->where(function($query) {
-                    $query->where('center_users.branch_id', auth('center_user')->user()->branch_id)
-                          ->orWhereNull('buy_products.created_by'); // Include records with null created_by
-                });
+        if ($branch_id_filter) {
+            $productsQuery->where('workers.branch_id', $branch_id_filter);
         }
 
-        $products = $temp_products->get();
-        
-        // Debug: Check BuyProducts query
-        \Log::info('ExpenseReport BuyProducts Debug', [
-            'sql' => $temp_products->toSql(),
-            'bindings' => $temp_products->getBindings(),
-            'count' => $products->count(),
-            'start_date' => $start_date,
-            'end_date' => $end_date,
-            'selected_branch' => $selected_branch
-        ]);
-        
-        // Debug: Check if there are any BuyProducts at all
-        $allProducts = BuyProduct::select('id', 'created_at', 'created_by', 'worker_id')
-            ->orderBy('created_at', 'desc')
-            ->limit(5)
-            ->get();
-        \Log::info('All BuyProducts (last 5)', [
-            'count' => $allProducts->count(),
-            'records' => $allProducts->toArray()
-        ]);
-        
-        // Debug: Test the exact query without branch filter
-        $testQuery = BuyProduct::select('buy_products.*')
-            ->whereRaw('DATE(buy_products.created_at) BETWEEN ? AND ?', [$start_date, $end_date])
-            ->join('center_users', 'center_users.id', '=', 'buy_products.created_by')
-            ->get();
-        \Log::info('BuyProducts Query WITHOUT branch filter', [
-            'count' => $testQuery->count(),
-            'records' => $testQuery->toArray()
-        ]);
-
-        foreach ($products as $product) {
+        foreach ($productsQuery->get() as $product) {
             $date = date('Y-m-d', strtotime($product->created_at));
-            if (!isset($incomeByDate[$date])) {
-                $incomeByDate[$date] = 0;
-            }
+            $incomeByDate[$date] = $incomeByDate[$date] ?? 0;
 
             foreach ($product->details as $detail) {
-                $amount = $detail->price;
+                $amount = $detail->price ?? ($detail->product?->retail_price && $detail->product?->retail_price > 0
+                    ? $detail->product->retail_price
+                    : ($detail->product?->supply_price ?? 0));
+
                 if (!empty($product->discount)) {
                     $amount -= ($amount * $product->discount) / 100;
                 }
-                
+
                 $incomeByDate[$date] += $amount;
                 $totalIncome += $amount;
 
-                // Group by payment type
                 $paymentType = $product->payment_type ?? 'cash';
-                if (!isset($incomeByType[$paymentType])) {
-                    $incomeByType[$paymentType] = 0;
-                }
-                $incomeByType[$paymentType] += $amount;
+                $incomeByType[$paymentType] = ($incomeByType[$paymentType] ?? 0) + $amount;
             }
         }
 
-        // Get wallet income (excluding commission/tips)
-        $temp_wallets = UserWallet::select('users_wallets.*')
+        $walletsQuery = UserWallet::select('users_wallets.*')
             ->whereRaw('DATE(users_wallets.created_at) BETWEEN ? AND ?', [$start_date, $end_date])
-            ->join('center_users', 'center_users.id', '=', 'users_wallets.user_id');
+            ->join('users', 'users.id', '=', 'users_wallets.user_id');
 
-        if ($selected_branch) {
-            $temp_wallets->where('center_users.branch_id', $selected_branch);
-        } elseif (get_user_role() != 1) {
-            $temp_wallets->where('center_users.branch_id', auth('center_user')->user()->branch_id);
+        if ($branch_id_filter) {
+            $walletsQuery->where('users.branch_id', $branch_id_filter);
         }
 
-        $wallets = $temp_wallets->get();
+        $wallets = $walletsQuery->get();
 
         foreach ($wallets as $wallet) {
             $date = date('Y-m-d', strtotime($wallet->created_at));
