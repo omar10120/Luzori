@@ -47,8 +47,11 @@ class GlobalEmailUnique implements ValidationRule
                 return;
             }
 
-            // Get all centers to check their databases
-            $centers = Center::all();
+            // Check only centers that already have a prepared tenant database
+            $centers = Center::query()
+                ->whereNotNull('database')
+                ->where('is_setup', true)
+                ->get();
             
             foreach ($centers as $center) {
                 // If we are updating a center, skip checking its own tenant database
@@ -63,6 +66,11 @@ class GlobalEmailUnique implements ValidationRule
                     DB::purge('mysql');
                     DB::reconnect('mysql');
 
+                    // Skip tenants that do not have center_users table yet
+                    if (!DB::connection('mysql')->getSchemaBuilder()->hasTable('center_users')) {
+                        continue;
+                    }
+
                     // Check center_users table in this center's database
                     $query = CenterUser::where('email', $value);
                     if ($this->excludeId && $this->excludeTable === 'center_users') {
@@ -74,8 +82,8 @@ class GlobalEmailUnique implements ValidationRule
                         return;
                     }
                 } catch (\Exception $e) {
-                    // Log error but continue checking other centers
-                    \Log::error("Error checking email in center {$center->database}: " . $e->getMessage());
+                    // Skip broken/inaccessible tenant DBs; they should not block registration
+                    \Log::warning("Skipping email check for center {$center->database}: " . $e->getMessage());
                 }
             }
         } finally {

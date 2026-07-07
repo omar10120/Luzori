@@ -176,34 +176,6 @@ class CenterService
             }
             $center->assignRole($request['role']);
             
-            //add check for payload data if all exsist start 
-               if ($center && (
-            empty($center->iban) || 
-            empty($center->BankAccountHolderName) || 
-            empty($center->BusinessName) || 
-            empty($center->BankAccount) ||
-            empty($center->BankId)
-        )) {
-            Log::info("test");
-            $msg = app()->getLocale() == 'ar' 
-                ? 'يرجى ملء تفاصيل البنك أولاً (رقم الآيبان، اسم صاحب الحساب، الاسم التجاري، رقم الحساب) قبل الاشتراك.' 
-                : 'Please fill in your bank details (IBAN, Bank Account Holder Name, Business Name, Bank Account Number) first before subscribing.';
-               
-                //   return redirect()->route('admin.centers.create');
-                //    return redirect()
-                // ->route('admin.centers.index')
-                // ->with('warning', $msg);
-            
-                // ->with('warning', $warningMsg);
-
-            return response()->json([
-                'success' => false,
-                'message' => $msg,
-            ], 422);
-        }
-            //add check for payload data if all exsist end 
-        
-
             if ($center->status == 'approve') {
                 $this->setupCenterDatabase($center);
             }
