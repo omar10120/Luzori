@@ -33,7 +33,7 @@
             <div class="card" style="background-color: #374151; border-color: #4b5563;">
                 <div class="card-body text-white">
                     <h5 class="card-title">{{ __('field.total_expenses') }}</h5>
-                    <h3 class="card-text">{{ get_currency() }}{{ get_num_format($totalExpenses) }}</h3>
+                        <h3 class="card-text">{{ get_currency() }}{{ get_num_format($totalExpenses) }}</h3>
                 </div>
             </div>
         </div>

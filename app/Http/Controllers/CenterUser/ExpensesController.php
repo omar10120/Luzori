@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use Carbon\Carbon;
 
 class ExpensesController extends Controller
 {
@@ -69,23 +70,24 @@ class ExpensesController extends Controller
         $supplierIdRule = 'nullable|exists:suppliers,id';
         $payeeRule = 'nullable|string|max:255';
         
-        // Handle date validation - make them optional
-        $startDateRule = 'nullable|date';
-        $endDateRule = 'nullable|date';
+        // Set default dates if not provided
+        $startDate = $request->filled('start_date') 
+            ? Carbon::parse($request->start_date) 
+            : now();
         
-        // If start_date is provided, end_date should be after or equal to start_date
-        if ($request->has('start_date') && $request->start_date) {
-            $endDateRule = 'nullable|date|after_or_equal:start_date';
-        }
+        $endDate = $request->filled('end_date') 
+            ? Carbon::parse($request->end_date) 
+            : $startDate->copy()->addMinute();
 
+        // Validation rules
         $validator = Validator::make($request->all(), [
             'branch_id' => 'required|exists:branches,id',
-            'supplier_id' => $supplierIdRule,
-            'expense_name' => $expenseNameRule,
-            'payee' => $payeeRule,
+            'supplier_id' => 'nullable|exists:suppliers,id',
+            'expense_name' => 'required|string|max:255',
+            'payee' => 'nullable|string|max:255',
             'amount' => 'required|numeric|min:0',
-            'start_date' => $startDateRule,
-            'end_date' => $endDateRule,
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
             'date' => 'required|date',
             'notes' => 'nullable|string|max:1000',
             'receipt_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
@@ -107,15 +109,13 @@ class ExpensesController extends Controller
             if (empty($data['payee'])) {
                 $data['payee'] = null;
             }
-            if (empty($data['start_date'])) {
-                $data['start_date'] = null;
-            }
-            if (empty($data['end_date'])) {
-                $data['end_date'] = null;
-            }
             if (empty($data['notes'])) {
                 $data['notes'] = null;
             }
+
+            // Set dates with defaults
+            $data['start_date'] = $startDate->toDateTimeString();
+            $data['end_date'] = $endDate->toDateTimeString();
 
             // Handle receipt image upload
             if ($request->hasFile('receipt_image')) {
