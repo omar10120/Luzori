@@ -14,7 +14,7 @@ return [
 	'pdf_a_auto'            => false,
     'icc_profile_path'      => '',
     'default_font_size'     => '12',
-    'default_font'          => 'sans-serif',
+    'default_font'          => 'cairo',
     'margin_left'           => 10,
     'margin_right'          => 10,
     'margin_top'            => 10,

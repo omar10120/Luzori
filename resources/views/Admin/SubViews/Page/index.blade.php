@@ -73,6 +73,8 @@
                                             </div>
                                         </div>
                                         <hr>
+                                        <!-- App Legal Sections -->
+
                                         <h4 class="mb-3">{{ __('field.app_legal_sections') }}</h4>
                                         <div class="row">
                                             <div class="col-md-12">
@@ -80,7 +82,7 @@
                                                     <label class="form-label">{{ __('field.privacy_policy_app') }}</label>
                                                     <input type="hidden" name="{{ $locale }}[privacy_policy_app][key]"
                                                         value="{{ App\Enums\PageEnum::PrivacyPolicyApp->value }}">
-                                                    <textarea class="summernote" name="{{ $locale }}[privacy_policy_app][value]">{{ $item['privacy_policy_app']?->translate($locale)?->value }}</textarea>
+                                                    <textarea rows=5 class="form-control bg-white text-black" name="{{ $locale }}[privacy_policy_app][value]">{{ $item['privacy_policy_app']?->translate($locale)?->value }}</textarea>
                                                 </div>
                                             </div>
                                         </div>
@@ -90,7 +92,7 @@
                                                     <label class="form-label">{{ __('field.terms_of_use_app') }}</label>
                                                     <input type="hidden" name="{{ $locale }}[terms_of_use_app][key]"
                                                         value="{{ App\Enums\PageEnum::TermsOfUseApp->value }}">
-                                                    <textarea class="summernote" name="{{ $locale }}[terms_of_use_app][value]">{{ $item['terms_of_use_app']?->translate($locale)?->value }}</textarea>
+                                                    <textarea rows=5 class="form-control bg-white text-black" name="{{ $locale }}[terms_of_use_app][value]">{{ $item['terms_of_use_app']?->translate($locale)?->value }}</textarea>
                                                 </div>
                                             </div>
                                         </div>
@@ -100,7 +102,7 @@
                                                     <label class="form-label">{{ __('field.terms_of_service_app') }}</label>
                                                     <input type="hidden" name="{{ $locale }}[terms_of_service_app][key]"
                                                         value="{{ App\Enums\PageEnum::TermsOfServiceApp->value }}">
-                                                    <textarea class="summernote" name="{{ $locale }}[terms_of_service_app][value]">{{ $item['terms_of_service_app']?->translate($locale)?->value }}</textarea>
+                                                    <textarea  rows=5 class="form-control bg-white text-black" name="{{ $locale }}[terms_of_service_app][value]">{{ $item['terms_of_service_app']?->translate($locale)?->value }}</textarea>
                                                 </div>
                                             </div>
                                         </div>
@@ -110,7 +112,7 @@
                                                     <label class="form-label">{{ __('field.about_us_app') }}</label>
                                                     <input type="hidden" name="{{ $locale }}[about_us_app][key]"
                                                         value="{{ App\Enums\PageEnum::AboutUsApp->value }}">
-                                                    <textarea class="summernote" name="{{ $locale }}[about_us_app][value]">{{ $item['about_us_app']?->translate($locale)?->value }}</textarea>
+                                                    <textarea  rows=5 class="form-control bg-white text-black" name="{{ $locale }}[about_us_app][value]">{{ $item['about_us_app']?->translate($locale)?->value }}</textarea>
                                                 </div>
                                             </div>
                                         </div>
