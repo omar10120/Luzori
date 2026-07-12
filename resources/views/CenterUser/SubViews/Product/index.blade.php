@@ -238,7 +238,7 @@
 
                         <!-- Inventory Section -->
                         <h5 class="mb-3 mt-4">Inventory</h5>
-                        <p class="text-muted mb-3">Manage stock levels of this product through Fresha.</p>
+                        <p class="text-muted mb-3">Manage stock levels of this product </p>
                         
                         <div class="row mb-3">
                             <div class="col-md-12">
