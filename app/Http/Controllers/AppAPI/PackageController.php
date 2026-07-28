@@ -17,6 +17,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Pagination\LengthAwarePaginator; 
 
 class PackageController extends Controller
 {
@@ -29,30 +30,30 @@ class PackageController extends Controller
         if (!$appUser) {
             return MyHelper::responseJSON('Unauthorized', Response::HTTP_UNAUTHORIZED);
         }
-
+    
         $allUserPackages = [];
         $centers = Center::whereNotNull('database')->get();
-
+    
         foreach ($centers as $center) {
             try {
                 Config::set('database.connections.mysql.database', $center->database);
                 DB::purge('mysql');
                 DB::reconnect('mysql');
-
+    
                 $tenantUser = TenantUser::where('email', $appUser->email)
                     ->orWhere('phone', $appUser->phone)
                     ->first();
-
+    
                 if ($tenantUser) {
                     $userPackages = UserPackage::where('user_id', $tenantUser->id)
                         ->with([
-                            'package.translation', 
-                            'package.packageServicePaid.service.translation', 
-                            'package.packageServiceFree.service.translation', 
+                            'package.translation',
+                            'package.packageServicePaid.service.translation',
+                            'package.packageServiceFree.service.translation',
                             'usedPackages.service.translation'
                         ])
                         ->get();
-                    
+    
                     if ($userPackages->count() > 0) {
                         foreach ($userPackages as $pkg) {
                             $pkgArray = (new UserPackageResource($pkg))->resolve();
@@ -71,19 +72,42 @@ class PackageController extends Controller
                 continue;
             }
         }
-
+    
         // Restore central database connection
         Config::set('database.connections.mysql.database', env('DB_DATABASE'));
         DB::purge('mysql');
         DB::reconnect('mysql');
-
-        return MyHelper::responseJSON(__('api.doneSuccessfully'), Response::HTTP_OK, $allUserPackages);
+    
+        // Sort by created_at descending (newest first)
+        usort($allUserPackages, function ($a, $b) {
+            return strcmp($b['created_at'] ?? '', $a['created_at'] ?? '');
+        });
+    
+        // ---- PAGINATION ----
+        $perPage = (int) $request->input('per_page', 15);
+        $page = (int) $request->input('page', 1);
+        $total = count($allUserPackages);
+        $offset = ($page - 1) * $perPage;
+        $paginatedItems = array_slice($allUserPackages, $offset, $perPage);
+    
+        $paginator = new LengthAwarePaginator(
+            $paginatedItems,
+            $total,
+            $perPage,
+            $page,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+    
+        return MyHelper::responseJSON(__('api.doneSuccessfully'), Response::HTTP_OK, $paginator->toArray());
     }
 
     /**
      * Get purchased packages for the authenticated user at a center
      */
-    public function index($center_id)
+   /**
+ * Get purchased packages for the authenticated user at a center (pagination added)
+ */
+    public function index(Request $request, $center_id)
     {
         $center = Center::find($center_id);
         if (!$center || !$center->database) {
@@ -108,21 +132,34 @@ class PackageController extends Controller
                 ->orWhere('phone', $appUser->phone)
                 ->first();
 
+            $perPage = (int) $request->input('per_page', 15);
+
+            // If no tenant user, return an empty paginated response
             if (!$tenantUser) {
-                return MyHelper::responseJSON(__('api.doneSuccessfully'), Response::HTTP_OK, []);
+                $emptyPaginator = new LengthAwarePaginator([], 0, $perPage, 1, [
+                    'path' => $request->url(),
+                    'query' => $request->query()
+                ]);
+                return MyHelper::responseJSON(__('api.doneSuccessfully'), Response::HTTP_OK, $emptyPaginator->toArray());
             }
 
-            $userPackages = UserPackage::where('user_id', $tenantUser->id)
+            // Paginate the user packages for this tenant user
+            $paginator = UserPackage::where('user_id', $tenantUser->id)
                 ->with([
-                    'package.translation', 
-                    'package.packageServicePaid.service.translation', 
-                    'package.packageServiceFree.service.translation', 
+                    'package.translation',
+                    'package.packageServicePaid.service.translation',
+                    'package.packageServiceFree.service.translation',
                     'usedPackages.service.translation'
                 ])
-                ->get();
-            
+                ->orderBy('created_at', 'desc')
+                ->paginate($perPage);
 
-            return MyHelper::responseJSON(__('api.doneSuccessfully'), Response::HTTP_OK, UserPackageResource::collection($userPackages));
+            // Transform items with the resource and preserve links/meta
+            $paginatedData = $paginator->toArray();
+            $paginatedData['data'] = UserPackageResource::collection($paginator->items())->toArray($request);
+
+            return MyHelper::responseJSON(__('api.doneSuccessfully'), Response::HTTP_OK, $paginatedData);
+
         } catch (\Exception $e) {
             Log::error('App Package Index Error: ' . $e->getMessage());
             return MyHelper::responseJSON('Error fetching user packages: ' . $e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);

@@ -15,6 +15,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Pagination\LengthAwarePaginator; 
 
 class BookingController extends Controller
 {
@@ -26,24 +27,24 @@ class BookingController extends Controller
     public function list(Request $request)
     {
         $appUser = $request->user();
-
+    
         $centersQuery = Center::query()
             ->where('status', 'approve')
             ->whereNotNull('database');
-
+    
         if ($request->filled('center_id')) {
             $centersQuery->whereKey((int) $request->query('center_id'));
         }
-
+    
         $centers = $centersQuery->get();
         $limit = min(100, max(1, (int) $request->query('limit', 50)));
-
+    
         $rows = [];
         $listDiagnostics = [];
         $centerMediaCache = [];
         $previousDb = config('database.connections.mysql.database');
         $appPhone = $this->normalizedAppPhone($appUser);
-
+    
         try {
             foreach ($centers as $center) {
                 if (empty($center->database)) {
@@ -54,19 +55,19 @@ class BookingController extends Controller
                     ];
                     continue;
                 }
-
+    
                 try {
                     if (!isset($centerMediaCache[$center->id])) {
                         $centerMediaCache[$center->id] = $this->centerMediaForApi($center);
                     }
                     $centerMedia = $centerMediaCache[$center->id];
-
+    
                     Config::set('database.connections.mysql.database', $center->database);
                     DB::purge('mysql');
                     DB::reconnect('mysql');
-
+    
                     $tenantUserIds = $this->tenantUserIdsMatchingAppUser($appUser);
-
+    
                     if ($tenantUserIds->isEmpty() && $appPhone === null) {
                         $listDiagnostics[] = [
                             'center_id' => $center->id,
@@ -79,7 +80,7 @@ class BookingController extends Controller
                         ];
                         continue;
                     }
-
+    
                     $bookingsQuery = Booking::query()
                         ->where(function ($q) use ($tenantUserIds, $appPhone) {
                             if ($tenantUserIds->isNotEmpty()) {
@@ -87,7 +88,7 @@ class BookingController extends Controller
                             }
                             if ($appPhone !== null) {
                                 if ($tenantUserIds->isNotEmpty()) {
-                                    $q->orWhere('mobile', $appPhone);   
+                                    $q->orWhere('mobile', $appPhone);
                                 } else {
                                     $q->where('mobile', $appPhone);
                                 }
@@ -95,14 +96,14 @@ class BookingController extends Controller
                         })
                         ->orderByDesc('id')
                         ->limit($limit);
-
+    
                     Log::debug('AppAPI booking list SQL', [
                         'center_id' => $center->id,
                         'tenant_database' => $center->database,
                         'sql' => $bookingsQuery->toSql(),
                         'bindings' => $bookingsQuery->getBindings(),
                     ]);
-
+    
                     $bookings = $bookingsQuery
                         ->with([
                             'details.service.translation',
@@ -111,7 +112,7 @@ class BookingController extends Controller
                             'branch',
                         ])
                         ->get();
-
+    
                     $listDiagnostics[] = [
                         'center_id' => $center->id,
                         'tenant_database' => $center->database,
@@ -122,7 +123,7 @@ class BookingController extends Controller
                         'bookings_fetched' => $bookings->count(),
                         'booking_ids' => $bookings->pluck('id')->values()->all(),
                     ];
-
+    
                     foreach ($bookings as $booking) {
                         $rows[] = $this->serializeAppBookingForList($booking, $center, $centerMedia);
                     }
@@ -139,7 +140,8 @@ class BookingController extends Controller
                     ]);
                 }
             }
-
+    
+            // Sort all bookings by created_at (newest first)
             usort($rows, static function (array $a, array $b): int {
                 return strcmp($b['created_at'] ?? '', $a['created_at'] ?? '');
             });
@@ -148,27 +150,46 @@ class BookingController extends Controller
             DB::purge('mysql');
             DB::reconnect('mysql');
         }
-
+    
+        // ---- PAGINATION ----
+        $perPage = (int) $request->input('per_page', 15);
+        $page = (int) $request->input('page', 1);
+        $total = count($rows);
+        $offset = ($page - 1) * $perPage;
+        $paginatedItems = array_slice($rows, $offset, $perPage);
+    
+        $paginator = new LengthAwarePaginator(
+            $paginatedItems,
+            $total,
+            $perPage,
+            $page,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+    
         $summary = [
             'app_user_id' => $appUser->id,
             'app_email' => $appUser->email,
             'app_phone_for_match' => $appPhone,
             'centers_in_scope' => $centers->pluck('id')->values()->all(),
             'centers_in_scope_count' => $centers->count(),
-            'limit' => $limit,
+            'limit_per_center' => $limit,
             'center_id_filter' => $request->query('center_id'),
-            'bookings_returned' => count($rows),
+            'total_bookings_before_pagination' => $total,
+            'per_page' => $perPage,
+            'current_page' => $page,
             'per_center' => $listDiagnostics,
         ];
-
+    
         Log::info('AppAPI booking list', $summary);
-
-        $data = ['bookings' => $rows];
-        // if (config('app.debug')) {
-        //     $data['_list_debug'] = $summary;
-        // }
-
-        return MyHelper::responseJSON(__('api.doneSuccessfully'), Response::HTTP_OK, $data);
+    
+        $responseData = $paginator->toArray();
+    
+        // Optionally include debug info (only in debug mode)
+        if (config('app.debug')) {
+            $responseData['_list_debug'] = $summary;
+        }
+    
+        return MyHelper::responseJSON(__('api.doneSuccessfully'), Response::HTTP_OK, $responseData);
     }
 
     /**

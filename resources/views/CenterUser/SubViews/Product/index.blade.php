@@ -204,6 +204,21 @@
                             </div>
                         </div>
 
+                          <div class="row mb-3">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <p class="mb-2">Allow Tracking Stock.</p>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="track_stock" name="track_stock" value="1"
+                                            {{ $item && $item->track_stock ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="track_stock">Enable track stock</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+
                         <div id="retail-pricing-fields" style="{{ $item && $item->allow_retail_sales ? '' : 'display:none;' }}">
                             <div class="row mb-3">
                                 <div class="col-md-12">

@@ -11,6 +11,8 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Str;
 
+use Illuminate\Support\Facades\Log;
+
 class ProductController extends Controller
 {
     private CRUDService $crudService;
@@ -121,6 +123,8 @@ class ProductController extends Controller
         if (!isset($newRequest['allow_retail_sales'])) {
             $newRequest['allow_retail_sales'] = true;
         }
+        LOG::info("track_stock".  $newRequest['track_stock']);
+        
         if (!isset($newRequest['track_stock'])) {
             $newRequest['track_stock'] = false;
         }
