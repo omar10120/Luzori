@@ -33,6 +33,9 @@ class CenterService
             ->where(function ($q) {
                 $q->whereNull('expire_date')->orWhere('expire_date', '>', now());
             })
+            ->when($request->filled('rate'), function ($q) use ($request) {
+                $q->where('rate', $request->rate);
+            })
             ->with('globalCategories');
     
         // ... (existing filters on rate, global_category_slug, global_category_id) ...
