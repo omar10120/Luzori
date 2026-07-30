@@ -30,9 +30,31 @@ class CenterService
         return Center::withTrashed()->find($id);
     }
 
+    private function haversineDistance($lat1, $lon1, $lat2, $lon2)
+    {
+        $earthRadius = 6371; // km
+
+        $dLat = deg2rad($lat2 - $lat1);
+        $dLon = deg2rad($lon2 - $lon1);
+
+        $a = sin($dLat / 2) * sin($dLat / 2) +
+             cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
+             sin($dLon / 2) * sin($dLon / 2);
+
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+
+        return $earthRadius * $c;
+    }
+
+
     public function getFilteredCenters($request)
     {
-    
+        // Get user location and radius from request
+        $userLat = $request->input('lat');
+        $userLng = $request->input('lng');
+        $radius = (float) $request->input('radius', 50); // default 50 km
+
+        // Base query for approved centers
         $query = Center::where('status', 'approve')
             ->where(function ($q) {
                 $q->whereNull('expire_date')->orWhere('expire_date', '>', now());
@@ -41,30 +63,38 @@ class CenterService
                 $q->where('rate', $request->rate);
             })
             ->with('globalCategories');
-    
-        // ... (existing filters on rate, global_category_slug, global_category_id) ...
-    
+
         $centers = $query->get();
         $filteredCenters = [];
-    
         $originalDb = Config::get('database.connections.mysql.database');
-    
+
+        // Helper: Haversine distance in km
+        $haversine = function ($lat1, $lon1, $lat2, $lon2) {
+            $earthRadius = 6371;
+            $dLat = deg2rad($lat2 - $lat1);
+            $dLon = deg2rad($lon2 - $lon1);
+            $a = sin($dLat / 2) * sin($dLat / 2) +
+                cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
+                sin($dLon / 2) * sin($dLon / 2);
+            $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+            return $earthRadius * $c;
+        };
+
         foreach ($centers as $center) {
             if ($center->database) {
                 try {
+                    // Switch to tenant database
                     Config::set('database.connections.mysql.database', $center->database);
                     DB::purge('mysql');
                     DB::reconnect('mysql');
-    
+
                     // Fetch tenant data
                     $center->categories = CategoryService::with('services.workers.vacations')->get();
                     $center->services = Service::with('workers.vacations')->where('is_top', true)->get();
                     $center->packages = Package::all();
                     $center->branches = Branch::all();
-                    $center->about_us  =  (new PageService())->aboutUs();
-                    
-                    
-    
+                    $center->about_us = (new PageService())->aboutUs();
+
                     $userId = auth('center_api')->id();
                     if ($userId) {
                         $center->user_packages = \App\Models\UserPackage::where('user_id', $userId)
@@ -74,10 +104,10 @@ class CenterService
                             ->with(['service.translation'])
                             ->get();
                     }
-    
+
                     $match = true;
-    
-                    // Filter by category_id
+
+                    // ---- Category filter ----
                     if ($request->filled('category_id')) {
                         $matchCategory = false;
                         foreach ($center->categories as $cat) {
@@ -86,12 +116,10 @@ class CenterService
                                 break;
                             }
                         }
-                        if (!$matchCategory) {
-                            $match = false;
-                        }
+                        if (!$matchCategory) $match = false;
                     }
-    
-                    // Search filter
+
+                    // ---- Search filter ----
                     if ($match && $request->filled('search')) {
                         $matchSearch = false;
                         $searchQuery = mb_strtolower($request->search);
@@ -114,37 +142,78 @@ class CenterService
                                 }
                             }
                         }
-                        if (!$matchSearch) {
+                        if (!$matchSearch) $match = false;
+                    }
+
+                    // ---- Nearby (distance) filter ----
+                    $minDistance = null;
+                    if ($match && $userLat !== null && $userLng !== null) {
+                        $minDistance = PHP_INT_MAX;
+                        foreach ($center->branches as $branch) {
+                            if (!empty($branch->latitude) && !empty($branch->longitude)) {
+                                $dist = $haversine(
+                                    (float) $userLat,
+                                    (float) $userLng,
+                                    (float) $branch->latitude,
+                                    (float) $branch->longitude
+                                );
+                                if ($dist < $minDistance) {
+                                    $minDistance = $dist;
+                                }
+                            }
+                        }
+                        // If no branch has valid coordinates, we can either keep the center (distance = null) or exclude it.
+                        // Here we keep it but won't be able to filter/sort properly – we set distance to null.
+                        if ($minDistance === PHP_INT_MAX) {
+                            $minDistance = null;
+                        }
+
+                        // Apply radius filter (only if we have a valid distance)
+                        if ($minDistance !== null && $minDistance > $radius) {
                             $match = false;
                         }
                     }
-    
+
                     if ($match) {
-                        $filteredCenters[] = json_decode(
+                        // Transform center using the resource
+                        $centerData = json_decode(
                             \App\Http\Resources\CenterResource::make($center)->toJson(),
                             true
                         );
+                        // Attach calculated distance
+                        $centerData['distance'] = $minDistance !== null ? round($minDistance, 2) : null;
+                        $filteredCenters[] = $centerData;
                     }
+
                 } catch (\Exception $e) {
                     // Skip center on error
                 }
             }
         }
-    
+
         // Restore original database connection
         Config::set('database.connections.mysql.database', $originalDb);
         DB::purge('mysql');
         DB::reconnect('mysql');
-    
-        // ---- PAGINATION ----
+
+        // ---- Sorting by distance (if coordinates provided) ----
+        if ($userLat !== null && $userLng !== null) {
+            usort($filteredCenters, function ($a, $b) {
+                // Null distances go to the end
+                if ($a['distance'] === null && $b['distance'] === null) return 0;
+                if ($a['distance'] === null) return 1;
+                if ($b['distance'] === null) return -1;
+                return $a['distance'] <=> $b['distance'];
+            });
+        }
+
+        // ---- Pagination ----
         $perPage = (int) $request->input('per_page', 15);
         $page = (int) $request->input('page', 1);
         $total = count($filteredCenters);
         $offset = ($page - 1) * $perPage;
-    
         $paginatedItems = array_slice($filteredCenters, $offset, $perPage);
-    
-        // Create a paginator instance
+
         $paginator = new LengthAwarePaginator(
             $paginatedItems,
             $total,
@@ -152,8 +221,8 @@ class CenterService
             $page,
             ['path' => $request->url(), 'query' => $request->query()]
         );
-    
-        return $paginator ;
+
+        return $paginator;
     }
     public function getFilteredCentersDetail($request)
     {
