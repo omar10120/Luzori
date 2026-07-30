@@ -8,6 +8,9 @@ use App\Models\CenterUser;
 use App\Models\Package;
 use App\Models\Service;
 use App\Models\CategoryService;
+use App\Services\PageService;
+
+
 use Exception;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Config;
@@ -28,6 +31,131 @@ class CenterService
     }
 
     public function getFilteredCenters($request)
+    {
+    
+        $query = Center::where('status', 'approve')
+            ->where(function ($q) {
+                $q->whereNull('expire_date')->orWhere('expire_date', '>', now());
+            })
+            ->when($request->filled('rate'), function ($q) use ($request) {
+                $q->where('rate', $request->rate);
+            })
+            ->with('globalCategories');
+    
+        // ... (existing filters on rate, global_category_slug, global_category_id) ...
+    
+        $centers = $query->get();
+        $filteredCenters = [];
+    
+        $originalDb = Config::get('database.connections.mysql.database');
+    
+        foreach ($centers as $center) {
+            if ($center->database) {
+                try {
+                    Config::set('database.connections.mysql.database', $center->database);
+                    DB::purge('mysql');
+                    DB::reconnect('mysql');
+    
+                    // Fetch tenant data
+                    $center->categories = CategoryService::with('services.workers.vacations')->get();
+                    $center->services = Service::with('workers.vacations')->where('is_top', true)->get();
+                    $center->packages = Package::all();
+                    $center->branches = Branch::all();
+                    $center->about_us  =  (new PageService())->aboutUs();
+                    
+                    
+    
+                    $userId = auth('center_api')->id();
+                    if ($userId) {
+                        $center->user_packages = \App\Models\UserPackage::where('user_id', $userId)
+                            ->with(['package.translation'])
+                            ->get();
+                        $center->user_used_packages = \App\Models\UserUsedPackage::where('user_id', $userId)
+                            ->with(['service.translation'])
+                            ->get();
+                    }
+    
+                    $match = true;
+    
+                    // Filter by category_id
+                    if ($request->filled('category_id')) {
+                        $matchCategory = false;
+                        foreach ($center->categories as $cat) {
+                            if ($cat->id == $request->category_id) {
+                                $matchCategory = true;
+                                break;
+                            }
+                        }
+                        if (!$matchCategory) {
+                            $match = false;
+                        }
+                    }
+    
+                    // Search filter
+                    if ($match && $request->filled('search')) {
+                        $matchSearch = false;
+                        $searchQuery = mb_strtolower($request->search);
+                        if (str_contains(mb_strtolower($center->name ?? ''), $searchQuery)) {
+                            $matchSearch = true;
+                        }
+                        if (!$matchSearch) {
+                            foreach ($center->categories as $cat) {
+                                if (str_contains(mb_strtolower($cat->name ?? ''), $searchQuery)) {
+                                    $matchSearch = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (!$matchSearch) {
+                            foreach ($center->services as $srv) {
+                                if (str_contains(mb_strtolower($srv->name ?? ''), $searchQuery)) {
+                                    $matchSearch = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (!$matchSearch) {
+                            $match = false;
+                        }
+                    }
+    
+                    if ($match) {
+                        $filteredCenters[] = json_decode(
+                            \App\Http\Resources\CenterResource::make($center)->toJson(),
+                            true
+                        );
+                    }
+                } catch (\Exception $e) {
+                    // Skip center on error
+                }
+            }
+        }
+    
+        // Restore original database connection
+        Config::set('database.connections.mysql.database', $originalDb);
+        DB::purge('mysql');
+        DB::reconnect('mysql');
+    
+        // ---- PAGINATION ----
+        $perPage = (int) $request->input('per_page', 15);
+        $page = (int) $request->input('page', 1);
+        $total = count($filteredCenters);
+        $offset = ($page - 1) * $perPage;
+    
+        $paginatedItems = array_slice($filteredCenters, $offset, $perPage);
+    
+        // Create a paginator instance
+        $paginator = new LengthAwarePaginator(
+            $paginatedItems,
+            $total,
+            $perPage,
+            $page,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+    
+        return $paginator ;
+    }
+    public function getFilteredCentersDetail($request)
     {
         $query = Center::where('status', 'approve')
             ->where(function ($q) {
@@ -57,6 +185,7 @@ class CenterService
                     $center->services = Service::with('workers.vacations')->where('is_top', true)->get();
                     $center->packages = Package::all();
                     $center->branches = Branch::all();
+                    $center->about_us = (new PageService())->aboutUs();
     
                     $userId = auth('center_api')->id();
                     if ($userId) {
@@ -148,6 +277,7 @@ class CenterService
     
         return $paginator;
     }
+
 
     public function add($request)
     {

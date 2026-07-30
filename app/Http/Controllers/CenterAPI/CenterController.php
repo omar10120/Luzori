@@ -39,6 +39,16 @@ class CenterController extends Controller
             return MyHelper::responseJSON(__('api.noDataFound'), Response::HTTP_NOT_FOUND);
         }
     }
+    public function filter(Request $request, CenterService $centerService)
+    {
+        $filteredCenters = $centerService->getFilteredCentersDetail($request);
+        
+        if (count($filteredCenters) > 0) {
+            return MyHelper::responseJSON(__('api.doneSuccessfully'), Response::HTTP_OK, $filteredCenters);
+        } else {
+            return MyHelper::responseJSON(__('api.noDataFound'), Response::HTTP_NOT_FOUND);
+        }
+    }
 
     /**
      * Fetch a single approved center by ID.
@@ -66,7 +76,8 @@ class CenterController extends Controller
                 $center->categories = CategoryService::with('services.workers.vacations')->get();
                 $center->services = Service::with('workers.vacations')->where('is_top', true)->get();
                 $center->packages = Package::all();
-                
+                $center->about_us = (new \App\Services\PageService())->aboutUs();
+
                 $userId = auth('center_api')->id();
                 if ($userId) {
                     $center->user_packages = UserPackage::where('user_id', $userId)

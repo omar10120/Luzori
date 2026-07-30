@@ -51,6 +51,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('centers', [CenterController::class, 'index']);
+Route::get('centers/detial', [CenterController::class, 'filter']);
 Route::get('centers/{id}', [CenterController::class, 'show']);
 Route::get('global-categories', [GlobalCategoryController::class, 'index']);
 

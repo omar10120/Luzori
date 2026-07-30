@@ -56,6 +56,12 @@ class CenterResource extends JsonResource
             $res['workers'] = WorkerResource::collection($this->workers);
         }
 
+        if (isset($this->about_us)) {
+            $res['about_us'] = $this->about_us
+                ? PageResource::make($this->about_us)
+                : null;
+        }
+
         return $res;
     }
 }
