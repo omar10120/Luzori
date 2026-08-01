@@ -12,6 +12,9 @@ use App\Models\Branch;
 use App\Models\CategoryService;
 use App\Models\Service;
 use App\Models\Package;
+use App\Models\Info;
+use App\Http\Resources\InfoResource;
+use App\Services\InfoService;
 use App\Models\UserPackage;
 use App\Models\UserUsedPackage;
 use Illuminate\Http\Request;
@@ -77,8 +80,9 @@ class CenterController extends Controller
                 $center->services = Service::with('workers.vacations')->where('is_top', true)->get();
                 $center->packages = Package::all();
                 $center->about_us = (new \App\Services\PageService())->aboutUs();
+                $center->infos = Info::all();  
 
-                $userId = auth('center_api')->id();
+                $userId = auth('center_api')->id(); 
                 if ($userId) {
                     $center->user_packages = UserPackage::where('user_id', $userId)
                         ->with(['package.translation'])

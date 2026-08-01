@@ -61,6 +61,9 @@ class CenterResource extends JsonResource
                 ? PageResource::make($this->about_us)
                 : null;
         }
+        if (isset($this->infos)) {
+            $res['infos'] = InfoResource::collection($this->infos);
+        }
 
         return $res;
     }
