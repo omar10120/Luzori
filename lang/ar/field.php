@@ -363,6 +363,8 @@ return [
     'tips'                            => 'بقشيش ',
     'general_cash'                    => 'عمليات نقدية عامة',
     'Commission'                      => 'العمولة',
+    'open_time '                      => 'وقت الفتح',
+    'close_time '                     => 'وقت الإغلاق',
     
     
 ];

@@ -372,4 +372,6 @@ return [
     'tips'                            => 'Ttips',
     'general_cash'                    => 'General Cash',
     'Commission'                      => 'Commission',
+    'open_time '                      => 'Open Time',
+    'close_time '                     => 'Close Time'
 ];
