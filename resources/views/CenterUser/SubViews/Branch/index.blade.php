@@ -162,6 +162,24 @@
                                     </div>
                                 </div>
                             </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-2">
+                                    <div class="mb-1">
+                                        <label for="open_time" class="form-label">{{__('field.open_time')}}  <span class="text-danger">*</span></label>
+                                        <input type="time" id="open_time" class="form-control"
+                                            name="open_time" placeholder="{{__('field.open_time')}}"
+                                            value="{{ $item ? $item->open_time : '' }}" />
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <div class="mb-1">
+                                        <label for="close_time" class="form-label">{{__('field.close_time')}}  <span class="text-danger">*</span></label>
+                                        <input type="time" id="close_time" class="form-control"
+                                            name="close_time" placeholder="{{__('field.close_time')}}"
+                                            value="{{ $item ? $item->close_time : '' }}" />
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="card-footer">

@@ -26,6 +26,8 @@ class BranchFactory extends Factory
         return [
             'longitude' => $this->faker->longitude(),
             'latitude' => $this->faker->latitude(),
+            'open_time' => $this->faker->time(),
+            'close_time' => $this->faker->time(),
             'ar' => [
                 'name' => $arabic_faker->name(),
                 'city' => $arabic_faker->city(),

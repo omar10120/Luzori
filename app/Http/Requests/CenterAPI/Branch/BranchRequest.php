@@ -51,12 +51,16 @@ class BranchRequest extends FormRequest
             $validations = [
                 'id' => 'required|exists:branches,id,deleted_at,NULL',
                 'longitude' => 'required',
-                'latitude' => 'required'
+                'latitude' => 'required',
+                'open_time' => 'required',
+                'close_time' => 'required'
             ];
         } else {
             $validations = [
                 'longitude' => 'required',
-                'latitude' => 'required'
+                'latitude' => 'required',
+                'open_time' => 'required',
+                'close_time' => 'required'
             ];
         }
         return array_merge($locales, $validations);

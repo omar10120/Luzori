@@ -15,6 +15,8 @@ class BranchResource extends JsonResource
             'address' => $this->address,
             'longitude' => $this->longitude,
             'latitude' => $this->latitude,
+            'open_time' => $this->open_time,
+            'close_time' => $this->close_time,
         ];
     }
 }

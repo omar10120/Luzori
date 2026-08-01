@@ -91,6 +91,8 @@ class BranchController extends Controller
             'en',
             'longitude',
             'latitude',
+            'open_time',
+            'close_time',
         );
         $item = $this->crudService->updateOrCreate($this->model, $newRequest, true);
         if ($item) {

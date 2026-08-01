@@ -27,6 +27,8 @@ class BranchDetailsResource extends JsonResource
         ];
         $res['longitude'] = $this->longitude;
         $res['latitude'] = $this->latitude;
+        $res['open_time'] = $this->open_time;
+        $res['close_time'] = $this->close_time;
         $res['created_at'] = $this->created_at;
         return $res;
     }

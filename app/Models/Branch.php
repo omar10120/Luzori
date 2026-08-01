@@ -24,7 +24,9 @@ class Branch extends Model
     protected $hidden = ['translations'];
     protected $fillable = [
         'longitude',
-        'latitude'
+        'latitude',
+        'open_time',
+        'close_time'
     ];
 
     public function users(): HasMany

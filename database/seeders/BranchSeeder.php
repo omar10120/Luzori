@@ -17,6 +17,8 @@ class BranchSeeder extends Seeder
         Branch::create([
             'longitude' => '',
             'latitude' => '',    
+            'open_time' => '',
+            'close_time' => '',
         ]);
 
         // Branch::factory()->count(15)->create();
