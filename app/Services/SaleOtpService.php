@@ -2,9 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\CenterUser;
-use App\Models\Info;
-use App\Models\Invoice_Settings;
 use App\Models\Sale;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
@@ -113,55 +110,7 @@ class SaleOtpService
 
     public function getAdminPhones(): array
     {
-        $phones = [];
-
-        $info = Info::query()->first();
-        if ($info && !empty($info->phone)) {
-            foreach (preg_split('/[,;|\s]+/', (string) $info->phone) as $phone) {
-                $phone = trim($phone);
-                if ($phone !== '') {
-                    $phones[] = $phone;
-                }
-            }
-        }
-
-        try {
-            $invoiceSettings = Invoice_Settings::query()->first();
-            if ($invoiceSettings) {
-                foreach (['phone_number_1', 'phone_number_2', 'phone_number_3'] as $field) {
-                    $phone = trim((string) ($invoiceSettings->{$field} ?? ''));
-                    if ($phone !== '') {
-                        $phones[] = $phone;
-                    }
-                }
-            }
-        } catch (\Throwable $e) {
-            // Table may not exist in all tenants
-        }
-
-        $authUser = auth('center_user')->user();
-        if ($authUser && !empty($authUser->phone)) {
-            $phones[] = trim(($authUser->country_code ?? '') . $authUser->phone);
-        }
-
-        $admins = CenterUser::query()
-            ->where('statusWeb', 1)
-            ->whereHas('roles', function ($q) {
-                $q->where('name', 'Super Admin');
-            })
-            ->get(['country_code', 'phone']);
-
-        foreach ($admins as $admin) {
-            if (!empty($admin->phone)) {
-                $phones[] = trim(($admin->country_code ?? '') . $admin->phone);
-            }
-        }
-
-        $phones = array_values(array_unique(array_filter(array_map(function ($phone) {
-            return $this->smsGateway->formatPhoneNumber((string) $phone);
-        }, $phones))));
-
-        return $phones;
+        return $this->smsGateway->getAdminPhones();
     }
 
     private function maskPhone(string $phone): string

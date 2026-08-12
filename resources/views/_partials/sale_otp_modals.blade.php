@@ -144,7 +144,8 @@
                 reasonModal().hide();
                 var phones = (response.data && response.data.masked_phones) ? response.data.masked_phones.join(', ') : '';
                 document.getElementById('saleOtpPhonesHint').textContent = phones
-                    ? labels.otpSentTo.replace(':phones', phones)
+                    // ? labels.otpSentTo.replace(':phones', phones)
+                    ? labels.otpSentTo.replace(':phones', '')
                     : (response.message || '');
                 document.getElementById('saleOtpCode').value = '';
                 otpModal().show();
