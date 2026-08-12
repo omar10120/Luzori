@@ -70,13 +70,20 @@
                                         value="{{ $item ? $item->start_at : null }}" />
                                 </div>
                             </div>
-                            <div class="col-md-12">
+                            <div class="col-md-12 mb-2">
                                 <div class="mb-1">
                                     <label for="end_at" class="form-label">{{ __('field.end_at') }} <span class="text-danger">*</span></label>
                                     <small class="text-muted">{{__('general.select_a_end_date_of_the_membership')}}</small>
                                     <input type="date" id="end_at" class="form-control" name="end_at"
                                         value="{{ $item ? $item->end_at : null }}" />
                                 </div>
+                            </div>
+                            <div class="col-md-12">
+                                @include('CenterUser.Components.image', [
+                                    'item' => $item,
+                                    'name' => 'image',
+                                    'model' => 'membership',
+                                ])
                             </div>
                         </div>
                     </div>
@@ -100,4 +107,5 @@
     @vite('resources/assets/js/forms-selects.js')
 
     @include('CenterUser.Components.submit-form-ajax')
+    @include('CenterUser.Components.image-js')
 @endsection

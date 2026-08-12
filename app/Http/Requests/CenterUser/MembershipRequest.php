@@ -27,12 +27,13 @@ class MembershipRequest extends FormRequest
     {
         if (isset($this->id)) {
             return [
-                'id' => 'required|exists:memberships,id',
+                'id' => 'required|exists:memberships_cards,id',
                 'user_id' => 'required|exists:users,id',
                 'membership_no' => 'required|string',
                 'percent' => 'required|numeric|between:1,100',
                 'start_at'=> 'required|date',
                 'end_at' => 'required|date|after:start_at',
+                'image' => 'nullable|image|max:4096|mimes:jpg,jpeg,png,gif|mimetypes:image/jpeg,image/png',
             ];
         } else {
             return [
@@ -41,6 +42,7 @@ class MembershipRequest extends FormRequest
                 'percent' => 'required|numeric|between:1,100',
                 'start_at'=> 'required|date',
                 'end_at' => 'required|date|after:start_at',
+                'image' => 'nullable|image|max:4096|mimes:jpg,jpeg,png,gif|mimetypes:image/jpeg,image/png',
             ];
         }
     }

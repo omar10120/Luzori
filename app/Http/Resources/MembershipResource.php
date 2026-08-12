@@ -19,6 +19,7 @@ class MembershipResource extends JsonResource
         $res['percent'] = $this->percent;
         $res['start_at'] = $this->start_at;
         $res['end_at'] = $this->end_at;
+        $res['image'] = $this->image;
         $res['user'] = null;
         if ($this->user) {
             $res['user'] = UserResource::make($this->user);

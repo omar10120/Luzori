@@ -21,7 +21,7 @@ trait HasMediaTrait
         if ($this->getFirstMediaUrl(class_basename($this))) {
             return $this->getFirstMediaUrl(class_basename($this));
         } else {
-            return asset('assets/img/avatars/1.png');
+            return asset('assets/img/avatars/Avatar.jpg');
         }
     }
 }

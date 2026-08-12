@@ -3,14 +3,16 @@
 namespace App\Models;
 
 use App\Traits\CreatedAtTrait;
+use App\Traits\HasMediaTrait;
 use App\Traits\UpdatedAtTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\MediaLibrary\HasMedia;
 
-class Membership extends Model
+class Membership extends Model implements HasMedia
 {
-    use CreatedAtTrait, UpdatedAtTrait, SoftDeletes;
+    use CreatedAtTrait, UpdatedAtTrait, HasMediaTrait, SoftDeletes;
 
     protected $table = 'memberships_cards';
     protected $fillable = [

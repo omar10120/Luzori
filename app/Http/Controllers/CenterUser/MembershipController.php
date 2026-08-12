@@ -57,7 +57,7 @@ class MembershipController extends Controller
 
         $item = null;
         if ($request->id) {
-            $item = $this->crudService->find($this->model, $request->id);
+            $item = $this->crudService->find($this->model, $request->id, ['media']);
         }
 
         if (is_null($item)) {

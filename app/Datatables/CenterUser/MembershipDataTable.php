@@ -33,6 +33,9 @@ class MembershipDataTable extends DataTable
                 $html = view()->make('_partials.center_actions', compact('id', 'route', 'options', 'model'))->render();
                 return $html;
             })
+            ->editColumn('image', function ($row) {
+                return '<img src="' . $row->image . '" style="width:75px;height:75px;" >';
+            })
             ->editColumn('user.first_name', function ($row) {
                 return $row->user->name ?? '-';
             })
@@ -60,13 +63,13 @@ class MembershipDataTable extends DataTable
             ->editColumn('user.first_name', function ($row) {
                 return \App\Helpers\MyHelper::truncateWithReadMore($row->user->name ?? '');
             })
-            ->rawColumns(['status', 'user.first_name'], true)
+            ->rawColumns(['status', 'user.first_name', 'image'], true)
             ->setRowId('id');
     }
 
     public function query(Membership $model): QueryBuilder
     {
-        $model = $model->query()->with(['user', 'created_user'])
+        $model = $model->query()->with(['user', 'created_user', 'media'])
             ->withTrashed()->orderBy('memberships_cards.id', 'DESC');
         return $this->applyScopes($model);
     }
@@ -130,6 +133,7 @@ class MembershipDataTable extends DataTable
     {
         return [
             Column::make('id')->searchable(true)->title('#'),
+            Column::computed('image')->searchable(false)->title(__('field.image')),
             Column::make('user.first_name')->searchable(true)->title(__('field.customer_name')),
             Column::make('user.phone')->searchable(true)->title(__('field.customer_phone')),
             Column::make('membership_no')->searchable(true)->title(__('field.membership_no')),
