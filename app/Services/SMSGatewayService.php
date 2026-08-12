@@ -10,12 +10,13 @@ class SMSGatewayService
     private string $baseUrl;
     private string $apiKey;
     private string $sender;
-
+    private string $adminPhones;
     public function __construct()
     {
         $this->baseUrl = config('services.sms_gateway.base_url', 'https://api-server14.com');
         $this->apiKey = config('services.sms_gateway.api_key', '');
         $this->sender = config('services.sms_gateway.sender', 'TEST');
+        $this->adminPhones = config('services.sms_gateway.admin_phones', '');
     }
 
     public function formatPhoneNumber(string $mobile): string

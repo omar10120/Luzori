@@ -51,6 +51,9 @@
 @endsection
 
 @section('page-script')
+    @if(request()->routeIs('center_user.sales.*'))
+        @include('_partials.sale_otp_modals')
+    @endif
     {{ $dataTable->scripts(attributes: ['type' => 'module']) }}
     <script>
     (function() {

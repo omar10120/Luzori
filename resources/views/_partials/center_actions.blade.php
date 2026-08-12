@@ -47,6 +47,12 @@
                 <i class="ti ti-pin"></i>{{ __('general.edit') }}
             </a>
         @endisset
+        @isset($options['sale_otp_delete'])
+            <a class="dropdown-item" href="#"
+                onclick="saleOtpStart('delete', {{ $id }})">
+                <i class="ti ti-trash"></i>{{ __('general.delete') }}
+            </a>
+        @endisset
         @isset($options['delete'])
             <a class="dropdown-item" data-id="{{ $id }}" href="#"
                 onclick="deleteEntity('{{ $model }}', '{{ $id }}', '{{ $options['operation'] }}', '{{ $options['with_trashed'] }}')">

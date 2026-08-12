@@ -324,6 +324,8 @@ Route::group(['middleware' => 'auth_center_user:center_user'], function () {
             Route::post('process-payment', 'processPayment')->name('process-payment');
             Route::get('show/{id}', 'show')->name('show');
             Route::get('print/{id}', 'print')->name('print');
+            Route::post('request-otp', 'requestOtp')->name('request-otp');
+            Route::post('verify-otp', 'verifyOtp')->name('verify-otp');
         });
     });
 

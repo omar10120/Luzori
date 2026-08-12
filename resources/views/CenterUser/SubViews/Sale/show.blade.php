@@ -11,11 +11,18 @@
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h2>{{ $title }}</h2>
-                        <div>
+                        <div class="d-flex gap-2">
                             <a href="{{ route('center_user.sales.print', $sale->id) }}" class="btn btn-primary">
                                 <i class="ti ti-printer me-1"></i>
                                 {{ __('general.print') }}
                             </a>
+                            @if(auth('center_user')->user()->can('DELETE_SALES', 'center_api'))
+                                <button type="button" class="btn btn-danger"
+                                    onclick="saleOtpStart('delete', {{ $sale->id }})">
+                                    <i class="ti ti-trash me-1"></i>
+                                    {{ __('general.delete') }}
+                                </button>
+                            @endif
                         </div>
                     </div>
                     <div class="card-body">
@@ -29,7 +36,22 @@
                                     </tr>
                                     <tr>
                                         <td><strong>{{ __('field.date') }}:</strong></td>
-                                        <td>{{ is_string($sale->created_at) ? substr($sale->created_at, 0, 16) : ($sale->created_at ? $sale->created_at->format('Y-m-d H:i') : '-') }}</td>
+                                        <td>
+                                            <div class="d-flex flex-wrap align-items-center gap-2">
+                                                <span id="saleShowDateDisplay">
+                                                    {{ is_string($sale->created_at) ? substr($sale->created_at, 0, 16) : ($sale->created_at ? $sale->created_at->format('Y-m-d H:i') : '-') }}
+                                                </span>
+                                                @if(auth('center_user')->user()->can('UPDATE_SALES', 'center_api') || auth('center_user')->user()->can('SHOW_SALES', 'center_api'))
+                                                    <input type="date" class="form-control form-control-sm" id="saleShowDateInput"
+                                                        style="max-width: 160px;"
+                                                        value="{{ is_string($sale->created_at) ? substr($sale->created_at, 0, 10) : ($sale->created_at ? $sale->created_at->format('Y-m-d') : '') }}">
+                                                    <button type="button" class="btn btn-sm btn-outline-primary"
+                                                        onclick="saleOtpStart('edit', {{ $sale->id }}, document.getElementById('saleShowDateInput').value)">
+                                                        {{ __('general.update_date') }}
+                                                    </button>
+                                                @endif
+                                            </div>
+                                        </td>
                                     </tr>
                                     <tr>
                                         <td><strong>{{ __('field.worker') }}:</strong></td>
@@ -101,7 +123,7 @@
                                                     {{ $service?->name ?? '-' }}
                                                     @if($booking->details->first())
                                                         <br><small class="text-muted">
-                                                            {{ $booking->details->first()->_date }} • 
+                                                            {{ $booking->details->first()->_date }} •
                                                             {{ $booking->details->first()->from_time }} - {{ $booking->details->first()->to_time }}
                                                         </small>
                                                         @if($booking->details->first()->is_free)
@@ -142,3 +164,6 @@
     </div>
 @endsection
 
+@section('page-script')
+    @include('_partials.sale_otp_modals')
+@endsection

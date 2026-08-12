@@ -16,12 +16,14 @@ use App\Models\User;
 use App\Models\Worker;
 use App\Services\InvoiceSettingsService;
 use App\Services\SalesService;
+use App\Services\SaleOtpService;
 use App\Traits\CategoryTreeTrait;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Str;
 use niklasravnsborg\LaravelPdf\Facades\Pdf;
 use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 
 class SalesController extends Controller
 {
@@ -442,6 +444,119 @@ class SalesController extends Controller
         $subdomain = count($parts) > 2 && $parts[0] !== 'www' ? $parts[0] : null;
 
         return $subdomain ? Center::with('media')->where('domain', $subdomain)->first() : null;
+    }
+
+    public function requestOtp(Request $request, SaleOtpService $saleOtpService)
+    {
+        $canDelete = auth('center_user')->user()->can('DELETE_SALES', 'center_api');
+        $canUpdate = auth('center_user')->user()->can('UPDATE_SALES', 'center_api')
+            || auth('center_user')->user()->can('SHOW_SALES', 'center_api');
+
+        $request->validate([
+            'sale_id' => 'required|exists:sales,id',
+            'action' => 'required|in:delete,edit',
+            'reason' => 'required|string|min:3|max:200',
+            'new_date' => 'nullable|date|required_if:action,edit',
+        ]);
+
+        if ($request->action === 'delete' && !$canDelete) {
+            return abort(403);
+        }
+        if ($request->action === 'edit' && !$canUpdate) {
+            return abort(403);
+        }
+
+        $sale = Sale::withTrashed()->findOrFail($request->sale_id);
+        $result = $saleOtpService->requestOtp(
+            $sale,
+            $request->action,
+            $request->reason,
+            $request->new_date
+        );
+
+        if (!$result['success']) {
+            return MyHelper::responseJSON($result['message'], Response::HTTP_BAD_REQUEST);
+        }
+
+        return MyHelper::responseJSON($result['message'], Response::HTTP_OK, [
+            'masked_phones' => $result['masked_phones'] ?? [],
+        ]);
+    }
+
+    public function verifyOtp(Request $request, SaleOtpService $saleOtpService)
+    {
+        $request->validate([
+            'sale_id' => 'required|exists:sales,id',
+            'action' => 'required|in:delete,edit',
+            'code' => 'required|string|min:4|max:8',
+        ]);
+
+        $canDelete = auth('center_user')->user()->can('DELETE_SALES', 'center_api');
+        $canUpdate = auth('center_user')->user()->can('UPDATE_SALES', 'center_api')
+            || auth('center_user')->user()->can('SHOW_SALES', 'center_api');
+
+        if ($request->action === 'delete' && !$canDelete) {
+            return abort(403);
+        }
+        if ($request->action === 'edit' && !$canUpdate) {
+            return abort(403);
+        }
+
+        $verify = $saleOtpService->verifyPending($request->code, (int) $request->sale_id, $request->action);
+        if (!$verify['success']) {
+            return MyHelper::responseJSON($verify['message'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $pending = $verify['pending'];
+        $sale = Sale::withTrashed()->findOrFail($request->sale_id);
+
+        try {
+            if ($request->action === 'delete') {
+                $sale->forceDelete();
+                $saleOtpService->clear();
+                Log::info('Sale deleted after OTP', [
+                    'sale_id' => $request->sale_id,
+                    'reason' => $pending['reason'] ?? null,
+                    'by' => auth('center_user')->id(),
+                ]);
+
+                return MyHelper::responseJSON(__('admin.done_delete_successfully'), Response::HTTP_OK);
+            }
+
+            $newDate = Carbon::parse($pending['new_date']);
+            $sale->load(['bookings.details']);
+            $sale->created_at = $newDate->copy()->setTimeFrom(Carbon::parse($sale->created_at));
+            $sale->save();
+
+            foreach ($sale->bookings as $booking) {
+                $booking->booking_date = $newDate->toDateString();
+                $booking->save();
+                foreach ($booking->details as $detail) {
+                    $detail->_date = $newDate->toDateString();
+                    $detail->save();
+                }
+            }
+
+            $saleOtpService->clear();
+            Log::info('Sale date updated after OTP', [
+                'sale_id' => $request->sale_id,
+                'new_date' => $pending['new_date'] ?? null,
+                'reason' => $pending['reason'] ?? null,
+                'by' => auth('center_user')->id(),
+            ]);
+
+            return MyHelper::responseJSON(__('admin.operation_done_successfully'), Response::HTTP_OK, [
+                'created_at' => $sale->created_at?->format('Y-m-d H:i'),
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Sale OTP action failed', [
+                'sale_id' => $request->sale_id,
+                'action' => $request->action,
+                'error' => $e->getMessage(),
+            ]);
+
+            return MyHelper::responseJSON(__('admin.an_error_occurred'), Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 }
 

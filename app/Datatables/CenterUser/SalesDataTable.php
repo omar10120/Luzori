@@ -80,13 +80,16 @@ class SalesDataTable extends DataTable
                 $route = 'center_user.' . $this->plural;
                 $id = $item->id;
                 $model = $this->model;
+                $canDelete = auth('center_user')->user()?->can('DELETE_SALES', 'center_api');
                 $options = [
                     'show' => true,
                     'print' => true,
-                    'delete' => true,
                     'operation' => DeleteActionEnum::FORCE_DELETE->value,
                     'with_trashed' => 1,
                 ];
+                if ($canDelete) {
+                    $options['sale_otp_delete'] = true;
+                }
                 $html = view()->make('_partials.center_actions', compact('id', 'route', 'options', 'model'))->render();
                 return $html;
             })
@@ -470,7 +473,7 @@ class SalesDataTable extends DataTable
             ->editColumn('total', function ($row) {
                 return number_format($row->total, 2) . ' ' . trim(get_currency());
             })
-            ->rawColumns(['status', 'worker.name', 'client.name', 'services', 'products', 'packages', 'coupons', 'booking_employees', 'product_employees', 'booking_source'], true)
+            ->rawColumns(['status', 'worker.name', 'client.name', 'services', 'products', 'packages', 'coupons', 'booking_employees', 'product_employees', 'booking_source', 'action'], true)
             ->setRowId('id');
     }
 

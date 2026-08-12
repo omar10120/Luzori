@@ -35,6 +35,7 @@ return [
         'base_url' => env('SMS_GATEWAY_BASE_URL', 'https://api-server14.com'),
         'api_key' => env('SMS_GATEWAY_API_KEY', ''),
         'sender' => env('SMS_GATEWAY_SENDER', 'TEST'),
+        'admin_phones' => env('SMS_GATEWAY_ADMIN_PHONES', ''),
     ],
 
 ];

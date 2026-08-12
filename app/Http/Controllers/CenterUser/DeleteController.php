@@ -17,6 +17,10 @@ class DeleteController extends Controller
             return abort(403);
         }
 
+        if ($request->model == 'Sale') {
+            return MyHelper::responseJSON(__('general.sale_otp_required'), 403);
+        }
+
         if ($request->model == 'Role') {
             $modelNameSpace = "Spatie\\Permission\\Models\\" . Str::studly(Str::lower($request->model));
             if ($request->id == 1) {
