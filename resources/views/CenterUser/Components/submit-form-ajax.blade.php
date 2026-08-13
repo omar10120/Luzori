@@ -1,3 +1,4 @@
+@if (!empty($requestUrl))
 <script>
     $(document).ready(function() {
         // Real-time validation feedback
@@ -106,3 +107,4 @@
         });
     });
 </script>
+@endif

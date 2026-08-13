@@ -216,6 +216,7 @@ Route::group(['middleware' => 'auth_center_user:center_user'], function () {
     Route::group(['prefix' => 'users_wallets', 'as' => 'users_wallets.'], function () {
         Route::controller(UserWalletController::class)->group(function () {
             Route::get('showUsers', 'showUsers')->name('showUsers');
+            Route::get('sales', 'salesHistory')->name('sales');
             Route::get('print', 'print')->name('print');
             Route::get('create', 'create')->name('create');
             Route::post('updateOrCreate', 'updateOrCreate')->name('updateOrCreate');

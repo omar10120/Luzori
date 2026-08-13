@@ -12,6 +12,8 @@ use App\Models\Wallet;
 use App\Models\Worker;
 use App\Models\User;
 use App\Models\UserWallet;
+use App\Models\Sale;
+use App\Models\UserUsedWallet;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Str;
@@ -50,6 +52,50 @@ class UserWalletController extends Controller
         }])->find($request->id);
 
         return view("CenterUser.SubViews.Wallet.show_user_wallet", compact('title', 'wallet', 'menu', 'menu_link'));
+    }
+
+    public function salesHistory(Request $request)
+    {
+        $can = 'VIEW_' . Str::upper($this->plural);
+        if (!auth('center_user')->user()->can($can, 'center_api')) {
+            return abort(403);
+        }
+
+        $user = User::findOrFail($request->user_id);
+        $wallet = Wallet::findOrFail($request->wallet_id);
+
+        $walletUsedBySale = UserUsedWallet::query()
+            ->selectRaw('bookings.sale_id as sale_id, SUM(users_used_wallet.amount) as wallet_used')
+            ->join('bookings', 'bookings.id', '=', 'users_used_wallet.booking_id')
+            ->where('users_used_wallet.user_id', $user->id)
+            ->where('users_used_wallet.wallet_id', $wallet->id)
+            ->whereNull('users_used_wallet.deleted_at')
+            ->whereNull('bookings.deleted_at')
+            ->whereNotNull('bookings.sale_id')
+            ->groupBy('bookings.sale_id')
+            ->pluck('wallet_used', 'sale_id');
+
+        $sales = Sale::with(['saleItems'])
+            ->whereIn('id', $walletUsedBySale->keys())
+            ->latest()
+            ->get()
+            ->map(function ($sale) use ($walletUsedBySale) {
+                $sale->wallet_used_amount = (float) $walletUsedBySale->get($sale->id, 0);
+                return $sale;
+            });
+
+        $title = __('general.sales_used_this_coupon') . ' — ' . $user->name;
+        $menu = __('locale.wallets');
+        $menu_link = route('center_user.users_wallets.showUsers', ['id' => $wallet->id]);
+
+        return view('CenterUser.SubViews.Wallet.user_sales', compact(
+            'title',
+            'user',
+            'wallet',
+            'sales',
+            'menu',
+            'menu_link'
+        ));
     }
 
     public function print(Request $request)
