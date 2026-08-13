@@ -679,13 +679,29 @@
                      
                     <label for="select-customer-dropdown" class="form-label">{{ __('field.search_customer') }}</label>
                         <select class="js-customer-select form-control" id="select-customer-dropdown" style="width: 100%;"
-    data-search-url="{{ route('center_user.sales.search-customers') }}"
-    data-dropdown-parent="#selectCustomerModal"
-    data-placeholder="{{ __('field.search_by_name_phone_or_email') }}"
-    data-no-results="{{ __('field.no_customers_found') }}"
-    data-searching="{{ __('field.searching') }}">
-    <option value="">{{ __('field.search_by_name_phone_or_email') }}</option>
-</select>
+                            data-search-url="{{ route('center_user.sales.search-customers') }}"
+                            data-dropdown-parent="#selectCustomerModal"
+                            data-placeholder="{{ __('field.search_by_name_phone_or_email') }}"
+                            data-no-results="{{ __('field.no_customers_found') }}"
+                            data-searching="{{ __('field.searching') }}">
+                            <option value="">{{ __('field.search_by_name_phone_or_email') }}</option>
+                            @foreach($users as $user)
+                                <option value="{{ $user->id }}" 
+                                    data-name="{{ $user->name }}"
+                                    data-email="{{ $user->email ?? '' }}"
+                                    data-phone="{{ $user->phone ?? $user->full_phone ?? '' }}"
+                                    data-image="{{ $user->image ?? '' }}"
+                                    data-branch-id="{{ $user->branch_id ?? '' }}">
+                                    {{ $user->name }} 
+                                    @if($user->phone || $user->full_phone)
+                                        - {{ $user->phone ?? $user->full_phone }}
+                                    @endif
+                                    @if($user->email)
+                                        - {{ $user->email }}
+                                    @endif
+                                </option>
+                            @endforeach
+                        </select>
                     </div>
                     <div id="selected-customer-info" style="display: none;" class="mt-3 p-3 border rounded bg-light">
                         <div class="d-flex align-items-center">
