@@ -37,6 +37,7 @@ return [
     'permissions'               => 'Permissions',
     'print'                     => 'Print',
     'sales_history'             => 'Sales history',
+    'all_users_sales_history'   => 'All users sales history',
     'sales_used_this_coupon'    => 'Sales that used this coupon',
     'no_sales_used_this_coupon' => 'No sales used this coupon',
     'wallet_used'               => 'Used from coupon',

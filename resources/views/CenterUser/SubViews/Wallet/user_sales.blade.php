@@ -12,7 +12,7 @@
                     <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
                         <div>
                             <h2 class="mb-1">{{ __('general.sales_used_this_coupon') }}</h2>
-                            <p class="mb-0 text-muted">{{ $user->name }} · {{ $wallet->code }}</p>
+                            <p class="mb-0 text-muted">{{ $user?->name ?? __('field.all_users') }} · {{ $wallet->code }}</p>
                         </div>
                         <a href="{{ route('center_user.users_wallets.showUsers', ['id' => $wallet->id]) }}"
                             class="btn btn-label-secondary">
@@ -25,6 +25,9 @@
                                 <thead>
                                     <tr>
                                         <th>{{ __('field.sale_id') }}</th>
+                                        @unless ($user)
+                                            <th>{{ __('field.user') }}</th>
+                                        @endunless
                                         <th>{{ __('field.date') }}</th>
                                         <th>{{ __('field.total') }}</th>
                                         <th>{{ __('general.wallet_used') }}</th>
@@ -35,6 +38,9 @@
                                     @forelse ($sales as $sale)
                                         <tr>
                                             <td>#{{ $sale->id }}</td>
+                                            @unless ($user)
+                                                <td>{{ $sale->client->name ?? '-' }}</td>
+                                            @endunless
                                             <td>
                                                 {{ is_string($sale->created_at) ? substr($sale->created_at, 0, 16) : ($sale->created_at ? $sale->created_at->format('Y-m-d H:i') : '-') }}
                                             </td>
@@ -49,7 +55,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="5">{{ __('general.no_sales_used_this_coupon') }}</td>
+                                            <td colspan="{{ $user ? 5 : 6 }}">{{ __('general.no_sales_used_this_coupon') }}</td>
                                         </tr>
                                     @endforelse
                                 </tbody>

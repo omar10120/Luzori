@@ -61,21 +61,29 @@ class UserWalletController extends Controller
             return abort(403);
         }
 
-        $user = User::findOrFail($request->user_id);
         $wallet = Wallet::findOrFail($request->wallet_id);
+        $user = $request->filled('user_id') ? User::findOrFail($request->user_id) : null;
+        $walletUserIds = UserWallet::where('wallet_id', $wallet->id)->pluck('user_id');
 
-        $walletUsedBySale = UserUsedWallet::query()
+        $walletUsedQuery = UserUsedWallet::query()
             ->selectRaw('bookings.sale_id as sale_id, SUM(users_used_wallet.amount) as wallet_used')
             ->join('bookings', 'bookings.id', '=', 'users_used_wallet.booking_id')
-            ->where('users_used_wallet.user_id', $user->id)
             ->where('users_used_wallet.wallet_id', $wallet->id)
             ->whereNull('users_used_wallet.deleted_at')
             ->whereNull('bookings.deleted_at')
-            ->whereNotNull('bookings.sale_id')
+            ->whereNotNull('bookings.sale_id');
+
+        if ($user) {
+            $walletUsedQuery->where('users_used_wallet.user_id', $user->id);
+        } else {
+            $walletUsedQuery->whereIn('users_used_wallet.user_id', $walletUserIds);
+        }
+
+        $walletUsedBySale = $walletUsedQuery
             ->groupBy('bookings.sale_id')
             ->pluck('wallet_used', 'sale_id');
 
-        $sales = Sale::with(['saleItems'])
+        $sales = Sale::with(['saleItems', 'client'])
             ->whereIn('id', $walletUsedBySale->keys())
             ->latest()
             ->get()
@@ -84,7 +92,9 @@ class UserWalletController extends Controller
                 return $sale;
             });
 
-        $title = __('general.sales_used_this_coupon') . ' — ' . $user->name;
+        $title = $user
+            ? __('general.sales_used_this_coupon') . ' — ' . $user->name
+            : __('general.all_users_sales_history') . ' — ' . $wallet->code;
         $menu = __('locale.wallets');
         $menu_link = route('center_user.users_wallets.showUsers', ['id' => $wallet->id]);
 

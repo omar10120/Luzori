@@ -11,8 +11,10 @@
 
         <div class="row">
             <div class="card">
-                <div class="card-header">
-                    <h2>{{ $title }} ({{ $wallet->code }})</h2>
+                <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <h2 class="mb-0">{{ $title }} ({{ $wallet->code }})</h2>
+                    <a href="{{ route('center_user.users_wallets.sales', ['wallet_id' => $wallet->id]) }}"
+                        class="btn btn-outline-primary">{{ __('general.all_users_sales_history') }}</a>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive text-center">

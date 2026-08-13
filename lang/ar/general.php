@@ -36,6 +36,7 @@ return [
     'permissions'               => 'الصلاحيات',
     'print'                     => 'طباعة',
     'sales_history'             => 'سجل المبيعات',
+    'all_users_sales_history'   => 'سجل مبيعات جميع المستخدمين',
     'sales_used_this_coupon'    => 'المبيعات التي استخدمت هذا الكوبون',
     'no_sales_used_this_coupon' => 'لا توجد مبيعات استخدمت هذا الكوبون',
     'wallet_used'               => 'المستخدم من الكوبون',
