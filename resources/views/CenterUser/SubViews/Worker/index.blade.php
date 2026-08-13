@@ -79,6 +79,30 @@
                             </div>
                             <div class="col-md-12 mb-2">
                                 <div class="mb-1">
+                                    <label for="salary" class="form-label">{{ __('field.salary') }}  <span class="text-danger">*</span></label>
+                                    <small class="text-muted">{{__('general.enter_the_salary_of_the_employee')}}</small>
+                                    <input type="number" id="salary" class="form-control" name="salary"
+                                        placeholder="{{ __('field.salary') }}" value="{{ $item ? $item->salary : null }}" />
+                                </div>
+                            </div>
+                            <div class="col-md-12 mb-2">
+                                <div class="mb-1">
+                                    <label for="visa_start_date" class="form-label">{{ __('field.visa_start_date') }}  <span class="text-danger">*</span></label>
+                                    <small class="text-muted">{{__('general.enter_the_visa_start_date_of_the_employee')}}</small>
+                                    <input type="date" id="visa_start_date" class="form-control" name="visa_start_date"
+                                        placeholder="{{ __('field.visa_start_date') }}" value="{{ $item ? $item->visa_start_date : null }}" />
+                                </div>
+                            </div>
+                            <div class="col-md-12 mb-2">
+                                <div class="mb-1">
+                                    <label for="visa_end_date" class="form-label">{{ __('field.visa_end_date') }}  <span class="text-danger">*</span></label>
+                                    <small class="text-muted">{{__('general.enter_the_visa_end_date_of_the_employee')}}</small>
+                                    <input type="date" id="visa_end_date" class="form-control" name="visa_end_date"
+                                        placeholder="{{ __('field.visa_end_date') }}" value="{{ $item ? $item->visa_end_date : null }}" />
+                                </div>
+                            </div>
+                            <div class="col-md-12 mb-2">
+                                <div class="mb-1">
                                     <label for="is_professional" class="form-label">{{ __('field.is_professional') }}  <span class="text-danger">*</span></label>
                                     <div class="form-check form-switch form-check-primary">
                                         <input type="hidden" name="is_professional" value="0">
@@ -134,6 +158,7 @@
                                     </div>
                                 </div>
                             </div>
+                        
                             <div class="col-md-12">
                                 @include('CenterUser.Components.image', [
                                     'item' => $item,
@@ -141,7 +166,8 @@
                                     'model' => 'worker',
                                 ])
                             </div>
-                        </div>
+              
+                            
                     </div>
                     <div class="card-footer">
                         <button type="submit" class="btn btn-primary btn-sm submitFrom">
@@ -160,6 +186,7 @@
 @endsection
 
 @section('page-script')
+
     @vite('resources/assets/js/forms-selects.js')
 
     <script>

@@ -35,7 +35,11 @@ class WorkerRequest extends FormRequest
                 'email' => 'nullable|email|unique:workers,email,' . $this->id,
                 'country_code' => 'required|string',
                 'phone' => 'required|numeric|digits_between:6,10|unique:workers,phone,' . $this->id,
+                'salary' => 'required|numeric',
+                'visa_start_date' => 'required|date',
+                'visa_end_date' => 'required|date',
                 'image' => 'nullable|image|max:4096|mimes:jpg,jpeg,png,gif|mimetypes:image/jpeg,image/png',
+                'visa_image' => 'nullable|image|max:4096|mimes:jpg,jpeg,png,gif|mimetypes:image/jpeg,image/png',
             ];
         } else {
             return [
@@ -48,7 +52,11 @@ class WorkerRequest extends FormRequest
                 'is_professional' => 'required|boolean',
                 'country_code' => 'required|string',
                 'phone' => 'required|numeric|digits_between:6,10|unique:workers,phone',
+                'salary' => 'required|numeric',
+                'visa_start_date' => 'required|date',
+                'visa_end_date' => 'required|date',
                 'image' => 'nullable|image|max:4096|mimes:jpg,jpeg,png,gif|mimetypes:image/jpeg,image/png',
+                'visa_image' => 'nullable|image|max:4096|mimes:jpg,jpeg,png,gif|mimetypes:image/jpeg,image/png',
             ];
         }
     }

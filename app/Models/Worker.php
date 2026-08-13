@@ -27,6 +27,9 @@ class Worker extends Model implements HasMedia
         'branch_id',
         'shift_id',
         'is_center_user',
+        'salary',
+        'visa_start_date',
+        'visa_end_date',    
     ];
 
     public function branch(): BelongsTo

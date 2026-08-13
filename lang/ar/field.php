@@ -365,6 +365,10 @@ return [
     'Commission'                      => 'العمولة',
     'open_time '                      => 'وقت الفتح',
     'close_time '                     => 'وقت الإغلاق',
+    'salary'                          => 'الراتب',
+    'visa_start_date'                 => 'تاريخ بدء الفيزا',
+    'visa_end_date'                   => 'تاريخ انتهاء الفيزا',
+    'visa_image'                      => 'صورة الفيزا',
     
     
 ];

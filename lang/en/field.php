@@ -373,5 +373,9 @@ return [
     'general_cash'                    => 'General Cash',
     'Commission'                      => 'Commission',
     'open_time '                      => 'Open Time',
-    'close_time '                     => 'Close Time'
+    'close_time '                     => 'Close Time',
+    'salary'                          => 'Salary',
+    'visa_start_date'                 => 'Visa Start Date',
+    'visa_end_date'                   => 'Visa End Date',
+    'visa_image'                      => 'Visa Image',
 ];
