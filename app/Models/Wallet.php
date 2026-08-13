@@ -4,7 +4,9 @@ namespace App\Models;
 
 use App\Traits\CreatedAtTrait;
 use App\Traits\UpdatedAtTrait;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -28,8 +30,22 @@ class Wallet extends Model
         return $this->hasMany(UserWallet::class);
     }
 
-    public function created_by_user(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function created_by_user(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'created_by');
+        return $this->belongsTo(CenterUser::class, 'created_by');
+    }
+
+    public function scopeForCenterUserBranch(Builder $query, ?CenterUser $centerUser = null): Builder
+    {
+        $centerUser = $centerUser ?: auth('center_user')->user();
+        $branchId = $centerUser?->branch_id;
+
+        if ($branchId === null) {
+            return $query;
+        }
+
+        return $query->whereHas('created_by_user', function ($q) use ($branchId) {
+            $q->where('branch_id', $branchId);
+        });
     }
 }

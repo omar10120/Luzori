@@ -55,7 +55,8 @@ class SalesService
         $walletPaymentMethods = PaymentMethod::forWallet()->get();
         
         $wallets = Wallet::with(['created_by_user', 'users.user'])
-             ->whereNull('deleted_at')
+            ->whereNull('deleted_at')
+            ->forCenterUserBranch($centerUser)
             ->orderBy('id', 'DESC')
             ->get();
         

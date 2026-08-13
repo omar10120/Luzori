@@ -72,9 +72,16 @@ class WalletDataTable extends DataTable
 
     public function query(Wallet $model): QueryBuilder
     {
-        return $model->query()->withTrashed()->with(['users' => function ($q) {
-            return $q->with(['user']);
-        }])->orderBy($this->plural . '.id', 'DESC');
+        return $model->query()
+            ->withTrashed()
+            ->with([
+                'created_by_user',
+                'users' => function ($q) {
+                    return $q->with(['user']);
+                },
+            ])
+            ->forCenterUserBranch()
+            ->orderBy($this->plural . '.id', 'DESC');
     }
 
     public function html(): HtmlBuilder

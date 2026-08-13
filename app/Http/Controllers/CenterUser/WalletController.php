@@ -6,6 +6,7 @@ use App\Datatables\CenterUser\WalletDataTable;
 use App\Helpers\MyHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CenterUser\WalletRequest;
+use App\Models\Wallet;
 use App\Services\CRUDService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -56,7 +57,7 @@ class WalletController extends Controller
 
         $item = null;
         if ($request->id) {
-            $item = $this->crudService->find($this->model, $request->id);
+            $item = Wallet::withTrashed()->forCenterUserBranch()->findOrFail($request->id);
         }
 
         if (is_null($item)) {
@@ -88,6 +89,9 @@ class WalletController extends Controller
         if (!isset($request->id)) {
             $newRequest['code'] = MyHelper::generateCode(10);
             $newRequest['used'] = 0;
+            $newRequest['created_by'] = auth('center_user')->id();
+        } else {
+            Wallet::withTrashed()->forCenterUserBranch()->findOrFail($request->id);
         }
 
         $item = $this->crudService->updateOrCreate($this->model, $newRequest, true);
