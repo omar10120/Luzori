@@ -678,7 +678,7 @@
                     <div class="mb-3">
                      
                     <label for="select-customer-dropdown" class="form-label">{{ __('field.search_customer') }}</label>
-                    <select class="js-customer-select form-control" id="select-customer-dropdown" style="width: 100%;"
+                        <select class="js-customer-select form-control" id="select-customer-dropdown" style="width: 100%;"
     data-search-url="{{ route('center_user.sales.search-customers') }}"
     data-dropdown-parent="#selectCustomerModal"
     data-placeholder="{{ __('field.search_by_name_phone_or_email') }}"
