@@ -129,9 +129,15 @@ class WorkerController extends Controller
         if (!$branch_id && auth('center_user')->check()) {
             $branch_id = auth('center_user')->user()->branch_id;
         }
-        $workers = Worker::when($branch_id, function($query) use ($branch_id) {
-            return $query->where('branch_id', $branch_id);
-        })->select('id', 'name', 'phone', 'is_center_user')->get();
+
+        $workers = Worker::query()
+            ->when($branch_id, function ($query) use ($branch_id) {
+                return $query->where('branch_id', $branch_id);
+            })
+            ->orderBy('name')
+            ->toBase()
+            ->get(['id', 'name', 'phone', 'is_center_user']);
+
         return response()->json($workers);
     }
 }

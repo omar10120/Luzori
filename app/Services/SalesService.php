@@ -40,25 +40,36 @@ class SalesService
      */
     public function getCartData($cart, $centerUser)
     {
-        $services = Service::with(['translation'])->get();
-        $products = Product::with(['translation', 'branches'])->get();
+        $services = Service::with('translation')
+            ->get(['id', 'category_id', 'price', 'has_commission']);
+        $products = Product::with('translation')
+            ->get(['id', 'supply_price', 'retail_price']);
         $discounts = Discount::all();
         $packages = Package::with([
             'translation',
-            'usersPackages.user',
             'packageServicePaid.service.translation',
             'packageServiceFree.service.translation',
-        ])->get();
-        
+            'usersPackages' => function ($q) {
+                $q->select('id', 'package_id', 'user_id')
+                    ->with(['user:id,first_name,last_name']);
+            },
+        ])->get(['id', 'price', 'created_by']);
+
         $paymentMethods = PaymentMethod::forBooking()->orWhereJsonContains('types', 'general')->get();
         $productPaymentMethods = PaymentMethod::forProduct()->orWhereJsonContains('types', 'general')->get();
         $walletPaymentMethods = PaymentMethod::forWallet()->get();
-        
-        $wallets = Wallet::with(['created_by_user', 'users.user'])
+
+        $wallets = Wallet::with([
+            'created_by_user:id,name',
+            'users' => function ($q) {
+                $q->select('id', 'wallet_id', 'user_id')
+                    ->with(['user:id,first_name,last_name']);
+            },
+        ])
             ->whereNull('deleted_at')
             ->forCenterUserBranch($centerUser)
             ->orderBy('id', 'DESC')
-            ->get();
+            ->get(['id', 'code', 'amount', 'invoiced_amount', 'used', 'start_at', 'end_at', 'created_by']);
         
         $selectedId = !empty($cart['client_id']) ? (int) $cart['client_id'] : null;
         $users = app(CustomerSearchService::class)->listForSelect($selectedId, 50);

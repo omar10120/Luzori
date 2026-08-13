@@ -2512,16 +2512,24 @@
             });
 
             // Cart Functions
-            function saveCartToSession() {
-                $.ajax({
+            function saveCartToSession(options) {
+                options = options || {};
+                const payload = {
+                    _token: '{{ csrf_token() }}',
+                    client_id: selectedCustomerId
+                };
+                if (!options.clientOnly) {
+                    payload.cart = cart;
+                    payload.replace_items = 1;
+                }
+                return $.ajax({
                     url: '{{ route("center_user.sales.cart") }}',
                     type: 'POST',
-                    data: {
-                        _token: '{{ csrf_token() }}',
-                        cart: cart,
-                        client_id: selectedCustomerId
-                    },
-                    async: false
+                    data: payload,
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
                 });
             }
 
@@ -2735,21 +2743,11 @@
                     return;
                 }
 
-                $.ajax({
-                    url: '{{ route("center_user.sales.cart") }}',
-                    type: 'POST',
-                    data: {
-                        _token: '{{ csrf_token() }}',
-                        cart: cart,
-                        client_id: selectedCustomerId
-                    },
-                    success: function() {
-                        window.location.href = '{{ route("center_user.sales.payment") }}';
-                    },
-                    error: function() {
-                        if (typeof toastr !== 'undefined') {
-                            toastr.error('{{ __('admin.an_error_occurred') }}');
-                        }
+                saveCartToSession().done(function() {
+                    window.location.href = '{{ route("center_user.sales.payment") }}';
+                }).fail(function() {
+                    if (typeof toastr !== 'undefined') {
+                        toastr.error('{{ __('admin.an_error_occurred') }}');
                     }
                 });
             });
@@ -3598,17 +3596,7 @@
                             // Update selected customer if not already set
                             if (!selectedCustomerId && userId) {
                                 selectedCustomerId = userId;
-                                // Save customer selection to session
-                                $.ajax({
-                                    url: '{{ route("center_user.sales.cart") }}',
-                                    type: 'POST',
-                                    data: {
-                                        _token: '{{ csrf_token() }}',
-                                        cart: cart,
-                                        client_id: userId
-                                    },
-                                    async: false
-                                });
+                                saveCartToSession({ clientOnly: true });
                             }
                             
                             // Check if this user-wallet assignment is already in cart
@@ -3926,47 +3914,30 @@
                 const userEmail = $selectedOption.data('email') || '';
                 const userPhone = $selectedOption.data('phone') || '';
                 const userImage = $selectedOption.data('image') || '{{ asset('assets/img/avatars/1.png') }}';
+                const branchId = $selectedOption.data('branch-id') || null;
                 
                 selectedCustomerId = userId;
                 selectedCustomerName = userName;
                 selectedCustomerPhone = userPhone;
-                
-                // Save to session
-                $.ajax({
-                    url: '{{ route("center_user.sales.cart") }}',
-                    type: 'POST',
-                    data: {
-                        _token: '{{ csrf_token() }}',
-                        cart: cart,
-                        client_id: userId
-                    },
-                    success: function() {
-                        // Update display
-                        updateCustomerDisplay(userId, userName, userEmail || userPhone, userImage , userPhone);
-                        
-                        // Update worker dropdowns based on customer's branch
-                        const branchId = $selectedOption.data('branch-id') || null;
-                        updateWorkersByBranch(branchId);
-                        
-                        $('#selectCustomerModal').modal('hide');
-                        
-                        // Reset modal
-                        $('#select-customer-dropdown').val(null).trigger('change');
-                        $('#selected-customer-info').hide();
-                        $('#confirm-select-customer').prop('disabled', true);
-                        
-                        // If we are already on step 3 of booking wizard, update the info immediately
-                        if ($('#booking-third-step').hasClass('active')) {
-                             $('#booking-step3-customer-name').text(selectedCustomerName);
-                             $('#booking-step3-customer-mobile').text(selectedCustomerPhone || '{{ __('field.no_mobile') }}');
-                             loadCustomerServices(selectedCustomerPhone);
-                        }
 
-                        if (typeof toastr !== 'undefined') {
-                            toastr.success('{{ __('field.customer_selected') }}');
-                        }
-                    }
-                });
+                updateCustomerDisplay(userId, userName, userEmail || userPhone, userImage , userPhone);
+                $('#selectCustomerModal').modal('hide');
+                $('#select-customer-dropdown').val(null).trigger('change');
+                $('#selected-customer-info').hide();
+                $('#confirm-select-customer').prop('disabled', true);
+
+                if ($('#booking-third-step').hasClass('active')) {
+                     $('#booking-step3-customer-name').text(selectedCustomerName);
+                     $('#booking-step3-customer-mobile').text(selectedCustomerPhone || '{{ __('field.no_mobile') }}');
+                     loadCustomerServices(selectedCustomerPhone);
+                }
+
+                if (typeof toastr !== 'undefined') {
+                    toastr.success('{{ __('field.customer_selected') }}');
+                }
+
+                saveCartToSession({ clientOnly: true });
+                updateWorkersByBranch(branchId);
             });
 
             // Reset modal when closed
@@ -3979,80 +3950,67 @@
             // Remove customer
             $(document).on('click', '#removeCustomerBtn', function() {
                 selectedCustomerId = null;
-                
-                
-                $.ajax({
-                    url: '{{ route("center_user.sales.cart") }}',
-                    type: 'POST',
-                    data: {
-                        _token: '{{ csrf_token() }}',
-                        cart: cart,
-                        client_id: null
-                    },
-                    success: function() {
-                        updateCustomerDisplay(null, null, null, null, null);
-                        
-                        // Update worker dropdowns - use logged-in user's branch
-                        const branchId = {{ auth('center_user')->user()->branch_id ?? 'null' }};
-                        updateWorkersByBranch(branchId);
-                        
-                        if (typeof toastr !== 'undefined') {
-                            toastr.success('{{ __('field.customer_removed') }}');
-                        }
-                    }
-                });
+                updateCustomerDisplay(null, null, null, null, null);
+                const branchId = {{ auth('center_user')->user()->branch_id ?? 'null' }};
+                updateWorkersByBranch(branchId);
+                if (typeof toastr !== 'undefined') {
+                    toastr.success('{{ __('field.customer_removed') }}');
+                }
+                saveCartToSession({ clientOnly: true });
             });
 
             // Update worker dropdowns based on branch
+            const workersByBranchCache = {};
+            function fillWorkerSelect($select, workers, placeholder, currentValue, centerUserName) {
+                if (!$select.length) {
+                    return;
+                }
+                $select.empty().append($('<option>', { value: '', text: placeholder }));
+                $.each(workers, function(index, worker) {
+                    let label = worker.name + ' - ' + (worker.phone || '');
+                    if (worker.is_center_user) {
+                        label += ' (' + centerUserName + ' - reception)';
+                    }
+                    $select.append(new Option(label, worker.id, false, String(worker.id) === String(currentValue)));
+                });
+                $select.trigger('change');
+            }
             function updateWorkersByBranch(branchId) {
+                const cacheKey = String(branchId || 'all');
+                const centerUserName = '{{ $centerUser->name ?? '' }}';
+                const applyWorkers = function(workers) {
+                    fillWorkerSelect(
+                        $('#product-sales_worker'),
+                        workers,
+                        '{{ __('field.select_sales_worker') }}',
+                        $('#product-sales_worker').val(),
+                        centerUserName
+                    );
+                    fillWorkerSelect(
+                        $('#product-worker'),
+                        workers,
+                        '{{ __('field.select_worker') }}',
+                        $('#product-worker').val(),
+                        centerUserName
+                    );
+                };
+
+                if (workersByBranchCache[cacheKey]) {
+                    applyWorkers(workersByBranchCache[cacheKey]);
+                    return;
+                }
+
                 $.ajax({
                     url: '{{ route("center_user.workers.get-workers-by-branch") }}',
                     type: 'GET',
-                    data: {
-                        _token: '{{ csrf_token() }}',
-                        branch_id: branchId
+                    data: { branch_id: branchId },
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
                     },
                     success: function(workers) {
-                        const centerUserName = '{{ $centerUser->name ?? '' }}';
-                        
-                        // Update product-sales_worker dropdown
-                        const $salesWorkerSelect = $('#product-sales_worker');
-                        const currentSalesWorker = $salesWorkerSelect.val();
-                        $salesWorkerSelect.empty().append('<option value="">{{ __('field.select_sales_worker') }}</option>');
-                        $.each(workers, function(index, worker) {
-                            let label = worker.name + ' - ' + (worker.phone || '');
-                            if (worker.is_center_user) {
-                                label += ' (' + centerUserName + ' - reception)';
-                            }
-                            const option = new Option(label, worker.id, false, false);
-                            if (worker.id == currentSalesWorker) {
-                                option.selected = true;
-                            }
-                            $salesWorkerSelect.append(option);
-                        });
-                        $salesWorkerSelect.trigger('change');
-                        
-                        // Update product-worker dropdown
-                        const $workerSelect = $('#product-worker');
-                        const currentWorker = $workerSelect.val();
-                        $workerSelect.empty().append('<option value="">{{ __('field.select_worker') }}</option>');
-                        $.each(workers, function(index, worker) {
-                            let label = worker.name + ' - ' + (worker.phone || '');
-                            if (worker.is_center_user) {
-                                label += ' (' + centerUserName + ' - reception)';
-                            }
-
-                            if (worker.id == currentWorker) {
-                                option.selected = true;
-                            }
-                            $workerSelect.append(option);
-                        });
-                        $workerSelect.trigger('change');
-                    },
-                    error: function() {
-                        if (typeof toastr !== 'undefined') {
-                            toastr.error('{{ __('admin.an_error_occurred') }}');
-                        }
+                        workersByBranchCache[cacheKey] = workers || [];
+                        applyWorkers(workersByBranchCache[cacheKey]);
                     }
                 });
             }
@@ -4525,28 +4483,14 @@
                             }
 
                             selectedCustomerId = userData.id;
-                            
-                            // Save to session
-                            $.ajax({
-                                url: '{{ route("center_user.sales.cart") }}',
-                                type: 'POST',
-                                data: {
-                                    _token: '{{ csrf_token() }}',
-                                    cart: cart,
-                                    client_id: userData.id
-                                },
-                                success: function() {
-                                    const userName = userData.name || (userData.first_name + ' ' + (userData.last_name || ''));
-                                    const userEmail = userData.email || '';
-                                    const userPhone = userData.phone || userData.full_phone || '';
-                                    const userImage = userData.image || '';
+                            const userName = userData.name || (userData.first_name + ' ' + (userData.last_name || ''));
+                            const userEmail = userData.email || '';
+                            const userPhone = userData.phone || userData.full_phone || '';
+                            const userImage = userData.image || '';
 
-                                    // Update display
-                                    updateCustomerDisplay(userData.id, userName, userEmail || userPhone, userImage , userPhone);
-                                    
-                                    // Update worker dropdowns based on customer's branch
-                                    const branchId = userData.branch_id || null;
-                                    updateWorkersByBranch(branchId);
+                            updateCustomerDisplay(userData.id, userName, userEmail || userPhone, userImage , userPhone);
+                            updateWorkersByBranch(userData.branch_id || null);
+                            saveCartToSession({ clientOnly: true });
                                     
                                     // Add to selection dropdowns
                                     let label = userName;
@@ -4590,8 +4534,6 @@
                                     if (typeof toastr !== 'undefined') {
                                         toastr.success('{{ __('admin.operation_done_successfully') }}');
                                     }
-                                }
-                            });
                         }
                     },
                     error: function(xhr) {

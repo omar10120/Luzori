@@ -69,8 +69,9 @@ class SalesController extends Controller
         $menu_link = route($this->indexRoute);
         $title = __('general.add') . ' ' . __('locale.' . $this->plural);
 
-        // Save cart if posted (AJAX request)
-        if ($request->isMethod('post') && $request->has('cart')) {
+        // AJAX save only — never render the full cart page on POST.
+        // Empty `cart: []` is omitted by jQuery, so do not require the cart key.
+        if ($request->isMethod('post')) {
             $cart = session('sales_cart', [
                 'items' => [],
                 'client_id' => null,
@@ -79,13 +80,22 @@ class SalesController extends Controller
                 'tax' => 0,
                 'payment_type' => null,
             ]);
-            // Filter out null/empty items and re-index
-            $cart['items'] = array_values(array_filter($request->cart));
-            if ($request->has('client_id')) {
-                $cart['client_id'] = $request->client_id;
+
+            if ($request->boolean('replace_items') || ($request->exists('cart') && is_array($request->input('cart')))) {
+                $posted = $request->input('cart', []);
+                $cart['items'] = is_array($posted) ? array_values(array_filter($posted)) : [];
             }
+
+            if ($request->exists('client_id')) {
+                $cart['client_id'] = $request->filled('client_id') ? $request->input('client_id') : null;
+            }
+
             session(['sales_cart' => $cart]);
-            return MyHelper::responseJSON('Cart saved', Response::HTTP_OK, ['items' => $cart['items']]);
+
+            return MyHelper::responseJSON('Cart saved', Response::HTTP_OK, [
+                'client_id' => $cart['client_id'],
+                'items_count' => count($cart['items'] ?? []),
+            ]);
         }
 
         // Get cart from session
@@ -106,7 +116,6 @@ class SalesController extends Controller
         $services = $data['services'];
         $products = $data['products'];
         $discounts = $data['discounts'];
-        Log::info('discounts', [$discounts]);
         $packages = $data['packages'];
         $paymentMethods = $data['paymentMethods'];
         $productPaymentMethods = $data['productPaymentMethods'];
