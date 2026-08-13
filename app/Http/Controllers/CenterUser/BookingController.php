@@ -14,6 +14,7 @@ use App\Models\Service;
 use App\Models\BookingDetail;
 use App\Services\BookingService;
 use App\Services\CRUDService;
+use App\Services\CustomerSearchService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Str;
@@ -96,89 +97,11 @@ class BookingController extends Controller
         }
     }
 
-    public function getServicesByUser(Request $request)
+    public function getServicesByUser(Request $request, CustomerSearchService $customerSearchService)
     {
-        $user = User::with([
-            'memberships', 
-            'wallets', 
-            'packages' => function($q) {
-                $q->where('status', 'active')->with(['package.packageServicePaid.service.category.translation', 'package.packageServiceFree.service.category.translation']);
-            },
-            'services' => function ($q) {
-                $q->with(['service' => function($sq) {
-                    $sq->with('category.translation');
-                }]);
-            }
-        ])->where('phone', $request->user_phone)->first();
-
-        if ($user) {
-            $services = $user->services->groupBy('service_id');
-            $wallets = $user->wallets()->with(['wallet'])->get()->map(function($userWallet) use ($user) {
-                $usedAmount = UserUsedWallet::where('user_id', $user->id)
-                    ->where('wallet_id', $userWallet->wallet_id)
-                    ->sum('amount');
-                
-                $userWallet->remaining_balance = $userWallet->amount - $usedAmount;
-                return $userWallet;
-            });
-            $memberships = $user->memberships()->get();
-
-            $packages = $user->packages->map(function ($userPackage) {
-                $usedServices = \App\Models\UserUsedPackage::where('user_package_id', $userPackage->id)->get();
-                $remainingServices = [];
-
-                if ($userPackage->package) {
-                    // Process paid services
-                    $paidCounts = $userPackage->package->packageServicePaid->groupBy('service_id');
-                    foreach ($paidCounts as $serviceId => $services) {
-                        $totalSlots = $services->count();
-                        $usedSlots = $usedServices->where('service_id', $serviceId)->where('is_free', 0)->count();
-                        $remaining = $totalSlots - $usedSlots;
-                        if ($remaining > 0) {
-                            $remainingServices[] = [
-                                'service' => $services->first()->service,
-                                'service_id' => $serviceId,
-                                'remaining' => $remaining,
-                                'is_free' => 0
-                            ];
-                        }
-                    }
-
-                    // Process free services
-                    $freeCounts = $userPackage->package->packageServiceFree->groupBy('service_id');
-                    foreach ($freeCounts as $serviceId => $services) {
-                        $totalSlots = $services->count();
-                        $usedSlots = $usedServices->where('service_id', $serviceId)->where('is_free', 1)->count();
-                        $remaining = $totalSlots - $usedSlots;
-                        if ($remaining > 0) {
-                            $remainingServices[] = [
-                                'service' => $services->first()->service,
-                                'service_id' => $serviceId,
-                                'remaining' => $remaining,
-                                'is_free' => 1
-                            ];
-                        }
-                    }
-                }
-
-                $userPackage->remaining_services = $remainingServices;
-                return $userPackage;
-            })->filter(function ($userPackage) {
-                \Log::warning('Contact form packge : ' . $userPackage->package_type);
-                return count($userPackage->remaining_services) > 0;
-            })->values();
-
-            return response()->json([
-                'status' => true,
-                'user' => $user,
-                'services' => $services,
-                'wallets' => $wallets,
-                'memberships' => $memberships,
-                'packages' => $packages
-            ]);
-        } else {
-            return response()->json(['status' => false]);
-        }
+        return response()->json(
+            $customerSearchService->getBookingProfile((string) $request->get('user_phone', ''))
+        );
     }
 
     public function getUsersByBranch(Request $request)

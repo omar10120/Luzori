@@ -2756,16 +2756,60 @@
 
             // Refactored reusable function to load customer services/wallets
             let userPackagesData = [];
-            
+            const customerDataCache = {};
+            let customerServicesRequest = null;
+
+            function clearCustomerBookingSections() {
+                $('#booking-servicesTable, #booking-walletsElement, #booking-membershipsElement, #booking-packagesElement').html('');
+                userPackagesData = [];
+            }
+
+            function showCustomerBookingLoading() {
+                var loadingHtml = '<div class="text-center py-3 text-muted"><i class="ti ti-loader-2 ti-spin me-1"></i>{{ __("field.searching") }}...</div>';
+                $('#booking-servicesTable').html(loadingHtml);
+                $('#booking-walletsElement, #booking-membershipsElement, #booking-packagesElement').html('');
+            }
+
+            function get_services(user_phone) {
+                return $.ajax({
+                    url: "{{ route('center_user.bookings.get-services-by-user') }}",
+                    method: 'GET',
+                    data: {
+                        _token: '{{ csrf_token() }}',
+                        user_phone: user_phone,
+                    }
+                });
+            }
+
             function loadCustomerServices(user_phone) {
                  if (!user_phone) {
-                     $('#booking-servicesTable, #booking-walletsElement, #booking-membershipsElement, #booking-packagesElement').html('');
-                     userPackagesData = [];
+                     clearCustomerBookingSections();
                      return;
                  }
 
-                 var response = get_services(user_phone);
-                 if (response.status) {
+                 if (customerDataCache[user_phone]) {
+                     renderCustomerBookingData(customerDataCache[user_phone]);
+                     return;
+                 }
+
+                 showCustomerBookingLoading();
+                 if (customerServicesRequest && customerServicesRequest.abort) {
+                     customerServicesRequest.abort();
+                 }
+                 customerServicesRequest = get_services(user_phone);
+                 customerServicesRequest
+                     .done(function(response) {
+                         customerDataCache[user_phone] = response;
+                         renderCustomerBookingData(response);
+                     })
+                     .fail(function(xhr) {
+                         if (xhr.statusText === 'abort') return;
+                         clearCustomerBookingSections();
+                     });
+            }
+
+            function renderCustomerBookingData(response) {
+                 if (response && response.status) {
                      // Note: name is already handled globally, this updates the service/wallet sections
                      if (response.services) {
                          var services = response.services;
@@ -3255,22 +3299,6 @@
             // Attach handlers on page load
             attachRadioClearHandlers();
 
-            function get_services(user_phone) {
-                var services = [];
-                $.ajax({
-                    url: "{{ route('center_user.bookings.get-services-by-user') }}",
-                    method: 'GET',
-                    async: false,
-                    data: {
-                        _token: '{{ csrf_token() }}',
-                        user_phone: user_phone,
-                    },
-                    success: function(response) {
-                        services = response;
-                    }
-                });
-                return services;
-            }
 
             // Quick Add Service Modal
             $('#save-quick-service-btn').on('click', function(e) {
@@ -3402,8 +3430,9 @@
                                 $('#customer-search-results').hide();
                                 $('#customer-search').val('');
                                 
-                                // Also trigger global reload
-                                loadCustomerServices(phone);
+                                if ($('#booking-third-step').hasClass('active')) {
+                                    loadCustomerServices(phone);
+                                }
                                 
                                 if (typeof toastr !== 'undefined') {
                                     toastr.success('{{ __('admin.operation_done_successfully') }}');
@@ -3847,7 +3876,7 @@
             // Handle customer selection from dropdown for PREVIEW (on change)
              $('#select-customer-dropdown').on('change', function() {
                 const userId = $(this).val();
-                console.log("userId"+ userId);
+                
                 const $selectedOption = $(this).find('option:selected');
                 
                 // This logic only updates the modal preview, DOES NOT set global state yet until confirmed
