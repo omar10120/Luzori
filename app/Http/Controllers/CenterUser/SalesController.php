@@ -17,6 +17,7 @@ use App\Models\Worker;
 use App\Services\InvoiceSettingsService;
 use App\Services\SalesService;
 use App\Services\SaleOtpService;
+use App\Services\CustomerSearchService;
 use App\Traits\CategoryTreeTrait;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -118,6 +119,19 @@ class SalesController extends Controller
 
         $view = 'CenterUser.SubViews.' . $this->model . '.cart';
         return view($view, compact('services', 'products', 'workers', 'discounts', 'packages', 'paymentMethods', 'productPaymentMethods', 'walletPaymentMethods', 'wallets', 'users', 'cart', 'title', 'menu', 'menu_link', 'categoriesJson', 'centerUser'));
+    }
+
+    public function searchCustomers(Request $request, CustomerSearchService $customerSearchService)
+    {
+        return response()->json($customerSearchService->search(
+            (string) ($request->get('q') ?: $request->get('term', '')),
+            max(1, (int) $request->get('page', 1))
+        ));
+    }
+
+    public function getCustomer($id, CustomerSearchService $customerSearchService)
+    {
+        return response()->json($customerSearchService->find((int) $id));
     }
 
     /**

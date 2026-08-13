@@ -59,12 +59,12 @@ class SalesService
             ->orderBy('id', 'DESC')
             ->get();
         
-        $users = User::with(['media'])->get();
+        $selectedId = !empty($cart['client_id']) ? (int) $cart['client_id'] : null;
+        $users = app(CustomerSearchService::class)->listForSelect($selectedId, 50);
 
-        // Branch filtering for workers
         $branchId = null;
-        if (!empty($cart['client_id'])) {
-            $selectedCustomer = User::find($cart['client_id']);
+        if ($selectedId) {
+            $selectedCustomer = $users->firstWhere('id', $selectedId) ?: User::find($selectedId);
             if ($selectedCustomer && $selectedCustomer->branch_id) {
                 $branchId = $selectedCustomer->branch_id;
             }

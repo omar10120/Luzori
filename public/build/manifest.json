@@ -315,7 +315,7 @@
     "src": "node_modules/leaflet/dist/images/marker-shadow.png"
   },
   "resources/assets/css/demo.css": {
-    "file": "assets/demo-BvzPMB0b.css",
+    "file": "assets/demo-DoaCnrY8.css",
     "src": "resources/assets/css/demo.css",
     "isEntry": true
   },
@@ -740,7 +740,7 @@
     "isEntry": true
   },
   "resources/assets/js/front-main.js": {
-    "file": "assets/front-main-ClIUICqw.js",
+    "file": "assets/front-main-NtIiS2hf.js",
     "name": "front-main",
     "src": "resources/assets/js/front-main.js",
     "isEntry": true
@@ -764,7 +764,7 @@
     "isEntry": true
   },
   "resources/assets/js/main.js": {
-    "file": "assets/main-5j7CE6ND.js",
+    "file": "assets/main-C6B_uLU6.js",
     "name": "main",
     "src": "resources/assets/js/main.js",
     "isEntry": true
@@ -899,6 +899,12 @@
     "file": "assets/pages-profile-DwzpuIrO.js",
     "name": "pages-profile",
     "src": "resources/assets/js/pages-profile.js",
+    "isEntry": true
+  },
+  "resources/assets/js/sales-customer-select.js": {
+    "file": "assets/sales-customer-select-C1EW__CH.js",
+    "name": "sales-customer-select",
+    "src": "resources/assets/js/sales-customer-select.js",
     "isEntry": true
   },
   "resources/assets/js/tables-datatables-advanced.js": {
@@ -1987,6 +1993,10 @@
   "resources/assets/vendor/fonts/flags/1x1/un.svg": {
     "file": "assets/un-BQ1kEGox.svg",
     "src": "resources/assets/vendor/fonts/flags/1x1/un.svg"
+  },
+  "resources/assets/vendor/fonts/flags/1x1/united-arab-emirates.png": {
+    "file": "assets/united-arab-emirates-jVVAtoTE.png",
+    "src": "resources/assets/vendor/fonts/flags/1x1/united-arab-emirates.png"
   },
   "resources/assets/vendor/fonts/flags/1x1/us.svg": {
     "file": "assets/us-DAM9Utrf.svg",
@@ -6709,8 +6719,7 @@
     "isEntry": true
   },
   "resources/css/app.css": {
-    "file": "assets/app-DP2rzg_V.js",
-    "name": "app",
+    "file": "assets/app-I-UmboG4.css",
     "src": "resources/css/app.css",
     "isEntry": true
   },

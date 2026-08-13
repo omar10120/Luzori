@@ -678,7 +678,12 @@
                     <div class="mb-3">
                      
                     <label for="select-customer-dropdown" class="form-label">{{ __('field.search_customer') }}</label>
-                        <select class="select2 form-control" id="select-customer-dropdown" style="width: 100%;">
+                        <select class="js-customer-select form-control" id="select-customer-dropdown" style="width: 100%;"
+                            data-search-url="{{ route('center_user.sales.search-customers') }}"
+                            data-dropdown-parent="#selectCustomerModal"
+                            data-placeholder="{{ __('field.search_by_name_phone_or_email') }}"
+                            data-no-results="{{ __('field.no_customers_found') }}"
+                            data-searching="{{ __('field.searching') }}">
                             <option value="">{{ __('field.search_by_name_phone_or_email') }}</option>
                             @foreach($users as $user)
                                 <option value="{{ $user->id }}" 
@@ -717,19 +722,6 @@
                         <i class="ti ti-check me-1"></i>
                         {{ __('field.select') }}
                     </button>
-                </div>
-            </div>
-        </div>
-    </div>
-                   
-                        
-                        @if($users->isEmpty())
-                            <div class="text-center py-4 text-muted">
-                                <i class="ti ti-users-off" style="font-size: 2rem;"></i>
-                                <p class="mt-2">{{ __('field.no_customers_found') }}</p>
-                            </div>
-                        @endif
-                    </div>
                 </div>
             </div>
         </div>
@@ -1150,7 +1142,12 @@
                             <div class="col-md-9 mb-3">
                                 <div class="mb-1">
                                     <label for="modal-wallet-user" class="form-label">{{ __('field.users') }} <span class="text-danger">*</span></label>
-                                    <select class="select2 form-control" name="user_id" id="modal-wallet-user" required>
+                                    <select class="js-customer-select form-control" name="user_id" id="modal-wallet-user" required
+                                        data-search-url="{{ route('center_user.sales.search-customers') }}"
+                                        data-dropdown-parent="#addWalletUserModal"
+                                        data-placeholder="{{ __('field.search_by_name_phone_or_email') }}"
+                                        data-no-results="{{ __('field.no_customers_found') }}"
+                                        data-searching="{{ __('field.searching') }}">
                                         <option value="">{{ __('field.select_user') }}</option>
                                         @if($users && $users->count() > 0)
                                             @foreach ($users as $user)
@@ -1227,7 +1224,12 @@
                             <div class="col-md-8 mb-3">
                                 <div class="mb-1">
                                     <label for="modal-package-user" class="form-label">{{ __('field.users') }} <span class="text-danger">*</span></label>
-                                    <select class="select2 form-control" name="user_id" id="modal-package-user" required>
+                                    <select class="js-customer-select form-control" name="user_id" id="modal-package-user" required
+                                        data-search-url="{{ route('center_user.sales.search-customers') }}"
+                                        data-dropdown-parent="#addPackageUserModal"
+                                        data-placeholder="{{ __('field.search_by_name_phone_or_email') }}"
+                                        data-no-results="{{ __('field.no_customers_found') }}"
+                                        data-searching="{{ __('field.searching') }}">
                                         <option value="">{{ __('field.select_user') }}</option>
                                         @if($users && $users->count() > 0)
                                             @foreach ($users as $user)
@@ -1270,7 +1272,7 @@
 @endsection
 
 @section('page-script')
-    @vite(['resources/assets/js/forms-selects.js', 'resources/assets/js/app-ecommerce-product-add.js', 'resources/assets/js/form-wizard-icons.js'])
+    @vite(['resources/assets/js/forms-selects.js', 'resources/assets/js/app-ecommerce-product-add.js', 'resources/assets/js/form-wizard-icons.js', 'resources/assets/js/sales-customer-select.js'])
     @include('CenterUser.Components.translation-js')
 
     <script>
@@ -1308,7 +1310,7 @@
             @endforeach
 
             // Initialize Select2
-            $('#booking-services, #product-products, #product-sales_worker, #product-worker, #modal-wallet-user, #modal-package-user').select2();
+            $('#booking-services, #product-products, #product-sales_worker, #product-worker').select2();
             
             // Clear invalid state when payment method is selected
             $('#booking-payment_type, #product-payment_type').on('change', function() {
@@ -1390,21 +1392,6 @@
             });
 
             
-            // Initialize Select2 for customer dropdown in modal
-            $('#select-customer-dropdown').select2({
-                dropdownParent: $('#selectCustomerModal'),
-                placeholder: '{{ __('field.search_by_name_phone_or_email') }}',
-                allowClear: true,
-                language: {
-                    noResults: function() {
-                        return '{{ __('field.no_customers_found') }}';
-                    },
-                    searching: function() {
-                        return '{{ __('field.searching') }}...';
-                    }
-                }
-            });
-
             // Initialize Booking Wizard Stepper
             const bookingStepper = new Stepper(document.querySelector('.bs-stepper'));
 
@@ -3478,13 +3465,6 @@
                 $('#modal-wallet-user').val(null).trigger('change');
                 $('#modal-wallet-commission-div').hide();
                 $('#modal-wallet-commission').prop('required', false);
-                
-                // Initialize Select2 for user field if not already initialized
-                if (!$('#modal-wallet-user').hasClass('select2-hidden-accessible')) {
-                    $('#modal-wallet-user').select2({
-                        dropdownParent: $('#addWalletUserModal')
-                    });
-                }
             });
 
             // Show/hide commission when worker is selected in modal
@@ -3699,11 +3679,6 @@
                 $('#modal-package-id').val(packageId);
                 $('#addPackageUserModalLabel').text('{{ __('locale.add_users_to') }} {{ __('locale.packages') }} (' + packageName + ')');
                 $('#add-package-user-form')[0].reset();
-                if (!$('#modal-package-user').hasClass('select2-hidden-accessible')) {
-                    $('#modal-package-user').select2({
-                        dropdownParent: $('#addPackageUserModal')
-                    });
-                }
                 $('#modal-package-user').val(null).trigger('change');
             });
 
@@ -4116,9 +4091,55 @@
                     return;
                 }
                 
-                // Find the customer data
+                function fillEditFromOption($selectedOption, extra) {
+                    extra = extra || {};
+                    const userName = extra.name || $selectedOption.data('name') || '';
+                    const userEmail = extra.email || $selectedOption.data('email') || '';
+                    const userPhone = extra.phone || $selectedOption.data('phone') || '';
+                    const userImage = extra.image || $selectedOption.data('image') || '';
+                    const countryCode = extra.country_code || '+971';
+
+                    const nameParts = userName.split(' ');
+                    const firstName = extra.first_name || nameParts[0] || '';
+                    const lastName = extra.last_name || nameParts.slice(1).join(' ') || '';
+
+                    $('#edit_customer_id').val(selectedCustomerId);
+                    $('#edit_customer_first_name').val(firstName);
+                    $('#edit_customer_last_name').val(lastName);
+                    $('#edit_customer_email').val(userEmail);
+                    $('#editCustomerModal select[name="country_code"]').val(countryCode);
+
+                    if (countryCode === '+971') {
+                        const phoneStr = String(userPhone);
+                        let phonePrefix = '';
+                        let phoneWithoutPrefix = phoneStr;
+                        const prefixes = ['50', '52', '54', '55', '56', '58'];
+                        for (const prefix of prefixes) {
+                            if (phoneStr.startsWith(prefix)) {
+                                phonePrefix = prefix;
+                                phoneWithoutPrefix = phoneStr.substring(prefix.length);
+                                break;
+                            }
+                        }
+                        $('#edit_customer_phone_prefix').val(phonePrefix || '50');
+                        $('#edit_customer_phone').val(phoneWithoutPrefix);
+                        $('#edit_customer_phone_prefix_container').show();
+                        $('#edit_customer_phone_input_container').removeClass('col-md-4').addClass('col-md-2');
+                    } else {
+                        $('#edit_customer_phone').val(userPhone);
+                        $('#edit_customer_phone_prefix_container').hide();
+                        $('#edit_customer_phone_input_container').removeClass('col-md-2').addClass('col-md-4');
+                    }
+
+                    if (userImage && userImage !== '{{ asset('assets/img/avatars/1.png') }}') {
+                        $('#edit_customer_image_preview').attr('src', userImage);
+                        $('#edit_customer_current_image').show();
+                    } else {
+                        $('#edit_customer_current_image').hide();
+                    }
+                }
+
                 const $selectedOption = $('#select-customer-dropdown').find(`option[value="${selectedCustomerId}"]`);
-                
                 if ($selectedOption.length) {
                     const userName = $selectedOption.data('name') || '';
                     const userEmail = $selectedOption.data('email') || '';
@@ -4182,6 +4203,40 @@
                             } else {
                                 $('#edit_customer_current_image').hide();
                             }
+                        }
+                    });
+                } else {
+                    $.get('{{ route('center_user.sales.get-customer', ['id' => '__ID__']) }}'.replace('__ID__', selectedCustomerId), function(user) {
+                        const option = new Option(user.text || user.name, user.id, true, true);
+                        $(option).attr('data-name', user.name || '');
+                        $(option).attr('data-email', user.email || '');
+                        $(option).attr('data-phone', user.phone || '');
+                        $(option).attr('data-image', user.image || '');
+                        $(option).attr('data-branch-id', user.branch_id || '');
+                        $('#select-customer-dropdown').append(option);
+                        $('#edit_customer_id').val(user.id);
+                        $('#edit_customer_first_name').val(user.first_name || '');
+                        $('#edit_customer_last_name').val(user.last_name || '');
+                        $('#edit_customer_email').val(user.email || '');
+                        $('#editCustomerModal select[name="country_code"]').val(user.country_code || '+971');
+                        const phoneStr = String(user.phone || '');
+                        if ((user.country_code || '+971') === '+971') {
+                            let phonePrefix = '';
+                            let phoneWithoutPrefix = phoneStr;
+                            ['50', '52', '54', '55', '56', '58'].forEach(function(prefix) {
+                                if (!phonePrefix && phoneStr.startsWith(prefix)) {
+                                    phonePrefix = prefix;
+                                    phoneWithoutPrefix = phoneStr.substring(prefix.length);
+                                }
+                            });
+                            $('#edit_customer_phone_prefix').val(phonePrefix || '50');
+                            $('#edit_customer_phone').val(phoneWithoutPrefix);
+                            $('#edit_customer_phone_prefix_container').show();
+                            $('#edit_customer_phone_input_container').removeClass('col-md-4').addClass('col-md-2');
+                        } else {
+                            $('#edit_customer_phone').val(phoneStr);
+                            $('#edit_customer_phone_prefix_container').hide();
+                            $('#edit_customer_phone_input_container').removeClass('col-md-2').addClass('col-md-4');
                         }
                     });
                 }
