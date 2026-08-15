@@ -85,9 +85,7 @@
         processResults: function (data) {
           return {
             results: data && data.results ? data.results : [],
-            pagination: {
-              more: !!(data && data.pagination && data.pagination.more)
-            }
+            pagination: { more: false }
           };
         }
       },

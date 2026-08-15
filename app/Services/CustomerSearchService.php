@@ -33,9 +33,7 @@ class CustomerSearchService
         $term = trim($term);
         $columns = ['id', 'first_name', 'last_name', 'email', 'country_code', 'phone', 'branch_id'];
 
-        $query = User::query()
-            ->select($columns)
-            ->with('media');
+        $query = User::query()->select($columns);
 
         if ($term !== '') {
             $like = '%' . $term . '%';
@@ -58,27 +56,33 @@ class CustomerSearchService
                 }
             })->orderBy('first_name');
         } else {
-            $query->orderByDesc('id');
+            // Full list on open — no pagination / scroll-to-load.
+            $query->orderBy('first_name')->orderBy('id');
         }
 
-        $paginator = $query->paginate($perPage, $columns, 'page', $page);
+        $users = $query->get();
 
         return [
-            'results' => $paginator->getCollection()->map(fn (User $user) => $this->map($user))->values(),
-            'pagination' => ['more' => $paginator->hasMorePages()],
+            'results' => $users->map(fn (User $user) => $this->map($user, false))->values(),
+            'pagination' => ['more' => false],
         ];
     }
 
     public function find(int $id): array
     {
-        return $this->map(User::with('media')->findOrFail($id));
+        return $this->map(User::with('media')->findOrFail($id), true);
     }
 
-    public function map(User $user): array
+    public function map(User $user, bool $withImage = true): array
     {
         $phone = $user->phone ?? '';
         $fullPhone = $user->full_phone ?? $phone;
-        $image = $user->getFirstMediaUrl(class_basename($user)) ?: asset('assets/img/avatars/1.png');
+        $defaultImage = asset('assets/img/avatars/1.png');
+        $image = $defaultImage;
+
+        if ($withImage) {
+            $image = $user->getFirstMediaUrl(class_basename($user)) ?: $defaultImage;
+        }
 
         return [
             'id' => $user->id,
