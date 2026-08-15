@@ -28,22 +28,20 @@ class CustomerSearchService
         return $users;
     }
 
-    public function search(string $term, int $page = 1, int $perPage = 20): array
+    public function search(string $term, int $page = 1, int $perPage = 30): array
     {
         $term = trim($term);
-        if (mb_strlen($term) < 1) {
-            return [
-                'results' => [],
-                'pagination' => ['more' => false],
-            ];
-        }
-
-        $like = '%' . $term . '%';
-        $digits = preg_replace('/\D+/', '', $term);
+        $columns = ['id', 'first_name', 'last_name', 'email', 'country_code', 'phone', 'branch_id'];
 
         $query = User::query()
-            ->with('media')
-            ->where(function ($q) use ($like, $digits) {
+            ->select($columns)
+            ->with('media');
+
+        if ($term !== '') {
+            $like = '%' . $term . '%';
+            $digits = preg_replace('/\D+/', '', $term);
+
+            $query->where(function ($q) use ($like, $digits) {
                 $q->where('first_name', 'LIKE', $like)
                     ->orWhere('last_name', 'LIKE', $like)
                     ->orWhereRaw("CONCAT(IFNULL(first_name, ''), ' ', IFNULL(last_name, '')) LIKE ?", [$like])
@@ -58,10 +56,12 @@ class CustomerSearchService
                             ['%' . $digits . '%']
                         );
                 }
-            })
-            ->orderBy('first_name');
+            })->orderBy('first_name');
+        } else {
+            $query->orderByDesc('id');
+        }
 
-        $paginator = $query->paginate($perPage, ['*'], 'page', $page);
+        $paginator = $query->paginate($perPage, $columns, 'page', $page);
 
         return [
             'results' => $paginator->getCollection()->map(fn (User $user) => $this->map($user))->values(),

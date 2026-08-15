@@ -121,13 +121,13 @@ class SalesController extends Controller
         $productPaymentMethods = $data['productPaymentMethods'];
         $walletPaymentMethods = $data['walletPaymentMethods'];
         $wallets = $data['wallets'];
-        $users = $data['users'];
+        $selectedUser = $data['selectedUser'];
         $workers = $data['workers'];
 
         $categoriesJson = $this->getFormattedCategories();
 
         $view = 'CenterUser.SubViews.' . $this->model . '.cart';
-        return view($view, compact('services', 'products', 'workers', 'discounts', 'packages', 'paymentMethods', 'productPaymentMethods', 'walletPaymentMethods', 'wallets', 'users', 'cart', 'title', 'menu', 'menu_link', 'categoriesJson', 'centerUser'));
+        return view($view, compact('services', 'products', 'workers', 'discounts', 'packages', 'paymentMethods', 'productPaymentMethods', 'walletPaymentMethods', 'wallets', 'selectedUser', 'cart', 'title', 'menu', 'menu_link', 'categoriesJson', 'centerUser'));
     }
 
     public function searchCustomers(Request $request, CustomerSearchService $customerSearchService)

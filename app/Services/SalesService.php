@@ -72,19 +72,11 @@ class SalesService
             ->get(['id', 'code', 'amount', 'invoiced_amount', 'used', 'start_at', 'end_at', 'created_by']);
         
         $selectedId = !empty($cart['client_id']) ? (int) $cart['client_id'] : null;
-        $users = app(CustomerSearchService::class)->listForSelect($selectedId, 50);
+        $selectedUser = $selectedId
+            ? User::query()->select('id', 'first_name', 'last_name', 'email', 'country_code', 'phone', 'branch_id')->with('media')->find($selectedId)
+            : null;
 
-        $branchId = null;
-        if ($selectedId) {
-            $selectedCustomer = $users->firstWhere('id', $selectedId) ?: User::find($selectedId);
-            if ($selectedCustomer && $selectedCustomer->branch_id) {
-                $branchId = $selectedCustomer->branch_id;
-            }
-        }
-        
-        if (!$branchId) {
-            $branchId = $centerUser->branch_id ?? null;
-        }
+        $branchId = $selectedUser?->branch_id ?? $centerUser->branch_id ?? null;
         
         $workers = Worker::when($branchId, function($query) use ($branchId) {
             return $query->where('branch_id', $branchId);
@@ -99,7 +91,7 @@ class SalesService
             'productPaymentMethods' => $productPaymentMethods,
             'walletPaymentMethods' => $walletPaymentMethods,
             'wallets' => $wallets,
-            'users' => $users,
+            'selectedUser' => $selectedUser,
             'workers' => $workers,
             'branchId' => $branchId
         ];

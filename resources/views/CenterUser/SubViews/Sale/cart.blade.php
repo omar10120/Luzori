@@ -19,12 +19,8 @@
                         <h5 class="mb-0">{{ __('field.customer') }} <span class="text-danger">*</span></h5>
                     </div>
                     <div class="card-body">
-                        <div id="selected-customer-display" style="{{ empty($cart['client_id']) ? 'display: none;' : '' }}">
-                            @if(!empty($cart['client_id']))
-                                @php
-                                    $selectedUser = $users->firstWhere('id', $cart['client_id']);
-                                @endphp
-                                @if($selectedUser)
+                        <div id="selected-customer-display" style="{{ empty($cart['client_id']) || empty($selectedUser) ? 'display: none;' : '' }}">
+                            @if(!empty($cart['client_id']) && !empty($selectedUser))
                                     <div class="d-flex align-items-center mb-3">
                                         <div class="avatar avatar-lg me-3">
                                             <img src="{{ $selectedUser->image ?? asset('assets/img/avatars/1.png') }}" 
@@ -37,7 +33,6 @@
                                             <small class="text-muted d-block">{{ $selectedUser->email ?? $selectedUser->full_phone }}</small>
                                         </div>
                                     </div>
-                                @endif
                             @endif
                             <div class="d-flex flex-column flex-sm-row gap-2">
                                 <button type="button" class="btn btn-outline-primary w-100 w-sm-auto" id="selectCustomerBtn" data-bs-toggle="modal" data-bs-target="#selectCustomerModal">
@@ -685,22 +680,6 @@
                             data-no-results="{{ __('field.no_customers_found') }}"
                             data-searching="{{ __('field.searching') }}">
                             <option value="">{{ __('field.search_by_name_phone_or_email') }}</option>
-                            @foreach($users as $user)
-                                <option value="{{ $user->id }}" 
-                                    data-name="{{ $user->name }}"
-                                    data-email="{{ $user->email ?? '' }}"
-                                    data-phone="{{ $user->phone ?? $user->full_phone ?? '' }}"
-                                    data-image="{{ $user->image ?? '' }}"
-                                    data-branch-id="{{ $user->branch_id ?? '' }}">
-                                    {{ $user->name }} 
-                                    @if($user->phone || $user->full_phone)
-                                        - {{ $user->phone ?? $user->full_phone }}
-                                    @endif
-                                    @if($user->email)
-                                        - {{ $user->email }}
-                                    @endif
-                                </option>
-                            @endforeach
                         </select>
                     </div>
                     <div id="selected-customer-info" style="display: none;" class="mt-3 p-3 border rounded bg-light">
@@ -1149,14 +1128,6 @@
                                         data-no-results="{{ __('field.no_customers_found') }}"
                                         data-searching="{{ __('field.searching') }}">
                                         <option value="">{{ __('field.select_user') }}</option>
-                                        @if($users && $users->count() > 0)
-                                            @foreach ($users as $user)
-                                                <option value="{{ $user->id }}">{{ $user->name }} ({{ $user->phone ?? $user->full_phone ?? '' }})
-                                                </option>
-                                            @endforeach
-                                        @else
-                                            <option value="" disabled>{{ __('field.no_users_available') }}</option>
-                                        @endif
                                     </select>
                                 </div>
                             </div>
@@ -1231,13 +1202,6 @@
                                         data-no-results="{{ __('field.no_customers_found') }}"
                                         data-searching="{{ __('field.searching') }}">
                                         <option value="">{{ __('field.select_user') }}</option>
-                                        @if($users && $users->count() > 0)
-                                            @foreach ($users as $user)
-                                                <option value="{{ $user->id }}">{{ $user->name }} ({{ $user->phone ?? $user->full_phone ?? '' }})</option>
-                                            @endforeach
-                                        @else
-                                            <option value="" disabled>{{ __('field.no_users_available') }}</option>
-                                        @endif
                                     </select>
                                 </div>
                             </div>
