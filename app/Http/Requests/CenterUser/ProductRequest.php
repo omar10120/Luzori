@@ -22,6 +22,11 @@ class ProductRequest extends FormRequest
      */
     protected function prepareForValidation(): void
     {
+
+            $this->merge([
+            'track_stock' => $this->input('track_stock', 0)
+        ]);
+
         foreach (Config::get('translatable.locales') as $locale) {
             $this->merge([
                 'name_' . $locale => $this->$locale['name'],
