@@ -33,14 +33,20 @@ class CenterController extends Controller
      */
     public function index(Request $request, CenterService $centerService)
     {
-        $filteredCenters = $centerService->getFilteredCenters($request);
-        
+        $paginator       = $centerService->getFilteredCenters($request);
+        $filteredCenters = $paginator->items();
 
         if (count($filteredCenters) > 0) {
-            return MyHelper::responseJSON(__('api.doneSuccessfully'), Response::HTTP_OK, $filteredCenters);
-        } else {
-            return MyHelper::responseJSON(__('api.noDataFound'), Response::HTTP_NOT_FOUND);
+            return MyHelper::responseJSON(__('api.doneSuccessfully'), Response::HTTP_OK, [
+                'data'         => $filteredCenters,
+                'current_page' => $paginator->currentPage(),
+                'per_page'     => $paginator->perPage(),
+                'total'        => $paginator->total(),
+                'last_page'    => $paginator->lastPage(),
+            ]);
         }
+
+        return MyHelper::responseJSON(__('api.noDataFound'), Response::HTTP_NOT_FOUND);
     }
     public function filter(Request $request, CenterService $centerService)
     {
