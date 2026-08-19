@@ -62,6 +62,11 @@ class CenterService
             ->when($request->filled('rate'), function ($q) use ($request) {
                 $q->where('rate', $request->rate);
             })
+            ->when($request->filled('global_category_id'), function ($q) use ($request) {
+                $q->whereHas('globalCategories', function ($q) use ($request) {
+                    $q->where('global_categories.id', (int) $request->global_category_id);
+                });
+            })
             ->with('globalCategories');
 
         $centers = $query->get();
