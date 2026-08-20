@@ -445,43 +445,13 @@
                                                         <th style="font-size: 10px;">{{ __('general.actions') }}</th>
                                                     </tr>
                                                 </thead>
-                                                <tbody>
-                                                    @forelse($wallets as $wallet)
-                                                        <tr style="font-size: 10px;">
-                                                            <td>{{ $wallet->code }}</td>
-                                                            <td>
-                                                                @if($wallet->users && $wallet->users->count() > 0)
-                                                                    @foreach($wallet->users as $userWallet)
-                                                                        <span class="badge bg-label-info mb-1">{{ $userWallet->user->name ?? '-' }}</span>
-                                                                    @endforeach
-                                                                @else
-                                                                    <span class="text-muted">-</span>
-                                                                @endif
-                                                            </td>
-                                                            <td>{{ number_format($wallet->amount, 2) }} {{ get_currency() }}</td>
-                                                            <td>{{ number_format($wallet->invoiced_amount, 2) }} {{ get_currency() }}</td>
-                                                            <td>{{ $wallet->start_at ? \Carbon\Carbon::parse($wallet->start_at)->format('Y-m-d') : '-' }}</td>
-                                                            <td>{{ $wallet->end_at ? \Carbon\Carbon::parse($wallet->end_at)->format('Y-m-d') : '-' }}</td>
-                                                            <td>{{ $wallet->created_by_user->name ?? '-' }}</td>
-                                                            <td>
-                                                                @if($wallet->used)
-                                                                    <span class="badge bg-label-danger">{{ __('field.used') }}</span>
-                                                                @else
-                                                                    <span class="badge bg-label-success">{{ __('field.active') }}</span>
-                                                                @endif
-                                                            </td>
-                                                            <td>
-                                                                <button type="button" class="btn btn-sm btn-primary add-wallet-user-btn" style="font-size: 10px;" data-wallet-id="{{ $wallet->id }}" data-wallet-code="{{ $wallet->code }}" data-wallet-amount="{{ $wallet->amount }}" data-wallet-invoiced="{{ $wallet->invoiced_amount }}" data-wallet-start="{{ $wallet->start_at }}" data-wallet-end="{{ $wallet->end_at }}" data-bs-toggle="modal" data-bs-target="#addWalletUserModal">
-                                                                    <i class="ti ti-user-plus me-1"></i>
-                                                                    {{ __('field.add_user') }}
-                                                                </button>
-                                                            </td>
-                                                        </tr>
-                                                    @empty
-                                                        <tr>
-                                                            <td colspan="9" class="text-center text-muted">{{ __('field.no_coupons_available') }}</td>
-                                                        </tr>
-                                                    @endforelse
+                                                <tbody id="wallets-table-body">
+                                                    <tr class="wallets-loading-row">
+                                                        <td colspan="9" class="text-center text-muted py-4">
+                                                            <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                                                            {{ __('general.loading') ?? 'Loading...' }}
+                                                        </td>
+                                                    </tr>
                                                 </tbody>
                                             </table>
                                         </div>
@@ -513,59 +483,13 @@
                                                         <th style="font-size: 10px;">{{ __('general.actions') }}</th>
                                                     </tr>
                                                 </thead>
-                                                <tbody>
-                                                    @forelse($packages as $package)
-                                                        <tr style="font-size: 10px;">
-                                                            <td>{{ $package->id }}</td>
-                                                            <td>{{ $package->name }}</td>
-                                                            <td>{{ number_format($package->price ?? 0, 2) }} {{ get_currency() }}</td>
-                                                            <td>
-                                                                @if($package->packageServicePaid && $package->packageServicePaid->count() > 0)
-                                                                    @foreach($package->packageServicePaid as $paidService)
-                                                                        <span class="badge bg-label-primary mb-1">{{ $paidService->service->name ?? '-' }}</span>
-                                                                    @endforeach
-                                                                @else
-                                                                    <span class="text-muted">-</span>
-                                                                @endif
-                                                            </td>
-                                                            <td>
-                                                                @if($package->packageServiceFree && $package->packageServiceFree->count() > 0)
-                                                                    @foreach($package->packageServiceFree as $freeService)
-                                                                        <span class="badge bg-label-success mb-1">{{ $freeService->service->name ?? '-' }}</span>
-                                                                    @endforeach
-                                                                @else
-                                                                    <span class="text-muted">-</span>
-                                                                @endif
-                                                            </td>
-                                                            <td>
-                                                                @if($package->usersPackages && $package->usersPackages->count() > 0)
-                                                                    @foreach($package->usersPackages as $userPackage)
-                                                                        <span class="badge bg-label-info mb-1">{{ $userPackage->user->name ?? '-' }}</span>
-                                                                    @endforeach
-                                                                @else
-                                                                    <span class="text-muted">-</span>
-                                                                @endif
-                                                            </td>
-                                                            <td>
-                                                                <button
-                                                                    type="button"
-                                                                    class="btn btn-sm btn-primary add-package-user-btn"
-                                                                    style="font-size: 10px;"
-                                                                    data-package-id="{{ $package->id }}"
-                                                                    data-package-name="{{ $package->name }}"
-                                                                    data-bs-toggle="modal"
-                                                                    data-bs-target="#addPackageUserModal"
-                                                                >
-                                                                    <i class="ti ti-user-plus me-1"></i>
-                                                                    {{ __('field.add_user') }}
-                                                                </button>
-                                                            </td>
-                                                        </tr>
-                                                    @empty
-                                                        <tr>
-                                                            <td colspan="7" class="text-center text-muted">{{ __('field.no_data_found') }}</td>
-                                                        </tr>
-                                                    @endforelse
+                                                <tbody id="packages-table-body">
+                                                    <tr class="packages-loading-row">
+                                                        <td colspan="7" class="text-center text-muted py-4">
+                                                            <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                                                            {{ __('general.loading') ?? 'Loading...' }}
+                                                        </td>
+                                                    </tr>
                                                 </tbody>
                                             </table>
                                         </div>
@@ -1077,19 +1001,11 @@
                             </div>
                             <div class="col-md-12 mb-3">
                                 <label for="quick_package_paid_services" class="form-label">{{ __('field.paid_services') }} <span class="text-danger">*</span></label>
-                                <select id="quick_package_paid_services" class="select2 form-control" multiple required>
-                                    @foreach ($services as $service)
-                                        <option value="{{ $service->id }}">{{ $service->name }}</option>
-                                    @endforeach
-                                </select>
+                                <select id="quick_package_paid_services" class="select2 form-control" multiple required></select>
                             </div>
                             <div class="col-md-12 mb-3">
                                 <label for="quick_package_free_services" class="form-label">{{ __('field.free_services') }}</label>
-                                <select id="quick_package_free_services" class="select2 form-control" multiple>
-                                    @foreach ($services as $service)
-                                        <option value="{{ $service->id }}">{{ $service->name }}</option>
-                                    @endforeach
-                                </select>
+                                <select id="quick_package_free_services" class="select2 form-control" multiple></select>
                             </div>
                         </div>
                     </form>
@@ -1262,19 +1178,137 @@
             };
 
             // Store service prices from loaded services
-            let servicesData = {};
-            @foreach ($services as $service)
-                servicesData[{{ $service->id }}] = {
-                    id: {{ $service->id }},
-                    name: '{{ addslashes($service->name) }}',
-                    price: {{ $service->price ?? 0 }},
-                    category_id: {{ $service->category_id ?? 'null' }},
-                    has_commission: {{ $service->has_commission ? 'true' : 'false' }}
-                };
-            @endforeach
+            let servicesData = @json($servicesData ?? new \stdClass());
 
             // Initialize Select2
             $('#booking-services, #product-products, #product-sales_worker, #product-worker').select2();
+
+            // Lazy-load heavy wallet/package tabs only when opened
+            let walletsTabLoaded = false;
+            let packagesTabLoaded = false;
+            const escapeHtml = (value) => $('<div>').text(value ?? '').html();
+            const badgesHtml = (items, cls) => {
+                if (!items || !items.length) return '<span class="text-muted">-</span>';
+                return items.map((item) => `<span class="badge ${cls} mb-1">${escapeHtml(item)}</span>`).join(' ');
+            };
+
+            function loadCartWalletsTab(force) {
+                if (walletsTabLoaded && !force) return;
+                const $body = $('#wallets-table-body');
+                $body.html(`
+                    <tr class="wallets-loading-row">
+                        <td colspan="9" class="text-center text-muted py-4">
+                            <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                            {{ __('general.loading') ?? 'Loading...' }}
+                        </td>
+                    </tr>
+                `);
+
+                $.getJSON('{{ route('center_user.sales.cart.wallets') }}')
+                    .done(function (res) {
+                        const rows = res.data || [];
+                        if (!rows.length) {
+                            $body.html(`<tr><td colspan="9" class="text-center text-muted">{{ __('field.no_coupons_available') }}</td></tr>`);
+                            walletsTabLoaded = true;
+                            return;
+                        }
+
+                        const html = rows.map((wallet) => `
+                            <tr style="font-size: 10px;">
+                                <td>${escapeHtml(wallet.code)}</td>
+                                <td>${badgesHtml(wallet.clients, 'bg-label-info')}</td>
+                                <td>${escapeHtml(wallet.amount)}</td>
+                                <td>${escapeHtml(wallet.invoiced_amount)}</td>
+                                <td>${escapeHtml(wallet.start_at)}</td>
+                                <td>${escapeHtml(wallet.end_at)}</td>
+                                <td>${escapeHtml(wallet.created_by)}</td>
+                                <td>${wallet.used
+                                    ? '<span class="badge bg-label-danger">{{ __('field.used') }}</span>'
+                                    : '<span class="badge bg-label-success">{{ __('field.active') }}</span>'
+                                }</td>
+                                <td>
+                                    <button type="button"
+                                        class="btn btn-sm btn-primary add-wallet-user-btn"
+                                        style="font-size: 10px;"
+                                        data-wallet-id="${wallet.id}"
+                                        data-wallet-code="${escapeHtml(wallet.code)}"
+                                        data-wallet-amount="${wallet.raw?.amount ?? ''}"
+                                        data-wallet-invoiced="${wallet.raw?.invoiced_amount ?? ''}"
+                                        data-wallet-start="${wallet.raw?.start_at ?? ''}"
+                                        data-wallet-end="${wallet.raw?.end_at ?? ''}"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#addWalletUserModal">
+                                        <i class="ti ti-user-plus me-1"></i>
+                                        {{ __('field.add_user') }}
+                                    </button>
+                                </td>
+                            </tr>
+                        `).join('');
+                        $body.html(html);
+                        walletsTabLoaded = true;
+                    })
+                    .fail(function () {
+                        $body.html(`<tr><td colspan="9" class="text-center text-danger">{{ __('api.unknownError') ?? 'Failed to load' }}</td></tr>`);
+                    });
+            }
+
+            function loadCartPackagesTab(force) {
+                if (packagesTabLoaded && !force) return;
+                const $body = $('#packages-table-body');
+                $body.html(`
+                    <tr class="packages-loading-row">
+                        <td colspan="7" class="text-center text-muted py-4">
+                            <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                            {{ __('general.loading') ?? 'Loading...' }}
+                        </td>
+                    </tr>
+                `);
+
+                $.getJSON('{{ route('center_user.sales.cart.packages') }}')
+                    .done(function (res) {
+                        const rows = res.data || [];
+                        if (!rows.length) {
+                            $body.html(`<tr><td colspan="7" class="text-center text-muted">{{ __('field.no_data_found') }}</td></tr>`);
+                            packagesTabLoaded = true;
+                            return;
+                        }
+
+                        const html = rows.map((pkg) => `
+                            <tr style="font-size: 10px;">
+                                <td>${pkg.id}</td>
+                                <td>${escapeHtml(pkg.name)}</td>
+                                <td>${escapeHtml(pkg.price)}</td>
+                                <td>${badgesHtml(pkg.paid_services, 'bg-label-primary')}</td>
+                                <td>${badgesHtml(pkg.free_services, 'bg-label-success')}</td>
+                                <td><span class="badge bg-label-info">${pkg.users_count || 0}</span></td>
+                                <td>
+                                    <button type="button"
+                                        class="btn btn-sm btn-primary add-package-user-btn"
+                                        style="font-size: 10px;"
+                                        data-package-id="${pkg.id}"
+                                        data-package-name="${escapeHtml(pkg.name)}"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#addPackageUserModal">
+                                        <i class="ti ti-user-plus me-1"></i>
+                                        {{ __('field.add_user') }}
+                                    </button>
+                                </td>
+                            </tr>
+                        `).join('');
+                        $body.html(html);
+                        packagesTabLoaded = true;
+                    })
+                    .fail(function () {
+                        $body.html(`<tr><td colspan="7" class="text-center text-danger">{{ __('api.unknownError') ?? 'Failed to load' }}</td></tr>`);
+                    });
+            }
+
+            $('a[data-bs-toggle="tab"][href="#wallet"], #wallet-tab').on('shown.bs.tab', function () {
+                loadCartWalletsTab(false);
+            });
+            $('a[data-bs-toggle="tab"][href="#package"], #package-tab').on('shown.bs.tab', function () {
+                loadCartPackagesTab(false);
+            });
             
             // Clear invalid state when payment method is selected
             $('#booking-payment_type, #product-payment_type').on('change', function() {
@@ -2344,21 +2378,7 @@
 
             // Product Tab Functions - Match BuyProduct Structure
             // Store product data
-            let productsData = {};
-            @foreach ($products as $product)
-                @php
-                    $price = $product->retail_price && $product->retail_price > 0 
-                        ? $product->retail_price 
-                        : ($product->supply_price ?? 0);
-                @endphp
-                productsData[{{ $product->id }}] = {
-                    id: {{ $product->id }},
-                    name: '{{ addslashes($product->name) }}',
-                    price: {{ $price }},
-                    supply_price: {{ $product->supply_price ?? 0 }},
-                    retail_price: {{ $product->retail_price ?? 0 }}
-                };
-            @endforeach
+            let productsData = @json($productsData ?? new \stdClass());
 
             $('#addProductBtn').on('click', function() {
                 const selectedProducts = $('#product-products').val();
@@ -3664,15 +3684,24 @@
             });
 
             $('#addPackageModal').on('shown.bs.modal', function() {
-                if (!$('#quick_package_paid_services').hasClass('select2-hidden-accessible')) {
-                    $('#quick_package_paid_services').select2({
-                        dropdownParent: $('#addPackageModal')
-                    });
+                const $paid = $('#quick_package_paid_services');
+                const $free = $('#quick_package_free_services');
+
+                if (!$paid.data('options-filled')) {
+                    const optionsHtml = Object.values(servicesData || {}).map(function (service) {
+                        return '<option value="' + service.id + '">' + escapeHtml(service.name) + '</option>';
+                    }).join('');
+                    $paid.html(optionsHtml);
+                    $free.html(optionsHtml);
+                    $paid.data('options-filled', true);
+                    $free.data('options-filled', true);
                 }
-                if (!$('#quick_package_free_services').hasClass('select2-hidden-accessible')) {
-                    $('#quick_package_free_services').select2({
-                        dropdownParent: $('#addPackageModal')
-                    });
+
+                if (!$paid.hasClass('select2-hidden-accessible')) {
+                    $paid.select2({ dropdownParent: $('#addPackageModal') });
+                }
+                if (!$free.hasClass('select2-hidden-accessible')) {
+                    $free.select2({ dropdownParent: $('#addPackageModal') });
                 }
             });
 

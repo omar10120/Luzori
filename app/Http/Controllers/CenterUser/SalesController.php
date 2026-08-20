@@ -126,8 +126,133 @@ class SalesController extends Controller
 
         $categoriesJson = $this->getFormattedCategories();
 
+        // Prebuild JS maps once (avoid heavy Blade @foreach loops)
+        $servicesData = $services->mapWithKeys(function ($service) {
+            return [
+                $service->id => [
+                    'id' => $service->id,
+                    'name' => $service->name,
+                    'price' => (float) ($service->price ?? 0),
+                    'category_id' => $service->category_id,
+                    'has_commission' => (bool) $service->has_commission,
+                ],
+            ];
+        });
+
+        $productsData = $products->mapWithKeys(function ($product) {
+            $price = $product->retail_price && $product->retail_price > 0
+                ? (float) $product->retail_price
+                : (float) ($product->supply_price ?? 0);
+
+            return [
+                $product->id => [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'price' => $price,
+                    'supply_price' => (float) ($product->supply_price ?? 0),
+                    'retail_price' => (float) ($product->retail_price ?? 0),
+                ],
+            ];
+        });
+
         $view = 'CenterUser.SubViews.' . $this->model . '.cart';
-        return view($view, compact('services', 'products', 'workers', 'discounts', 'packages', 'paymentMethods', 'productPaymentMethods', 'walletPaymentMethods', 'wallets', 'selectedUser', 'cart', 'title', 'menu', 'menu_link', 'categoriesJson', 'centerUser'));
+        return view($view, compact(
+            'services',
+            'products',
+            'workers',
+            'discounts',
+            'packages',
+            'paymentMethods',
+            'productPaymentMethods',
+            'walletPaymentMethods',
+            'wallets',
+            'selectedUser',
+            'cart',
+            'title',
+            'menu',
+            'menu_link',
+            'categoriesJson',
+            'centerUser',
+            'servicesData',
+            'productsData'
+        ));
+    }
+
+    /**
+     * Lazy-load coupons for the cart wallet tab.
+     */
+    public function cartWallets()
+    {
+        $can = 'CREATE_' . Str::upper($this->plural);
+        if (!auth('center_user')->user()->can($can, 'center_api')) {
+            return abort(403);
+        }
+
+        $wallets = $this->salesService->getCartWallets(auth('center_user')->user());
+        $currency = get_currency();
+
+        $rows = $wallets->map(function ($wallet) use ($currency) {
+            $clients = $wallet->users
+                ->map(fn ($uw) => $uw->user->name ?? null)
+                ->filter()
+                ->values()
+                ->all();
+
+            return [
+                'id' => $wallet->id,
+                'code' => $wallet->code,
+                'clients' => $clients,
+                'amount' => number_format((float) $wallet->amount, 2) . ' ' . $currency,
+                'invoiced_amount' => number_format((float) $wallet->invoiced_amount, 2) . ' ' . $currency,
+                'start_at' => $wallet->start_at ? \Carbon\Carbon::parse($wallet->start_at)->format('Y-m-d') : '-',
+                'end_at' => $wallet->end_at ? \Carbon\Carbon::parse($wallet->end_at)->format('Y-m-d') : '-',
+                'created_by' => $wallet->created_by_user->name ?? '-',
+                'used' => (bool) $wallet->used,
+                'raw' => [
+                    'amount' => $wallet->amount,
+                    'invoiced_amount' => $wallet->invoiced_amount,
+                    'start_at' => $wallet->start_at,
+                    'end_at' => $wallet->end_at,
+                ],
+            ];
+        });
+
+        return response()->json(['data' => $rows]);
+    }
+
+    /**
+     * Lazy-load packages for the cart package tab.
+     */
+    public function cartPackages()
+    {
+        $can = 'CREATE_' . Str::upper($this->plural);
+        if (!auth('center_user')->user()->can($can, 'center_api')) {
+            return abort(403);
+        }
+
+        $packages = $this->salesService->getCartPackages();
+        $currency = get_currency();
+
+        $rows = $packages->map(function ($package) use ($currency) {
+            return [
+                'id' => $package->id,
+                'name' => $package->name,
+                'price' => number_format((float) ($package->price ?? 0), 2) . ' ' . $currency,
+                'paid_services' => $package->packageServicePaid
+                    ->map(fn ($ps) => $ps->service->name ?? null)
+                    ->filter()
+                    ->values()
+                    ->all(),
+                'free_services' => $package->packageServiceFree
+                    ->map(fn ($ps) => $ps->service->name ?? null)
+                    ->filter()
+                    ->values()
+                    ->all(),
+                'users_count' => (int) ($package->users_packages_count ?? 0),
+            ];
+        });
+
+        return response()->json(['data' => $rows]);
     }
 
     public function searchCustomers(Request $request, CustomerSearchService $customerSearchService)

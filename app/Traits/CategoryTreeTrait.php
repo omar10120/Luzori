@@ -15,14 +15,15 @@ trait CategoryTreeTrait
      */
     public function getFormattedCategories($excludeId = 0, $showBothLanguages = false)
     {
-        $categories = CategoryService::with(['translation', 'children' => function($q) use ($excludeId) {
+        $categories = CategoryService::with(['translation', 'children' => function ($q) use ($excludeId) {
                 if ($excludeId) {
                     $q->where('id', '!=', $excludeId);
                 }
-                $q->with('translation');
+                $q->select('id', 'parent_id')->with('translation');
             }])
+            ->select('id', 'parent_id')
             ->whereNull('parent_id')
-            ->when($excludeId, function($q) use ($excludeId) {
+            ->when($excludeId, function ($q) use ($excludeId) {
                 return $q->where('id', '!=', $excludeId);
             })
             ->get();

@@ -318,6 +318,8 @@ Route::group(['middleware' => 'auth_center_user:center_user'], function () {
         Route::controller(SalesController::class)->group(function () {
             Route::get('index', 'index')->name('index');
             Route::match(['get', 'post'], 'cart', 'cart')->name('cart');
+            Route::get('cart/wallets', 'cartWallets')->name('cart.wallets');
+            Route::get('cart/packages', 'cartPackages')->name('cart.packages');
             Route::get('search-customers', 'searchCustomers')->name('search-customers');
             Route::get('customer/{id}', 'getCustomer')->name('get-customer');
             Route::post('add-service-to-cart', 'addServiceToCart')->name('add-service-to-cart');

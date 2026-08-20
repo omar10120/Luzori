@@ -36,51 +36,65 @@ use App\Models\Worker;
 class SalesService
 {
     /**
-     * Get all data needed for the cart view
+     * Get lean data needed for the initial cart view.
+     * Heavy wallet/package tables are loaded on-demand via AJAX.
      */
     public function getCartData($cart, $centerUser)
     {
         $services = Service::with('translation')
+            ->orderBy('id')
             ->get(['id', 'category_id', 'price', 'has_commission']);
+
         $products = Product::with('translation')
+            ->orderBy('id')
             ->get(['id', 'supply_price', 'retail_price']);
-        $discounts = Discount::all();
-        $packages = Package::with([
-            'translation',
-            'packageServicePaid.service.translation',
-            'packageServiceFree.service.translation',
-            'usersPackages' => function ($q) {
-                $q->select('id', 'package_id', 'user_id')
-                    ->with(['user:id,first_name,last_name']);
-            },
-        ])->get(['id', 'price', 'created_by']);
 
-        $paymentMethods = PaymentMethod::forBooking()->orWhereJsonContains('types', 'general')->get();
-        $productPaymentMethods = PaymentMethod::forProduct()->orWhereJsonContains('types', 'general')->get();
-        $walletPaymentMethods = PaymentMethod::forWallet()->get();
+        $discounts = Discount::query()
+            ->select('id', 'code', 'type', 'amount', 'start_at', 'end_at')
+            ->orderBy('id')
+            ->get();
 
-        $wallets = Wallet::with([
-            'created_by_user:id,name',
-            'users' => function ($q) {
-                $q->select('id', 'wallet_id', 'user_id')
-                    ->with(['user:id,first_name,last_name']);
-            },
-        ])
-            ->whereNull('deleted_at')
-            ->forCenterUserBranch($centerUser)
-            ->orderBy('id', 'DESC')
-            ->get(['id', 'code', 'amount', 'invoiced_amount', 'used', 'start_at', 'end_at', 'created_by']);
-        
+        // Packages list for selects only — no users / nested services on first paint
+        $packages = Package::with('translation')
+            ->orderBy('id')
+            ->get(['id', 'price']);
+
+        $paymentMethodsAll = PaymentMethod::query()
+            ->select('id', 'name', 'types')
+            ->get();
+
+        $paymentMethods = $paymentMethodsAll->filter(function ($m) {
+            $types = $m->types ?? [];
+            return in_array(PaymentMethod::TYPE_BOOKING, $types, true)
+                || in_array(PaymentMethod::TYPE_GENERAL, $types, true);
+        })->values();
+
+        $productPaymentMethods = $paymentMethodsAll->filter(function ($m) {
+            $types = $m->types ?? [];
+            return in_array(PaymentMethod::TYPE_PRODUCT, $types, true)
+                || in_array(PaymentMethod::TYPE_GENERAL, $types, true);
+        })->values();
+
+        $walletPaymentMethods = $paymentMethodsAll->filter(function ($m) {
+            $types = $m->types ?? [];
+            return in_array(PaymentMethod::TYPE_WALLET, $types, true)
+                || in_array(PaymentMethod::TYPE_GENERAL, $types, true);
+        })->values();
+
         $selectedId = !empty($cart['client_id']) ? (int) $cart['client_id'] : null;
         $selectedUser = $selectedId
-            ? User::query()->select('id', 'first_name', 'last_name', 'email', 'country_code', 'phone', 'branch_id')->with('media')->find($selectedId)
+            ? User::query()
+                ->select('id', 'first_name', 'last_name', 'email', 'country_code', 'phone', 'branch_id')
+                ->with('media')
+                ->find($selectedId)
             : null;
 
         $branchId = $selectedUser?->branch_id ?? $centerUser->branch_id ?? null;
-        
-        $workers = Worker::when($branchId, function($query) use ($branchId) {
-            return $query->where('branch_id', $branchId);
-        })->select('id', 'name', 'phone', 'is_center_user')->get();
+
+        $workers = Worker::query()
+            ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
+            ->orderBy('name')
+            ->get(['id', 'name', 'phone', 'is_center_user']);
 
         return [
             'services' => $services,
@@ -90,11 +104,44 @@ class SalesService
             'paymentMethods' => $paymentMethods,
             'productPaymentMethods' => $productPaymentMethods,
             'walletPaymentMethods' => $walletPaymentMethods,
-            'wallets' => $wallets,
+            'wallets' => collect(), // lazy-loaded
             'selectedUser' => $selectedUser,
             'workers' => $workers,
-            'branchId' => $branchId
+            'branchId' => $branchId,
         ];
+    }
+
+    /**
+     * Coupons table payload for cart wallet tab (lazy).
+     */
+    public function getCartWallets($centerUser)
+    {
+        return Wallet::with([
+            'created_by_user:id,name',
+            'users' => function ($q) {
+                $q->select('id', 'wallet_id', 'user_id')
+                    ->with(['user:id,first_name,last_name']);
+            },
+        ])
+            ->whereNull('deleted_at')
+            ->forCenterUserBranch($centerUser)
+            ->orderByDesc('id')
+            ->get(['id', 'code', 'amount', 'invoiced_amount', 'used', 'start_at', 'end_at', 'created_by']);
+    }
+
+    /**
+     * Packages table payload for cart package tab (lazy).
+     */
+    public function getCartPackages()
+    {
+        return Package::with([
+            'translation',
+            'packageServicePaid.service.translation',
+            'packageServiceFree.service.translation',
+        ])
+            ->withCount('usersPackages')
+            ->orderByDesc('id')
+            ->get(['id', 'price', 'created_by']);
     }
 
     /**
