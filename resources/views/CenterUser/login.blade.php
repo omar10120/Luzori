@@ -369,6 +369,26 @@
                 }
             });
 
+            function showLoginError(messages) {
+                const $list = $('#listError');
+                $list.empty();
+                const items = Array.isArray(messages) ? messages : [messages];
+                items.filter(Boolean).forEach(function(msg) {
+                    $list.append($('<li>').text(msg));
+                });
+                $('#alertError').removeClass('d-none');
+            }
+
+            function hideLoginError() {
+                $('#listError').empty();
+                $('#alertError').addClass('d-none');
+            }
+
+            function resetLoginButton() {
+                $(".submitFrom span").html('{{ __('center_login.login') }}');
+                $('.submitFrom').prop('disabled', false);
+            }
+
             $("#frmLogin").on("submit", function(event) {
                 event.preventDefault();
 
@@ -380,51 +400,49 @@
                     processData: false,
                     headers: domainParam ? { 'domain': domainParam } : {},
                     beforeSend: function() {
-                        $('#listError').empty();
-                        $("#alertError").hide();
+                        hideLoginError();
                         $(".submitFrom span").html('{{ __('center_login.logining') }}');
                         $('.submitFrom').prop('disabled', true);
                     },
                     success: function(response, textStatus, xhr) {
-                        console.log('Login response:', response);
                         $('#debug-response').text(JSON.stringify(response));
-                        
+
+                        if (xhr.status == 200 && response.data && response.data.redirect_url) {
+                            window.location.href = response.data.redirect_url;
+                            return;
+                        }
+
                         if (xhr.status == 200) {
-                            if (response.data && response.data.redirect_url) {
-                                console.log('Redirecting to:', response.data.redirect_url);
-                                window.location.href = response.data.redirect_url;
-                            } else {
-                                console.log('No redirect_url found, using default redirect');
-                                window.location.href = "{{ route('center_user.cp') }}" + (domainParam ? ("?domain=" + encodeURIComponent(domainParam)) : "");
-                            }
-                        } else {
-                            $("#alertError").show();
-                            $('#listError').html(response.message || 'Unexpected response');
+                            window.location.href = "{{ route('center_user.cp') }}" + (domainParam ? ("?domain=" + encodeURIComponent(domainParam)) : "");
+                            return;
                         }
 
-                        $("html, body").animate({ scrollTop: 0 }, { duration: 1500 });
-                        $(".submitFrom span").html('{{ __('center_login.login') }}');
-                        $('.submitFrom').prop('disabled', false);
+                        showLoginError(response.message || '{{ __('center_login.login_failed') ?? 'Login failed' }}');
+                        $("html, body").animate({ scrollTop: 0 }, { duration: 400 });
+                        resetLoginButton();
                     },
-                    error: function(response) {
-                        $("#alertError").show();
-                        var errors = response.responseJSON && response.responseJSON.errors;
-                        if (errors) {
-                            for (var error in errors) {
-                                var ul = document.getElementById("listError");
-                                var li = document.createElement("li");
-                                li.appendChild(document.createTextNode(errors[error]));
-                                ul.appendChild(li);
-                            }
-                        } else if (response.responseJSON && response.responseJSON.message) {
-                            $('#listError').html(response.responseJSON.message);
+                    error: function(xhr) {
+                        const payload = xhr.responseJSON || {};
+                        const messages = [];
+
+                        if (payload.errors) {
+                            Object.keys(payload.errors).forEach(function(key) {
+                                const value = payload.errors[key];
+                                if (Array.isArray(value)) {
+                                    value.forEach(function(msg) { messages.push(msg); });
+                                } else {
+                                    messages.push(value);
+                                }
+                            });
+                        } else if (payload.message) {
+                            messages.push(payload.message);
                         } else {
-                            $('#listError').html('Login failed with status ' + response.status);
+                            messages.push('{{ __('center_login.login_failed') ?? 'Login failed. Please check your email or password.' }}');
                         }
 
-                        $("html, body").animate({ scrollTop: 0 }, { duration: 1500 });
-                        $(".submitFrom span").html('{{ __('center_login.login') }}');
-                        $('.submitFrom').prop('disabled', false);
+                        showLoginError(messages);
+                        $("html, body").animate({ scrollTop: 0 }, { duration: 400 });
+                        resetLoginButton();
                     }
                 });
             });
@@ -469,8 +487,17 @@
             <h1 class="register-title">{{ __('center_login.signin_title') ?? 'Sign In' }}</h1>
 
             <!-- Alert -->
-            <div id="alertError" class="alert alert-danger alert-status d-none" role="alert">
-                <div id="listError"></div>
+            <div id="alertError" class="alert alert-danger alert-status {{ empty($error) && empty($errors?->any()) ? 'd-none' : '' }}" role="alert">
+                <ul id="listError" class="mb-0 ps-3">
+                    @if (!empty($error))
+                        <li>{{ $error }}</li>
+                    @endif
+                    @if (!empty($errors) && $errors->any())
+                        @foreach ($errors->all() as $err)
+                            <li>{{ $err }}</li>
+                        @endforeach
+                    @endif
+                </ul>
             </div>
 
             <form id="frmLogin" class="mb-3" enctype="multipart/form-data" novalidate>
