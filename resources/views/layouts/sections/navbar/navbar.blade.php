@@ -117,12 +117,12 @@
 
         @if (auth('center_user')->check() && !str_contains(url()->current(), 'admin'))
             <!-- Payment portal -->
-            <li class="nav-item me-2 me-xl-0">
+            <!-- <li class="nav-item me-2 me-xl-0">
                 <a class="nav-link hide-arrow" href="{{ route('center_user.subscription.plans') }}"
                     title="{{ __('field.payment') }}">
                     <i class="ti ti-credit-card ti-md"></i>
                 </a>
-            </li>
+            </li> -->
             <!--/ Payment portal -->
         @endif
 

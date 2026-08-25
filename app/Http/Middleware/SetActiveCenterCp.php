@@ -59,9 +59,9 @@ class SetActiveCenterCp
 
         $this->configureCenterDatabase($center);
 
-        if ($this->centerIsExpired($center) && !$this->isSubscriptionRenewalRoute($request)) {
-            return $this->redirectToRenewal($request);
-        }
+        // if ($this->centerIsExpired($center) && !$this->isSubscriptionRenewalRoute($request)) {
+        //     return $this->redirectToRenewal($request);
+        // }
 
         return $next($request);
     }
