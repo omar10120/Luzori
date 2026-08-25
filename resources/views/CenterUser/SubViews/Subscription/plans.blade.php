@@ -235,9 +235,9 @@
 @section('content')
     <div class="container-xxl flex-grow-1 container-p-y">
         <div class="subscription-page">
-            <!-- @if (!($isExpired || session('center_expired')))
+            @if (!($isExpired || session('center_expired')))
                 @include('CenterUser.Components.breadcrumbs')
-            @endif -->
+            @endif
 
             @if (($isExpired || session('center_expired')) || $hasSubscription)
                 @include('CenterUser.SubViews.Subscription.partials.subscription-status')
