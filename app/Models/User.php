@@ -8,6 +8,8 @@ use App\Traits\UpdatedAtTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\MediaLibrary\HasMedia;
 use Illuminate\Database\Eloquent\Model;
@@ -73,5 +75,15 @@ class User extends Model implements HasMedia
     protected function getFullPhoneAttribute()
     {
         return $this->country_code . $this->phone;
+    }
+
+    public function fcmTokens(): MorphMany
+    {
+        return $this->morphMany(FcmToken::class, 'tokenable');
+    }
+
+    public function notifications(): MorphToMany
+    {
+        return $this->morphToMany(Notification::class, 'notifiable')->withPivot('is_read');
     }
 }

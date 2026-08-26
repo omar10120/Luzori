@@ -16,7 +16,8 @@
                 "VIEW_PAGES",
                 "VIEW_SETTINGS",
                 "VIEW_USERS",
-                "VIEW_GLOBALCATEGORIES"
+                "VIEW_GLOBALCATEGORIES",
+                "VIEW_NOTIFICATIONS"
             ]
         },
         {
@@ -124,6 +125,17 @@
                 "CREATE_USERS",
                 "UPDATE_USERS",
                 "DELETE_USERS"
+            ]
+        },
+        {
+            "url": "admin/notifications/index",
+            "name": "notifications",
+            "external_icon": "notifications",
+            "slug": [
+                "notifications"
+            ],
+            "permissions": [
+                "VIEW_NOTIFICATIONS"
             ]
         },
         {

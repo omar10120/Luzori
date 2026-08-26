@@ -68,12 +68,6 @@ return [
     'confirm_withdrawal_request'                    => 'Confirm Withdrawal Request',
     'confirm_withdrawal_approval'                   => 'Confirm Withdrawal Approval',
     'center_expired'                                => 'Your center trial has expired. Please renew your plan.',
-    
-    
-    
-    
-    
-    
-    
-
+    'notificationSeen'                              => 'Notification marked as seen',
+    'notificationsFetched'                          => 'Notifications fetched successfully',
 ];

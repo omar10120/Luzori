@@ -40,7 +40,7 @@ class NotificationService
         $centeruser = CenterUser::find($center_user_id);
         $centerNotifications = $centeruser->notifications()->orderByDesc('id')->paginate(8)->items();
         foreach ($centerNotifications as $centerNotification) {
-            $centerNotification->centers()->updateExistingPivot($centeruser, ['is_read' => 1]);
+            $centerNotification->centerUsers()->updateExistingPivot($centeruser, ['is_read' => 1]);
         }
         return $centerNotifications;
     }

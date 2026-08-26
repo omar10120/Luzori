@@ -24,6 +24,7 @@ class AuthController extends Controller
             'address' => 'nullable|string|max:255',
             'birth' => 'nullable|date',
             'gender' => 'nullable|string|max:255',
+            'fcm_token' => 'nullable|string',
         ]);
 
         $user = AppUser::create([
@@ -39,6 +40,10 @@ class AuthController extends Controller
             'birth' => $request->birth,
             'gender' => $request->gender,
         ]);
+
+        if ($request->filled('fcm_token')) {
+            $user->fcmTokens()->firstOrCreate(['token' => $request->fcm_token]);
+        }
 
         $token = $user->createToken('app_auth_token')->plainTextToken;
 
@@ -56,6 +61,7 @@ class AuthController extends Controller
             'address' => 'nullable|string|max:255',
             'birth' => 'nullable|date',
             'gender' => 'nullable|string|max:255',
+            'fcm_token' => 'nullable|string',
         ]);
 
         $user = AppUser::where('email', $request->email)->first();
@@ -66,6 +72,10 @@ class AuthController extends Controller
 
         if (!$user->is_active) {
             return MyHelper::responseJSON(__('auth.inactive'), Response::HTTP_FORBIDDEN);
+        }
+
+        if ($request->filled('fcm_token')) {
+            $user->fcmTokens()->firstOrCreate(['token' => $request->fcm_token]);
         }
 
         $token = $user->createToken('app_auth_token')->plainTextToken;
@@ -97,6 +107,7 @@ class AuthController extends Controller
             'address' => 'nullable|string|max:255',
             'birth' => 'nullable|date',
             'gender' => 'nullable|string|max:255',
+            'fcm_token' => 'nullable|string',
         ]);
 
         $data = $request->only(['first_name', 'last_name', 'email', 'phone', 'address', 'birth', 'gender']);
@@ -112,6 +123,10 @@ class AuthController extends Controller
             $user->addMediaFromRequest('image')->toMediaCollection('PrimaryImage');
         }
 
+        if ($request->filled('fcm_token')) {
+            $user->fcmTokens()->firstOrCreate(['token' => $request->fcm_token]);
+        }
+
         $user->image_url = $user->getFirstMediaUrl('PrimaryImage');
 
         return MyHelper::responseJSON(__('api.updateSuccessfully') ?? 'Profile updated successfully', Response::HTTP_OK, $user);
@@ -119,6 +134,10 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
+        if ($request->filled('fcm_token')) {
+            $request->user()->fcmTokens()->where('token', $request->fcm_token)->delete();
+        }
+
         $request->user()->currentAccessToken()->delete();
         return MyHelper::responseJSON(__('api.doneSuccessfully'), Response::HTTP_OK);
     }

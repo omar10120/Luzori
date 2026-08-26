@@ -163,6 +163,8 @@ class BookingController extends Controller
 
         $booking->details()->update(['status' => 'confirmed']);
 
+        app(\App\Services\BookingNotificationService::class)->notifyStatusChange($booking->fresh(['user', 'details']), 'confirmed');
+
         return MyHelper::responseJSON(__('api.editSuccessfully'), Response::HTTP_OK);
     }
 
@@ -183,6 +185,8 @@ class BookingController extends Controller
             $totalPrice = $booking->details->sum('price');
             $booking->user->increment('wallet', $totalPrice);
         }
+
+        app(\App\Services\BookingNotificationService::class)->notifyStatusChange($booking->fresh(['user', 'details']), 'rejected');
 
         return MyHelper::responseJSON(__('api.editSuccessfully'), Response::HTTP_OK);
     }

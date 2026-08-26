@@ -16,6 +16,7 @@ return [
     'renew_subscription'        => 'Renew your subscription to continue using the system.',
     'choose'                    => 'Choose',
     'save'                      => 'Save',
+    'reset'                     => 'Reset',
     'enter'                     => 'Enter',
     'fail'                      => 'Fail',
     'new'                       => 'New',

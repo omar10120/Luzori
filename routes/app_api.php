@@ -8,6 +8,7 @@ use App\Http\Controllers\AppAPI\BookingController;
 use App\Http\Controllers\AppAPI\InfoController;
 use App\Http\Controllers\AppAPI\PackageController;
 use App\Http\Controllers\AppAPI\PaymentController;
+use App\Http\Controllers\AppAPI\NotificationController;
 /*
 |--------------------------------------------------------------------------
 | App API Routes (Main Database)
@@ -48,7 +49,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('create-session', [PaymentController::class, 'createSession']);
     });
 
-    
+    Route::get('getnotification', [NotificationController::class, 'get']);
+    Route::post('notification/seen', [NotificationController::class, 'seen']);
 });
 
 Route::middleware('auth:sanctum')->prefix('wallet')->controller(WalletController::class)->group(function () {

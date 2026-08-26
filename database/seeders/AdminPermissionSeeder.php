@@ -194,13 +194,30 @@ class AdminPermissionSeeder extends Seeder
         ]);
         // END USERS
 
-        // START BOOKINGS
-        Permission::create([
-            'name' => 'VIEW_BOOKINGS',
-            'name_ar' => 'عرض الحجوزات',
-            'group' => 'Bookings',
-            'guard_name' => 'admin',
-        ]);
+        // END BOOKINGS
+
+        // START NOTIFICATIONS
+        Permission::firstOrCreate(
+            ['name' => 'VIEW_NOTIFICATIONS', 'guard_name' => 'admin'],
+            ['name_ar' => 'عرض الإشعارات', 'group' => 'Notifications']
+        );
+        Permission::firstOrCreate(
+            ['name' => 'CREATE_NOTIFICATIONS', 'guard_name' => 'admin'],
+            ['name_ar' => 'إنشاء إشعار', 'group' => 'Notifications']
+        );
+        Permission::firstOrCreate(
+            ['name' => 'UPDATE_NOTIFICATIONS', 'guard_name' => 'admin'],
+            ['name_ar' => 'تعديل الإشعارات', 'group' => 'Notifications']
+        );
+        Permission::firstOrCreate(
+            ['name' => 'DELETE_NOTIFICATIONS', 'guard_name' => 'admin'],
+            ['name_ar' => 'حذف الإشعارات', 'group' => 'Notifications']
+        );
+        Permission::firstOrCreate(
+            ['name' => 'UPDATE_FIREBASE_SETTINGS', 'guard_name' => 'admin'],
+            ['name_ar' => 'تعديل إعدادات Firebase', 'group' => 'Notifications']
+        );
+        // END NOTIFICATIONS
         
     }
 }
