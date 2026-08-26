@@ -396,5 +396,6 @@ return [
     'push_notifications'              => 'Push Notifications',
     'received_notifications'          => 'Received Notifications',
     'new_notification'                => 'New Notification',
+    'view_all_notifications'          => 'View all notifications',
     'mark_as_read'                    => 'Mark as Read',
 ];

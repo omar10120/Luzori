@@ -193,6 +193,36 @@ class AppNotificationService
             ->paginate($perPage);
     }
 
+    public function navbarForCenter(Center $center, int $limit = 10): array
+    {
+        $items = $center->notifications()
+            ->with('translations')
+            ->orderByDesc('notifications.id')
+            ->limit($limit)
+            ->get();
+
+        $unread = $center->notifications()->wherePivot('is_read', 0)->count();
+
+        return [
+            'items' => $items,
+            'unread' => $unread,
+        ];
+    }
+
+    public function navbarForAdmin(int $limit = 10): array
+    {
+        $items = AppNotification::query()
+            ->with('translations')
+            ->orderByDesc('id')
+            ->limit($limit)
+            ->get();
+
+        return [
+            'items' => $items,
+            'unread' => 0,
+        ];
+    }
+
     public function markSeenForCenter(Center $center, ?int $notificationId = null): bool
     {
         if ($notificationId) {

@@ -388,5 +388,6 @@ return [
     'push_notifications'              => 'إشعارات الدفع',
     'received_notifications'          => 'الإشعارات الواردة',
     'new_notification'                => 'إشعار جديد',
+    'view_all_notifications'          => 'عرض كل الإشعارات',
     'mark_as_read'                    => 'تعيين كمقروء',
 ];
