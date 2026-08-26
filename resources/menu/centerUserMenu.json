@@ -28,6 +28,7 @@
         "VIEW_PRODUCTS",
         "VIEW_BUYPRODUCTS",
         "VIEW_STOCKTAKES",
+        "VIEW_STOCKORDERS",
         "VIEW_DAILY_REPORTS",
         "VIEW_SALES_REPORTS",
         "VIEW_STAFF_REPORTS",
@@ -191,12 +192,14 @@
       "slug": [
         "products",
         "buyproducts",
-        "stocktakes"
+        "stocktakes",
+        "stockorders"
       ],
       "permissions": [
         "VIEW_PRODUCTS",
         "VIEW_BUYPRODUCTS",
-        "VIEW_STOCKTAKES"
+        "VIEW_STOCKTAKES",
+        "VIEW_STOCKORDERS"
       ],
       "submenu": [
         {
@@ -219,6 +222,17 @@
           ],
           "permissions": [
             "VIEW_STOCKTAKES"
+          ]
+        },
+        {
+          "url": "center_user/stockorders/index",
+          "name": "stockorders",
+          "external_icon": "stock",
+          "slug": [
+            "stockorders"
+          ],
+          "permissions": [
+            "VIEW_STOCKORDERS"
           ]
         }
       ]

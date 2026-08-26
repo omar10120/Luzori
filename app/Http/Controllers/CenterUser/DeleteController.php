@@ -27,7 +27,10 @@ class DeleteController extends Controller
                 abort(404);
             }
         } else {
-            $modelNameSpace = "App\\Models\\" . Str::studly(Str::lower($request->model));
+            $modelNameSpace = "App\\Models\\" . $request->model;
+            if (!class_exists($modelNameSpace)) {
+                $modelNameSpace = "App\\Models\\" . Str::studly(Str::lower($request->model));
+            }
         }
 
         $model = $request->withTrashed == 1 ? $modelNameSpace::withTrashed()->find($request->id) : $modelNameSpace::find($request->id);

@@ -22,6 +22,7 @@ use App\Http\Controllers\CenterUser\SalesController;
 use App\Http\Controllers\CenterUser\ProductController;
 use App\Http\Controllers\CenterUser\ServiceController;
 use App\Http\Controllers\CenterUser\StocktakeController;
+use App\Http\Controllers\CenterUser\StockOrderController;
 use App\Http\Controllers\CenterUser\ShiftController;
 use App\Http\Controllers\CenterUser\UserController;
 use App\Http\Controllers\CenterUser\VacationController;
@@ -270,6 +271,19 @@ Route::group(['middleware' => 'auth_center_user:center_user'], function () {
             Route::get('complete/{id}', 'complete')->name('complete');
             Route::get('details/{id}', 'details')->name('details');
             Route::post('review/{id}', 'review')->name('review');
+        });
+    });
+
+    Route::group(['prefix' => 'stockorders', 'as' => 'stockorders.'], function () {
+        Route::controller(StockOrderController::class)->group(function () {
+            Route::get('index', 'index')->name('index');
+            Route::get('create', 'create')->name('create');
+            Route::post('updateOrCreate', 'updateOrCreate')->name('updateOrCreate');
+            Route::get('suppliers', 'suppliers')->name('suppliers');
+            Route::get('products', 'products')->name('products');
+            Route::get('receive/{id}', 'receive')->name('receive');
+            Route::post('receive/{id}', 'receiveStore')->name('receive.store');
+            Route::get('show/{id}', 'show')->name('show');
         });
     });
 

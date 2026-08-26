@@ -207,5 +207,9 @@ return [
     'settings_desc'=> 'Settings Desc',
     'invoices_settings_desc'=> 'Invoices Settings Desc',
     'manage_all_system_preferences'=> 'Manage All System Preferences',
+    'receive' => 'Receive',
+    'loading' => 'Loading...',
+    'select_products_to_add_to_order' => 'Select products to add to the order',
+    'receive_products_in_stock_order' => 'Receive products in your stock order',
     
 ];

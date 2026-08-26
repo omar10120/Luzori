@@ -802,6 +802,39 @@ class CenterUserPermissionSeeder extends Seeder
         ]);
         // END STOCKTAKES
 
+        // START STOCKORDERS
+        Permission::create([
+            'name' => 'VIEW_STOCKORDERS',
+            'name_ar' => 'عرض طلبات المخزون',
+            'group' => 'Stock Orders',
+            'guard_name' => 'center_api',
+        ]);
+        Permission::create([
+            'name' => 'SHOW_STOCKORDERS',
+            'name_ar' => 'عرض تفاصيل طلب المخزون',
+            'group' => 'Stock Orders',
+            'guard_name' => 'center_api',
+        ]);
+        Permission::create([
+            'name' => 'CREATE_STOCKORDERS',
+            'name_ar' => 'إضافة طلب مخزون',
+            'group' => 'Stock Orders',
+            'guard_name' => 'center_api',
+        ]);
+        Permission::create([
+            'name' => 'UPDATE_STOCKORDERS',
+            'name_ar' => 'تعديل طلب مخزون',
+            'group' => 'Stock Orders',
+            'guard_name' => 'center_api',
+        ]);
+        Permission::create([
+            'name' => 'DELETE_STOCKORDERS',
+            'name_ar' => 'حذف طلب مخزون',
+            'group' => 'Stock Orders',
+            'guard_name' => 'center_api',
+        ]);
+        // END STOCKORDERS
+
          // START SERVICES CATEGORIES
          Permission::create([
             'name' => 'VIEW_SERVICES_CATEGORIES',

@@ -54,6 +54,8 @@ return [
     'details'                           => 'التفاصيل',
     'payment_methods'                   => 'طرق الدفع',
     'stocktakes'                        => 'المخزون',
+    'stockorders'                       => 'طلبات المخزون',
+    'stockorder'                        => 'طلب مخزون',
     'stocktake_details'                 => 'تفاصيل المخزون',
     'sales_employee'                    => 'عامل المبيعات',
     'employee'                          => 'الموظف',

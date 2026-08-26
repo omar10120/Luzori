@@ -369,6 +369,23 @@ return [
     'visa_start_date'                 => 'تاريخ بدء الفيزا',
     'visa_end_date'                   => 'تاريخ انتهاء الفيزا',
     'visa_image'                      => 'صورة الفيزا',
+    'order_number'                    => 'رقم الطلب',
+    'created'                         => 'تاريخ الإنشاء',
+    'expected'                        => 'متوقع',
+    'deliver_from'                    => 'التوريد من',
+    'total_cost'                      => 'التكلفة الإجمالية',
+    'unit_cost'                       => 'تكلفة الوحدة',
+    'order_qty'                       => 'كمية الطلب',
+    'ordered'                         => 'مطلوب',
+    'received'                        => 'مستلم',
+    'product_name'                    => 'اسم المنتج',
+    'product_cost'                    => 'تكلفة المنتج',
+    'select_supplier'                 => 'اختر المورد',
+    'search_by_product_name_or_barcode' => 'البحث باسم المنتج أو الباركود',
+    'no_products_selected'            => 'لم يتم اختيار منتجات',
+    'select_branch_and_supplier_first'=> 'اختر الفرع والمورد أولاً',
+    'please_complete_order_fields'    => 'يرجى اختيار الفرع والمورد ومنتج واحد على الأقل',
+    'no_data_found'                   => 'لا توجد بيانات',
     
     
 ];

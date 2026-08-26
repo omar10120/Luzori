@@ -54,6 +54,8 @@ return [
     'details'                           => 'Details',
     'payment_methods'                   => 'Payment Methods',
     'stocktakes'                        => 'Stocktakes',
+    'stockorders'                       => 'Stock Orders',
+    'stockorder'                        => 'Stock Order',
     'stocktake_details'                 => 'Stocktake Details',
     'sales_employee'                    => 'Sales Worker',
     'employee'                          => 'Worker',

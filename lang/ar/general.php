@@ -204,9 +204,14 @@ return [
     'pages_desc'=> 'قسم الصفحات',
     'settings_desc'=> 'قسم الإعدادات',
     'invoices_settings_desc'=> 'قسم إعدادات الفاتورة',
-    'manage_all_system_preferences'=> 'إدارة جميع تفضيلات النظام'
-
-
-    
-    
+    'manage_all_system_preferences'=> 'إدارة جميع تفضيلات النظام',
+    'receive' => 'استلام',
+    'loading' => 'جاري التحميل...',
+    'select_products_to_add_to_order' => 'اختر المنتجات لإضافتها إلى الطلب',
+    'receive_products_in_stock_order' => 'استلام منتجات طلب المخزون',
 ];
+
+
+    
+    
+
