@@ -51,6 +51,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('getnotification', [NotificationController::class, 'get']);
     Route::post('notification/seen', [NotificationController::class, 'seen']);
+
+    Route::prefix('account')->group(function () {
+        Route::post('delete', [AuthController::class, 'deleteAccount']);
+    });
 });
 
 Route::middleware('auth:sanctum')->prefix('wallet')->controller(WalletController::class)->group(function () {

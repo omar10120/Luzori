@@ -141,4 +141,41 @@ class AuthController extends Controller
         $request->user()->currentAccessToken()->delete();
         return MyHelper::responseJSON(__('api.doneSuccessfully'), Response::HTTP_OK);
     }
+
+    public function deleteAccount(Request $request)
+    {
+        $user = $request->user();
+
+        $request->validate([
+            'password' => 'nullable|string',
+        ]);
+
+        // Confirm password when the account has a local password
+        if (!empty($user->password) && $user->provider === 'email') {
+            $request->validate(['password' => 'required|string']);
+            if (!Hash::check($request->password, $user->password)) {
+                return MyHelper::responseJSON(__('api.passwordDontMatch'), Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+        }
+
+        try {
+            $user->tokens()->delete();
+            $user->fcmTokens()->delete();
+            $user->clearMediaCollection('PrimaryImage');
+
+            // Free unique fields so the same email/phone can register again
+            $user->update([
+                'email' => $user->email ? 'deleted_' . $user->id . '_' . time() . '@deleted.local' : null,
+                'phone' => 'deleted_' . $user->id . '_' . time(),
+                'firebase_uid' => null,
+                'is_active' => 0,
+            ]);
+
+            $user->delete();
+
+            return MyHelper::responseJSON(__('api.accountDeleted'), Response::HTTP_OK);
+        } catch (\Throwable $e) {
+            return MyHelper::responseJSON(__('api.unknownError'), Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
 }

@@ -70,4 +70,5 @@ return [
     'center_expired'                                => 'Your center trial has expired. Please renew your plan.',
     'notificationSeen'                              => 'Notification marked as seen',
     'notificationsFetched'                          => 'Notifications fetched successfully',
+    'accountDeleted'                                => 'Account deleted successfully',
 ];
