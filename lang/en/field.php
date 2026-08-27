@@ -406,4 +406,8 @@ return [
     'order_status_confirmed'          => 'Confirmed',
     'order_status_rejected'           => 'Rejected',
     'order_status_cancelled'          => 'Cancelled',
+    'created'                         => 'created',
+    'expected'                        => 'Expected',
+    'deliver_from'                    => 'Deliver From',
+    'total_cost'                      => 'Total Cost',
 ];
