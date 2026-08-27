@@ -390,5 +390,6 @@ return [
     'search_by_product_name_or_barcode' => 'بحث باسم المنتج أو الباركود',
     'product_cost'                    => 'سعر المنتج',
     'received'                        => 'تم التسليم',
+    'ordered'                         => 'تم الطلب',
     
 ];
