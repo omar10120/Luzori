@@ -442,6 +442,17 @@
           "permissions": [
             "VIEW_NOTIFICATIONS"
           ]
+        },
+        {
+          "url": "center_user/notifications/inbox",
+          "name": "received_notifications",
+          "external_icon": "notifications",
+          "slug": [
+            "notifications"
+          ],
+          "permissions": [
+            "VIEW_NOTIFICATIONS"
+          ]
         }
       ]
     },

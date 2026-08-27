@@ -6,6 +6,8 @@ use App\Traits\CreatedAtTrait;
 use App\Traits\HasMediaTrait;
 use App\Traits\UpdatedAtTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -68,5 +70,17 @@ class AppUser extends Authenticatable implements HasMedia
     public function used_wallets()
     {
         return $this->hasMany(AppUserUsedWallet::class, 'user_id');
+    }
+
+    public function fcmTokens(): MorphMany
+    {
+        return $this->morphMany(CentralFcmToken::class, 'tokenable');
+    }
+
+    public function appNotifications(): MorphToMany
+    {
+        return $this->morphToMany(AppNotification::class, 'notifiable', 'notifiables', 'notifiable_id', 'notification_id')
+            ->withPivot('is_read', 'id')
+            ->withTimestamps();
     }
 }

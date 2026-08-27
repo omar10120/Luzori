@@ -92,12 +92,14 @@ class Center extends Authenticatable implements HasMedia
 
     public function fcmTokens()
     {
-        return $this->morphMany(FcmToken::class, 'tokenable');
+        return $this->morphMany(CentralFcmToken::class, 'tokenable');
     }
 
     public function notifications()
     {
-        return $this->morphToMany(Notification::class, 'notifiable')->withPivot('is_read');
+        return $this->morphToMany(AppNotification::class, 'notifiable', 'notifiables', 'notifiable_id', 'notification_id')
+            ->withPivot('is_read', 'id')
+            ->withTimestamps();
     }
 
     public function setPasswordAttribute($value)

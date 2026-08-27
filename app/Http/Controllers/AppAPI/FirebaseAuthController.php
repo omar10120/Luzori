@@ -5,7 +5,6 @@ namespace App\Http\Controllers\AppAPI;
 use App\Http\Controllers\Controller;
 use App\Models\AppUser;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Kreait\Firebase\Factory;
 use Exception;
 
@@ -19,7 +18,8 @@ class FirebaseAuthController extends Controller
     {
         $request->validate([
             'token' => 'required|string',
-            'provider' => 'required|string|in:google,phone,email'
+            'provider' => 'required|string|in:google,phone,email',
+            'fcm_token' => 'nullable|string',
         ]);
 
         try {
@@ -57,6 +57,10 @@ class FirebaseAuthController extends Controller
                     'provider' => $request->provider,
                 ]
             );
+
+            if ($request->filled('fcm_token')) {
+                $user->fcmTokens()->firstOrCreate(['token' => $request->fcm_token]);
+            }
 
             // Generate Sanctum token
             $token = $user->createToken('auth_token')->plainTextToken;

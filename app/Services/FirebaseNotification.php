@@ -28,7 +28,9 @@ class FirebaseNotification
             } else {
                 foreach ($users as $user) {
                     $user_info = User::find($user);
-                    $this->sendToOne($request['title_' . $user_info->language->name], $request['text_' . $user_info->language->name], $user_info->fcmTokens()->pluck('token')->toArray());
+                    $title = $request['title_ar'] ?? ($request['ar']['title'] ?? '');
+                    $text = $request['text_ar'] ?? ($request['ar']['text'] ?? '');
+                    $this->sendToOne($title, $text, $user_info?->fcmTokens()->pluck('token')->toArray() ?? []);
                 }
             }
             DB::commit();
@@ -44,7 +46,9 @@ class FirebaseNotification
         $user = User::find($user_id);
         $notification = $this->create_user_notification($request, $user_id);
         if ($notification) {
-            $this->sendToOne($request[$user->language->name]['title'], $request[$user->language->name]['text'], $user->fcmTokens()->pluck('token')->toArray());
+            $title = $request['ar']['title'] ?? ($request['title_ar'] ?? '');
+            $text = $request['ar']['text'] ?? ($request['text_ar'] ?? '');
+            $this->sendToOne($title, $text, $user?->fcmTokens()->pluck('token')->toArray() ?? []);
             DB::commit();
             return $notification;
         } else {

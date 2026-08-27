@@ -21,4 +21,9 @@ class Notification extends Model
     {
         return $this->morphedByMany(User::class, 'notifiable')->withPivot('is_read');
     }
+
+    public function centerUsers()
+    {
+        return $this->morphedByMany(CenterUser::class, 'notifiable')->withPivot('is_read');
+    }
 }

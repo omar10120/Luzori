@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\GlobalCategoryController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\WithdrawalRequestController;
 use App\Http\Controllers\Admin\BookingController;
+use App\Http\Controllers\Admin\NotificationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -133,6 +134,16 @@ Route::group(['middleware' => 'auth:admin'], function () {
             Route::get('index', 'index')->name('index');
             Route::get('create', 'create')->name('create');
             Route::post('updateOrCreate', 'updateOrCreate')->name('updateOrCreate');
+        });
+    });
+
+    Route::group(['prefix' => 'notifications', 'as' => 'notifications.'], function () {
+        Route::controller(NotificationController::class)->group(function () {
+            Route::get('index', 'index')->name('index')->can('VIEW_NOTIFICATIONS');
+            Route::post('send', 'send')->name('send')->can('CREATE_NOTIFICATIONS');
+            Route::post('resend', 'resend')->name('resend')->can('CREATE_NOTIFICATIONS');
+            Route::post('toggleStatus', 'toggleStatus')->name('toggleStatus')->can('UPDATE_NOTIFICATIONS');
+            Route::post('firebase/save', 'saveFirebase')->name('firebase.save')->can('UPDATE_FIREBASE_SETTINGS');
         });
     });
 });
