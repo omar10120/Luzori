@@ -387,5 +387,7 @@ return [
     'unit_cost'                       => 'سعر الوحدة',
     'no_products_selected'            => 'لم يتم اختيار أي منتجات',
     'product_name'                    => 'اسم المنتج',
+    'search_by_product_name_or_barcode' => 'بحث باسم المنتج أو الباركود',
+    'product_cost'                    => 'سعر المنتج',
     
 ];

@@ -415,4 +415,6 @@ return [
     'unit_cost'                       => 'Unit Cost',
     'no_products_selected'            => 'No Products Selected',
     'product_name'                    => 'Product Name',
+    'search_by_product_name_or_barcode' => 'Search by product name or barcode',
+    'product_cost'                    => 'Product Cost',
 ];
