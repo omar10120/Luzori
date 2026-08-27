@@ -417,4 +417,6 @@ return [
     'product_name'                    => 'Product Name',
     'search_by_product_name_or_barcode' => 'Search by product name or barcode',
     'product_cost'                    => 'Product Cost',
+    'received'                        => 'Received',
+    'ordered'                         => 'Ordered',
 ];
