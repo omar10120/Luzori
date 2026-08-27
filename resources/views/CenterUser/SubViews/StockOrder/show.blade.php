@@ -29,7 +29,7 @@
                 <div class="row mb-4">
                     <div class="col-md-3">
                         <div class="text-muted small">{{ __('field.created') }}</div>
-                        <div class="fw-semibold">{{ $order->created_at?->format('Y-m-d H:i') }}</div>
+                        <div class="fw-semibold">{{ $order->created_at ?: '-' }}</div>
                     </div>
                     <div class="col-md-3">
                         <div class="text-muted small">{{ __('field.expected') }}</div>

@@ -44,7 +44,12 @@ class StockOrderDataTable extends DataTable
                 return e($row->order_number);
             })
             ->editColumn('expected_at', function ($row) {
-                return $row->expected_at ? $row->expected_at->format('Y-m-d') : '-';
+                if (!$row->expected_at) {
+                    return '-';
+                }
+                return $row->expected_at instanceof \Carbon\Carbon
+                    ? $row->expected_at->format('Y-m-d')
+                    : \Carbon\Carbon::parse($row->expected_at)->format('Y-m-d');
             })
             ->editColumn('deliver_from', function ($row) {
                 return e($row->deliver_from ?: ($row->supplier->name ?? '-'));
@@ -60,7 +65,8 @@ class StockOrderDataTable extends DataTable
                 return '<span class="badge ' . $class . '">' . e($label) . '</span>';
             })
             ->editColumn('created_at', function ($row) {
-                return $row->created_at ? $row->created_at->format('Y-m-d H:i') : '-';
+                // CreatedAtTrait already returns a formatted string
+                return $row->created_at ?: '-';
             })
             ->rawColumns(['action', 'status'])
             ->setRowId('id');
