@@ -378,6 +378,9 @@ return [
     'order_status_confirmed'          => 'مؤكد',
     'order_status_rejected'           => 'مرفوض',
     'order_status_cancelled'          => 'ملغي',
-    
+    'created'                         => 'انشئت',
+    'expected'                        => 'متوقع',
+    'deliver_from'                    => 'توصيل من',
+    'total_cost'                      => 'المبلغ الكلي',
     
 ];
