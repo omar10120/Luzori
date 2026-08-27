@@ -370,7 +370,7 @@ return [
     'visa_start_date'                 => 'تاريخ بدء الفيزا',
     'visa_end_date'                   => 'تاريخ انتهاء الفيزا',
     'visa_image'                      => 'صورة الفيزا',
-    'order_number'                    => 'رقم الطلب',
+    'order_number'                    => '#',
     'order_date'                      => 'تاريخ الطلب',
     'order_time'                      => 'وقت الطلب',
     'order_status'                    => 'حالة الطلب',
