@@ -382,5 +382,10 @@ return [
     'expected'                        => 'متوقع',
     'deliver_from'                    => 'توصيل من',
     'total_cost'                      => 'المبلغ الكلي',
+    'select_supplier'                 => 'اختر المورد',
+    'order_qty'                       => 'كمية الطلب',
+    'unit_cost'                       => 'سعر الوحدة',
+    'no_products_selected'            => 'لم يتم اختيار أي منتجات',
+    'product_name'                    => 'اسم المنتج',
     
 ];

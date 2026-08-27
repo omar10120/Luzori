@@ -410,4 +410,9 @@ return [
     'expected'                        => 'Expected',
     'deliver_from'                    => 'Deliver From',
     'total_cost'                      => 'Total Cost',
+    'select_supplier'                 => 'Select Supplier',
+    'order_qty'                       => 'Order Qty',
+    'unit_cost'                       => 'Unit Cost',
+    'no_products_selected'            => 'No Products Selected',
+    'product_name'                    => 'Product Name',
 ];
