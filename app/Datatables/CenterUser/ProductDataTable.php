@@ -61,16 +61,37 @@ class ProductDataTable extends DataTable
                 }
                 return '-';
             })
+            ->editColumn('qty', function ($row) {
+                $branches = $row->productBranches;
+                if (!$branches || $branches->isEmpty()) {
+                    return '0';
+                }
+
+                $total = (int) $branches->sum('stock_quantity');
+                if ($branches->count() === 1) {
+                    return (string) $total;
+                }
+
+                $details = $branches->map(function ($pb) {
+                    $name = $pb->branch->name ?? ('#' . $pb->branch_id);
+                    return e($name) . ': ' . (int) $pb->stock_quantity;
+                })->implode('<br>');
+
+                return '<div><strong>' . $total . '</strong><br><small class="text-muted">' . $details . '</small></div>';
+            })
             ->editColumn('translation.name', function ($row) {
                 return \App\Helpers\MyHelper::truncateWithReadMore($row->translation->name ?? '');
             })
-            ->rawColumns(['image', 'status', 'skus', 'translation.name'], true)
+            ->rawColumns(['image', 'status', 'skus', 'qty', 'translation.name'], true)
             ->setRowId('id');
     }
 
     public function query(Product $model): QueryBuilder
     {
-        return $model->query()->withTrashed()->with(['translation', 'brand', 'category', 'productSuppliers', 'skus'])->orderBy($this->plural . '.id', 'DESC');
+        return $model->query()
+            ->withTrashed()
+            ->with(['translation', 'brand', 'category', 'productSuppliers', 'skus', 'productBranches.branch.translation'])
+            ->orderBy($this->plural . '.id', 'DESC');
     }
 
     public function html(): HtmlBuilder
@@ -146,6 +167,7 @@ class ProductDataTable extends DataTable
             Column::computed('brand.name')->searchable(true)->title(__('field.brand')),
             Column::computed('category.name')->searchable(true)->title(__('field.category')),
             Column::computed('productSuppliers')->searchable(false)->title(__('field.suppliers')),
+            Column::computed('qty')->searchable(false)->title(__('field.quantity')),
             Column::make('barcode')->searchable(true)->title(__('field.barcode')),
             Column::make('supply_price')->searchable(true)->title(__('field.supply_price')),
             Column::make('retail_price')->searchable(true)->title(__('field.retail_price')),

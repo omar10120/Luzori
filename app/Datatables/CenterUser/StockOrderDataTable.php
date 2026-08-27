@@ -54,6 +54,9 @@ class StockOrderDataTable extends DataTable
             ->editColumn('deliver_from', function ($row) {
                 return e($row->deliver_from ?: ($row->supplier->name ?? '-'));
             })
+            ->editColumn('branch_name', function ($row) {
+                return e($row->branch->name ?? '-');
+            })
             ->editColumn('total_cost', function ($row) {
                 return number_format((float) $row->total_cost, 2) . ' ' . get_currency();
             })
@@ -76,7 +79,7 @@ class StockOrderDataTable extends DataTable
     {
         return $model->query()
             ->withTrashed()
-            ->with(['supplier'])
+            ->with(['supplier', 'branch.translation'])
             ->orderBy('stock_orders.id', 'DESC');
     }
 
@@ -142,6 +145,7 @@ class StockOrderDataTable extends DataTable
             Column::make('order_number')->searchable(true)->title(__('field.order_number')),
             Column::make('created_at')->searchable(true)->title(__('field.created')),
             Column::make('expected_at')->searchable(false)->title(__('field.expected')),
+            Column::computed('branch_name')->searchable(false)->title(__('field.branch')),
             Column::make('deliver_from')->searchable(true)->title(__('field.deliver_from')),
             Column::make('total_cost')->searchable(false)->title(__('field.total_cost')),
             Column::computed('status')->searchable(false)->title(__('field.status')),
