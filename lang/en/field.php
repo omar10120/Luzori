@@ -398,4 +398,12 @@ return [
     'new_notification'                => 'New Notification',
     'view_all_notifications'          => 'View all notifications',
     'mark_as_read'                    => 'Mark as Read',
+    'order_number'                    => 'Order Number',
+    'order_date'                      => 'Order Date',
+    'order_time'                      => 'Order Time',
+    'order_status'                    => 'Order Status',
+    'order_status_pending'            => 'Pending',
+    'order_status_confirmed'          => 'Confirmed',
+    'order_status_rejected'           => 'Rejected',
+    'order_status_cancelled'          => 'Cancelled',
 ];
