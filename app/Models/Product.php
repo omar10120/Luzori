@@ -83,4 +83,9 @@ class Product extends Model implements HasMedia
             ->withPivot('stock_quantity')
             ->withTimestamps();
     }
+
+    public function inventoryMovements(): HasMany
+    {
+        return $this->hasMany(InventoryMovement::class);
+    }
 }

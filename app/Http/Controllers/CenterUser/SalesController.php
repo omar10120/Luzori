@@ -660,6 +660,39 @@ class SalesController extends Controller
 
         try {
             if ($request->action === 'delete') {
+                $sale->load(['buyProducts.details', 'branch']);
+                $branchId = (int) ($sale->branch_id ?? 0);
+                $movementService = app(\App\Services\InventoryMovementService::class);
+
+                // Restore stock from sold product lines before delete
+                if ($branchId) {
+                    foreach ($sale->buyProducts as $buyProduct) {
+                        $qtyByProduct = $buyProduct->details
+                            ->groupBy('product_id')
+                            ->map->count();
+
+                        foreach ($qtyByProduct as $productId => $qty) {
+                            $productBranch = \App\Models\ProductBranch::where('product_id', $productId)
+                                ->where('branch_id', $branchId)
+                                ->first();
+
+                            if ($productBranch) {
+                                $productBranch->increment('stock_quantity', (int) $qty);
+                            }
+
+                            $movementService->record(
+                                (int) $productId,
+                                $branchId,
+                                (int) $qty,
+                                \App\Models\InventoryMovement::TYPE_SALE_DELETED,
+                                $sale,
+                                null,
+                                'Sale deleted #' . $sale->id . ' — stock restored'
+                            );
+                        }
+                    }
+                }
+
                 $sale->forceDelete();
                 $saleOtpService->clear();
                 Log::info('Sale deleted after OTP', [

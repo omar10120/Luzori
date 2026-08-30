@@ -30,6 +30,7 @@ use Illuminate\Support\Facades\Log;
 use App\Models\Package;
 use App\Models\PaymentMethod;
 use App\Models\Worker;
+use App\Models\InventoryMovement;
 
 
 
@@ -301,7 +302,7 @@ class SalesService
 
                 // Update stock for all products
                 foreach ($productItems as $item) {
-                    $this->updateProductStock($item['id'], $item['quantity'], $branchId);
+                    $this->updateProductStock($item['id'], $item['quantity'], $branchId, $sale);
                 }
             }
 
@@ -817,11 +818,11 @@ class SalesService
     /**
      * Update product stock after sale
      */
-    private function updateProductStock($productId, $quantity, $branchId)
+    private function updateProductStock($productId, $quantity, $branchId, $sale = null)
     {
         $product = Product::find($productId);
         
-        if (!$product->track_stock) {
+        if (!$product || !$product->track_stock) {
             return; // Stock tracking disabled
         }
 
@@ -832,6 +833,16 @@ class SalesService
         if ($productBranch) {
             $productBranch->stock_quantity -= $quantity;
             $productBranch->save();
+
+            app(InventoryMovementService::class)->record(
+                (int) $productId,
+                (int) $branchId,
+                -((int) $quantity),
+                InventoryMovement::TYPE_SALE,
+                $sale,
+                $product->primarySku?->id,
+                'POS product sale'
+            );
         }
     }
 

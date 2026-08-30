@@ -163,7 +163,14 @@ class ProductController extends Controller
         if ($item && $request->has('product_branches')) {
             $productBranches = $request->input('product_branches', []);
             $syncData = [];
-            
+            $previousStocks = $item->productBranches()
+                ->get()
+                ->pluck('stock_quantity', 'branch_id')
+                ->map(fn ($qty) => (int) $qty)
+                ->all();
+            $hadAnyMovement = \App\Models\InventoryMovement::where('product_id', $item->id)->exists();
+            $movementService = app(\App\Services\InventoryMovementService::class);
+
             foreach ($productBranches as $branchData) {
                 // Only process if branch_id is set and not empty
                 if (!empty($branchData['branch_id']) && isset($branchData['stock_quantity'])) {
@@ -173,13 +180,42 @@ class ProductController extends Controller
                     ];
                 }
             }
-            
+
             // Sync branches with stock quantities (this will update existing or create new)
             // If no branches selected, detach all
             if (empty($syncData)) {
                 $item->branches()->detach();
             } else {
                 $item->branches()->sync($syncData);
+                $item->loadMissing('primarySku');
+
+                foreach ($syncData as $branchId => $data) {
+                    $newQty = (int) ($data['stock_quantity'] ?? 0);
+                    $oldQty = array_key_exists($branchId, $previousStocks)
+                        ? (int) $previousStocks[$branchId]
+                        : null;
+                    $delta = $oldQty === null ? $newQty : ($newQty - $oldQty);
+
+                    if ($delta === 0) {
+                        continue;
+                    }
+
+                    $type = (!$hadAnyMovement && $oldQty === null)
+                        ? \App\Models\InventoryMovement::TYPE_INITIAL
+                        : \App\Models\InventoryMovement::TYPE_ADJUSTMENT;
+
+                    $movementService->record(
+                        (int) $item->id,
+                        (int) $branchId,
+                        $delta,
+                        $type,
+                        $item,
+                        $item->primarySku?->id,
+                        $type === \App\Models\InventoryMovement::TYPE_INITIAL
+                            ? 'Product branch stock initial'
+                            : 'Product branch stock adjustment'
+                    );
+                }
             }
         }
 

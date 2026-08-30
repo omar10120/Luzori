@@ -60,6 +60,7 @@ class StockOrderService
         return DB::transaction(function () use ($order, $itemsData) {
             $totalCost = 0;
             $itemsById = collect($itemsData)->keyBy('id');
+            $order->loadMissing(['items.product.primarySku']);
 
             foreach ($order->items as $item) {
                 if (!$itemsById->has($item->id)) {
@@ -92,6 +93,16 @@ class StockOrderService
                     }
 
                     $productBranch->increment('stock_quantity', $receivedQty);
+
+                    app(InventoryMovementService::class)->record(
+                        (int) $item->product_id,
+                        (int) $order->branch_id,
+                        (int) $receivedQty,
+                        \App\Models\InventoryMovement::TYPE_STOCK_ORDER,
+                        $order,
+                        $item->product?->primarySku?->id,
+                        'Stock order receive ' . $order->order_number
+                    );
                 }
             }
 

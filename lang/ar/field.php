@@ -391,5 +391,18 @@ return [
     'product_cost'                    => 'سعر المنتج',
     'received'                        => 'تم التسليم',
     'ordered'                         => 'تم الطلب',
+    'current_stock'                   => 'المخزون الحالي',
+    'net_sold'                        => 'صافي المبيعات',
+    'total_ordered'                   => 'إجمالي الطلبات',
+    'movement_type'                   => 'نوع الحركة',
+    'reference'                       => 'المرجع',
+    'movement_purchase'               => 'شراء',
+    'movement_stock_order'            => 'طلب مخزون',
+    'movement_sale'                   => 'بيع',
+    'movement_sale_deleted'           => 'حذف بيع',
+    'movement_adjustment'             => 'تعديل',
+    'movement_transfer_out'           => 'تحويل خارج',
+    'movement_transfer_in'            => 'تحويل داخل',
+    'movement_initial'                => 'رصيد ابتدائي',
     
 ];

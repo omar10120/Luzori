@@ -280,16 +280,34 @@ class StocktakeController extends Controller
         $stocktake = Stocktake::with('stocktakeProducts')->findOrFail($id);
         
         if ($stocktake->status == 'completed') {
+            $movementService = app(\App\Services\InventoryMovementService::class);
+
             // Update stock quantities
             foreach ($stocktake->stocktakeProducts as $stocktakeProduct) {
                 if ($stocktakeProduct->counted_qty !== null) {
                     $productBranch = \App\Models\ProductBranch::where('product_id', $stocktakeProduct->product_id)
                         ->where('branch_id', $stocktakeProduct->branch_id)
                         ->first();
-                    
+
                     if ($productBranch) {
-                        $productBranch->stock_quantity = $stocktakeProduct->counted_qty;
+                        $oldQty = (int) $productBranch->stock_quantity;
+                        $newQty = (int) $stocktakeProduct->counted_qty;
+                        $delta = $newQty - $oldQty;
+
+                        $productBranch->stock_quantity = $newQty;
                         $productBranch->save();
+
+                        if ($delta !== 0) {
+                            $movementService->record(
+                                (int) $stocktakeProduct->product_id,
+                                (int) $stocktakeProduct->branch_id,
+                                $delta,
+                                \App\Models\InventoryMovement::TYPE_ADJUSTMENT,
+                                $stocktake,
+                                null,
+                                'Stocktake review #' . $stocktake->id
+                            );
+                        }
                     }
                 }
             }

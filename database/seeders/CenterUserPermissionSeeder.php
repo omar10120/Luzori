@@ -835,6 +835,21 @@ class CenterUserPermissionSeeder extends Seeder
         ]);
         // END STOCKORDERS
 
+        // START INVENTORY MOVEMENTS
+        Permission::create([
+            'name' => 'VIEW_INVENTORYMOVEMENTS',
+            'name_ar' => 'عرض حركة المخزون',
+            'group' => 'Inventory Movements',
+            'guard_name' => 'center_api',
+        ]);
+        Permission::create([
+            'name' => 'SHOW_INVENTORYMOVEMENTS',
+            'name_ar' => 'عرض تفاصيل حركة المخزون',
+            'group' => 'Inventory Movements',
+            'guard_name' => 'center_api',
+        ]);
+        // END INVENTORY MOVEMENTS
+
          // START SERVICES CATEGORIES
          Permission::create([
             'name' => 'VIEW_SERVICES_CATEGORIES',

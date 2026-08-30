@@ -29,6 +29,7 @@
         "VIEW_BUYPRODUCTS",
         "VIEW_STOCKTAKES",
         "VIEW_STOCKORDERS",
+        "VIEW_INVENTORYMOVEMENTS",
         "VIEW_DAILY_REPORTS",
         "VIEW_SALES_REPORTS",
         "VIEW_STAFF_REPORTS",
@@ -193,13 +194,15 @@
         "products",
         "buyproducts",
         "stocktakes",
-        "stockorders"
+        "stockorders",
+        "inventorymovements"
       ],
       "permissions": [
         "VIEW_PRODUCTS",
         "VIEW_BUYPRODUCTS",
         "VIEW_STOCKTAKES",
-        "VIEW_STOCKORDERS"
+        "VIEW_STOCKORDERS",
+        "VIEW_INVENTORYMOVEMENTS"
       ],
       "submenu": [
         {
@@ -233,6 +236,17 @@
           ],
           "permissions": [
             "VIEW_STOCKORDERS"
+          ]
+        },
+        {
+          "url": "center_user/inventorymovements/index",
+          "name": "inventorymovements",
+          "external_icon": "stock",
+          "slug": [
+            "inventorymovements"
+          ],
+          "permissions": [
+            "VIEW_INVENTORYMOVEMENTS"
           ]
         }
       ]
