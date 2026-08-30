@@ -164,7 +164,7 @@ class SalesService
             $total = $subtotal + $tax + $tip;
 
             // Get branch with override support
-            $branchId = $overrides['branch_id'] ?? (auth('center_user')->user()->branch_id ?? (Branch::first()->id ?? null));
+            $branchId = $this->resolveSaleBranchId($cartData, $overrides);
             
             if (!$branchId) {
                 throw new \Exception('No branch found for this sale');
@@ -302,7 +302,12 @@ class SalesService
 
                 // Update stock for all products
                 foreach ($productItems as $item) {
-                    $this->updateProductStock($item['id'], $item['quantity'], $branchId, $sale);
+                    $this->updateProductStock(
+                        (int) $item['id'],
+                        (int) ($item['quantity'] ?? 1),
+                        $branchId,
+                        $sale
+                    );
                 }
             }
 
@@ -792,22 +797,51 @@ class SalesService
 
 
     /**
+     * Resolve which branch a POS sale should use (stock, bookings, etc.).
+     */
+    public function resolveSaleBranchId(array $cartData, array $overrides = []): ?int
+    {
+        if (!empty($overrides['branch_id'])) {
+            return (int) $overrides['branch_id'];
+        }
+
+        $centerUserBranchId = auth('center_user')->user()?->branch_id;
+        if ($centerUserBranchId) {
+            return (int) $centerUserBranchId;
+        }
+
+        if (!empty($cartData['client_id'])) {
+            $clientBranchId = User::where('id', $cartData['client_id'])->value('branch_id');
+            if ($clientBranchId) {
+                return (int) $clientBranchId;
+            }
+        }
+
+        return Branch::query()->value('id');
+    }
+
+    /**
      * Validate product stock availability
      */
     private function validateProductStock($productId, $quantity, $branchId)
     {
         $product = Product::find($productId);
-        
-        if (!$product->track_stock) {
-            return; // Stock tracking disabled
+
+        if (!$product) {
+            throw new \Exception('Product not found');
         }
 
         $productBranch = ProductBranch::where('product_id', $productId)
             ->where('branch_id', $branchId)
             ->first();
 
+        // Enforce stock limits when tracking is enabled or branch stock is configured
+        if (!$product->track_stock && !$productBranch) {
+            return;
+        }
+
         if (!$productBranch) {
-            throw new \Exception("Product not available in this branch");
+            throw new \Exception('Product not available in this branch');
         }
 
         if ($productBranch->stock_quantity < $quantity) {
@@ -820,30 +854,36 @@ class SalesService
      */
     private function updateProductStock($productId, $quantity, $branchId, $sale = null)
     {
-        $product = Product::find($productId);
-        
-        if (!$product || !$product->track_stock) {
-            return; // Stock tracking disabled
+        $product = Product::with('primarySku')->find($productId);
+
+        if (!$product) {
+            return;
         }
 
-        $productBranch = ProductBranch::where('product_id', $productId)
+        $productBranch = ProductBranch::withTrashed()
+            ->where('product_id', $productId)
             ->where('branch_id', $branchId)
             ->first();
 
-        if ($productBranch) {
-            $productBranch->stock_quantity -= $quantity;
-            $productBranch->save();
-
-            app(InventoryMovementService::class)->record(
-                (int) $productId,
-                (int) $branchId,
-                -((int) $quantity),
-                InventoryMovement::TYPE_SALE,
-                $sale,
-                $product->primarySku?->id,
-                'POS product sale'
-            );
+        if (!$productBranch) {
+            return;
         }
+
+        if ($productBranch->trashed()) {
+            $productBranch->restore();
+        }
+
+        $productBranch->decrement('stock_quantity', (int) $quantity);
+
+        app(InventoryMovementService::class)->record(
+            (int) $productId,
+            (int) $branchId,
+            -((int) $quantity),
+            InventoryMovement::TYPE_SALE,
+            $sale,
+            $product->primarySku?->id,
+            'POS product sale'
+        );
     }
 
     /**

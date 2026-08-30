@@ -317,20 +317,24 @@ class SalesController extends Controller
         ]);
 
         $product = Product::find($request->product_id);
-        $branchId = auth('center_user')->user()->branch_id ?? Branch::first()->id;
+        $cart = session('sales_cart', ['items' => []]);
+        $branchId = $this->salesService->resolveSaleBranchId($cart);
 
-        // Validate stock
-        if ($product->track_stock) {
-            $productBranch = \App\Models\ProductBranch::where('product_id', $product->id)
-                ->where('branch_id', $branchId)
-                ->first();
-
-            if (!$productBranch || $productBranch->stock_quantity < $request->quantity) {
-                return MyHelper::responseJSON('Insufficient stock', Response::HTTP_BAD_REQUEST);
-            }
+        if (!$branchId) {
+            return MyHelper::responseJSON('No branch found for this sale', Response::HTTP_BAD_REQUEST);
         }
 
-        $cart = session('sales_cart', ['items' => []]);
+        // Validate stock when tracking is enabled or branch stock exists
+        $productBranch = \App\Models\ProductBranch::where('product_id', $product->id)
+            ->where('branch_id', $branchId)
+            ->first();
+
+        if ($product->track_stock || $productBranch) {
+            if (!$productBranch || $productBranch->stock_quantity < $request->quantity) {
+                $available = $productBranch?->stock_quantity ?? 0;
+                return MyHelper::responseJSON("Insufficient stock. Available: {$available}", Response::HTTP_BAD_REQUEST);
+            }
+        }
 
         // Check if product already in cart
         foreach ($cart['items'] as $item) {
