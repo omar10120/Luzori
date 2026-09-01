@@ -22,7 +22,7 @@ return [
     'packages'                          => 'الباقات',
     'products'                          => 'المنتجات',
     'employees'                         => 'الموظفين',
-    'memberships'                       => 'بطاقات العوضية',
+    'memberships'                       => 'بطاقات عضوية',
     'discounts'                         => 'الحسومات',
     'coupons'                           => 'الكوبونات',
     'wallets'                           => 'المحفظات',
