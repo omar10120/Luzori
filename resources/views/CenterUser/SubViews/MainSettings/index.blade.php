@@ -13,6 +13,11 @@
         </div>
     </div>
 
+    {{-- Determine arrow direction based on locale --}}
+    @php
+        $arrowClass = app()->getLocale() === 'ar' ? 'ti-arrow-left' : 'ti-arrow-right';
+    @endphp
+
     {{-- Settings Cards Grid --}}
     <div class="row g-4">
 
@@ -22,7 +27,7 @@
                 <div class="card-body d-flex flex-column p-4">
                     <div class="settings-icon-wrap mb-3">
                         <div class="settings-icon-box">
-                            <img src="{{ asset('assets/icons/contact_info.svg') }}" alt="icon" style="width: 25px; height: 25px; object-fit: contain;">    
+                            <img src="{{ asset('assets/icons/contact_info.svg') }}" alt="icon" style="width: 25px; height: 25px; object-fit: contain;">
                         </div>
                     </div>
                     <h5 class="settings-card-title mb-2">{{ __('locale.infos') ?? 'Contact Infos' }}</h5>
@@ -31,7 +36,7 @@
                     </p>
                     <div class="mt-auto">
                         <a href="{{ route('center_user.infos.index') }}" class="btn btn-outline-secondary settings-manage-btn">
-                            {{ __('general.manage') ?? 'Manage' }} &nbsp;<i class="ti ti-arrow-right"></i>
+                            {{ __('general.manage') ?? 'Manage' }} &nbsp;<i class="ti {{ $arrowClass }}"></i>
                         </a>
                     </div>
                 </div>
@@ -44,7 +49,7 @@
                 <div class="card-body d-flex flex-column p-4">
                     <div class="settings-icon-wrap mb-3">
                         <div class="settings-icon-box">
-                            <img src="{{ asset('assets/icons/center_deatils.svg') }}" alt="icon" style="width: 25px; height: 25px; object-fit: contain;">    
+                            <img src="{{ asset('assets/icons/center_deatils.svg') }}" alt="icon" style="width: 25px; height: 25px; object-fit: contain;">
                         </div>
                     </div>
                     <h5 class="settings-card-title mb-2">{{ __('locale.center_info') ?? 'Center Details' }}</h5>
@@ -53,7 +58,7 @@
                     </p>
                     <div class="mt-auto">
                         <a href="{{ route('center_user.center.index') }}" class="btn btn-outline-secondary settings-manage-btn">
-                            {{ __('general.manage') ?? 'Manage' }} &nbsp;<i class="ti ti-arrow-right"></i>
+                            {{ __('general.manage') ?? 'Manage' }} &nbsp;<i class="ti {{ $arrowClass }}"></i>
                         </a>
                     </div>
                 </div>
@@ -66,7 +71,7 @@
                 <div class="card-body d-flex flex-column p-4">
                     <div class="settings-icon-wrap mb-3">
                         <div class="settings-icon-box">
-                            <img src="{{ asset('assets/icons/pages.svg') }}" alt="icon" style="width: 25px; height: 25px; object-fit: contain;">    
+                            <img src="{{ asset('assets/icons/pages.svg') }}" alt="icon" style="width: 25px; height: 25px; object-fit: contain;">
                         </div>
                     </div>
                     <h5 class="settings-card-title mb-2">{{ __('locale.pages') ?? 'Pages' }}</h5>
@@ -75,7 +80,7 @@
                     </p>
                     <div class="mt-auto">
                         <a href="{{ route('center_user.pages.index') }}" class="btn btn-outline-secondary settings-manage-btn">
-                            {{ __('general.manage') ?? 'Manage' }} &nbsp;<i class="ti ti-arrow-right"></i>
+                            {{ __('general.manage') ?? 'Manage' }} &nbsp;<i class="ti {{ $arrowClass }}"></i>
                         </a>
                     </div>
                 </div>
@@ -88,7 +93,7 @@
                 <div class="card-body d-flex flex-column p-4">
                     <div class="settings-icon-wrap mb-3">
                         <div class="settings-icon-box">
-                            <img src="{{ asset('assets/icons/settings_new.svg') }}" alt="icon" style="width: 25px; height: 25px; object-fit: contain;">    
+                            <img src="{{ asset('assets/icons/settings_new.svg') }}" alt="icon" style="width: 25px; height: 25px; object-fit: contain;">
                         </div>
                     </div>
                     <h5 class="settings-card-title mb-2">{{ __('locale.settings') ?? 'Settings' }}</h5>
@@ -97,7 +102,7 @@
                     </p>
                     <div class="mt-auto">
                         <a href="{{ route('center_user.settings.index') }}" class="btn btn-outline-secondary settings-manage-btn">
-                            {{ __('general.manage') ?? 'Manage' }} &nbsp;<i class="ti ti-arrow-right"></i>
+                            {{ __('general.manage') ?? 'Manage' }} &nbsp;<i class="ti {{ $arrowClass }}"></i>
                         </a>
                     </div>
                 </div>
@@ -110,7 +115,7 @@
                 <div class="card-body d-flex flex-column p-4">
                     <div class="settings-icon-wrap mb-3">
                         <div class="settings-icon-box">
-                            <img src="{{ asset('assets/icons/invoice_settings.svg') }}" alt="icon" style="width: 25px; height: 25px; object-fit: contain;">    
+                            <img src="{{ asset('assets/icons/invoice_settings.svg') }}" alt="icon" style="width: 25px; height: 25px; object-fit: contain;">
                         </div>
                     </div>
                     <h5 class="settings-card-title mb-2">{{ __('locale.InvoiceSettings') ?? 'Invoice Settings' }}</h5>
@@ -119,7 +124,7 @@
                     </p>
                     <div class="mt-auto">
                         <a href="{{ route('center_user.invoice_settings.index') }}" class="btn btn-outline-secondary settings-manage-btn">
-                            {{ __('general.manage') ?? 'Manage' }} &nbsp;<i class="ti ti-arrow-right"></i>
+                            {{ __('general.manage') ?? 'Manage' }} &nbsp;<i class="ti {{ $arrowClass }}"></i>
                         </a>
                     </div>
                 </div>
@@ -132,6 +137,7 @@
 
 @section('page-style')
 <style>
+    /* Your existing styles (unchanged) */
     .settings-card {
         border-radius: 12px;
         transition: transform 0.2s ease, box-shadow 0.2s ease;
