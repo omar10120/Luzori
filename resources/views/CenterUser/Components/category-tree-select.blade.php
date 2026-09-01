@@ -35,6 +35,7 @@
                 border: 1px solid #dbdade;
                 box-shadow: 0 0.25rem 1rem rgba(165, 163, 174, 0.45);
             }
+            
         </style>
     @endpush
     @push('scripts')
