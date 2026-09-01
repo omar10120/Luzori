@@ -1,1 +1,39 @@
 table.dataTable.dt-checkboxes-select tbody tr,table.dataTable thead th.dt-checkboxes-select-all,table.dataTable tbody td.dt-checkboxes-cell{cursor:pointer}table.dataTable thead th.dt-checkboxes-select-all,table.dataTable tbody td.dt-checkboxes-cell{text-align:center}div.dataTables_wrapper span.select-info,div.dataTables_wrapper span.select-item{margin-left:.5em}@media screen and (max-width: 640px){div.dataTables_wrapper span.select-info,div.dataTables_wrapper span.select-item{margin-left:0;display:block}}
+
+
+
+
+
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Tajawal:wght@200;300;400;500;700;800;900&display=swap');
+
+:root {
+    --app-font: 'Cairo', sans-serif;
+}
+
+html,
+body,
+body *,
+table,
+th,
+td,
+tr,
+button,
+input,
+select,
+textarea,
+label,
+div,
+span,
+a,
+li,
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.dataTables_wrapper,
+.dataTables_wrapper * {
+    font-family: var(--app-font) !important;
+}
