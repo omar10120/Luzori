@@ -26,7 +26,7 @@ return [
     'image'                         => 'الصورة',
     'country'                       => 'البلد',
     'permission'                    => 'الصلاحيات',
-    'users'                         => 'المستخدمين',
+    'users'                         => 'العملاء',
     'title'                         => 'العنوان',
     'text'                          => 'النص',
     'city'                          => 'المدينة',
@@ -43,6 +43,7 @@ return [
     'is_top'                        => 'خدمة متميزة',
     'commission'                    => 'عمولة',
     'branch'                        => 'الفرع',
+    
     'services'                      => 'الخدمات',
     'day'                           => 'اليوم',
     'paid_services'                 => 'الخدمات المدفوعة',
@@ -201,6 +202,8 @@ return [
     'start_date'                     => 'تاريخ البداية',
     'end_date'                       => 'تاريخ النهاية',
     'expense_report'                 => 'تقرير المصروفات',
+    'expenses'                       => 'المصاريف',
+    
     'total_expenses'                 => 'إجمالي المصروفات',
     'daily_expense_rate'             => 'معدل المصروف اليومي',
     'total_income'                   => 'إجمالي الإيرادات',
@@ -404,5 +407,7 @@ return [
     'movement_transfer_out'           => 'تحويل خارج',
     'movement_transfer_in'            => 'تحويل داخل',
     'movement_initial'                => 'رصيد ابتدائي',
+    'employee'                        => 'الموظف',
+    
     
 ];

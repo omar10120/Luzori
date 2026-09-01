@@ -67,6 +67,17 @@ class ExpensesProviderDataTable extends DataTable
         $buttonClass = 'btn btn-sm mx-1 px-2';
         $addRoute = route('center_user.expenses.create');
 
+          // Translation strings for the filter bar
+        $branchLabel     = __('field.branch');
+        $dateLabel       = __('field.date');
+        $expenseLabel    = __('field.expense_name');
+        $allBranches     = __('general.all_branches') ?: 'All Branches';
+        $allExpenses     = __('general.all_expenses') ?: 'All Expenses';
+        $clearText       = __('general.clear') ?: 'Clear';
+        $selectDatePlaceholder = __('field.select_date') ?: 'Select date';
+
+
+
         return $this->builder()
             ->setTableId('expenses_providers-table')
             ->addTableClass('dt-responsive')
@@ -109,36 +120,36 @@ class ExpensesProviderDataTable extends DataTable
                 $(".dt-action-buttons").append("<a href=' . $addRoute . ' class=\"btn btn-primary btn-sm mx-1 px-2\">' . __('general.add_new') . '<i class=\"ti ti-plus ms-1\"></i></a>");
                 
                 // Add filter controls
-                var filterHtml = `
-                    <div class="card mb-3">
-                        <div class="card-body p-3">
-                            <div class="row g-2 align-items-end">
-                                <div class="col-md-3">
-                                    <label class="form-label small">Branch:</label>
-                                    <select id="branchFilter" class="form-select form-select-sm">
-                                        <option value="">All Branches</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label small">Date:</label>
-                                    <input type="date" id="dateFilter" class="form-control form-control-sm" placeholder="Select date">
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label small">Expense:</label>
-                                    <select id="nameFilter" class="form-select form-select-sm">
-                                        <option value="">All Expenses</option>
-                                        <option value="Salary">Salary</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-3">
-                                    <button type="button" id="clearFilters" class="btn btn-outline-secondary btn-sm">
-                                        <i class="ti ti-x"></i> Clear
-                                    </button>
-                                </div>
+                 var filterHtml = `
+                <div class="card mb-3">
+                    <div class="card-body p-3">
+                        <div class="row g-2 align-items-end">
+                            <div class="col-md-3">
+                                <label class="form-label small">' . $branchLabel . ':</label>
+                                <select id="branchFilter" class="form-select form-select-sm">
+                                    <option value="">' . $allBranches . '</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small">' . $dateLabel . ':</label>
+                                <input type="date" id="dateFilter" class="form-control form-control-sm" placeholder="' . $selectDatePlaceholder . '">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small">' . $expenseLabel . ':</label>
+                                <select id="nameFilter" class="form-select form-select-sm">
+                                    <option value="">' . $allExpenses . '</option>
+                                    <option value="Salary">Salary</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <button type="button" id="clearFilters" class="btn btn-outline-secondary btn-sm">
+                                    <i class="ti ti-x"></i> ' . $clearText . '
+                                </button>
                             </div>
                         </div>
                     </div>
-                `;
+                </div>
+            `;
                 $(".dt-action-buttons").before(filterHtml);
                 
                 // Add receipt modal

@@ -212,5 +212,7 @@ return [
     'loading' => 'Loading...',
     'select_products_to_add_to_order' => 'Select products to add to the order',
     'receive_products_in_stock_order' => 'Receive products in your stock order',
+    'none' => 'None',
+    'invoice_settings_desc' => 'Invoice Settings Desc',
     
 ];

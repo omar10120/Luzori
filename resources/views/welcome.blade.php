@@ -35,7 +35,7 @@
 
         @php
             $metaDescription = app()->getLocale() === 'ar'
-                ? 'هو برنامج/نظام يساعد في تنظيم وتشغيل الأنشطة اليومية داخل الصالونات أو مراكز التجميل والعناية او مراكز بشكل عام، بهدف تحسين الكفاءة، تقليل الأخطاء، وزيادة رضا العملاء وتسهيل العمل الإداري ورفع كفاءة إدارة الوقت والموارد و توفير بيانات دقيقة لدعم اتخاذ القرار .'
+                ? 'هو برنامج/نظام يساعد في تنظيم وتشغيل الأنشطة اليومية داخل المركزات أو مراكز التجميل والعناية او مراكز بشكل عام، بهدف تحسين الكفاءة، تقليل الأخطاء، وزيادة رضا العملاء وتسهيل العمل الإداري ورفع كفاءة إدارة الوقت والموارد و توفير بيانات دقيقة لدعم اتخاذ القرار .'
                 : 'A salon and beauty center management system to streamline daily operations, improve efficiency, reduce errors, delight customers, and provide accurate data for better decisions.';
             $ogImage = asset('assets/img/background.png');
         @endphp

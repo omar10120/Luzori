@@ -201,7 +201,7 @@ return [
         'company_id'            => 'الشركات',
         'categories'            => 'التصنيفات',
         'user_type'             => 'نوع المستخدم',
-        'users'                 => 'المستخدمين',
+        'users'                 => 'العملاء',
         'permissions'           => 'الصلاحيات',
         'code'                  => 'الكود',
         'link'                  => 'الرابط',
