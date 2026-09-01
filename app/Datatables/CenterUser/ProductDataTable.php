@@ -153,7 +153,7 @@ class ProductDataTable extends DataTable
     public function getDataTableLanguageUrl()
     {
         return app()->getLocale() == "ar" ?
-        "https://cdn.datatables.net/plug-ins/2.0.7/i18n/ar.json" :
+        asset('js/lang/ar_custom.json') :
         "https://cdn.datatables.net/plug-ins/2.0.7/i18n/en-GB.json";
     }
 
