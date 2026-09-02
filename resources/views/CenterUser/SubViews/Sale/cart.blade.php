@@ -1,41 +1,6 @@
 <style>
 
 
-
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Tajawal:wght@200;300;400;500;700;800;900&display=swap');
-
-:root {
-    --app-font: 'Cairo', sans-serif;
-}
-
-html,
-body,
-body *,
-table,
-th,
-td,
-tr,
-button,
-input,
-select,
-textarea,
-label,
-div,
-span,
-a,
-li,
-p,
-h1,
-h2,
-h3,
-h4,
-h5,
-h6,
-.dataTables_wrapper,
-.dataTables_wrapper * {
-    font-family: var(--app-font) !important;
-}
-
 </style>
 @extends('layouts/layoutMaster')
 
@@ -48,7 +13,9 @@ h6,
 @section('content')
     <div class="container-fluid">
         @include('CenterUser.Components.breadcrumbs')
-        
+        @php
+            $arrowClass = app()->getLocale() === 'ar' ? 'ti-arrow-left' : 'ti-arrow-right';
+        @endphp
 
         <!-- Customer Selection Card -->
         <div class="row mb-3">
@@ -244,7 +211,9 @@ h6,
                                                         </button>
                                                         <button type="button" class="btn btn-primary btn-next" id="booking-nextStep1" disabled>
                                                             <span class="align-middle d-sm-inline-block d-none me-sm-1">{{ __('field.next') }}</span>
-                                                            <i class="ti ti-arrow-right"></i>
+                                                            <!-- <i class="ti {{ $arrowClass }}"></i> -->
+                                                             <i class="ti {{ $arrowClass }}"></i>
+
                                                         </button>
                                                     </div>
                                                 </div>
@@ -259,7 +228,7 @@ h6,
                                                         </button>
                                                         <button type="button" class="btn btn-primary btn-next" id="booking-nextStep2">
                                                             <span class="align-middle d-sm-inline-block d-none me-sm-1">{{ __('field.next') }}</span>
-                                                            <i class="ti ti-arrow-right"></i>
+                                                            <i class="ti {{ $arrowClass }}"></i>
                                                         </button>
                                                     </div>
                                                 </div>
@@ -359,7 +328,7 @@ h6,
                                                         </button>
                                                         <button type="button" class="btn btn-primary btn-next" id="booking-nextStep3" disabled>
                                                             <span class="align-middle d-sm-inline-block d-none me-sm-1">{{ __('field.next') }}</span>
-                                                            <i class="ti ti-arrow-right"></i>
+                                                            <i class="ti {{ $arrowClass }}"></i>
                                                         </button>
                                                     </div>
                                                 </div>
@@ -615,7 +584,8 @@ h6,
                         </div>
 
                         <button type="button" class="btn btn-success w-100" id="continueToPayment" {{ (empty($cart['items']) || empty($cart['client_id'])) ? 'disabled' : '' }}>
-                            <i class="ti ti-arrow-right me-1"></i>
+                            <i class="ti {{ $arrowClass }} me-1"></i>
+                            
                             {{ __('field.continue_to_payment') }}
                         </button>
                     </div>
