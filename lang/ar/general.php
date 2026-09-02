@@ -212,7 +212,9 @@ return [
     'receive_products_in_stock_order' => 'استلام منتجات طلب المخزون',
     'none' => 'لا شيء',
     'invoice_settings_desc' => 'قسم تفاصيل الفاتورة',
-    'enter_the_salary_of_the_employee' => 'أدخل راتب الموظف'
+    'enter_the_salary_of_the_employee' => 'أدخل راتب الموظف',
+    'enter_the_visa_start_date_of_the_employee' => 'أدخل تاريخ بداية التأشيرة للموظف',
+    'enter_the_visa_end_date_of_the_employee'=> 'أدخل تاريخ نهاية التأشيرة للموظف'
 ];
 
 
