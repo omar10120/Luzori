@@ -243,7 +243,7 @@ h6,
                                                         <button type="button" class="btn btn-label-secondary btn-prev" disabled>
                                                               @if(app()->getLocale() === 'ar')
                                                                 
-                                                                <i class="ti {{ $arrowClassreverse }} mr-sm-1"></i>
+                                                                <i class="ti {{ $arrowClass }} mr-sm-1"></i>
                                                             @else
                                                                 <i class="ti {{ $arrowClass }} me-sm-1"></i>
                                                                 
@@ -257,7 +257,7 @@ h6,
                                                                 
                                                                 <i class="ti {{ $arrowClassreverse }} "></i>
                                                             @else
-                                                                <i class="ti {{ $arrowClass }} "></i>
+                                                                <i class="ti {{ $arrowClassreverse }} "></i>
                                                                 
                                                             @endif
 
@@ -272,7 +272,7 @@ h6,
                                                         <button type="button" class="btn btn-label-secondary btn-prev" id="booking-prevStep2">
                                                               @if(app()->getLocale() === 'ar')
                                                                 
-                                                                <i class="ti {{ $arrowClassreverse }} mr-sm-1"></i>
+                                                                <i class="ti {{ $arrowClass }} mr-sm-1"></i>
                                                             @else
                                                                 <i class="ti {{ $arrowClass }} me-sm-1"></i>
                                                                 
@@ -286,7 +286,7 @@ h6,
                                                                 
                                                                 <i class="ti {{ $arrowClassreverse }} "></i>
                                                             @else
-                                                                <i class="ti {{ $arrowClass }} "></i>
+                                                                <i class="ti {{ $arrowClassreverse }} "></i>
                                                                 
                                                             @endif
 
