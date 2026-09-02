@@ -334,7 +334,8 @@ h6,
                                                     <div id="booking-membershipsElement"></div>
                                                     <div id="booking-packagesElement"></div>
                                                     <div id="booking-servicesTable"></div>
-                                                    <div class="row mb-2" id="booking-multiple-payments-container">
+                                                   <!-- Toggle container – give it a unique ID or remove it -->
+                                                    <div class="row mb-2" id="booking-multiple-toggle-wrapper">
                                                         <div class="col-md-12">
                                                             <div class="form-check form-switch mb-2">
                                                                 <input class="form-check-input" type="checkbox" id="booking-multiple_payments_toggle">
@@ -356,7 +357,7 @@ h6,
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <div class="row mb-4" id="booking-multiple-payments-container" style="display: none;">
+                                                    <div class="row mb-4" id="booking-multiple-payments-fields" style="display: none;">
                                                         <div class="col-md-12">
                                                             <div class="d-flex justify-content-between align-items-center mb-2">
                                                                 <label class="form-label mb-0">{{ __('field.payment_method') }} & {{ __('field.amount') }} <span class="text-danger">*</span></label>
@@ -1899,7 +1900,9 @@ h6,
                 if ($(this).is(':checked')) {
                     $('#booking-payment-method-container').hide();
                     $('#booking-multiple-payments-container').show();
+                     $('#booking-multiple-payments-fields').show();   
                     $('#booking-payment_type').prop('required', false);
+                    
                     
                     // Reset multiple payments list with one row pre-filled with total
                     $('#booking-multiple-payments-list').empty();
@@ -1911,6 +1914,7 @@ h6,
                     $('#booking-payment-method-container').show();
                     $('#booking-multiple-payments-container').hide();
                     $('#booking-payment_type').prop('required', true);
+                    $('#booking-multiple-payments-fields').hide();
                 }
                 validateBookingPayments();
             });
@@ -2033,6 +2037,7 @@ h6,
                 const packagePaymentType = getSelectedPackagePaymentType();
                 const $multipleToggle = $('#booking-multiple_payments_toggle');
                 const $multipleToggleRow = $multipleToggle.closest('.row');
+                
 
                 if (hasPackageSelected) {
                     // Package payment behavior: hide manual payment controls and lock to package type when available.
@@ -2043,6 +2048,7 @@ h6,
                     if (packagePaymentType) {
                         $('#booking-payment_type').val(packagePaymentType);
                     }
+                    $('#booking-multiple-payments-fields').hide();
                     $('#booking-payment_type').prop('required', false);
                 } else {
                     $multipleToggleRow.show();
@@ -2050,10 +2056,13 @@ h6,
                         $('#booking-payment-method-container').hide();
                         $('#booking-multiple-payments-container').show();
                         $('#booking-payment_type').prop('required', false);
+                        $('#booking-multiple-payments-fields').show();
                     } else {
+                        
                         $('#booking-payment-method-container').show();
                         $('#booking-multiple-payments-container').hide();
                         $('#booking-payment_type').prop('required', true);
+                        $('#booking-multiple-payments-fields').hide();
                     }
                 }
 
