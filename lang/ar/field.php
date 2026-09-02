@@ -247,7 +247,7 @@ return [
     'cart_is_empty'                  => 'البطاقة فارغة',
     'coupons'                        => 'الكوبونات',
     'wallets'                        => 'المحفظات',
-    'add_to_cart'                    => 'أضف الى البطاقة',
+    'add_to_cart'                    => 'السلة الى البطاقة',
     'client'                         => 'العميل',
     'tax'                            => 'الضريبة',
     'tip_will_be_for_this_worker'    => 'النسبة المدفوعة لهذا العامل',
@@ -409,6 +409,8 @@ return [
     'movement_initial'                => 'رصيد ابتدائي',
     'employee'                        => 'الموظف',
     'cart'                            => 'السلة',
+    'excess_amount'                   => 'المبلغ الزائد',
+    
     
     
 ];
