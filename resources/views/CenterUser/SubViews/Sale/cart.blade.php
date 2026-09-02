@@ -245,7 +245,7 @@ h6,
                                                                 
                                                                 <i class="ti {{ $arrowClassreverse }} mr-sm-1"></i>
                                                             @else
-                                                                <i class="ti {{ $arrowClassreverse }} me-sm-1"></i>
+                                                                <i class="ti {{ $arrowClass }} me-sm-1"></i>
                                                                 
                                                             @endif
                                                             <span class="align-middle d-sm-inline-block d-none">{{ __('field.previous') }}</span>
@@ -257,7 +257,7 @@ h6,
                                                                 
                                                                 <i class="ti {{ $arrowClassreverse }} "></i>
                                                             @else
-                                                                <i class="ti {{ $arrowClassreverse }} "></i>
+                                                                <i class="ti {{ $arrowClass }} "></i>
                                                                 
                                                             @endif
 
@@ -274,7 +274,7 @@ h6,
                                                                 
                                                                 <i class="ti {{ $arrowClassreverse }} mr-sm-1"></i>
                                                             @else
-                                                                <i class="ti {{ $arrowClassreverse }} me-sm-1"></i>
+                                                                <i class="ti {{ $arrowClass }} me-sm-1"></i>
                                                                 
                                                             @endif
                                                          
@@ -286,7 +286,7 @@ h6,
                                                                 
                                                                 <i class="ti {{ $arrowClassreverse }} "></i>
                                                             @else
-                                                                <i class="ti {{ $arrowClassreverse }} "></i>
+                                                                <i class="ti {{ $arrowClass }} "></i>
                                                                 
                                                             @endif
 
@@ -388,7 +388,7 @@ h6,
                                                                 
                                                                 <i class="ti {{ $arrowClassreverse }} mr-sm-1"></i>
                                                             @else
-                                                                <i class="ti {{ $arrowClassreverse }} me-sm-1"></i>
+                                                                <i class="ti {{ $arrowClass }} me-sm-1"></i>
                                                                 
                                                             @endif
                                                             <span class="align-middle d-sm-inline-block d-none">{{ __('field.previous') }}</span>
@@ -399,7 +399,7 @@ h6,
                                                                 
                                                                 <i class="ti {{ $arrowClassreverse }} "></i>
                                                             @else
-                                                                <i class="ti {{ $arrowClassreverse }} "></i>
+                                                                <i class="ti {{ $arrowClass }} "></i>
                                                                 
                                                             @endif
                                                         </button>
