@@ -432,4 +432,5 @@ return [
     'movement_transfer_out'           => 'Transfer out',
     'movement_transfer_in'            => 'Transfer in',
     'movement_initial'                => 'Initial',
+    'cart'                            => 'Cart',
 ];

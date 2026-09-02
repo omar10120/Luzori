@@ -408,6 +408,7 @@ return [
     'movement_transfer_in'            => 'تحويل داخل',
     'movement_initial'                => 'رصيد ابتدائي',
     'employee'                        => 'الموظف',
+    'cart'                            => 'السلة',
     
     
 ];
