@@ -410,7 +410,8 @@ return [
     'employee'                        => 'الموظف',
     'cart'                            => 'السلة',
     'excess_amount'                   => 'المبلغ الزائد',
-    'optional'                        => 'اختياري'
+    'optional'                        => 'اختياري',
+    'remaining_amount'                => 'قيمة متبقية'
     
     
     

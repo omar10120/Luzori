@@ -434,5 +434,6 @@ return [
     'movement_initial'                => 'Initial',
     'cart'                            => 'Cart',
     'excess_amount'                   => 'Excess amount',
-    'optional'                        => 'Optional'
+    'optional'                        => 'Optional',
+    'remaining_amount'                => 'Remaining amount'
 ];
