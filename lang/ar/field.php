@@ -333,7 +333,7 @@ return [
     'admin_notes'                     => 'ملاحظات الادمن',
     'wallet_balance'                  => 'رصيد المحفظة',
     'updated_at'                      => 'تاريخ التحديث',
-    'multiple_payment_methods'        => 'دفعات متفرقة',
+    'multiple_payment_methods'        => 'تجزئة الدفعات',
     'total_to_pay'                    => 'المبلغ المستحق',
     'payment_methods'                 => 'طريقة الدفع', 
     'please_fill_all_required_fields' => 'يرجى ملء جميع الحقول المطلوبة (مجموع الدفعات يجب ان يساوي الفاتورة)',
