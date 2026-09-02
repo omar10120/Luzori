@@ -32,6 +32,8 @@ h6,
 .dataTables_wrapper * {
     font-family: var(--app-font) !important;
 }
+
+
 </style>
 @extends('layouts/layoutMaster')
 
@@ -1603,7 +1605,7 @@ h6,
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-md-4">
                                 <div class="mb-1">
                                     <label class="form-label">{{ __('field.commission') }}</label>`;
                         
