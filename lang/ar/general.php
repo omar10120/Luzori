@@ -212,6 +212,7 @@ return [
     'receive_products_in_stock_order' => 'استلام منتجات طلب المخزون',
     'none' => 'لا شيء',
     'invoice_settings_desc' => 'قسم تفاصيل الفاتورة',
+    'enter_the_salary_of_the_employee' => 'أدخل راتب الموظف'
 ];
 
 

@@ -214,5 +214,6 @@ return [
     'receive_products_in_stock_order' => 'Receive products in your stock order',
     'none' => 'None',
     'invoice_settings_desc' => 'Invoice Settings Desc',
+    'enter_the_salary_of_the_employee' => 'Enter the salary of the employee'
     
 ];
