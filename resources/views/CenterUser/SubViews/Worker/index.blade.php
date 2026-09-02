@@ -79,7 +79,7 @@
                             </div>
                             <div class="col-md-12 mb-2">
                                 <div class="mb-1">
-                                    <label for="salary" class="form-label">{{ __('field.salary') }}  <span class="text-danger">*</span></label>
+                                    <label for="salary" class="form-label">{{ __('field.salary') }}  
                                     <small class="text-muted">{{__('general.enter_the_salary_of_the_employee')}}</small>
                                     <input type="number" id="salary" class="form-control" name="salary"
                                         placeholder="{{ __('field.salary') }}" value="{{ $item ? $item->salary : null }}" />

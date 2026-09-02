@@ -52,7 +52,7 @@ class WorkerRequest extends FormRequest
                 'is_professional' => 'required|boolean',
                 'country_code' => 'required|string',
                 'phone' => 'required|numeric|digits_between:6,10|unique:workers,phone',
-                'salary' => 'required|numeric',
+                'salary' => 'nullable|numeric',
                 'visa_start_date' => 'required|date',
                 'visa_end_date' => 'required|date',
                 'image' => 'nullable|image|max:4096|mimes:jpg,jpeg,png,gif|mimetypes:image/jpeg,image/png',
