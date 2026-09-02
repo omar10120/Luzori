@@ -15,6 +15,7 @@
         @include('CenterUser.Components.breadcrumbs')
         @php
             $arrowClass = app()->getLocale() === 'ar' ? 'ti-arrow-left' : 'ti-arrow-right';
+            $langis = app()->getLocale() === 'ar' ? 'ar' : 'en';
         @endphp
 
         <!-- Customer Selection Card -->
@@ -584,9 +585,13 @@
                         </div>
 
                         <button type="button" class="btn btn-success w-100" id="continueToPayment" {{ (empty($cart['items']) || empty($cart['client_id'])) ? 'disabled' : '' }}>
-                            <i class="ti {{ $arrowClass }} me-1"></i>
-                            
-                            {{ __('field.continue_to_payment') }}
+                               @if(app()->getLocale() === 'ar')
+                                    {{ __('field.continue_to_payment') }}
+                                    <i class="ti {{ $arrowClass }} mr-1"></i>
+                                @else
+                                    <i class="ti {{ $arrowClass }} me-1"></i>
+                                    {{ __('field.continue_to_payment') }}
+                                @endif
                         </button>
                     </div>
                 </div>
