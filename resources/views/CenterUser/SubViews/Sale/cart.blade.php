@@ -48,6 +48,7 @@ h6,
         @include('CenterUser.Components.breadcrumbs')
         @php
             $arrowClass = app()->getLocale() === 'ar' ? 'ti-arrow-left' : 'ti-arrow-right';
+            $arrowClassreverse = app()->getLocale() === 'ar' ? 'ti-arrow-right' : 'ti-arrow-left';
             $langis = app()->getLocale() === 'ar' ? 'ar' : 'en';
         @endphp
 
@@ -240,13 +241,25 @@ h6,
                                                     </div>
                                                     <div class="col-12 d-flex justify-content-between">
                                                         <button type="button" class="btn btn-label-secondary btn-prev" disabled>
-                                                            <i class="ti ti-arrow-left me-sm-1"></i>
+                                                              @if(app()->getLocale() === 'ar')
+                                                                
+                                                                <i class="ti {{ $arrowClassreverse }} mr-sm-1"></i>
+                                                            @else
+                                                                <i class="ti {{ $arrowClassreverse }} me-sm-1"></i>
+                                                                
+                                                            @endif
                                                             <span class="align-middle d-sm-inline-block d-none">{{ __('field.previous') }}</span>
                                                         </button>
                                                         <button type="button" class="btn btn-primary btn-next" id="booking-nextStep1" disabled>
                                                             <span class="align-middle d-sm-inline-block d-none me-sm-1">{{ __('field.next') }}</span>
-                                                            <!-- <i class="ti {{ $arrowClass }}"></i> -->
-                                                             <i class="ti {{ $arrowClass }}"></i>
+                                                    
+                                                              @if(app()->getLocale() === 'ar')
+                                                                
+                                                                <i class="ti {{ $arrowClassreverse }} "></i>
+                                                            @else
+                                                                <i class="ti {{ $arrowClassreverse }} "></i>
+                                                                
+                                                            @endif
 
                                                         </button>
                                                     </div>
@@ -257,12 +270,26 @@ h6,
                                                     <div id="booking-service-container"></div>
                                                     <div class="col-12 mt-4 d-flex justify-content-between">
                                                         <button type="button" class="btn btn-label-secondary btn-prev" id="booking-prevStep2">
-                                                            <i class="ti ti-arrow-left me-sm-1"></i>
+                                                              @if(app()->getLocale() === 'ar')
+                                                                
+                                                                <i class="ti {{ $arrowClassreverse }} mr-sm-1"></i>
+                                                            @else
+                                                                <i class="ti {{ $arrowClassreverse }} me-sm-1"></i>
+                                                                
+                                                            @endif
+                                                         
                                                             <span class="align-middle d-sm-inline-block d-none">{{ __('field.previous') }}</span>
                                                         </button>
                                                         <button type="button" class="btn btn-primary btn-next" id="booking-nextStep2">
                                                             <span class="align-middle d-sm-inline-block d-none me-sm-1">{{ __('field.next') }}</span>
-                                                            <i class="ti {{ $arrowClass }}"></i>
+                                                             @if(app()->getLocale() === 'ar')
+                                                                
+                                                                <i class="ti {{ $arrowClassreverse }} "></i>
+                                                            @else
+                                                                <i class="ti {{ $arrowClassreverse }} "></i>
+                                                                
+                                                            @endif
+
                                                         </button>
                                                     </div>
                                                 </div>
@@ -357,12 +384,24 @@ h6,
                                                     </div>
                                                     <div class="col-12 mt-4 d-flex justify-content-between">
                                                         <button type="button" class="btn btn-label-secondary btn-prev" id="booking-prevStep3">
-                                                            <i class="ti ti-arrow-left me-sm-1"></i>
+                                                              @if(app()->getLocale() === 'ar')
+                                                                
+                                                                <i class="ti {{ $arrowClassreverse }} mr-sm-1"></i>
+                                                            @else
+                                                                <i class="ti {{ $arrowClassreverse }} me-sm-1"></i>
+                                                                
+                                                            @endif
                                                             <span class="align-middle d-sm-inline-block d-none">{{ __('field.previous') }}</span>
                                                         </button>
                                                         <button type="button" class="btn btn-primary btn-next" id="booking-nextStep3" disabled>
                                                             <span class="align-middle d-sm-inline-block d-none me-sm-1">{{ __('field.next') }}</span>
-                                                            <i class="ti {{ $arrowClass }}"></i>
+                                                             @if(app()->getLocale() === 'ar')
+                                                                
+                                                                <i class="ti {{ $arrowClassreverse }} "></i>
+                                                            @else
+                                                                <i class="ti {{ $arrowClassreverse }} "></i>
+                                                                
+                                                            @endif
                                                         </button>
                                                     </div>
                                                 </div>
@@ -372,7 +411,13 @@ h6,
                                                     <div id="booking-review-content"></div>
                                                     <div class="col-12 mt-4 d-flex justify-content-between">
                                                         <button type="button" class="btn btn-label-secondary btn-prev" id="booking-prevStep4">
-                                                            <i class="ti ti-arrow-left me-sm-1"></i>
+                                                              @if(app()->getLocale() === 'ar')
+                                                                
+                                                                <i class="ti {{ $arrowClass }} mr-sm-1"></i>
+                                                            @else
+                                                                <i class="ti {{ $arrowClass }} me-sm-1"></i>
+                                                                
+                                                            @endif
                                                             <span class="align-middle d-sm-inline-block d-none">{{ __('field.previous') }}</span>
                                                         </button>
                                                         <button type="button" class="btn btn-success" id="addBookingToCart">
