@@ -95,7 +95,7 @@
                             </div>
                             <div class="col-md-12 mb-2">
                                 <div class="mb-1">
-                                    <label for="visa_end_date" class="form-label">{{ __('field.visa_end_date') }}  </label>
+                                    <label for="visa_end_date" class="form-label">{{ __('field.visa_end_date') }}   </label>
                                     <small class="text-muted">{{__('general.enter_the_visa_end_date_of_the_employee')}}</small>
                                     <input type="date" id="visa_end_date" class="form-control" name="visa_end_date"
                                         placeholder="{{ __('field.visa_end_date') }}" value="{{ $item ? $item->visa_end_date : null }}" />
