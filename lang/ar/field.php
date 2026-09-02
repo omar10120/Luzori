@@ -247,7 +247,7 @@ return [
     'cart_is_empty'                  => 'البطاقة فارغة',
     'coupons'                        => 'الكوبونات',
     'wallets'                        => 'المحفظات',
-    'add_to_cart'                    => 'السلة الى البطاقة',
+    'add_to_cart'                    => 'أضف الى السلة',
     'client'                         => 'العميل',
     'tax'                            => 'الضريبة',
     'tip_will_be_for_this_worker'    => 'النسبة المدفوعة لهذا العامل',
