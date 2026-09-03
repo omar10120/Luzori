@@ -314,7 +314,7 @@ return [
     'active'                          => 'نشط',
     'rate'                            => 'التقييم',
     'inactive'                        => 'غير نشط',
-    'utilities'                       => 'Utilities',
+    'utilities'                       => 'مصاريف محلية',
     'no_supplier'                     => 'بدون مورد',
     'local'                           => 'محلي',
     'no_payee'                        => 'بدون مدين',
