@@ -11,6 +11,7 @@ use App\Models\BuyProduct;
 use App\Models\UserWallet;
 use Illuminate\Support\Facades\DB;
 use niklasravnsborg\LaravelPdf\Facades\Pdf;
+use Illuminate\Support\Facades\Log;
 
 class CommissionReportController extends Controller
 {
@@ -161,6 +162,7 @@ class CommissionReportController extends Controller
                 return $pdf->stream('commission_report.pdf');
             }
         }
+        Log::info($template);
         return view('CenterUser.SubViews.Report.commission_report', compact(
             'years',
             'template',
