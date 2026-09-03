@@ -161,8 +161,11 @@ class CommissionReportController extends Controller
                 ), [], $options);
                 return $pdf->stream('commission_report.pdf');
             }
-        }
-        Log::info($template);
+        }Log::info('Workers in report', [
+            'count' => $users->count(),
+            'ids'   => $users->pluck('id')->toArray(),
+            'branch_id' => $branch_id ?? 'all'
+        ]);
         return view('CenterUser.SubViews.Report.commission_report', compact(
             'years',
             'template',
