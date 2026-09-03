@@ -88,9 +88,9 @@ class DailyReportController extends Controller
             }
 
             $temp_users = Worker::query();
-            // if (get_user_role() != 1) {
+            if (get_user_role() != 1) {
                 $temp_users->where('branch_id', auth('center_user')->user()->branch_id);
-            // }
+            }
 
             if ($selected_branch) {
                 $temp_users->where('branch_id', $selected_branch);
