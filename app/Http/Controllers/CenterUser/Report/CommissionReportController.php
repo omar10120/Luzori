@@ -66,6 +66,10 @@ class CommissionReportController extends Controller
                 $temp_report->where('branch_id', $request->get('branch_id'));
             }
             $report = $temp_report->get();
+            Log::info('Bookings fetched', [
+                'count' => $report->count(),
+                'booking_ids' => $report->pluck('id')->toArray()
+            ]);
             if (!$report->isEmpty()) {
                 foreach ($report as $value) {
                     $booking_date_str = $value->booking_date->format('Y-m-d');
