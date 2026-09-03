@@ -20,10 +20,12 @@ class CommissionReportController extends Controller
         $result = [];
 
         if (!empty($request->year)) {
-            $temp_users = Worker::query();
-            if (get_user_role() == 1 || $selected_branch) {
-                $branch_id = $selected_branch ? $selected_branch : auth('center_api')->user()->branch_id;
-                $temp_users->where('branch_id', $branch_id);
+            $temp_users = Worker::query()->orderBy('id');
+            // Role 1 + empty branch = ALL workers (do not fall back to null auth.branch_id)
+            if (!empty($selected_branch)) {
+                $temp_users->where('branch_id', $selected_branch);
+            } elseif (get_user_role() != 1) {
+                $temp_users->where('branch_id', auth('center_api')->user()->branch_id);
             }
             $users = $temp_users->get();
 
@@ -41,27 +43,38 @@ class CommissionReportController extends Controller
                 $result[$date]["total"] = 0;
             }
 
-            $temp_report = Booking::whereRaw('YEAR(booking_date)="' . $request->year . '"')
-                ->whereRaw('MONTH(booking_date)="' . $request->month . '"')
-                ->with('details');
+            $temp_report = Booking::whereYear('booking_date', $request->year)
+                ->whereMonth('booking_date', $request->month)
+                ->whereHas('details', function ($query) {
+                    $query->where('status', 'confirmed');
+                })
+                ->with(['details' => function ($query) {
+                    $query->where('status', 'confirmed');
+                }]);
             if (!empty($request->branch_id)) {
                 $temp_report->where('branch_id', $request->branch_id);
+            } elseif (get_user_role() != 1) {
+                $temp_report->where('branch_id', auth('center_api')->user()->branch_id);
             }
 
             $report = $temp_report->get();
             if (!$report->isEmpty()) {
                 foreach ($report as $value) {
                     $booking_date_str = $value->booking_date->format('Y-m-d');
-                    if (isset($result[$booking_date_str])) {
-                        if (!$value->details->isEmpty()) {
-                            foreach ($value->details as $detail) {
-                                if (isset($result[$booking_date_str][$detail->worker_id])) {
-                                    $result[$booking_date_str][$detail->worker_id] += $detail->commission;
-                                    $users_with_totals[$detail->worker_id] += $detail->commission;
-                                    $result[$booking_date_str]["total"] += $detail->commission;
-                                }
-                            }
+                    if (!isset($result[$booking_date_str]) || $value->details->isEmpty()) {
+                        continue;
+                    }
+                    foreach ($value->details as $detail) {
+                        if (!isset($result[$booking_date_str][$detail->worker_id])) {
+                            continue;
                         }
+                        $commissionAmount = $this->resolveCommissionAmount($detail);
+                        if ($commissionAmount == 0) {
+                            continue;
+                        }
+                        $result[$booking_date_str][$detail->worker_id] += $commissionAmount;
+                        $users_with_totals[$detail->worker_id] += $commissionAmount;
+                        $result[$booking_date_str]["total"] += $commissionAmount;
                     }
                 }
             }
@@ -111,20 +124,38 @@ class CommissionReportController extends Controller
                 }
             }
 
-            $firstusers = $temp_users->skip(0)->take(16)->get();
-            $secondusers = $temp_users->skip(16)->take(33)->get();
-            $restusers = $temp_users->skip(33)->get();
+            $firstusers = $users->slice(0, 16)->values();
+            $secondusers = $users->slice(16, 16)->values();
+            $restusers = $users->slice(32)->values();
         }
 
         $data = [
             'result' => $result,
-            'firstusers' => $firstusers,
-            'secondusers' => $secondusers,
-            'restusers' => $restusers,
-            'users_with_totals' => $users_with_totals
+            'firstusers' => $firstusers ?? collect(),
+            'secondusers' => $secondusers ?? collect(),
+            'restusers' => $restusers ?? collect(),
+            'users_with_totals' => $users_with_totals ?? []
         ];
 
         $data = CommissionReportResource::make($data);
         return MyHelper::responseJSON(__('api.doneSuccessfully'), Response::HTTP_OK, $data);
+    }
+
+    private function resolveCommissionAmount($detail): float
+    {
+        if ($detail->commission === null || $detail->commission === '') {
+            return 0;
+        }
+
+        $commission = floatval($detail->commission);
+        if ($commission == 0) {
+            return 0;
+        }
+
+        if ($detail->commission_type === 'fixed') {
+            return $commission;
+        }
+
+        return (floatval($detail->price) * $commission) / 100;
     }
 }
