@@ -60,19 +60,25 @@ class DailyReportController extends Controller
 
         if (!empty($date)) {
             $date = date('Y-m-d', strtotime($date));
-            $temp_report = Booking::where('booking_date', $date)
+            // Use whereDate so timezone-cast booking_date (Asia/Dubai) still matches Y-m-d
+            $temp_report = Booking::whereDate('booking_date', $date)
                 ->whereHas('details', function ($query) {
                     $query->where('status', 'confirmed');
                 })
                 ->with(['details' => function ($query) {
                     $query->where('status', 'confirmed');
                 }]);
-            // $temp_report = Booking::whereRaw('booking_date="' . $date . '"')->with('details');
-            Log::info($temp_report->get());
+
             if ($branch_id_filter) {
                 $temp_report->where('branch_id', $branch_id_filter);
             }
             $report = $temp_report->get();
+            Log::info('daily_report bookings', [
+                'date' => $date,
+                'branch_id_filter' => $branch_id_filter,
+                'count' => $report->count(),
+                'worker_ids' => $report->flatMap(fn ($b) => $b->details->pluck('worker_id'))->unique()->values()->all(),
+            ]);
 
             $payments_type = get_payment_types();
             $payments_type_list = [];
@@ -87,7 +93,7 @@ class DailyReportController extends Controller
                 $payments_with_prices['wallet'] = [];
             }
 
-            $temp_users = Worker::query();
+            $temp_users = Worker::query()->orderBy('id');
             if (get_user_role() != 1) {
                 $temp_users->where('branch_id', auth('center_user')->user()->branch_id);
             }
@@ -96,26 +102,15 @@ class DailyReportController extends Controller
                 $temp_users->where('branch_id', $selected_branch);
             }
 
+            // Load once, then slice — do NOT reuse skip()/take() on the same builder
+            // (previous code left LIMIT 33 on restusers and dropped later workers from $result)
             $users = $temp_users->get();
-            $firstusers = $temp_users->skip(0)->take(16)->get();
-            $secondusers = $temp_users->skip(16)->take(33)->get();
-            $restusers = $temp_users->skip(33)->get();
+            $firstusers = $users->slice(0, 16)->values();
+            $secondusers = $users->slice(16, 16)->values();
+            $restusers = $users->slice(32)->values();
 
-            foreach ($firstusers as $user) {
-                $result[$user->id] = $payments_type_list;
-                $users_with_prices[$user->id] = [];
-                $users_with_commission[$user->id] = [];
-                $users_with_tips[$user->id] = [];
-            }
-
-            foreach ($secondusers as $user) {
-                $result[$user->id] = $payments_type_list;
-                $users_with_prices[$user->id] = [];
-                $users_with_commission[$user->id] = [];
-                $users_with_tips[$user->id] = [];
-            }
-
-            foreach ($restusers as $user) {
+            // Initialize buckets for ALL workers so bookings are never silently skipped
+            foreach ($users as $user) {
                 $result[$user->id] = $payments_type_list;
                 $users_with_prices[$user->id] = [];
                 $users_with_commission[$user->id] = [];
@@ -276,6 +271,10 @@ class DailyReportController extends Controller
                                         }
                                     }
                                 } else {
+                                    if (!isset($result[$detail->worker_id][$payment_type_select])) {
+                                        $result[$detail->worker_id][$payment_type_select] = 0;
+                                        $payments_with_prices[$payment_type_select] = $payments_with_prices[$payment_type_select] ?? [];
+                                    }
                                     $result[$detail->worker_id][$payment_type_select] += $price;
                                     $payments_with_prices[$payment_type_select][$detail->worker_id][] = $price - $free_price;
                                 }
