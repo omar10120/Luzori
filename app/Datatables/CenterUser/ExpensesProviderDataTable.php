@@ -38,7 +38,7 @@ class ExpensesProviderDataTable extends DataTable
                 return $row->end_date ? \Carbon\Carbon::parse($row->end_date)->format('Y-m-d') : '';
             })
             ->editColumn('amount', function ($row) {
-                return number_format($row->amount, 0) . ' SAR';
+                return number_format($row->amount, 0) . ' AED';
             })
             ->editColumn('date', function ($row) {
                 return $row->date ? \Carbon\Carbon::parse($row->date)->format('Y-m-d') : '';
