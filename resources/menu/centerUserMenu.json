@@ -216,17 +216,7 @@
             "VIEW_PRODUCTS"
           ]
         },
-        {
-          "url": "center_user/stocktakes/index",
-          "name": "stocktakes",
-          "external_icon": "stock",
-          "slug": [
-            "stocktakes"
-          ],
-          "permissions": [
-            "VIEW_STOCKTAKES"
-          ]
-        },
+   
         {
           "url": "center_user/stockorders/index",
           "name": "stockorders",
