@@ -128,10 +128,10 @@ h6,
                             <div class="row mb-3">
                                 <div class="col-md-12">
                                     <label for="tip" class="form-label">
-                                        {{ __('field.tip') }} ({{ __('field.between_0_200') }})
+                                        {{ __('field.tip') }} ({{ __('field.between_0_800') }})
                                     </label>
                                     <input type="number" class="form-control" id="tip" name="tip" 
-                                        value="{{ $cart['tip'] ?? 0 }}" min="0" max="200" step="0.01">
+                                        value="{{ $cart['tip'] ?? 0 }}" min="0" max="800" step="0.01">
                                 </div>
                             </div>
 

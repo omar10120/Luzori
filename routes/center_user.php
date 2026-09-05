@@ -355,6 +355,8 @@ Route::group(['middleware' => 'auth_center_user:center_user'], function () {
             Route::post('remove-from-cart', 'removeFromCart')->name('remove-from-cart');
             Route::get('payment', 'payment')->name('payment');
             Route::post('process-payment', 'processPayment')->name('process-payment');
+            Route::get('tip/{id}', 'tip')->name('tip');
+            Route::post('tip/{id}', 'storeTip')->name('tip.store');
             Route::get('show/{id}', 'show')->name('show');
             Route::get('print/{id}', 'print')->name('print');
             Route::post('request-otp', 'requestOtp')->name('request-otp');

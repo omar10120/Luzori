@@ -47,6 +47,11 @@
                 <i class="ti ti-pin"></i>{{ __('general.edit') }}
             </a>
         @endisset
+        @isset($options['add_tip'])
+            <a class="dropdown-item" href="{{ route($route . '.tip', ['id' => $id]) }}">
+                <i class="ti ti-coin"></i>{{ __('field.add_tip') }}
+            </a>
+        @endisset
         @isset($options['sale_otp_delete'])
             <a class="dropdown-item" href="#"
                 onclick="saleOtpStart('delete', {{ $id }})">

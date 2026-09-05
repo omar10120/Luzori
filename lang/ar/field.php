@@ -112,7 +112,7 @@ return [
     'date_time'                     => 'الوقت والتاريخ',
     'created_by'                    => 'انشئت عن طريق',
     'booking_date_time'             => 'تاريخ ووقت الحجز',
-    'between_0_200'                 => 'بين 0 و 200',
+    'between_0_800'                 => 'بين 0 و 800',
     'country_code'                  => 'رمز الدولة',
     'birthday_date'                 => 'تاريخ الميلاد',
     'mobile_number'                 => 'رقم الهاتف المحمول',
@@ -411,7 +411,11 @@ return [
     'cart'                            => 'السلة',
     'excess_amount'                   => 'المبلغ الزائد',
     'optional'                        => 'اختياري',
-    'remaining_amount'                => 'قيمة متبقية'
+    'remaining_amount'                => 'قيمة متبقية',
+    'add_tip'                         => 'إضافة بقشيش',
+    'tip_required'                    => 'يرجى إدخال بقشيش أكبر من 0',
+    'tip_already_added'               => 'تم إضافة البقشيش مسبقاً لهذه المبيعة',
+    'no_bookings_for_tip'             => 'لا توجد حجوزات لإضافة بقشيش لهذه المبيعة',
     
     
     

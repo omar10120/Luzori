@@ -112,7 +112,7 @@ return [
     'date_time'                     => 'Date&Time',
     'created_by'                    => 'Created By',
     'booking_date_time'             => 'Booking Date and Time',
-    'between_0_200'                 => 'Between 0 and 200',
+    'between_0_800'                 => 'Between 0 and 800',
     'country_code'                  => 'Country Code',
     'birthday_date'                 => 'Birthday Date',
     'mobile_number'                 => 'Mobile Number',
@@ -435,5 +435,9 @@ return [
     'cart'                            => 'Cart',
     'excess_amount'                   => 'Excess amount',
     'optional'                        => 'Optional',
-    'remaining_amount'                => 'Remaining amount'
+    'remaining_amount'                => 'Remaining amount',
+    'add_tip'                         => 'Add Tip',
+    'tip_required'                    => 'Please enter a tip greater than 0',
+    'tip_already_added'               => 'Tip already added for this sale',
+    'no_bookings_for_tip'             => 'This sale has no bookings to add a tip',
 ];

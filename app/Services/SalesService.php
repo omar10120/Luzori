@@ -971,5 +971,85 @@ class SalesService
 
         return $userWallet;
     }
+
+    /**
+     * Add tip to an existing sale that has bookings and no tip yet.
+     */
+    public function addTipToSale(Sale $sale, float $tip, ?int $workerId = null): Sale
+    {
+        if ($tip <= 0) {
+            throw new \Exception(__('field.tip_required'));
+        }
+
+        if ($tip > 200) {
+            throw new \Exception(__('field.between_0_200'));
+        }
+
+        $sale->loadMissing(['bookings.details.worker', 'bookings.details.service.translation']);
+
+        if ($sale->bookings->isEmpty()) {
+            throw new \Exception(__('field.no_bookings_for_tip'));
+        }
+
+        $existingTip = (float) ($sale->tip ?? 0);
+        $detailTipSum = $sale->bookings
+            ->flatMap(fn ($b) => $b->details)
+            ->sum(fn ($d) => (float) ($d->tip ?? 0));
+
+        if ($existingTip > 0 || $detailTipSum > 0) {
+            throw new \Exception(__('field.tip_already_added'));
+        }
+
+        return DB::transaction(function () use ($sale, $tip, $workerId) {
+            $details = $sale->bookings->flatMap(fn ($b) => $b->details)->values();
+            $targetDetail = null;
+
+            if ($workerId) {
+                $targetDetail = $details->firstWhere('worker_id', $workerId);
+            }
+
+            if (!$targetDetail) {
+                $targetDetail = $details->first();
+            }
+
+            if (!$targetDetail) {
+                throw new \Exception(__('field.no_bookings_for_tip'));
+            }
+
+            $targetDetail->tip = $tip;
+            $targetDetail->save();
+
+            $sale->tip = $tip;
+            $sale->worker_id = $workerId ?: $targetDetail->worker_id;
+            $sale->total = (float) $sale->subtotal + (float) $sale->tax + $tip;
+            $sale->save();
+
+            return $sale->fresh(['worker', 'client', 'bookings.details']);
+        });
+    }
+
+    /**
+     * Whether a sale can still receive a tip (has booking, tip empty).
+     */
+    public function saleCanAddTip(Sale $sale): bool
+    {
+        if ((float) ($sale->tip ?? 0) > 0) {
+            return false;
+        }
+
+        if (!$sale->relationLoaded('bookings')) {
+            $sale->load(['bookings.details']);
+        }
+
+        if ($sale->bookings->isEmpty()) {
+            return false;
+        }
+
+        $detailTipSum = $sale->bookings
+            ->flatMap(fn ($b) => $b->details)
+            ->sum(fn ($d) => (float) ($d->tip ?? 0));
+
+        return $detailTipSum <= 0;
+    }
 }
 

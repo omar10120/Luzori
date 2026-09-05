@@ -90,6 +90,16 @@ class SalesDataTable extends DataTable
                 if ($canDelete) {
                     $options['sale_otp_delete'] = true;
                 }
+
+                $hasBooking = $item->bookings->isNotEmpty()
+                    || $item->saleItems->contains(fn ($si) => $si->item_type === 'booking');
+                $hasTip = (float) ($item->tip ?? 0) > 0
+                    || $item->bookings->flatMap->details->sum(fn ($d) => (float) ($d->tip ?? 0)) > 0;
+
+                if ($hasBooking && !$hasTip) {
+                    $options['add_tip'] = true;
+                }
+
                 $html = view()->make('_partials.center_actions', compact('id', 'route', 'options', 'model'))->render();
                 return $html;
             })

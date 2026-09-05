@@ -501,6 +501,104 @@ class SalesController extends Controller
     }
 
     /**
+     * Show add-tip form for an existing sale (after booking).
+     */
+    public function tip($id)
+    {
+        $can = 'UPDATE_' . Str::upper($this->plural);
+        if (!auth('center_user')->user()->can($can, 'center_api')
+            && !auth('center_user')->user()->can('CREATE_' . Str::upper($this->plural), 'center_api')
+            && !auth('center_user')->user()->can('SHOW_' . Str::upper($this->plural), 'center_api')) {
+            return abort(403);
+        }
+
+        $sale = Sale::with([
+            'client.media',
+            'branch.translation',
+            'worker',
+            'bookings.details.service.translation',
+            'bookings.details.worker',
+            'saleItems',
+        ])->findOrFail($id);
+
+        if (!$this->salesService->saleCanAddTip($sale)) {
+            return redirect()
+                ->route($this->indexRoute)
+                ->with('error', __('field.tip_already_added'));
+        }
+
+        $branchId = $sale->branch_id ?? auth('center_user')->user()->branch_id ?? null;
+        $workers = Worker::when($branchId, fn ($q) => $q->where('branch_id', $branchId))
+            ->orderBy('name')
+            ->get(['id', 'name', 'phone', 'is_center_user']);
+
+        $bookingEmployees = [];
+        $preferredWorkerId = null;
+        foreach ($sale->bookings as $booking) {
+            foreach ($booking->details as $detail) {
+                $name = $detail->worker?->name;
+                if ($name && !in_array($name, $bookingEmployees, true)) {
+                    $bookingEmployees[] = $name;
+                }
+                if (!$preferredWorkerId && $detail->worker_id) {
+                    $preferredWorkerId = $detail->worker_id;
+                }
+            }
+        }
+
+        $centerUser = auth('center_user')->user();
+        $menu = __('locale.' . $this->plural);
+        $menu_link = route($this->indexRoute);
+        $title = __('field.add_tip');
+
+        return view('CenterUser.SubViews.Sale.tip', compact(
+            'sale',
+            'workers',
+            'bookingEmployees',
+            'preferredWorkerId',
+            'centerUser',
+            'title',
+            'menu',
+            'menu_link'
+        ));
+    }
+
+    /**
+     * Store tip on an existing sale.
+     */
+    public function storeTip(Request $request, $id)
+    {
+        $can = 'UPDATE_' . Str::upper($this->plural);
+        if (!auth('center_user')->user()->can($can, 'center_api')
+            && !auth('center_user')->user()->can('CREATE_' . Str::upper($this->plural), 'center_api')) {
+            return abort(403);
+        }
+
+        $request->validate([
+            'worker_id' => 'nullable|exists:workers,id',
+            'tip' => 'required|numeric|min:0.01|max:200',
+        ]);
+
+        $sale = Sale::with(['bookings.details'])->findOrFail($id);
+
+        try {
+            $this->salesService->addTipToSale(
+                $sale,
+                (float) $request->tip,
+                $request->filled('worker_id') ? (int) $request->worker_id : null
+            );
+
+            return MyHelper::responseJSON(
+                __('admin.operation_done_successfully'),
+                Response::HTTP_OK,
+                route($this->indexRoute)
+            );
+        } catch (\Exception $e) {
+            return MyHelper::responseJSON($e->getMessage(), Response::HTTP_BAD_REQUEST);
+        }
+    }
+
+    /**
      * Show sale details
      */
     public function show($id)
