@@ -8,7 +8,7 @@
 
 html,
 body,
-body *,
+
 table,
 th,
 td,
@@ -29,8 +29,7 @@ h3,
 h4,
 h5,
 h6,
-.dataTables_wrapper,
-.dataTables_wrapper * {
+.dataTables_wrapper {
     font-family: var(--app-font) !important;
 }
 </style>
