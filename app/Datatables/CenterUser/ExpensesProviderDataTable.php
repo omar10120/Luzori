@@ -2,6 +2,7 @@
 namespace App\Datatables\CenterUser;
 
 use App\Enums\DeleteActionEnum;
+use App\Models\Branch;
 use App\Models\Expense;
 use Illuminate\Database\Eloquent\Builder as QueryBuilder;
 use Yajra\DataTables\EloquentDataTable;
@@ -75,6 +76,8 @@ class ExpensesProviderDataTable extends DataTable
         $allExpenses     = __('general.all_expenses') ?: 'All Expenses';
         $clearText       = __('general.clear') ?: 'Clear';
         $selectDatePlaceholder = __('field.select_date') ?: 'Select date';
+        $branches = Branch::query()->orderBy('id')->get();
+        $expenseNames = Expense::query()->distinct()->orderBy('expense_name')->pluck('expense_name');
 
 
 
@@ -82,7 +85,11 @@ class ExpensesProviderDataTable extends DataTable
             ->setTableId('expenses_providers-table')
             ->addTableClass('dt-responsive')
             ->columns($this->getColumns())
-            ->minifiedAjax()
+            ->minifiedAjax('', null, [
+                'branch_id' => 'function () { return $("#branchFilter").val(); }',
+                'date' => 'function () { return $("#dateFilter").val(); }',
+                'expense_name' => 'function () { return $("#nameFilter").val(); }',
+            ])
             ->orderBy(0, 'desc')
             ->responsive(true)
             ->dom('
@@ -128,6 +135,9 @@ class ExpensesProviderDataTable extends DataTable
                                 <label class="form-label small">' . $branchLabel . ':</label>
                                 <select id="branchFilter" class="form-select form-select-sm">
                                     <option value="">' . $allBranches . '</option>
+                                    ' . $branches->map(function ($branch) {
+                                        return '<option value="' . $branch->id . '">' . e($branch->name) . '</option>';
+                                    })->implode('') . '
                                 </select>
                             </div>
                             <div class="col-md-3">
@@ -138,7 +148,9 @@ class ExpensesProviderDataTable extends DataTable
                                 <label class="form-label small">' . $expenseLabel . ':</label>
                                 <select id="nameFilter" class="form-select form-select-sm">
                                     <option value="">' . $allExpenses . '</option>
-                                    <option value="Salary">Salary</option>
+                                    ' . $expenseNames->map(function ($expenseName) {
+                                        return '<option value="' . e($expenseName) . '">' . e($expenseName) . '</option>';
+                                    })->implode('') . '
                                 </select>
                             </div>
                             <div class="col-md-3">
@@ -173,78 +185,12 @@ class ExpensesProviderDataTable extends DataTable
                 `;
                 $("body").append(modalHtml);
                 
-                // Populate filter dropdowns from table data
-                var table = $("#expenses_providers-table").DataTable();
-                
-                // Wait for data to load, then populate filters
-                setTimeout(function() {
-                    // Populate branch filter
-                    var branchData = table.column(4).data().unique().sort();
-                    var branchSelect = $("#branchFilter");
-                    branchData.each(function(branch) {
-                        if (branch && branch.trim() !== "") {
-                            branchSelect.append("<option value=\"" + branch + "\">" + branch + "</option>");
-                        }
-                    });
-                    
-                    // Populate expense name filter
-                    var expenseData = table.column(1).data().unique().sort();
-                    var expenseSelect = $("#nameFilter");
-                    expenseData.each(function(expense) {
-                        if (expense && expense.trim() !== "") {
-                            expenseSelect.append("<option value=\"" + expense + "\">" + expense + "</option>");
-                        }
-                    });
-                }, 1000);
-                
                 // Store the table reference
                 var expensesTable = $("#expenses_providers-table").DataTable();
                 
-                // Clear any existing search functions
-                $.fn.dataTable.ext.search = [];
-                
-                // Custom search function for this table only
-                var customSearch = function(settings, data, dataIndex) {
-                    // Only apply to expenses table
-                    if (settings.nTable.id !== "expenses_providers-table") {
-                        return true;
-                    }
-                    
-                    var branchFilter = $("#branchFilter").val();
-                    var dateFilter = $("#dateFilter").val();
-                    var nameFilter = $("#nameFilter").val();
-                    
-                    // Debug logging
-                    console.log("Custom search - Branch:", branchFilter, "Date:", dateFilter, "Name:", nameFilter);
-                    console.log("Data row:", data);
-                    
-                    // Check if any filters are active
-                    if (!branchFilter && !dateFilter && !nameFilter) {
-                        return true;
-                    }
-                    
-                    // data[5] is branch.name column
-                    
-                    var branchMatch = !branchFilter || (data[4] && data[4].toLowerCase().includes(branchFilter.toLowerCase()));
-                    // data[3] is date column
-                    var dateMatch = !dateFilter || (data[3] && data[3].includes(dateFilter));
-                    // data[1] is expense_name column
-                    var nameMatch = !nameFilter || (data[1] && data[1].toLowerCase().includes(nameFilter.toLowerCase()));
-                    
-                    console.log("Matches - Branch:", branchMatch, "Date:", dateMatch, "Name:", nameMatch);
-                    console.log("Final result:", branchMatch && dateMatch && nameMatch);
-                    
-                    return branchMatch && dateMatch && nameMatch;
-                };
-                
-                // Add the custom search function
-                $.fn.dataTable.ext.search.push(customSearch);
-                
                 // Filter change handlers
                 $("#branchFilter, #dateFilter, #nameFilter").on("change", function() {
-                    console.log("Filter changed, redrawing table...");
-                    console.log("Branch:", $("#branchFilter").val(), "Date:", $("#dateFilter").val(), "Name:", $("#nameFilter").val());
-                    expensesTable.draw();
+                    expensesTable.ajax.reload();
                 });
                 
                 // Receipt modal functionality
@@ -262,7 +208,7 @@ class ExpensesProviderDataTable extends DataTable
                     $("#nameFilter").val("");
                     
                     // Redraw table to apply cleared filters
-                    expensesTable.draw();
+                    expensesTable.ajax.reload();
                     
                     // Show success message
                     $(this).html("<i class=\"ti ti-check\"></i> Cleared!").removeClass("btn-outline-secondary").addClass("btn-success");
@@ -302,7 +248,18 @@ class ExpensesProviderDataTable extends DataTable
 
     public function query(Expense $model): QueryBuilder
     {
-        return $model->newQuery()->with(['branch', 'supplier'])->orderBy('created_at', 'desc');
+        return $model->newQuery()
+            ->with(['branch', 'supplier'])
+            ->when(request('branch_id'), function (QueryBuilder $query, $branchId) {
+                $query->where('branch_id', $branchId);
+            })
+            ->when(request('date'), function (QueryBuilder $query, $date) {
+                $query->whereDate('date', $date);
+            })
+            ->when(request('expense_name'), function (QueryBuilder $query, $expenseName) {
+                $query->where('expense_name', $expenseName);
+            })
+            ->orderBy('created_at', 'desc');
     }
 
     protected function filename(): string
