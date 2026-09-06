@@ -92,7 +92,7 @@
     }
     
     .image-preview {
-        width: 50%;
+        width: 30%;
         max-width: 100%;
         height: auto;
         max-height: 200px;
