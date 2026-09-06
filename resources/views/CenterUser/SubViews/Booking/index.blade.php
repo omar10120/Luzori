@@ -62,15 +62,15 @@
             width: 100%;
         }
         
-        .image-preview {
-            width: 100%;
-            max-width: 100%;
-            height: auto;
-            max-height: 300px;
-            object-fit: cover;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
+        /* .image-preview {
+            width: 50%;
+        max-width: 100%;
+        height: auto;
+        max-height: 200px;
+        object-fit: contain;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        } */
         
         .image-remove-btn {
             position: absolute;

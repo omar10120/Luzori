@@ -92,13 +92,13 @@
     }
     
     .image-preview {
-        width: 100%;
+        width: 50%;
         max-width: 100%;
         height: auto;
-        max-height: 400px;
-        object-fit: cover;
+        max-height: 200px;
+        object-fit: contain;
         border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
     
     .image-remove-btn {
