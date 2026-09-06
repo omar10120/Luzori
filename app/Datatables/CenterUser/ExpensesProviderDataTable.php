@@ -179,7 +179,7 @@ class ExpensesProviderDataTable extends DataTable
                 // Wait for data to load, then populate filters
                 setTimeout(function() {
                     // Populate branch filter
-                    var branchData = table.column(5).data().unique().sort();
+                    var branchData = table.column(4).data().unique().sort();
                     var branchSelect = $("#branchFilter");
                     branchData.each(function(branch) {
                         if (branch && branch.trim() !== "") {
@@ -224,7 +224,8 @@ class ExpensesProviderDataTable extends DataTable
                     }
                     
                     // data[5] is branch.name column
-                    var branchMatch = !branchFilter || (data[5] && data[5].toLowerCase().includes(branchFilter.toLowerCase()));
+                    
+                    var branchMatch = !branchFilter || (data[4] && data[4].toLowerCase().includes(branchFilter.toLowerCase()));
                     // data[3] is date column
                     var dateMatch = !dateFilter || (data[3] && data[3].includes(dateFilter));
                     // data[1] is expense_name column
