@@ -41,7 +41,13 @@
                     </div>
                     <div class="col-md-3">
                         <div class="text-muted small">{{ __('locale.branches') }}</div>
-                        <div class="fw-semibold">{{ $order->branch->name ?? '-' }}</div>
+                        <div class="fw-semibold">
+                            @forelse($order->branches as $branch)
+                                <span class="badge bg-label-primary me-1">{{ $branch->name }}</span>
+                            @empty
+                                -
+                            @endforelse
+                        </div>
                     </div>
                 </div>
 

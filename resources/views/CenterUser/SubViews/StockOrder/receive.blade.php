@@ -10,7 +10,12 @@
             <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <div>
                     <h2 class="mb-1">{{ __('general.receive_products_in_stock_order') }}</h2>
-                    <p class="text-muted mb-0">{{ $order->order_number }} · {{ $order->deliver_from }}</p>
+                    <p class="text-muted mb-0">
+                        {{ $order->order_number }} · {{ $order->deliver_from }}
+                        @if($order->branches->isNotEmpty())
+                            · {{ $order->branches->pluck('name')->filter()->implode(', ') }}
+                        @endif
+                    </p>
                 </div>
                 <div class="d-flex gap-2">
                     <a href="{{ route('center_user.stockorders.index') }}" class="btn btn-outline-secondary">{{ __('general.close') }}</a>

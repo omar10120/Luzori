@@ -7,6 +7,7 @@ use App\Traits\UpdatedAtTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -16,7 +17,6 @@ class StockOrder extends Model
 
     protected $fillable = [
         'order_number',
-        'branch_id',
         'product_supplier_id',
         'deliver_from',
         'expected_at',
@@ -32,9 +32,10 @@ class StockOrder extends Model
         'total_cost' => 'decimal:2',
     ];
 
-    public function branch(): BelongsTo
+    public function branches(): BelongsToMany
     {
-        return $this->belongsTo(Branch::class);
+        return $this->belongsToMany(Branch::class, 'stock_order_branches')
+            ->withTimestamps();
     }
 
     public function supplier(): BelongsTo

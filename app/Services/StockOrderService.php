@@ -14,6 +14,11 @@ class StockOrderService
     {
         return DB::transaction(function () use ($data, $createdBy) {
             $supplier = ProductSupplier::findOrFail($data['product_supplier_id']);
+            $branchIds = array_values(array_unique(array_map('intval', $data['branch_ids'] ?? [])));
+
+            if (empty($branchIds)) {
+                throw new Exception('At least one branch is required');
+            }
 
             $totalCost = 0;
             $lineItems = [];
@@ -34,7 +39,6 @@ class StockOrderService
 
             $order = StockOrder::create([
                 'order_number' => StockOrder::nextOrderNumber(),
-                'branch_id' => (int) $data['branch_id'],
                 'product_supplier_id' => (int) $data['product_supplier_id'],
                 'deliver_from' => $supplier->name,
                 'expected_at' => $data['expected_at'] ?? null,
@@ -43,11 +47,13 @@ class StockOrderService
                 'created_by' => $createdBy,
             ]);
 
+            $order->branches()->sync($branchIds);
+
             foreach ($lineItems as $line) {
                 $order->items()->create($line);
             }
 
-            return $order->load(['items.product.translation', 'branch.translation', 'supplier']);
+            return $order->load(['items.product.translation', 'branches.translation', 'supplier']);
         });
     }
 
@@ -60,7 +66,12 @@ class StockOrderService
         return DB::transaction(function () use ($order, $itemsData) {
             $totalCost = 0;
             $itemsById = collect($itemsData)->keyBy('id');
-            $order->loadMissing(['items.product.primarySku']);
+            $order->loadMissing(['items.product.primarySku', 'branches']);
+
+            $branchIds = $order->branches->pluck('id')->map(fn ($id) => (int) $id)->all();
+            if (empty($branchIds)) {
+                throw new Exception('Stock order has no branches');
+            }
 
             foreach ($order->items as $item) {
                 if (!$itemsById->has($item->id)) {
@@ -79,11 +90,15 @@ class StockOrderService
                     'line_total' => $lineTotal,
                 ]);
 
-                if ($receivedQty > 0) {
+                if ($receivedQty <= 0) {
+                    continue;
+                }
+
+                foreach ($branchIds as $branchId) {
                     $productBranch = ProductBranch::withTrashed()->firstOrCreate(
                         [
                             'product_id' => $item->product_id,
-                            'branch_id' => $order->branch_id,
+                            'branch_id' => $branchId,
                         ],
                         ['stock_quantity' => 0]
                     );
@@ -96,7 +111,7 @@ class StockOrderService
 
                     app(InventoryMovementService::class)->record(
                         (int) $item->product_id,
-                        (int) $order->branch_id,
+                        $branchId,
                         (int) $receivedQty,
                         \App\Models\InventoryMovement::TYPE_STOCK_ORDER,
                         $order,
@@ -112,7 +127,7 @@ class StockOrderService
                 'total_cost' => round($totalCost, 2),
             ]);
 
-            return $order->fresh(['items.product.translation', 'branch.translation', 'supplier']);
+            return $order->fresh(['items.product.translation', 'branches.translation', 'supplier']);
         });
     }
 }

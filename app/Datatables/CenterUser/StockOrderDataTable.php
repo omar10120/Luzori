@@ -55,7 +55,8 @@ class StockOrderDataTable extends DataTable
                 return e($row->deliver_from ?: ($row->supplier->name ?? '-'));
             })
             ->editColumn('branch_name', function ($row) {
-                return e($row->branch->name ?? '-');
+                $names = $row->branches->map(fn ($b) => $b->name)->filter()->values();
+                return $names->isEmpty() ? '-' : e($names->implode(', '));
             })
             ->editColumn('total_cost', function ($row) {
                 return number_format((float) $row->total_cost, 2) . ' ' . get_currency();
@@ -79,7 +80,7 @@ class StockOrderDataTable extends DataTable
     {
         return $model->query()
             ->withTrashed()
-            ->with(['supplier', 'branch.translation'])
+            ->with(['supplier', 'branches.translation'])
             ->orderBy('stock_orders.id', 'DESC');
     }
 

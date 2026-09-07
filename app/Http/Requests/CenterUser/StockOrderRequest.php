@@ -14,7 +14,8 @@ class StockOrderRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'branch_id' => 'required|exists:branches,id',
+            'branch_ids' => 'required|array|min:1',
+            'branch_ids.*' => 'required|exists:branches,id',
             'product_supplier_id' => 'required|exists:product_suppliers,id',
             'expected_at' => 'nullable|date',
             'items' => 'required|array|min:1',

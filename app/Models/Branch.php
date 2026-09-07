@@ -45,4 +45,10 @@ class Branch extends Model
     {
         return $this->hasMany(ProductBranch::class);
     }
+
+    public function stockOrders(): BelongsToMany
+    {
+        return $this->belongsToMany(StockOrder::class, 'stock_order_branches')
+            ->withTimestamps();
+    }
 }

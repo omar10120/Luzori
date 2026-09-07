@@ -416,6 +416,12 @@ return [
     'tip_required'                    => 'يرجى إدخال بقشيش أكبر من 0',
     'tip_already_added'               => 'تم إضافة البقشيش مسبقاً لهذه المبيعة',
     'no_bookings_for_tip'             => 'لا توجد حجوزات لإضافة بقشيش لهذه المبيعة',
+    'stock_order_flow_hint'           => 'اختر المورد ← المنتجات ← فرع أو أكثر',
+    'select_all_branches'             => 'تحديد كل الفروع',
+    'select_one_or_more_branches'     => 'اختر فرعاً واحداً أو أكثر كوجهة',
+    'select_supplier_first'           => 'اختر المورد أولاً',
+    'please_complete_order_fields'    => 'يرجى اختيار المورد وفرع واحد على الأقل والمنتجات',
+    'stock_order_branches'            => 'فروع الطلب',
     
     
     

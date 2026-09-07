@@ -52,13 +52,15 @@ class StockOrderController extends Controller
         $title = __('general.add') . ' ' . __('locale.stockorder');
         $requestUrl = route('center_user.stockorders.updateOrCreate');
         $branches = Branch::with('translation')->get();
+        $suppliers = ProductSupplier::query()->orderBy('name')->get(['id', 'name']);
 
         return view('CenterUser.SubViews.StockOrder.create', compact(
             'title',
             'menu',
             'menu_link',
             'requestUrl',
-            'branches'
+            'branches',
+            'suppliers'
         ));
     }
 
@@ -92,19 +94,7 @@ class StockOrderController extends Controller
             return abort(403);
         }
 
-        $branchId = (int) $request->get('branch_id');
-        if (!$branchId) {
-            return response()->json(['data' => []]);
-        }
-
         $suppliers = ProductSupplier::query()
-            ->whereIn('id', function ($sub) use ($branchId) {
-                $sub->select('product_product_supplier.product_supplier_id')
-                    ->from('product_product_supplier')
-                    ->join('product_branches', 'product_branches.product_id', '=', 'product_product_supplier.product_id')
-                    ->where('product_branches.branch_id', $branchId)
-                    ->whereNull('product_branches.deleted_at');
-            })
             ->orderBy('name')
             ->get(['id', 'name']);
 
@@ -123,11 +113,11 @@ class StockOrderController extends Controller
             return abort(403);
         }
 
-        $branchId = (int) $request->get('branch_id');
         $supplierId = (int) $request->get('supplier_id');
         $search = trim((string) $request->get('q', ''));
+        $branchIds = array_filter(array_map('intval', (array) $request->get('branch_ids', [])));
 
-        if (!$branchId || !$supplierId) {
+        if (!$supplierId) {
             return response()->json(['data' => []]);
         }
 
@@ -135,10 +125,13 @@ class StockOrderController extends Controller
             'translation',
             'category',
             'primarySku',
-            'productBranches' => fn ($q) => $q->where('branch_id', $branchId),
+            'productBranches',
         ])
-            ->whereHas('productBranches', fn ($q) => $q->where('branch_id', $branchId))
             ->whereHas('productSuppliers', fn ($q) => $q->where('product_suppliers.id', $supplierId));
+
+        if (!empty($branchIds)) {
+            $query->whereHas('productBranches', fn ($q) => $q->whereIn('branch_id', $branchIds));
+        }
 
         if ($search !== '') {
             $like = '%' . mb_strtolower($search) . '%';
@@ -155,8 +148,11 @@ class StockOrderController extends Controller
 
         $products = $query->orderBy('id')->limit(100)->get();
 
-        $data = $products->map(function ($product) {
-            $branchStock = $product->productBranches->first();
+        $data = $products->map(function ($product) use ($branchIds) {
+            $branches = $product->productBranches;
+            if (!empty($branchIds)) {
+                $branches = $branches->whereIn('branch_id', $branchIds);
+            }
 
             return [
                 'id' => $product->id,
@@ -164,7 +160,7 @@ class StockOrderController extends Controller
                 'barcode' => $product->barcode,
                 'sku' => $product->primarySku->sku ?? null,
                 'category' => $product->category->name ?? '-',
-                'stock_quantity' => (float) ($branchStock->stock_quantity ?? 0),
+                'stock_quantity' => (float) $branches->sum('stock_quantity'),
                 'supply_price' => (float) ($product->supply_price ?? 0),
                 'image' => method_exists($product, 'getFirstMediaUrl') ? ($product->getFirstMediaUrl('image') ?: null) : null,
             ];
@@ -183,7 +179,7 @@ class StockOrderController extends Controller
         $order = StockOrder::with([
             'items.product.translation',
             'items.product.primarySku',
-            'branch.translation',
+            'branches.translation',
             'supplier',
         ])->findOrFail($id);
 
@@ -212,7 +208,7 @@ class StockOrderController extends Controller
             return abort(403);
         }
 
-        $order = StockOrder::with('items')->findOrFail($id);
+        $order = StockOrder::with(['items', 'branches'])->findOrFail($id);
 
         try {
             $order = $this->stockOrderService->receive($order, $request->validated()['items']);
@@ -237,7 +233,7 @@ class StockOrderController extends Controller
         $order = StockOrder::with([
             'items.product.translation',
             'items.product.primarySku',
-            'branch.translation',
+            'branches.translation',
             'supplier',
             'createdBy',
         ])->withTrashed()->findOrFail($id);

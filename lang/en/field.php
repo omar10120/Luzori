@@ -440,4 +440,10 @@ return [
     'tip_required'                    => 'Please enter a tip greater than 0',
     'tip_already_added'               => 'Tip already added for this sale',
     'no_bookings_for_tip'             => 'This sale has no bookings to add a tip',
+    'stock_order_flow_hint'           => 'Select supplier → products → one or more branches',
+    'select_all_branches'             => 'Select all branches',
+    'select_one_or_more_branches'     => 'Select one or more destination branches',
+    'select_supplier_first'           => 'Select a supplier first',
+    'please_complete_order_fields'    => 'Please select supplier, at least one branch, and products',
+    'stock_order_branches'            => 'Stock Order Branches',
 ];

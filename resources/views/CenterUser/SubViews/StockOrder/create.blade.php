@@ -14,7 +14,7 @@
             <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <div>
                     <h2 class="mb-1">{{ $title }}</h2>
-                    <p class="text-muted mb-0">{{ __('general.select_products_to_add_to_order') }}</p>
+                    <p class="text-muted mb-0">{{ __('field.stock_order_flow_hint') }}</p>
                 </div>
                 <div class="d-flex gap-2">
                     <a href="{{ route('center_user.stockorders.index') }}" class="btn btn-outline-secondary">{{ __('general.close') }}</a>
@@ -27,25 +27,44 @@
                 </div>
 
                 <div class="row g-3 mb-4">
-                    <div class="col-md-4">
-                        <label class="form-label">{{ __('locale.branches') }} <span class="text-danger">*</span></label>
-                        <select id="branch_id" class="form-control select2" required>
-                            <option value="">{{ __('field.select_branch') }}</option>
-                            @foreach ($branches as $branch)
-                                <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                    <div class="col-md-6">
+                        <label class="form-label">{{ __('locale.suppliers') }} <span class="text-danger">*</span></label>
+                        <select id="product_supplier_id" class="form-control select2" required>
+                            <option value="">{{ __('field.select_supplier') }}</option>
+                            @foreach ($suppliers as $supplier)
+                                <option value="{{ $supplier->id }}">{{ $supplier->name }}</option>
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-4">
-                        <label class="form-label">{{ __('locale.suppliers') }} <span class="text-danger">*</span></label>
-                        <select id="product_supplier_id" class="form-control select2" disabled required>
-                            <option value="">{{ __('field.select_supplier') }}</option>
-                        </select>
-                    </div>
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                         <label class="form-label">{{ __('field.expected') }}</label>
                         <input type="date" id="expected_at" class="form-control">
                     </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label d-block">{{ __('locale.branches') }} <span class="text-danger">*</span></label>
+                    <div class="border rounded p-3" id="branches-checkbox-list">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="check-all-branches">
+                            <label class="form-check-label fw-semibold" for="check-all-branches">{{ __('field.select_all_branches') }}</label>
+                        </div>
+                        <hr class="my-2">
+                        <div class="row g-2">
+                            @forelse ($branches as $branch)
+                                <div class="col-md-4 col-sm-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input branch-check" type="checkbox"
+                                               id="branch_{{ $branch->id }}" value="{{ $branch->id }}">
+                                        <label class="form-check-label" for="branch_{{ $branch->id }}">{{ $branch->name }}</label>
+                                    </div>
+                                </div>
+                            @empty
+                                <div class="col-12 text-muted">{{ __('field.no_data_found') }}</div>
+                            @endforelse
+                        </div>
+                    </div>
+                    <small class="text-muted">{{ __('field.select_one_or_more_branches') }}</small>
                 </div>
 
                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -133,10 +152,9 @@
 <script>
 $(function () {
     const currency = @json(get_currency());
-    const suppliersUrl = @json(route('center_user.stockorders.suppliers'));
     const productsUrl = @json(route('center_user.stockorders.products'));
     const saveUrl = @json($requestUrl);
-    let selectedItems = {}; // product_id => {id,name,barcode,sku,order_qty,unit_cost}
+    let selectedItems = {};
     let pickerProducts = [];
     let searchTimer = null;
 
@@ -148,6 +166,17 @@ $(function () {
 
     function formatMoney(amount) {
         return Number(amount || 0).toFixed(2) + ' ' + currency;
+    }
+
+    function selectedBranchIds() {
+        return $('.branch-check:checked').map(function () {
+            return Number($(this).val());
+        }).get();
+    }
+
+    function syncAddProductsBtn() {
+        const ready = !!$('#product_supplier_id').val();
+        $('#btnOpenProducts').prop('disabled', !ready);
     }
 
     function recalcTotals() {
@@ -197,39 +226,25 @@ $(function () {
         recalcTotals();
     }
 
-    function loadSuppliers(branchId) {
-        const $supplier = $('#product_supplier_id');
-        $supplier.prop('disabled', true).html(`<option value="">{{ __('field.select_supplier') }}</option>`).trigger('change');
-        $('#btnOpenProducts').prop('disabled', true);
-        selectedItems = {};
-        renderOrderItems();
-
-        if (!branchId) return;
-
-        $.getJSON(suppliersUrl, { branch_id: branchId })
-            .done(function (res) {
-                const rows = res.data || [];
-                rows.forEach(function (s) {
-                    $supplier.append(`<option value="${s.id}">${escapeHtml(s.name)}</option>`);
-                });
-                $supplier.prop('disabled', false).trigger('change');
-            });
-    }
-
     function loadPickerProducts() {
-        const branchId = $('#branch_id').val();
         const supplierId = $('#product_supplier_id').val();
         const q = $('#product-search').val();
+        const branchIds = selectedBranchIds();
         const $body = $('#picker-products-body');
 
-        if (!branchId || !supplierId) {
-            $body.html(`<tr><td colspan="5" class="text-center text-muted">{{ __('field.select_branch_and_supplier_first') }}</td></tr>`);
+        if (!supplierId) {
+            $body.html(`<tr><td colspan="5" class="text-center text-muted">{{ __('field.select_supplier_first') }}</td></tr>`);
             return;
         }
 
         $body.html(`<tr><td colspan="5" class="text-center text-muted py-3">{{ __('general.loading') ?? 'Loading...' }}</td></tr>`);
 
-        $.getJSON(productsUrl, { branch_id: branchId, supplier_id: supplierId, q: q })
+        const params = { supplier_id: supplierId, q: q };
+        if (branchIds.length) {
+            params['branch_ids'] = branchIds;
+        }
+
+        $.getJSON(productsUrl, params)
             .done(function (res) {
                 pickerProducts = res.data || [];
                 if (!pickerProducts.length) {
@@ -255,15 +270,20 @@ $(function () {
             });
     }
 
-    $('#branch_id').on('change', function () {
-        loadSuppliers($(this).val());
-    });
-
     $('#product_supplier_id').on('change', function () {
-        const ready = !!$('#branch_id').val() && !!$(this).val();
-        $('#btnOpenProducts').prop('disabled', !ready);
         selectedItems = {};
         renderOrderItems();
+        syncAddProductsBtn();
+    });
+
+    $('#check-all-branches').on('change', function () {
+        $('.branch-check').prop('checked', $(this).is(':checked'));
+    });
+
+    $(document).on('change', '.branch-check', function () {
+        const total = $('.branch-check').length;
+        const checked = $('.branch-check:checked').length;
+        $('#check-all-branches').prop('checked', total > 0 && checked === total);
     });
 
     $('#btnOpenProducts').on('click', function () {
@@ -321,14 +341,14 @@ $(function () {
 
     $('#btnSaveOrder').on('click', function () {
         const $btn = $(this);
-        const branchId = $('#branch_id').val();
         const supplierId = $('#product_supplier_id').val();
+        const branchIds = selectedBranchIds();
         const items = Object.values(selectedItems);
 
         $('#listError').empty();
         $('#alertError').addClass('d-none');
 
-        if (!branchId || !supplierId || !items.length) {
+        if (!supplierId || !branchIds.length || !items.length) {
             $('#listError').append(`<li>{{ __('field.please_complete_order_fields') }}</li>`);
             $('#alertError').removeClass('d-none');
             return;
@@ -341,7 +361,7 @@ $(function () {
             type: 'POST',
             data: {
                 _token: '{{ csrf_token() }}',
-                branch_id: branchId,
+                branch_ids: branchIds,
                 product_supplier_id: supplierId,
                 expected_at: $('#expected_at').val() || null,
                 items: items.map(function (item) {
@@ -379,6 +399,9 @@ $(function () {
             }
         });
     });
+
+    syncAddProductsBtn();
+    renderOrderItems();
 });
 </script>
 @endsection
