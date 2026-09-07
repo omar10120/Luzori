@@ -144,7 +144,7 @@ class InventoryMovementDataTable extends DataTable
             ->initComplete('function () {
                             var table = $("#inventorymovements-table").DataTable();
                             $(".dt-action-buttons").prepend(`
-                                <select id="inventoryBranchFilter" class="form-select form-select-sm mx-1" style="width: auto; min-width: 180px;">
+                                <select id="inventoryBranchFilter" class="form-select form-select-sm mx-2 mb-4" style="width: auto; min-width: 180px;">
                                     <option value="">' . e(__('general.all')) . ' ' . e(__('field.branch')) . '</option>
                                     ' . $branches->map(function ($branch) {
                                         return '<option value="' . $branch->id . '">' . e($branch->name) . '</option>';
