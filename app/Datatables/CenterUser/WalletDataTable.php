@@ -143,6 +143,7 @@ class WalletDataTable extends DataTable
     {
         return [
             Column::make('id')->searchable(true)->title('#'),
+            Column::make('serial_number')->searchable(true)->title(__('field.serial_number')),
             Column::make('code')->searchable(true)->title(__('field.code')),
             Column::computed('users.user.first_name')->searchable(true)->title(__('field.users')),
             Column::computed('amount')->searchable(true)->title(__('field.amount')),

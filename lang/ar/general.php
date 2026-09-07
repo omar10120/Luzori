@@ -214,7 +214,8 @@ return [
     'invoice_settings_desc' => 'قسم تفاصيل الفاتورة',
     'enter_the_salary_of_the_employee' => 'أدخل راتب الموظف',
     'enter_the_visa_start_date_of_the_employee' => 'أدخل تاريخ بداية التأشيرة للموظف',
-    'enter_the_visa_end_date_of_the_employee'=> 'أدخل تاريخ نهاية التأشيرة للموظف'
+    'enter_the_visa_end_date_of_the_employee'=> 'أدخل تاريخ نهاية التأشيرة للموظف',
+    'enter_the_serial_number_of_the_wallet' => 'أدخل رقم التسلسل للمحفظة',
 ];
 
 

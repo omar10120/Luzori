@@ -28,6 +28,7 @@ class WalletRequest extends FormRequest
                 'id' => 'required|exists:wallets,id',
                 'amount' => 'required|numeric',
                 'invoiced_amount'=>'required|numeric',
+                'serial_number' => 'required|unique:wallets,serial_number,' . $this->id,
                 'start_at' => 'required|date',
                 'end_at' => 'required|date|after:start_at',
             ];
@@ -35,6 +36,7 @@ class WalletRequest extends FormRequest
             return [
                 'amount' => 'required|numeric',
                 'invoiced_amount'=>'required|numeric',
+                'serial_number' => 'required|unique:wallets,serial_number',
                 'start_at' => 'required|date',
                 'end_at' => 'required|date|after:start_at',
             ];

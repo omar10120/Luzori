@@ -17,6 +17,7 @@ class Wallet extends Model
     protected $table = 'wallets';
     protected $fillable = [
         'code',
+        'serial_number',
         'amount',
         'invoiced_amount',
         'used',

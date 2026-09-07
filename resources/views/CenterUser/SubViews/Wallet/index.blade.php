@@ -18,6 +18,15 @@
                     </div>
                     <div class="card-body">
                         <div class="row">
+                        <div class="col-md-12 mb-2">
+                                <div class="mb-1">
+                                    <label for="serial_number" class="form-label">{{ __('field.serial_number') }} </label>
+                                    <small class="text-muted">{{__('general.enter_the_serial_number_of_the_wallet')}}</small>
+                                    <input type="text" id="serial_number" class="form-control" name="serial_number"
+                                        placeholder="{{ __('field.serial_number') }}"
+                                        value="{{ $item ? $item->serial_number : null }}" />
+                                </div>
+                            </div>
                             <div class="col-md-12 mb-2">
                                 <div class="mb-1">
                                     <label for="amount" class="form-label">{{ __('field.amount') }} <span class="text-danger">*</span> </label>
@@ -27,6 +36,7 @@
                                         value="{{ $item ? $item->amount : null }}" />
                                 </div>
                             </div>
+                           
                             <div class="col-md-12 mb-2">
                                 <div class="mb-1">
                                     <label for="invoiced_amount" class="form-label">{{ __('field.invoiced_amount') }}
