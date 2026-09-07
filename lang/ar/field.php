@@ -422,6 +422,7 @@ return [
     'select_supplier_first'           => 'اختر المورد أولاً',
     'please_complete_order_fields'    => 'يرجى اختيار المورد وفرع واحد على الأقل والمنتجات',
     'stock_order_branches'            => 'فروع الطلب',
+    'no_data_found'                   => 'لا يوجد بيانات',
     
     
     

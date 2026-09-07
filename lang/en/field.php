@@ -446,4 +446,5 @@ return [
     'select_supplier_first'           => 'Select a supplier first',
     'please_complete_order_fields'    => 'Please select supplier, at least one branch, and products',
     'stock_order_branches'            => 'Stock Order Branches',
+    'no_data_found'                   => 'No data found',
 ];
