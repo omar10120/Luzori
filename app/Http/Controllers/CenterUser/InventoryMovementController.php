@@ -11,6 +11,7 @@ use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Str;
+use niklasravnsborg\LaravelPdf\Facades\Pdf;
 
 class InventoryMovementController extends Controller
 {
@@ -130,5 +131,68 @@ class InventoryMovementController extends Controller
             'menu',
             'menu_link'
         ));
+    }
+
+    public function export(Request $request, string $format)
+    {
+        $can = 'SHOW_' . Str::upper($this->plural);
+        if (!auth('center_user')->user()->can($can, 'center_api')) {
+            return abort(403);
+        }
+
+        abort_unless(in_array($format, ['csv', 'pdf'], true), 404);
+
+        $productIds = collect($request->input('product_ids', []))
+            ->filter(fn ($id) => is_numeric($id))
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values();
+        $branchId = $request->integer('branch_id') ?: null;
+
+        $movements = InventoryMovement::query()
+            ->with(['product.translation', 'branch.translation'])
+            ->when($productIds->isNotEmpty(), fn ($query) => $query->whereIn('product_id', $productIds))
+            ->when($branchId, fn ($query) => $query->where('branch_id', $branchId))
+            ->orderByDesc('id')
+            ->get();
+
+        if ($format === 'pdf') {
+            $pdf = Pdf::loadView('CenterUser.SubViews.InventoryMovement.export', [
+                'movements' => $movements,
+                'title' => __('locale.inventorymovement'),
+            ], [], ['orientation' => 'landscape']);
+
+            return $pdf->download('inventory-movements-' . now()->format('YmdHis') . '.pdf');
+        }
+
+        return response()->streamDownload(function () use ($movements) {
+            $handle = fopen('php://output', 'w');
+            fwrite($handle, "\xEF\xBB\xBF");
+            fputcsv($handle, [
+                '#', __('field.product_name'), __('field.barcode'), __('field.created_at'),
+                __('field.branch'), __('field.movement_type'), __('field.quantity'),
+                __('field.reference'), __('field.notes'),
+            ]);
+
+            foreach ($movements as $movement) {
+                fputcsv($handle, [
+                    $movement->id,
+                    $movement->product?->name ?? '-',
+                    $movement->product?->barcode ?? '-',
+                    optional($movement->created_at)->format('Y-m-d H:i'),
+                    $movement->branch?->name ?? '-',
+                    __('field.movement_' . $movement->movement_type),
+                    $movement->quantity,
+                    $movement->reference_type && $movement->reference_id
+                        ? $movement->reference_type . ' #' . $movement->reference_id
+                        : '-',
+                    $movement->notes ?: '-',
+                ]);
+            }
+
+            fclose($handle);
+        }, 'inventory-movements-' . now()->format('YmdHis') . '.csv', [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
     }
 }

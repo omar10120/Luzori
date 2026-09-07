@@ -3,6 +3,7 @@
 namespace App\Datatables\CenterUser;
 
 use App\Models\InventoryMovement;
+use App\Models\Branch;
 use App\Models\Product;
 use Illuminate\Database\Eloquent\Builder as QueryBuilder;
 use Yajra\DataTables\EloquentDataTable;
@@ -23,6 +24,9 @@ class InventoryMovementDataTable extends DataTable
                 $url = route('center_user.inventorymovements.show', ['productId' => $item->id]);
                 return '<a href="' . $url . '" class="btn btn-sm btn-success" title="' . e(__('general.show')) . '"><i class="ti ti-eye"></i></a>';
             })
+            ->editColumn('select', function ($row) {
+                return '<input type="checkbox" class="form-check-input product-select" value="' . $row->id . '" aria-label="Select product">';
+            })
             ->editColumn('translation.name', function ($row) {
                 return e($row->translation->name ?? $row->name ?? '-');
             })
@@ -40,7 +44,7 @@ class InventoryMovementDataTable extends DataTable
             ->editColumn('total_ordered', function ($row) {
                 return (int) ($row->total_ordered ?? 0);
             })
-            ->rawColumns(['action'])
+            ->rawColumns(['action', 'select'])
             ->setRowId('id');
     }
 
@@ -93,12 +97,16 @@ class InventoryMovementDataTable extends DataTable
     public function html(): HtmlBuilder
     {
         $buttonClass = 'btn mx-1 mx-md-2 px-2 px-md-4 py-1 py-md-2 btn-sm';
+        $exportRoute = route('center_user.inventorymovements.export', ['format' => 'csv']);
+        $branches = Branch::with('translation')->orderBy('id')->get();
 
         return $this->builder()
             ->setTableId($this->plural . '-table')
             ->addTableClass('dt-responsive')
             ->columns($this->getColumns())
-            ->minifiedAjax()
+            ->minifiedAjax('', null, [
+                'branch_id' => 'function () { return $("#inventoryBranchFilter").val(); }',
+            ])
             ->orderBy(1)
             ->responsive(true)
             ->dom('
@@ -121,9 +129,49 @@ class InventoryMovementDataTable extends DataTable
                     'extend' => 'collection',
                     'text' => __('general.export'),
                     'className' => $buttonClass,
-                    'buttons' => ['excel', 'csv', 'pdf', 'print', 'copy'],
+                    'buttons' => [
+                        [
+                            'text' => __('general.export') . ' Excel',
+                            'action' => "function () { window.exportMovementDetails('csv'); }",
+                        ],
+                        [
+                            'text' => __('general.export') . ' PDF',
+                            'action' => "function () { window.exportMovementDetails('pdf'); }",
+                        ],
+                    ],
                 ],
             ])
+            ->initComplete('function () {
+                            var table = $("#inventorymovements-table").DataTable();
+                            $(".dt-action-buttons").prepend(`
+                                <select id="inventoryBranchFilter" class="form-select form-select-sm mx-1" style="width: auto; min-width: 180px;">
+                                    <option value="">' . e(__('general.all')) . ' ' . e(__('field.branch')) . '</option>
+                                    ' . $branches->map(function ($branch) {
+                                        return '<option value="' . $branch->id . '">' . e($branch->name) . '</option>';
+                                    })->implode('') . '
+                                </select>
+                            `);
+
+                            $("#inventorymovements-table thead tr th:first").html("<input type=\"checkbox\" id=\"selectAllProducts\" class=\"form-check-input\" aria-label=\"Select all products\">");
+                            $("#inventoryBranchFilter").on("change", function () {
+                                table.ajax.reload();
+                            });
+                            $(document).on("change", "#selectAllProducts", function () {
+                                $("#inventorymovements-table .product-select").prop("checked", this.checked);
+                            });
+                            window.exportMovementDetails = function (format) {
+                            var selectedProducts = $("#inventorymovements-table .product-select:checked").map(function () {
+                                return this.value;
+                            }).get();
+                            var params = new URLSearchParams();
+                            var branchId = $("#inventoryBranchFilter").val();
+                            if (branchId) params.append("branch_id", branchId);
+                            selectedProducts.forEach(function (productId) {
+                                params.append("product_ids[]", productId);
+                            });
+                            window.location.href = "' . $exportRoute . '".replace("/csv", "/" + format) + "?" + params.toString();
+                            };
+            }')
             ->language($this->getDataTableLanguageUrl())
             ->addTableClass('table table-bordered table-hover')
             ->parameters([]);
@@ -139,6 +187,7 @@ class InventoryMovementDataTable extends DataTable
     public function getColumns(): array
     {
         return [
+            Column::computed('select')->searchable(false)->orderable(false)->title(''),
             Column::make('id')->searchable(true)->title('#'),
             Column::computed('translation.name')->searchable(true)->title(__('field.product_name')),
             Column::make('barcode')->searchable(true)->title(__('field.barcode')),

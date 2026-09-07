@@ -297,6 +297,7 @@ Route::group(['middleware' => 'auth_center_user:center_user'], function () {
         Route::controller(InventoryMovementController::class)->group(function () {
             Route::get('index', 'index')->name('index');
             Route::get('snapshot', 'snapshot')->name('snapshot');
+            Route::get('export/{format}', 'export')->name('export');
             Route::get('show/{productId}', 'show')->name('show');
         });
     });
