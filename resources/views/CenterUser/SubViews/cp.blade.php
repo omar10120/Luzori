@@ -586,6 +586,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const teal = '#0a4a44';
     const chartMint = '#b8e4d4';
     const peachFill = '#fde8d8';
+    const isDarkStyle = document.documentElement.classList.contains('dark-style');
+    const chartLabelColor = isDarkStyle ? '#e4e6e8' : '#384551';
 
     const popularServices = @json($popularServices);
     const revenueTrends = @json($revenueTrends);
@@ -670,11 +672,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     hollow: { size: '30%' },
                     track: { background: '#eef2f1', strokeWidth: '100%' },
                     dataLabels: {
-                        name: { fontSize: '11px' },
-                        value: { fontSize: '14px', fontWeight: 700 },
+                        name: { fontSize: '11px', color: chartLabelColor },
+                        value: { fontSize: '14px', fontWeight: 700, color: chartLabelColor },
                         total: {
                             show: true,
                             label: '{{ __("field.total") }}',
+                            color: chartLabelColor,
                             formatter: () => (earningsWeek.all || 0).toLocaleString() + ' ' + currency
                         }
                     }
