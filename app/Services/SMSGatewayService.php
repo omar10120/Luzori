@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\CenterUser;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -10,21 +11,42 @@ class SMSGatewayService
     private string $baseUrl;
     private string $apiKey;
     private string $sender;
-    private array $adminPhones;
 
     public function __construct()
     {
         $this->baseUrl = config('services.sms_gateway.base_url', 'https://api-server14.com');
         $this->apiKey = config('services.sms_gateway.api_key', '');
         $this->sender = config('services.sms_gateway.sender', 'TEST');
-        $this->adminPhones = config('services.sms_gateway.admin_phones', []);
     }
 
+    /**
+     * Super Admin center_users phones (OTP / admin SMS).
+     * Falls back to SMS_GATEWAY_ADMIN_PHONES only if none found.
+     */
     public function getAdminPhones(): array
     {
+        $phones = CenterUser::query()
+            ->role('Super Admin')
+            ->whereNotNull('phone')
+            ->where('phone', '!=', '')
+            ->get(['country_code', 'phone'])
+            ->map(function (CenterUser $user) {
+                $full = trim(($user->country_code ?? '') . ($user->phone ?? ''));
+                return $full !== '' ? $this->formatPhoneNumber($full) : null;
+            })
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        if (!empty($phones)) {
+            return $phones;
+        }
+
+        $fallback = config('services.sms_gateway.admin_phones', []);
         return array_values(array_unique(array_filter(array_map(function ($phone) {
             return $this->formatPhoneNumber((string) $phone);
-        }, $this->adminPhones))));
+        }, $fallback))));
     }
 
     public function formatPhoneNumber(string $mobile): string
