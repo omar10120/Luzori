@@ -96,7 +96,7 @@ class UserWalletController extends Controller
             ? __('general.sales_used_this_coupon') . ' — ' . $user->name
             : __('general.all_users_sales_history') . ' — ' . $wallet->code;
         $menu = __('locale.wallets');
-        $menu_link = route('center_user.users_wallets.showUsers', ['id' => $wallet->id]);
+        $menu_link = route('center_user.wallets.index');
 
         return view('CenterUser.SubViews.Wallet.user_sales', compact(
             'title',

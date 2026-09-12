@@ -23,9 +23,14 @@
             </a>
         @endisset
         @isset($options['show-user-to-wallet'])
-            <a class="dropdown-item" href="{{ route('center_user.users_wallets.showUsers', ['id' => $id]) }}">
+            <!-- <a class="dropdown-item" href="{{ route('center_user.users_wallets.showUsers', ['id' => $id]) }}">
                 <i class="ti ti-eye"></i>{{ __('field.show_users') }}
+            </a> -->
+
+            <a class="dropdown-item" href="{{ route('center_user.users_wallets.sales', ['wallet_id' => $id]) }}">
+                <i class="ti ti-eye"></i>{{ __('general.all_users_sales_history') }}
             </a>
+
         @endisset
         @isset($options['add-user-to-wallet'])
             <a class="dropdown-item" href="{{ route('center_user.users_wallets.create', ['id' => $id]) }}">

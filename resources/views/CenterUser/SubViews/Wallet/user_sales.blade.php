@@ -14,7 +14,7 @@
                             <h2 class="mb-1">{{ __('general.sales_used_this_coupon') }}</h2>
                             <p class="mb-0 text-muted">{{ $user?->name ?? __('field.all_users') }} · {{ $wallet->code }}</p>
                         </div>
-                        <a href="{{ route('center_user.users_wallets.showUsers', ['id' => $wallet->id]) }}"
+                        <a href="{{ route('center_user.wallets.index') }}"
                             class="btn btn-label-secondary">
                             {{ __('general.back') }}
                         </a>

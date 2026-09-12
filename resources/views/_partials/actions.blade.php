@@ -13,11 +13,11 @@
                 <i class="ti ti-plus"></i>{{ __('field.vacations') }}
             </a>
         @endif
-        @if(!empty($options['show-user-to-wallet']))
+        <!-- @if(!empty($options['show-user-to-wallet']))
             <a class="dropdown-item" href="{{ route('center_user.users_wallets.showUsers', ['id' => $id]) }}">
                 <i class="ti ti-eye"></i>{{ __('field.show_users') }}
             </a>
-        @endif
+        @endif -->
         @if(!empty($options['add-user-to-wallet']))
             <a class="dropdown-item" href="{{ route('center_user.users_wallets.create', ['id' => $id]) }}">
                 <i class="ti ti-plus"></i>{{ __('field.add_user') }}
