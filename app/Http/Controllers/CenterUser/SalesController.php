@@ -109,9 +109,11 @@ class SalesController extends Controller
         ]);
 
         $centerUser = auth('center_user')->user();
+
+        $isAdmin = ((int) get_user_role() === 1);
         
         // Use service to get all dependencies
-        $data = $this->salesService->getCartData($cart, $centerUser);
+        $data = $this->salesService->getCartData($cart, $centerUser, $isAdmin);
         
         $services = $data['services'];
         $products = $data['products'];
@@ -187,39 +189,44 @@ class SalesController extends Controller
         if (!auth('center_user')->user()->can($can, 'center_api')) {
             return abort(403);
         }
-
-        $wallets = $this->salesService->getCartWallets(auth('center_user')->user());
+    
+        // Pick the authenticated user from either guard
+        $centerUser = auth('center_api')->user() ?? auth('center_user')->user();
+    
+        // Role 1 = admin / super admin → see ALL wallets (no branch filter)
+        $isAdmin = ((int) get_user_role() === 1);
+    
+        $wallets  = $this->salesService->getCartWallets($centerUser, $isAdmin);
         $currency = get_currency();
-
+    
         $rows = $wallets->map(function ($wallet) use ($currency) {
             $clients = $wallet->users
                 ->map(fn ($uw) => $uw->user->name ?? null)
                 ->filter()
                 ->values()
                 ->all();
-
+    
             return [
-                'id' => $wallet->id,
-                'code' => $wallet->code,
-                'clients' => $clients,
-                'amount' => number_format((float) $wallet->amount, 2) . ' ' . $currency,
+                'id'              => $wallet->id,
+                'code'            => $wallet->code,
+                'clients'         => $clients,
+                'amount'          => number_format((float) $wallet->amount, 2) . ' ' . $currency,
                 'invoiced_amount' => number_format((float) $wallet->invoiced_amount, 2) . ' ' . $currency,
-                'start_at' => $wallet->start_at ? \Carbon\Carbon::parse($wallet->start_at)->format('Y-m-d') : '-',
-                'end_at' => $wallet->end_at ? \Carbon\Carbon::parse($wallet->end_at)->format('Y-m-d') : '-',
-                'created_by' => $wallet->created_by_user->name ?? '-',
-                'used' => (bool) $wallet->used,
+                'start_at'        => $wallet->start_at ? \Carbon\Carbon::parse($wallet->start_at)->format('Y-m-d') : '-',
+                'end_at'          => $wallet->end_at   ? \Carbon\Carbon::parse($wallet->end_at)->format('Y-m-d')   : '-',
+                'created_by'      => $wallet->created_by_user->name ?? '-',
+                'used'            => (bool) $wallet->used,
                 'raw' => [
-                    'amount' => $wallet->amount,
+                    'amount'          => $wallet->amount,
                     'invoiced_amount' => $wallet->invoiced_amount,
-                    'start_at' => $wallet->start_at,
-                    'end_at' => $wallet->end_at,
+                    'start_at'        => $wallet->start_at,
+                    'end_at'          => $wallet->end_at,
                 ],
             ];
         });
-
+    
         return response()->json(['data' => $rows]);
     }
-
     /**
      * Lazy-load packages for the cart package tab.
      */

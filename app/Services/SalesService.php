@@ -36,52 +36,48 @@ use App\Models\InventoryMovement;
 
 class SalesService
 {
-    /**
-     * Get lean data needed for the initial cart view.
-     * Heavy wallet/package tables are loaded on-demand via AJAX.
-     */
-    public function getCartData($cart, $centerUser)
+    public function getCartData($cart, $centerUser, bool $isAdmin = false)
     {
         $services = Service::with('translation')
             ->orderBy('id')
             ->get(['id', 'category_id', 'price', 'has_commission']);
-
+    
         $products = Product::with('translation')
             ->orderBy('id')
             ->get(['id', 'supply_price', 'retail_price']);
-
+    
         $discounts = Discount::query()
             ->select('id', 'code', 'type', 'amount', 'start_at', 'end_at')
             ->orderBy('id')
             ->get();
-
+    
         // Packages list for selects only — no users / nested services on first paint
         $packages = Package::with('translation')
             ->orderBy('id')
             ->get(['id', 'price']);
-
+    
         $paymentMethodsAll = PaymentMethod::query()
             ->select('id', 'name', 'types')
             ->get();
-
+    
         $paymentMethods = $paymentMethodsAll->filter(function ($m) {
             $types = $m->types ?? [];
             return in_array(PaymentMethod::TYPE_BOOKING, $types, true)
                 || in_array(PaymentMethod::TYPE_GENERAL, $types, true);
         })->values();
-
+    
         $productPaymentMethods = $paymentMethodsAll->filter(function ($m) {
             $types = $m->types ?? [];
             return in_array(PaymentMethod::TYPE_PRODUCT, $types, true)
                 || in_array(PaymentMethod::TYPE_GENERAL, $types, true);
         })->values();
-
+    
         $walletPaymentMethods = $paymentMethodsAll->filter(function ($m) {
             $types = $m->types ?? [];
             return in_array(PaymentMethod::TYPE_WALLET, $types, true)
                 || in_array(PaymentMethod::TYPE_GENERAL, $types, true);
         })->values();
-
+    
         $selectedId = !empty($cart['client_id']) ? (int) $cart['client_id'] : null;
         $selectedUser = $selectedId
             ? User::query()
@@ -89,14 +85,16 @@ class SalesService
                 ->with('media')
                 ->find($selectedId)
             : null;
-
+    
         $branchId = $selectedUser?->branch_id ?? $centerUser->branch_id ?? null;
-
+    
+        // Admins / super-admins (role 1) see workers from EVERY branch.
+        // Everyone else is scoped to the resolved branch.
         $workers = Worker::query()
-            ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
+            ->when(! $isAdmin && $branchId, fn ($q) => $q->where('branch_id', $branchId))
             ->orderBy('name')
             ->get(['id', 'name', 'phone', 'is_center_user']);
-
+    
         return [
             'services' => $services,
             'products' => $products,
@@ -111,23 +109,34 @@ class SalesService
             'branchId' => $branchId,
         ];
     }
-
-    /**
+        /**
      * Coupons table payload for cart wallet tab (lazy).
+     *
+     * @param  mixed  $centerUser  The authenticated center user (API or web guard)
+     * @param  bool   $isAdmin     When true, skip the branch scope (see all wallets)
      */
-    public function getCartWallets($centerUser)
+    public function getCartWallets($centerUser, bool $isAdmin = false)
     {
-        return Wallet::with([
+        $query = Wallet::with([
             'created_by_user:id,name',
             'users' => function ($q) {
                 $q->select('id', 'wallet_id', 'user_id')
-                    ->with(['user:id,first_name,last_name']);
+                ->with(['user:id,first_name,last_name']);
             },
         ])
             ->whereNull('deleted_at')
-            ->forCenterUserBranch($centerUser)
-            ->orderByDesc('id')
-            ->get(['id', 'code', 'amount', 'invoiced_amount', 'used', 'start_at', 'end_at', 'created_by']);
+            ->orderByDesc('id');
+
+        // Non-admins are scoped to their branch.
+        // Admins (role 1) see every wallet across all branches.
+        if (! $isAdmin && $centerUser) {
+            $query->forCenterUserBranch($centerUser);
+        }
+
+        return $query->get([
+            'id', 'code', 'amount', 'invoiced_amount',
+            'used', 'start_at', 'end_at', 'created_by',
+        ]);
     }
 
     /**

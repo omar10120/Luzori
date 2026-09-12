@@ -129,18 +129,19 @@ class WorkerController extends Controller
 
     public function getWorkersByBranch(Request $request)
     {
-        $branch_id = $request->branch_id;
-        if (!$branch_id && auth('center_user')->check()) {
-            $branch_id = auth('center_user')->user()->branch_id;
+        $centerUser = auth('center_api')->user() ?? auth('center_user')->user();
+        $isAdmin    = ((int) get_user_role() === 1);
+
+        $query = Worker::query();
+
+        // Admins / super-admins: no branch filter → return workers from all branches
+        if (! $isAdmin && $request->filled('branch_id')) {
+            $query->where('branch_id', $request->branch_id);
         }
 
-        $workers = Worker::query()
-            ->when($branch_id, function ($query) use ($branch_id) {
-                return $query->where('branch_id', $branch_id);
-            })
+        $workers = $query
             ->orderBy('name')
-            ->toBase()
-            ->get(['id', 'name', 'phone', 'is_center_user']);
+            ->get(['id', 'name', 'phone', 'is_center_user', 'branch_id']);
 
         return response()->json($workers);
     }
