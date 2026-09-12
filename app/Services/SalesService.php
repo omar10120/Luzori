@@ -939,11 +939,26 @@ class SalesService
             ->where('user_id', $item['user_id'])
             ->first();
 
-        // If UserWallet already exists (created when added to cart), just return it
-        // No need to update wallet or user balance as it was already done
+        // If UserWallet already exists (created when added to cart), ensure audit fields
         if ($existingUserWallet) {
-            return $existingUserWallet;
+            $centerUserId = auth('center_user')->id() ?? auth('center_api')->id();
+            $updates = [];
+            if (empty($existingUserWallet->created_by) && $centerUserId) {
+                $updates['created_by'] = $centerUserId;
+            }
+            if (empty($existingUserWallet->branch_id) && $branchId) {
+                $updates['branch_id'] = $branchId;
+            }
+            if (!empty($updates)) {
+                $existingUserWallet->update($updates);
+            }
+            return $existingUserWallet->fresh();
         }
+
+        $centerUserId = auth('center_user')->id() ?? auth('center_api')->id();
+        $resolvedBranchId = $branchId
+            ?? auth('center_user')->user()?->branch_id
+            ?? auth('center_api')->user()?->branch_id;
 
         // Create UserWallet record if it doesn't exist
         $userWallet = UserWallet::create([
@@ -954,8 +969,8 @@ class SalesService
             'invoiced_amount' => $item['invoiced_amount'] ?? $wallet->invoiced_amount,
             'commission' => $item['commission'] ?? null,
             'worker_id' => $item['worker_id'] ?? null,
-            'branch_id' => $branchId,
-            'created_by' => auth('center_user')->id() ?? auth('center_api')->id(),
+            'branch_id' => $resolvedBranchId,
+            'created_by' => $centerUserId,
         ]);
 
         // Mark wallet as used (only if not already used)

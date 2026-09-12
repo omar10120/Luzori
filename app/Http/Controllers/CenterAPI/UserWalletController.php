@@ -44,8 +44,11 @@ class UserWalletController extends Controller
         if (!UserWallet::where('wallet_id', $request->wallet_id)->where('user_id', $request->user_id)->exists()) {
             $newRequest = $request->validated();
             $wallet = Wallet::find($request->wallet_id);
+            $centerUser = auth('center_api')->user() ?? auth('center_user')->user();
             $newRequest['amount'] = $wallet->amount;
             $newRequest['invoiced_amount'] = $wallet->invoiced_amount;
+            $newRequest['created_by'] = $centerUser?->id;
+            $newRequest['branch_id'] = $centerUser?->branch_id;
             $item = $this->crudService->updateOrCreate($this->model, $newRequest);
             if ($item) {
                 $wallet = Wallet::find($request->wallet_id);

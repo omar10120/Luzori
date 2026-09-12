@@ -71,8 +71,11 @@ class CenterUserDataTable extends DataTable
     public function query(CenterUser $model): QueryBuilder
     {
         $user = auth('center_user')->user();
-        $branchId = $user->branch_id ?? null;
-
+        if (get_user_role() != 1) {
+            $branchId = $user->branch_id ?? null;
+        } else {
+            $branchId = null;
+        }
         $query = $model->query()->withTrashed()->with(['media']);
 
         if ($branchId !== null) {

@@ -47,7 +47,7 @@ class UserWallet extends Model
 
     public function created_by_user()
     {
-        return $this->belongsTo(User::class, 'created_by');
+        return $this->belongsTo(CenterUser::class, 'created_by');
     }
 
     public function used()

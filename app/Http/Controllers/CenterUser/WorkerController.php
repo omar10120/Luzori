@@ -79,7 +79,11 @@ class WorkerController extends Controller
         if ($branchId === null) {
             $branches = Branch::with(['translation'])->get();
         } else {
-            $branches = Branch::with(['translation'])->where('id', $branchId)->get();
+            if (get_user_role() != 1) {
+                $branches = Branch::with(['translation'])->where('id', $branchId)->get();
+            } else {
+                $branches = Branch::with(['translation'])->get();
+            }
         }
         $services = Service::with(['translation'])->get();
         $shifts = Shift::all();

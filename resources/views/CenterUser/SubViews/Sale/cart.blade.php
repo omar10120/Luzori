@@ -1023,6 +1023,16 @@ h6,
                     <form id="quick-add-coupon-form">
                         @csrf
                         <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="quick_coupon_serial_number" class="form-label">
+                                    {{ __('field.serial_number') }} <span class="text-danger">*</span>
+                                </label>
+                                <!-- <input type="text" id="quick_coupon_serial_number" class="form-control" name="serial_number"
+                                    placeholder="{{ __('field.serial_number') }}" required /> -->
+                                <input type="number" id="quick_coupon_serial_number" class="form-control" name="serial_number" 
+                                    placeholder="{{ __('field.serial_number') }}" />
+                                <div class="invalid-feedback"></div>
+                            </div>
                             <div class="col-md-12 mb-3">
                                 <label for="quick_coupon_amount" class="form-label">
                                     {{ __('field.amount') }} <span class="text-danger">*</span>
@@ -4709,6 +4719,7 @@ h6,
                     data: {
                         _token: '{{ csrf_token() }}',
                         amount: $('#quick_coupon_amount').val(),
+                        serial_number: $('#quick_coupon_serial_number').val(),
                         invoiced_amount: $('#quick_coupon_invoiced_amount').val() || 0,
                         start_at: $('#quick_coupon_start_at').val() || null,
                         end_at: $('#quick_coupon_end_at').val() || null
