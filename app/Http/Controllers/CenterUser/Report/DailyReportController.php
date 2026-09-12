@@ -28,7 +28,10 @@ class DailyReportController extends Controller
 
         $date = $request->date ?? now()->format('Y-m-d');
         $selected_branch = $request->branch_id;
-        $branch_id_filter = $selected_branch ?: (get_user_role() != 1 ? auth('center_user')->user()->branch_id : null);
+        $centerUserBranchId = auth('center_user')->user()->branch_id ?? null;
+        // Prefer selected branch; otherwise lock non–Super Admin to their own branch
+        $branch_id_filter = $selected_branch
+            ?: (get_user_role() != 1 ? $centerUserBranchId : null);
 
 
         $result = [];
@@ -94,12 +97,10 @@ class DailyReportController extends Controller
             }
 
             $temp_users = Worker::query()->orderBy('id');
-            if (get_user_role() != 1) {
-                $temp_users->where('branch_id', auth('center_user')->user()->branch_id);
-            }
-
-            if ($selected_branch) {
-                $temp_users->where('branch_id', $selected_branch);
+            if ($branch_id_filter) {
+                $temp_users->where('branch_id', $branch_id_filter);
+            } elseif (get_user_role() != 1 && $centerUserBranchId) {
+                $temp_users->where('branch_id', $centerUserBranchId);
             }
 
             // Load once, then slice — do NOT reuse skip()/take() on the same builder
@@ -335,9 +336,8 @@ class DailyReportController extends Controller
             }
 
             $BuyProduct = $temp_BuyProduct->get();
-            if (!empty($BuyProduct)) {
+            if (!$BuyProduct->isEmpty()) {
                 foreach ($BuyProduct as $BuyProduct_item) {
-                    $date = date('Y-m-d', strtotime($BuyProduct_item->created_at));
                     $temp = [
                         "amount" => 0,
                         "products" => []
@@ -378,15 +378,22 @@ class DailyReportController extends Controller
                 }
             }
 
-            $temp_get_wallets = UserWallet::whereRaw('DATE(users_wallets.created_at)="' . $date . '"');
-            // if (get_user_role() == 1 || $selected_branch) {
-            //     $branch_id = $selected_branch ? $selected_branch : auth('center_user')->user()->branch_id;
-            //     $temp_get_wallets = $temp_get_wallets->join('users', 'users.id', '=', 'users_wallets.user_id')->where('users.branch_id', $branch_id);
-            // }
+            $temp_get_wallets = UserWallet::query()
+                ->select('users_wallets.*')
+                ->whereRaw('DATE(users_wallets.created_at)="' . $date . '"');
+
+            // Filter by users_wallets.branch_id (center user branch at assign time).
+            // Legacy rows without wallet branch_id: fall back to customer users.branch_id.
             if ($branch_id_filter) {
-                $temp_get_wallets = $temp_get_wallets
-                    ->join('users', 'users.id', '=', 'users_wallets.user_id')
-                    ->where('users.branch_id', $branch_id_filter);
+                $temp_get_wallets->where(function ($q) use ($branch_id_filter) {
+                    $q->where('users_wallets.branch_id', $branch_id_filter)
+                        ->orWhere(function ($legacy) use ($branch_id_filter) {
+                            $legacy->whereNull('users_wallets.branch_id')
+                                ->whereHas('user', function ($userQ) use ($branch_id_filter) {
+                                    $userQ->where('branch_id', $branch_id_filter);
+                                });
+                        });
+                });
             }
 
             $get_wallets = $temp_get_wallets->get();
@@ -409,7 +416,10 @@ class DailyReportController extends Controller
 
             $temp_get_packages = UserPackage::whereRaw('DATE(users_packages.created_at)="' . $date . '"');
             if ($branch_id_filter) {
-                $temp_get_packages = $temp_get_packages->join('users', 'users.id', '=', 'users_packages.user_id')->where('users.branch_id', $branch_id_filter);
+                $temp_get_packages = $temp_get_packages
+                    ->join('users', 'users.id', '=', 'users_packages.user_id')
+                    ->where('users.branch_id', $branch_id_filter)
+                    ->select('users_packages.*');
             }
 
             $get_packages = $temp_get_packages->get();
