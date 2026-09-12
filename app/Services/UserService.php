@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 
 class UserService
 {
+
     public function add($request)
     {
         DB::beginTransaction();
@@ -24,6 +25,12 @@ class UserService
             $user->fcmTokens()->attach([
                 'token' => $request['fcm_token'],
             ]);
+
+        }
+        $centerUser = auth('center_api')->user() ?? auth('center_user')->user();
+        if ($centerUser) {  
+            $user->branch_id = $centerUser->branch_id;
+            $user->save();
         }
 		$user = User::find($user->id);
         DB::commit();
