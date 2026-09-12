@@ -32,7 +32,7 @@ return [
     ],
 
     'sms_gateway' => [
-        'base_url' => env('SMS_GATEWAY_BASE_URL', 'https://api-server14.com'),
+        'base_url' => env('SMS_GATEWAY_BASE_URL'),
         'api_key' => env('SMS_GATEWAY_API_KEY', ''),
         'sender' => env('SMS_GATEWAY_SENDER', 'TEST'),
         // Legacy fallback only — OTP admin SMS uses Super Admin center_users phones first
