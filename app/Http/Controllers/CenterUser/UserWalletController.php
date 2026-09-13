@@ -63,7 +63,15 @@ class UserWalletController extends Controller
 
         $wallet = Wallet::findOrFail($request->wallet_id);
         $user = $request->filled('user_id') ? User::findOrFail($request->user_id) : null;
-        $walletUserIds = UserWallet::where('wallet_id', $wallet->id)->pluck('user_id');
+        $walletUsers = UserWallet::with('user')
+            ->where('wallet_id', $wallet->id)
+            ->whereNotNull('user_id')
+            ->get()
+            ->pluck('user')
+            ->filter()
+            ->unique('id')
+            ->values();
+        $walletUserIds = $walletUsers->pluck('id');
 
         $walletUsedQuery = UserUsedWallet::query()
             ->selectRaw('bookings.sale_id as sale_id, SUM(users_used_wallet.amount) as wallet_used')
@@ -102,6 +110,7 @@ class UserWalletController extends Controller
             'title',
             'user',
             'wallet',
+            'walletUsers',
             'sales',
             'menu',
             'menu_link'

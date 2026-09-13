@@ -93,6 +93,8 @@ return [
     'male'                          => 'ذكر',
     'female'                        => 'أنثى',
     'all_users'                     => 'كل المستخدمين',
+    'filter_by_user'                => 'تصفية حسب المستخدم',
+    'clear_filter'                  => 'مسح التصفية',
     'longitude'                     => 'خط الطول',
     'latitude'                      => 'خط العرض',
     'booking_details'               => 'تفاصيل الحجز',

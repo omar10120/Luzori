@@ -93,6 +93,8 @@ return [
     'male'                          => 'Male',
     'female'                        => 'Female',
     'all_users'                     => 'All Users',
+    'filter_by_user'                => 'Filter by user',
+    'clear_filter'                  => 'Clear filter',
     'longitude'                     => 'Longitude',
     'latitude'                      => 'Latitude',
     'booking_details'               => 'Booking Details',

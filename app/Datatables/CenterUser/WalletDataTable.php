@@ -24,7 +24,7 @@ class WalletDataTable extends DataTable
                 $id = $item->id;
                 $model = $this->model;
                 $options = [
-                    'show-user-to-wallet' => true,
+                    'wallet-sales-history' => true,
                     'add-user-to-wallet' => true,
                     'edit' => true,
                     'delete' => true,
@@ -72,16 +72,23 @@ class WalletDataTable extends DataTable
 
     public function query(Wallet $model): QueryBuilder
     {
-        return $model->query()
+        $isAdmin = ((int) get_user_role() === 1);
+    
+        $query = $model->query()
             ->withTrashed()
             ->with([
                 'created_by_user',
                 'users' => function ($q) {
                     return $q->with(['user']);
                 },
-            ])
-            ->forCenterUserBranch()
-            ->orderBy($this->plural . '.id', 'DESC');
+            ]);
+    
+        // Super admin (role = 1) sees all wallets; others are scoped to their branch
+        if (!$isAdmin) {
+            $query->forCenterUserBranch();
+        }
+    
+        return $query->orderBy($this->plural . '.id', 'DESC');
     }
 
     public function html(): HtmlBuilder
