@@ -129,7 +129,7 @@ class AuthController extends Controller
 
         $user->image_url = $user->getFirstMediaUrl('PrimaryImage');
 
-        return MyHelper::responseJSON(__('api.updateSuccessfully') ?? 'Profile updated successfully', Response::HTTP_OK, $user);
+            return MyHelper::responseJSON(__('api.updateSuccessfully') ?? 'Profile updated successfully', Response::HTTP_OK, $user);
     }
 
     public function logout(Request $request)

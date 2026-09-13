@@ -71,4 +71,6 @@ return [
     'notificationSeen'                              => 'Notification marked as seen',
     'notificationsFetched'                          => 'Notifications fetched successfully',
     'accountDeleted'                                => 'Account deleted successfully',
+    'updateSuccessfully'                            => 'Update Successfully',
+    'logoutSuccessfully'                            => 'Logout Successfully',
 ];

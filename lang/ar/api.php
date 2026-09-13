@@ -70,4 +70,6 @@ return [
     'notificationSeen'                              => 'تم تعيين الإشعار كمقروء',
     'notificationsFetched'                          => 'تم جلب الإشعارات بنجاح',
     'accountDeleted'                                => 'تم حذف الحساب بنجاح',
+    'updateSuccessfully'                            => 'تم تعديل البيانات بنجاح',
+    
 ];
