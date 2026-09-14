@@ -397,16 +397,16 @@ class SalesService
             $smsGateway = new SMSGatewayService();
             $formattedPhone = $smsGateway->formatPhoneNumber($fullPhone);
             
-            $result = $smsGateway->sendSMSWithTemplate(
-                $formattedPhone,
-                $template,
-                [
-                    'user_name' => $userName,
-                    'salon_name' => $salonName,
-                    'bill_number' => $sale->id,
-                ],
-                $locale
-            );
+            // $result = $smsGateway->sendSMSWithTemplate(
+            //     $formattedPhone,
+            //     $template,
+            //     [
+            //         'user_name' => $userName,
+            //         'salon_name' => $salonName,
+            //         'bill_number' => $sale->id,
+            //     ],
+            //     $locale
+            // );
 
             if (!$result['success']) {
                 Log::warning('Failed to send sale confirmation SMS', [
