@@ -49,13 +49,14 @@ class CenterService
 
     public function getFilteredCenters($request)
     {
-        // Get user location and radius from request
         $userLat = $request->input('lat');
         $userLng = $request->input('lng');
-        $radius = (float) $request->input('radius', 50); // default 50 km
+        $radius = (float) $request->input('radius', 50);
+        $search = $request->filled('search') ? mb_strtolower(trim($request->search)) : null;
+        $categoryId = $request->filled('category_id') ? (int) $request->category_id : null;
+        $needsGeo = $userLat !== null && $userLng !== null;
 
-        // Base query for approved centers
-        $query = Center::where('status', 'approve')
+        $centers = Center::where('status', 'approve')
             ->where(function ($q) {
                 $q->whereNull('expire_date')->orWhere('expire_date', '>', now());
             })
@@ -67,289 +68,296 @@ class CenterService
                     $q->where('global_categories.id', (int) $request->global_category_id);
                 });
             })
-            ->with('globalCategories');
+            ->with('globalCategories')
+            ->get();
 
-        $centers = $query->get();
-        $filteredCenters = [];
-        $originalDb = Config::get('database.connections.mysql.database');
-
-        // Helper: Haversine distance in km
-        $haversine = function ($lat1, $lon1, $lat2, $lon2) {
-            $earthRadius = 6371;
-            $dLat = deg2rad($lat2 - $lat1);
-            $dLon = deg2rad($lon2 - $lon1);
-            $a = sin($dLat / 2) * sin($dLat / 2) +
-                cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
-                sin($dLon / 2) * sin($dLon / 2);
-            $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
-            return $earthRadius * $c;
-        };
+        $matches = [];
 
         foreach ($centers as $center) {
-            if ($center->database) {
-                try {
-                    // Switch to tenant database
-                    Config::set('database.connections.mysql.database', $center->database);
-                    DB::purge('mysql');
-                    DB::reconnect('mysql');
+            if (!$center->database) {
+                continue;
+            }
 
-                    // Fetch tenant data
-                    $center->categories = CategoryService::with('services.workers.vacations')->get();
-                    $center->services = Service::with('workers.vacations')->where('is_top', true)->get();
-                    $center->packages = Package::all();
-                    $center->branches = Branch::all();
-                    $center->about_us = (new PageService())->aboutUs();
+            try {
+                $matched = $this->centerMatchesFilters(
+                    $center,
+                    $search,
+                    $categoryId,
+                    $needsGeo ? (float) $userLat : null,
+                    $needsGeo ? (float) $userLng : null,
+                    $radius
+                );
 
-                    $userId = auth('center_api')->id();
-                    if ($userId) {
-                        $center->user_packages = \App\Models\UserPackage::where('user_id', $userId)
-                            ->with(['package.translation'])
-                            ->get();
-                        $center->user_used_packages = \App\Models\UserUsedPackage::where('user_id', $userId)
-                            ->with(['service.translation'])
-                            ->get();
-                    }
-
-                    $match = true;
-
-                    // ---- Category filter ----
-                    if ($request->filled('category_id')) {
-                        $matchCategory = false;
-                        foreach ($center->categories as $cat) {
-                            if ($cat->id == $request->category_id) {
-                                $matchCategory = true;
-                                break;
-                            }
-                        }
-                        if (!$matchCategory) $match = false;
-                    }
-
-                    // ---- Search filter ----
-                    if ($match && $request->filled('search')) {
-                        $matchSearch = false;
-                        $searchQuery = mb_strtolower($request->search);
-                        if (str_contains(mb_strtolower($center->name ?? ''), $searchQuery)) {
-                            $matchSearch = true;
-                        }
-                        if (!$matchSearch) {
-                            foreach ($center->categories as $cat) {
-                                if (str_contains(mb_strtolower($cat->name ?? ''), $searchQuery)) {
-                                    $matchSearch = true;
-                                    break;
-                                }
-                            }
-                        }
-                        if (!$matchSearch) {
-                            foreach ($center->services as $srv) {
-                                if (str_contains(mb_strtolower($srv->name ?? ''), $searchQuery)) {
-                                    $matchSearch = true;
-                                    break;
-                                }
-                            }
-                        }
-                        if (!$matchSearch) $match = false;
-                    }
-
-                    // ---- Nearby (distance) filter ----
-                    $minDistance = null;
-                    if ($match && $userLat !== null && $userLng !== null) {
-                        $minDistance = PHP_INT_MAX;
-                        foreach ($center->branches as $branch) {
-                            if (!empty($branch->latitude) && !empty($branch->longitude)) {
-                                $dist = $haversine(
-                                    (float) $userLat,
-                                    (float) $userLng,
-                                    (float) $branch->latitude,
-                                    (float) $branch->longitude
-                                );
-                                if ($dist < $minDistance) {
-                                    $minDistance = $dist;
-                                }
-                            }
-                        }
-                        // If no branch has valid coordinates, we can either keep the center (distance = null) or exclude it.
-                        // Here we keep it but won't be able to filter/sort properly – we set distance to null.
-                        if ($minDistance === PHP_INT_MAX) {
-                            $minDistance = null;
-                        }
-
-                        // Apply radius filter (only if we have a valid distance)
-                        if ($minDistance !== null && $minDistance > $radius) {
-                            $match = false;
-                        }
-                    }
-
-                    if ($match) {
-                        // Transform center using the resource
-                        $centerData = json_decode(
-                            \App\Http\Resources\CenterResource::make($center)->toJson(),
-                            true
-                        );
-                        // Attach calculated distance
-                        $centerData['distance'] = $minDistance !== null ? round($minDistance, 2) : null;
-                        $filteredCenters[] = $centerData;
-                    }
-
-                } catch (\Exception $e) {
-                    // Skip center on error
+                if ($matched === false) {
+                    continue;
                 }
+
+                $matches[] = [
+                    'center' => $center,
+                    'distance' => $matched['distance'],
+                ];
+            } catch (\Exception $e) {
+                // Skip broken tenant DBs
             }
         }
 
-        // Restore original database connection
-        Config::set('database.connections.mysql.database', $originalDb);
-        DB::purge('mysql');
-        DB::reconnect('mysql');
-
-        // ---- Sorting by distance (if coordinates provided) ----
-        if ($userLat !== null && $userLng !== null) {
-            usort($filteredCenters, function ($a, $b) {
-                // Null distances go to the end
-                if ($a['distance'] === null && $b['distance'] === null) return 0;
-                if ($a['distance'] === null) return 1;
-                if ($b['distance'] === null) return -1;
+        if ($needsGeo) {
+            usort($matches, function ($a, $b) {
+                if ($a['distance'] === null && $b['distance'] === null) {
+                    return 0;
+                }
+                if ($a['distance'] === null) {
+                    return 1;
+                }
+                if ($b['distance'] === null) {
+                    return -1;
+                }
                 return $a['distance'] <=> $b['distance'];
             });
         }
 
-        // ---- Pagination ----
         $perPage = (int) $request->input('per_page', 15);
         $page = (int) $request->input('page', 1);
-        $total = count($filteredCenters);
+        $total = count($matches);
         $offset = ($page - 1) * $perPage;
-        $paginatedItems = array_slice($filteredCenters, $offset, $perPage);
+        $pageMatches = array_slice($matches, $offset, $perPage);
 
-        $paginator = new LengthAwarePaginator(
-            $paginatedItems,
+        $filteredCenters = [];
+        $originalDb = Config::get('database.connections.mysql.database');
+        $userId = auth('center_api')->id();
+
+        foreach ($pageMatches as $match) {
+            $center = $match['center'];
+            try {
+                $this->hydrateCenterForList($center, $userId);
+                $centerData = \App\Http\Resources\CenterResource::make($center)->resolve();
+                $centerData['distance'] = $match['distance'] !== null ? round($match['distance'], 2) : null;
+                $filteredCenters[] = $centerData;
+            } catch (\Exception $e) {
+                // Skip hydrate failures
+            }
+        }
+
+        Config::set('database.connections.mysql.database', $originalDb);
+        DB::purge('mysql');
+        DB::reconnect('mysql');
+
+        return new LengthAwarePaginator(
+            $filteredCenters,
             $total,
             $perPage,
             $page,
             ['path' => $request->url(), 'query' => $request->query()]
         );
-
-        return $paginator;
     }
+
     public function getFilteredCentersDetail($request)
     {
-        $query = Center::where('status', 'approve')
+        $search = $request->filled('search') ? mb_strtolower(trim($request->search)) : null;
+        $categoryId = $request->filled('category_id') ? (int) $request->category_id : null;
+
+        $centers = Center::where('status', 'approve')
             ->where(function ($q) {
                 $q->whereNull('expire_date')->orWhere('expire_date', '>', now());
             })
             ->when($request->filled('rate'), function ($q) use ($request) {
                 $q->where('rate', $request->rate);
             })
-            ->with('globalCategories');
-    
-        // ... (existing filters on rate, global_category_slug, global_category_id) ...
-    
-        $centers = $query->get();
-        $filteredCenters = [];
-    
-        $originalDb = Config::get('database.connections.mysql.database');
-    
+            ->when($request->filled('global_category_id'), function ($q) use ($request) {
+                $q->whereHas('globalCategories', function ($q) use ($request) {
+                    $q->where('global_categories.id', (int) $request->global_category_id);
+                });
+            })
+            ->with('globalCategories')
+            ->get();
+
+        $matches = [];
+
         foreach ($centers as $center) {
-            if ($center->database) {
-                try {
-                    Config::set('database.connections.mysql.database', $center->database);
-                    DB::purge('mysql');
-                    DB::reconnect('mysql');
-    
-                    // Fetch tenant data
-                    $center->categories = CategoryService::with('services.workers.vacations')->get();
-                    $center->services = Service::with('workers.vacations')->where('is_top', true)->get();
-                    $center->packages = Package::all();
-                    $center->branches = Branch::all();
-                    $center->about_us = (new PageService())->aboutUs();
-    
-                    $userId = auth('center_api')->id();
-                    if ($userId) {
-                        $center->user_packages = \App\Models\UserPackage::where('user_id', $userId)
-                            ->with(['package.translation'])
-                            ->get();
-                        $center->user_used_packages = \App\Models\UserUsedPackage::where('user_id', $userId)
-                            ->with(['service.translation'])
-                            ->get();
-                    }
-    
-                    $match = true;
-    
-                    // Filter by category_id
-                    if ($request->filled('category_id')) {
-                        $matchCategory = false;
-                        foreach ($center->categories as $cat) {
-                            if ($cat->id == $request->category_id) {
-                                $matchCategory = true;
-                                break;
-                            }
-                        }
-                        if (!$matchCategory) {
-                            $match = false;
-                        }
-                    }
-    
-                    // Search filter
-                    if ($match && $request->filled('search')) {
-                        $matchSearch = false;
-                        $searchQuery = mb_strtolower($request->search);
-                        if (str_contains(mb_strtolower($center->name ?? ''), $searchQuery)) {
-                            $matchSearch = true;
-                        }
-                        if (!$matchSearch) {
-                            foreach ($center->categories as $cat) {
-                                if (str_contains(mb_strtolower($cat->name ?? ''), $searchQuery)) {
-                                    $matchSearch = true;
-                                    break;
-                                }
-                            }
-                        }
-                        if (!$matchSearch) {
-                            foreach ($center->services as $srv) {
-                                if (str_contains(mb_strtolower($srv->name ?? ''), $searchQuery)) {
-                                    $matchSearch = true;
-                                    break;
-                                }
-                            }
-                        }
-                        if (!$matchSearch) {
-                            $match = false;
-                        }
-                    }
-    
-                    if ($match) {
-                        $filteredCenters[] = json_decode(
-                            \App\Http\Resources\CenterResource::make($center)->toJson(),
-                            true
-                        );
-                    }
-                } catch (\Exception $e) {
-                    // Skip center on error
+            if (!$center->database) {
+                continue;
+            }
+
+            try {
+                $matched = $this->centerMatchesFilters($center, $search, $categoryId, null, null, null);
+                if ($matched === false) {
+                    continue;
                 }
+                $matches[] = ['center' => $center, 'distance' => null];
+            } catch (\Exception $e) {
+                // Skip broken tenant DBs
             }
         }
-    
-        // Restore original database connection
+
+        $perPage = (int) $request->input('per_page', 15);
+        $page = (int) $request->input('page', 1);
+        $total = count($matches);
+        $offset = ($page - 1) * $perPage;
+        $pageMatches = array_slice($matches, $offset, $perPage);
+
+        $filteredCenters = [];
+        $originalDb = Config::get('database.connections.mysql.database');
+        $userId = auth('center_api')->id();
+
+        foreach ($pageMatches as $match) {
+            $center = $match['center'];
+            try {
+                $this->hydrateCenterForList($center, $userId);
+                $filteredCenters[] = \App\Http\Resources\CenterResource::make($center)->resolve();
+            } catch (\Exception $e) {
+                // Skip hydrate failures
+            }
+        }
+
         Config::set('database.connections.mysql.database', $originalDb);
         DB::purge('mysql');
         DB::reconnect('mysql');
-    
-        // ---- PAGINATION ----
-        $perPage = (int) $request->input('per_page', 15);
-        $page = (int) $request->input('page', 1);
-        $total = count($filteredCenters);
-        $offset = ($page - 1) * $perPage;
-    
-        $paginatedItems = array_slice($filteredCenters, $offset, $perPage);
-    
-        // Create a paginator instance
-        $paginator = new LengthAwarePaginator(
-            $paginatedItems,
+
+        return new LengthAwarePaginator(
+            $filteredCenters,
             $total,
             $perPage,
             $page,
             ['path' => $request->url(), 'query' => $request->query()]
         );
-    
-        return $paginator;
+    }
+
+    /**
+     * Cheap tenant filter pass — no heavy eager loads.
+     * Returns ['distance' => float|null] on match, false otherwise.
+     */
+    private function centerMatchesFilters(
+        Center $center,
+        ?string $search,
+        ?int $categoryId,
+        ?float $userLat,
+        ?float $userLng,
+        ?float $radius
+    ) {
+        $matchedByName = $search
+            ? str_contains(mb_strtolower($center->name ?? ''), $search)
+            : true;
+
+        $needsTenant = ($search && !$matchedByName) || $categoryId || ($userLat !== null && $userLng !== null);
+
+        $distance = null;
+
+        if ($needsTenant) {
+            $this->connectTenant($center->database);
+
+            if ($categoryId && !$this->tenantHasCategory($categoryId)) {
+                return false;
+            }
+
+            if ($search && !$matchedByName && !$this->tenantMatchesSearch($search)) {
+                return false;
+            }
+
+            if ($userLat !== null && $userLng !== null) {
+                $distance = $this->tenantMinDistance($userLat, $userLng);
+                if ($distance !== null && $radius !== null && $distance > $radius) {
+                    return false;
+                }
+            }
+        } elseif ($search && !$matchedByName) {
+            return false;
+        }
+
+        return ['distance' => $distance];
+    }
+
+    private function connectTenant(string $database): void
+    {
+        static $ready = false;
+
+        $safeDb = str_replace('`', '``', $database);
+
+        if (!$ready) {
+            Config::set('database.connections.tenant.database', $database);
+            DB::purge('tenant');
+            DB::reconnect('tenant');
+            $ready = true;
+            return;
+        }
+
+        DB::connection('tenant')->getPdo()->exec("USE `{$safeDb}`");
+    }
+
+    private function tenantHasCategory(int $categoryId): bool
+    {
+        return DB::connection('tenant')
+            ->table('categories_services')
+            ->where('id', $categoryId)
+            ->whereNull('deleted_at')
+            ->exists();
+    }
+
+    private function tenantMatchesSearch(string $search): bool
+    {
+        $like = '%' . $search . '%';
+
+        if (DB::connection('tenant')
+            ->table('category_service_translations')
+            ->whereRaw('LOWER(name) LIKE ?', [$like])
+            ->exists()) {
+            return true;
+        }
+
+        return DB::connection('tenant')
+            ->table('service_translations')
+            ->whereRaw('LOWER(name) LIKE ?', [$like])
+            ->exists();
+    }
+
+    private function tenantMinDistance(float $userLat, float $userLng): ?float
+    {
+        $branches = DB::connection('tenant')
+            ->table('branches')
+            ->whereNull('deleted_at')
+            ->whereNotNull('latitude')
+            ->whereNotNull('longitude')
+            ->get(['latitude', 'longitude']);
+
+        if ($branches->isEmpty()) {
+            return null;
+        }
+
+        $min = null;
+        foreach ($branches as $branch) {
+            $dist = $this->haversineDistance(
+                $userLat,
+                $userLng,
+                (float) $branch->latitude,
+                (float) $branch->longitude
+            );
+            if ($min === null || $dist < $min) {
+                $min = $dist;
+            }
+        }
+
+        return $min;
+    }
+
+    private function hydrateCenterForList(Center $center, $userId = null): void
+    {
+        Config::set('database.connections.mysql.database', $center->database);
+        DB::purge('mysql');
+        DB::reconnect('mysql');
+
+        $center->categories = CategoryService::with('services.workers.vacations')->get();
+        $center->services = Service::with('workers.vacations')->where('is_top', true)->get();
+        $center->packages = Package::all();
+        $center->branches = Branch::all();
+        $center->about_us = (new PageService())->aboutUs();
+
+        if ($userId) {
+            $center->user_packages = \App\Models\UserPackage::where('user_id', $userId)
+                ->with(['package.translation'])
+                ->get();
+            $center->user_used_packages = \App\Models\UserUsedPackage::where('user_id', $userId)
+                ->with(['service.translation'])
+                ->get();
+        }
     }
 
 
