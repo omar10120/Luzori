@@ -71,5 +71,10 @@ return [
     'notificationsFetched'                          => 'تم جلب الإشعارات بنجاح',
     'accountDeleted'                                => 'تم حذف الحساب بنجاح',
     'updateSuccessfully'                            => 'تم تعديل البيانات بنجاح',
-    
+    'hello'                                         => 'مرحباً',
+    'forgot_password_mail_subject'                  => 'رمز إعادة تعيين كلمة المرور',
+    'forgot_password_mail_intro'                    => 'استخدم هذا الرمز لإعادة تعيين كلمة المرور:',
+    'forgot_password_mail_expiry'                   => 'ينتهي صلاحية هذا الرمز خلال :minutes دقائق.',
+    'forgot_password_mail_ignore'                   => 'إذا لم تطلب إعادة تعيين كلمة المرور، يمكنك تجاهل هذا البريد.',
+    'codeExpired'                                   => 'انتهت صلاحية رمز التحقق. يرجى طلب رمز جديد.',
 ];

@@ -73,4 +73,10 @@ return [
     'accountDeleted'                                => 'Account deleted successfully',
     'updateSuccessfully'                            => 'Update Successfully',
     'logoutSuccessfully'                            => 'Logout Successfully',
+    'hello'                                         => 'Hello',
+    'forgot_password_mail_subject'                  => 'Password Reset Code',
+    'forgot_password_mail_intro'                    => 'Use this code to reset your password:',
+    'forgot_password_mail_expiry'                   => 'This code expires in :minutes minutes.',
+    'forgot_password_mail_ignore'                   => 'If you did not request a password reset, you can ignore this email.',
+    'codeExpired'                                   => 'Verification code has expired. Please request a new one.',
 ];

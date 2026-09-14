@@ -7,8 +7,11 @@ use App\Models\AppUser;
 use App\Helpers\MyHelper;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class AuthController extends Controller
 {
@@ -140,6 +143,111 @@ class AuthController extends Controller
 
         $request->user()->currentAccessToken()->delete();
         return MyHelper::responseJSON(__('api.doneSuccessfully'), Response::HTTP_OK);
+    }
+
+    /**
+     * Send a password-reset OTP to the user's email (uses config/mail.php).
+     */
+    public function forgotPassword(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        $email = trim($request->email);
+        $user = AppUser::where('email', $email)->first();
+
+        if (!$user) {
+            return MyHelper::responseJSON(__('api.userNotFound'), Response::HTTP_NOT_FOUND);
+        }
+
+        if (!$user->is_active) {
+            return MyHelper::responseJSON(__('auth.inactive'), Response::HTTP_FORBIDDEN);
+        }
+
+        $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+
+        DB::connection('central')->table('password_resets')->updateOrInsert(
+            ['email' => $user->email],
+            [
+                'token' => Hash::make($code),
+                'created_at' => now(),
+            ]
+        );
+
+        try {
+            Mail::send('emails.app_forgot_password', [
+                'name' => $user->name,
+                'code' => $code,
+                'minutes' => 10,
+                'subject' => __('api.forgot_password_mail_subject'),
+            ], function ($message) use ($user) {
+                $message->to($user->email, $user->name)
+                    ->subject(__('api.forgot_password_mail_subject'));
+            });
+        } catch (\Throwable $e) {
+            Log::error('App forgot password email failed', [
+                'email' => $user->email,
+                'error' => $e->getMessage(),
+            ]);
+
+            return MyHelper::responseJSON(__('api.unknownError'), Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        return MyHelper::responseJSON(__('api.sendEmailSuccessfully'), Response::HTTP_OK, [
+            'email' => $user->email,
+            'expires_in_minutes' => 10,
+        ]);
+    }
+
+    /**
+     * Verify OTP and set a new password.
+     */
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'code' => 'required|string|size:6',
+            'password' => 'required|string|min:6|confirmed',
+        ]);
+
+        $email = trim($request->email);
+        $user = AppUser::where('email', $email)->first();
+
+        if (!$user) {
+            return MyHelper::responseJSON(__('api.userNotFound'), Response::HTTP_NOT_FOUND);
+        }
+
+        $reset = DB::connection('central')->table('password_resets')
+            ->where('email', $user->email)
+            ->first();
+
+        if (!$reset) {
+            return MyHelper::responseJSON(__('api.incorrectCode'), Response::HTTP_BAD_REQUEST);
+        }
+
+        if (Carbon::parse($reset->created_at)->addMinutes(10)->isPast()) {
+            DB::connection('central')->table('password_resets')->where('email', $user->email)->delete();
+            return MyHelper::responseJSON(__('api.codeExpired'), Response::HTTP_BAD_REQUEST);
+        }
+
+        if (!Hash::check($request->code, $reset->token)) {
+            return MyHelper::responseJSON(__('api.incorrectCode'), Response::HTTP_BAD_REQUEST);
+        }
+
+        $user->update([
+            'password' => $request->password,
+        ]);
+
+        DB::connection('central')->table('password_resets')->where('email', $user->email)->delete();
+        $user->tokens()->delete();
+
+        $token = $user->createToken('app_auth_token')->plainTextToken;
+
+        return MyHelper::responseJSON(__('api.updatePasswordSuccessfully'), Response::HTTP_OK, [
+            'user' => $user,
+            'token' => $token,
+        ]);
     }
 
     public function deleteAccount(Request $request)
