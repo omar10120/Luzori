@@ -130,11 +130,19 @@ class CenterService
             $center = $match['center'];
             try {
                 $this->hydrateCenterForList($center, $userId);
-                $centerData = \App\Http\Resources\CenterResource::make($center)->resolve();
+                // Serialize while still on tenant DB (nested translations lazy-load here)
+                $centerData = json_decode(
+                    \App\Http\Resources\CenterResource::make($center)->toJson(),
+                    true
+                );
                 $centerData['distance'] = $match['distance'] !== null ? round($match['distance'], 2) : null;
                 $filteredCenters[] = $centerData;
             } catch (\Exception $e) {
-                // Skip hydrate failures
+                Log::warning('Center list hydrate failed', [
+                    'center_id' => $center->id ?? null,
+                    'database' => $center->database ?? null,
+                    'error' => $e->getMessage(),
+                ]);
             }
         }
 
@@ -203,9 +211,16 @@ class CenterService
             $center = $match['center'];
             try {
                 $this->hydrateCenterForList($center, $userId);
-                $filteredCenters[] = \App\Http\Resources\CenterResource::make($center)->resolve();
+                $filteredCenters[] = json_decode(
+                    \App\Http\Resources\CenterResource::make($center)->toJson(),
+                    true
+                );
             } catch (\Exception $e) {
-                // Skip hydrate failures
+                Log::warning('Center detail hydrate failed', [
+                    'center_id' => $center->id ?? null,
+                    'database' => $center->database ?? null,
+                    'error' => $e->getMessage(),
+                ]);
             }
         }
 
@@ -344,18 +359,24 @@ class CenterService
         DB::purge('mysql');
         DB::reconnect('mysql');
 
-        $center->categories = CategoryService::with('services.workers.vacations')->get();
-        $center->services = Service::with('workers.vacations')->where('is_top', true)->get();
-        $center->packages = Package::all();
-        $center->branches = Branch::all();
+        $center->categories = CategoryService::with([
+            'translations',
+            'services.translations',
+            'services.workers.vacations',
+        ])->get();
+        $center->services = Service::with(['translations', 'workers.vacations'])
+            ->where('is_top', true)
+            ->get();
+        $center->packages = Package::with('translations')->get();
+        $center->branches = Branch::with('translations')->get();
         $center->about_us = (new PageService())->aboutUs();
 
         if ($userId) {
             $center->user_packages = \App\Models\UserPackage::where('user_id', $userId)
-                ->with(['package.translation'])
+                ->with(['package.translations'])
                 ->get();
             $center->user_used_packages = \App\Models\UserUsedPackage::where('user_id', $userId)
-                ->with(['service.translation'])
+                ->with(['service.translations'])
                 ->get();
         }
     }
