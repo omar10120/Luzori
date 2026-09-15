@@ -19,6 +19,9 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class CenterService
 {
+    // =========================================================================
+    // BASIC
+    // =========================================================================
     public function all()
     {
         return Center::withTrashed()->get();
@@ -46,6 +49,61 @@ class CenterService
     }
 
     // =========================================================================
+    // INCLUDES
+    // =========================================================================
+    /**
+     * Parse the ?include=... query param into an allowlisted array.
+     *
+     * Examples:
+     *   ?include=branches,packages
+     *   ?include[]=branches&include[]=services
+     *   (no include)  -> defaults to ['global_categories']
+     */
+    private function parseIncludes($request): array
+    {
+        $allowed = [
+            'global_categories',
+            'branches',
+            'categories',
+            'services',
+            'packages',
+            'about_us',
+            'user_packages',
+            'user_used_packages',
+            'workers',      // only meaningful with categories/services
+            'vacations',    // only meaningful with workers
+        ];
+
+        if (!$request->has('include')) {
+            return ['global_categories'];
+        }
+
+        $raw   = $request->input('include');
+        $items = is_array($raw) ? $raw : explode(',', (string) $raw);
+
+        $items = array_map(fn($v) => strtolower(trim((string) $v)), $items);
+        $items = array_values(array_intersect($items, $allowed));
+
+        if (empty($items)) {
+            return ['global_categories'];
+        }
+
+        // workers/vacations only make sense with categories or services
+        if (in_array('workers', $items, true)
+            && !array_intersect($items, ['categories', 'services'])) {
+            $items = array_values(array_diff($items, ['workers', 'vacations']));
+        }
+
+        if (!in_array('global_categories', $items, true)) {
+            // global_categories is cheap (main DB) — keep it always on unless
+            // the client explicitly asked for a very narrow include set.
+            // Remove this block if you want it strictly opt-in.
+        }
+
+        return $items;
+    }
+
+    // =========================================================================
     // LIST (with geo + search + filters)
     // =========================================================================
     public function getFilteredCenters($request)
@@ -57,7 +115,9 @@ class CenterService
         $categoryId = $request->filled('category_id') ? (int) $request->category_id : null;
         $needsGeo   = $userLat !== null && $userLng !== null;
 
-        $centers = Center::where('status', 'approve')
+        $includes = $this->parseIncludes($request);
+
+        $centersQuery = Center::where('status', 'approve')
             ->where(function ($q) {
                 $q->whereNull('expire_date')->orWhere('expire_date', '>', now());
             })
@@ -68,9 +128,13 @@ class CenterService
                 $q->whereHas('globalCategories', function ($q) use ($request) {
                     $q->where('global_categories.id', (int) $request->global_category_id);
                 });
-            })
-            ->with('globalCategories')
-            ->get();
+            });
+
+        if (in_array('global_categories', $includes, true)) {
+            $centersQuery->with('globalCategories');
+        }
+
+        $centers = $centersQuery->get();
 
         // One batch tenant search across all tenant DBs (instead of N queries)
         $tenantSearchHits = $search
@@ -123,28 +187,31 @@ class CenterService
             });
         }
 
-        $perPage = (int) $request->input('per_page', 15);
-        $page    = (int) $request->input('page', 1);
-        $total   = count($matches);
-        $offset  = ($page - 1) * $perPage;
+        $perPage     = (int) $request->input('per_page', 15);
+        $page        = (int) $request->input('page', 1);
+        $total       = count($matches);
+        $offset      = ($page - 1) * $perPage;
         $pageMatches = array_slice($matches, $offset, $perPage);
 
         $filteredCenters = [];
-        $originalDb = Config::get('database.connections.mysql.database');
-        $userId     = auth('center_api')->id();
+        $originalDb      = Config::get('database.connections.mysql.database');
+        $userId          = auth('center_api')->id();
 
         foreach ($pageMatches as $match) {
             $center = $match['center'];
             try {
-                $this->hydrateCenterForList($center, $userId);
+                $this->hydrateCenterForList($center, $userId, $includes);
+
                 // Serialize while still on tenant DB (nested translations lazy-load here)
                 $centerData = json_decode(
                     \App\Http\Resources\CenterResource::make($center)->toJson(),
                     true
                 );
+
                 $centerData['distance'] = $match['distance'] !== null
                     ? round($match['distance'], 2)
                     : null;
+
                 $filteredCenters[] = $centerData;
             } catch (\Exception $e) {
                 Log::warning('Center list hydrate failed', [
@@ -174,7 +241,9 @@ class CenterService
         $search     = $request->filled('search') ? mb_strtolower(trim($request->search)) : null;
         $categoryId = $request->filled('category_id') ? (int) $request->category_id : null;
 
-        $centers = Center::where('status', 'approve')
+        $includes = $this->parseIncludes($request);
+
+        $centersQuery = Center::where('status', 'approve')
             ->where(function ($q) {
                 $q->whereNull('expire_date')->orWhere('expire_date', '>', now());
             })
@@ -185,9 +254,13 @@ class CenterService
                 $q->whereHas('globalCategories', function ($q) use ($request) {
                     $q->where('global_categories.id', (int) $request->global_category_id);
                 });
-            })
-            ->with('globalCategories')
-            ->get();
+            });
+
+        if (in_array('global_categories', $includes, true)) {
+            $centersQuery->with('globalCategories');
+        }
+
+        $centers = $centersQuery->get();
 
         // ---- Batch tenant search (same as list) ----
         $tenantSearchHits = $search
@@ -222,20 +295,20 @@ class CenterService
             }
         }
 
-        $perPage = (int) $request->input('per_page', 15);
-        $page    = (int) $request->input('page', 1);
-        $total   = count($matches);
-        $offset  = ($page - 1) * $perPage;
+        $perPage     = (int) $request->input('per_page', 15);
+        $page        = (int) $request->input('page', 1);
+        $total       = count($matches);
+        $offset      = ($page - 1) * $perPage;
         $pageMatches = array_slice($matches, $offset, $perPage);
 
         $filteredCenters = [];
-        $originalDb = Config::get('database.connections.mysql.database');
-        $userId     = auth('center_api')->id();
+        $originalDb      = Config::get('database.connections.mysql.database');
+        $userId          = auth('center_api')->id();
 
         foreach ($pageMatches as $match) {
             $center = $match['center'];
             try {
-                $this->hydrateCenterForList($center, $userId);
+                $this->hydrateCenterForList($center, $userId, $includes);
                 $filteredCenters[] = json_decode(
                     \App\Http\Resources\CenterResource::make($center)->toJson(),
                     true
@@ -467,32 +540,59 @@ class CenterService
     // =========================================================================
     // HYDRATION
     // =========================================================================
-    private function hydrateCenterForList(Center $center, $userId = null): void
-    {
+    /**
+     * Load only the relations requested via ?include=...
+     * Always keeps global_categories off the tenant (it comes from the main DB
+     * and is loaded on the Center query itself).
+     */
+    private function hydrateCenterForList(
+        Center $center,
+        $userId = null,
+        array $includes = ['global_categories']
+    ): void {
         // Switch MySQL connection to the tenant DB without purge/reconnect.
         $safeDb = str_replace('`', '``', $center->database);
         DB::connection('mysql')->getPdo()->exec("USE `{$safeDb}`");
         Config::set('database.connections.mysql.database', $center->database);
 
-        $center->categories = CategoryService::with([
-            'translations',
-            'services.translations',
-            'services.workers.vacations',
-        ])->get();
+        $withWorkers  = in_array('workers',   $includes, true);
+        $withVacation = in_array('vacations', $includes, true);
 
-        $center->services = Service::with(['translations', 'workers.vacations'])
-            ->where('is_top', true)
-            ->get();
+        if (in_array('categories', $includes, true)) {
+            $cats = ['translations', 'services.translations'];
+            if ($withWorkers) {
+                $cats[] = $withVacation ? 'services.workers.vacations' : 'services.workers';
+            }
+            $center->categories = CategoryService::with($cats)->get();
+        }
 
-        $center->packages = Package::with('translations')->get();
-        $center->branches = Branch::with('translations')->get();
-        $center->about_us = (new PageService())->aboutUs();
+        if (in_array('services', $includes, true)) {
+            $svc = ['translations'];
+            if ($withWorkers) {
+                $svc[] = $withVacation ? 'workers.vacations' : 'workers';
+            }
+            $center->services = Service::with($svc)->where('is_top', true)->get();
+        }
 
-        if ($userId) {
+        if (in_array('packages', $includes, true)) {
+            $center->packages = Package::with('translations')->get();
+        }
+
+        if (in_array('branches', $includes, true)) {
+            $center->branches = Branch::with('translations')->get();
+        }
+
+        if (in_array('about_us', $includes, true)) {
+            $center->about_us = (new PageService())->aboutUs();
+        }
+
+        if ($userId && in_array('user_packages', $includes, true)) {
             $center->user_packages = \App\Models\UserPackage::where('user_id', $userId)
                 ->with(['package.translations'])
                 ->get();
+        }
 
+        if ($userId && in_array('user_used_packages', $includes, true)) {
             $center->user_used_packages = \App\Models\UserUsedPackage::where('user_id', $userId)
                 ->with(['service.translations'])
                 ->get();
