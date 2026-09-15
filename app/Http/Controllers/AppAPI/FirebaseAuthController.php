@@ -18,7 +18,7 @@ class FirebaseAuthController extends Controller
     {
         $request->validate([
             'token' => 'required|string',
-            'provider' => 'required|string|in:google,phone,email',
+            'provider' => 'required|string|in:google,phone,email,apple',
             'fcm_token' => 'nullable|string',
         ]);
 
