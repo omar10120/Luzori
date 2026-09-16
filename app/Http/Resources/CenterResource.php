@@ -35,6 +35,7 @@ class CenterResource extends JsonResource
 
         $res['created_at'] = $this->created_at;
         $res['is_favorite'] = (bool) ($this->resource->is_favorite ?? false);
+        // Public review summary (available without auth)
         $res['avg_rating'] = $this->resource->avg_rating ?? null;
         $res['reviews_count'] = (int) ($this->resource->reviews_count ?? 0);
         $res['has_review'] = (bool) ($this->resource->has_review ?? false);
@@ -83,7 +84,26 @@ class CenterResource extends JsonResource
         if ($this->has('infos')) {
             $res['infos'] = InfoResource::collection($this->infos);
         }
-        
+
+        if ($this->has('reviews')) {
+            $res['reviews'] = collect($this->reviews)->map(function ($review) {
+                $user = $review->user ?? null;
+                return [
+                    'id' => $review->id,
+                    'rating' => (int) $review->rating,
+                    'comment' => $review->comment,
+                    'user' => $user ? [
+                        'id' => $user->id,
+                        'name' => $user->name,
+                        'image' => method_exists($user, 'getFirstMediaUrl')
+                            ? ($user->getFirstMediaUrl('PrimaryImage') ?: null)
+                            : null,
+                    ] : null,
+                    'created_at' => $review->created_at,
+                    'updated_at' => $review->updated_at,
+                ];
+            })->values();
+        }
 
         return $res;
     }

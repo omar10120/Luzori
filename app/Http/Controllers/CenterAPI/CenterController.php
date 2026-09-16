@@ -100,16 +100,13 @@ class CenterController extends Controller
 
             $center->is_favorite = $this->isFavoriteForRequest($request, (int) $center->id);
 
-            $payload = json_decode(CenterResource::make($center)->toJson(), true);
-            $payload['is_favorite'] = (bool) $center->is_favorite;
-
             $stats = CenterReview::where('center_id', $center->id)
                 ->selectRaw('COUNT(*) as reviews_count, AVG(rating) as avg_rating')
                 ->first();
-            $payload['avg_rating'] = ($stats && $stats->reviews_count)
+            $center->avg_rating = ($stats && $stats->reviews_count)
                 ? round((float) $stats->avg_rating, 1)
                 : null;
-            $payload['reviews_count'] = (int) ($stats->reviews_count ?? 0);
+            $center->reviews_count = (int) ($stats->reviews_count ?? 0);
 
             $myReview = null;
             $user = $request->user();
@@ -118,12 +115,35 @@ class CenterController extends Controller
                     ->where('center_id', $center->id)
                     ->first(['id', 'rating', 'comment']);
             }
-            $payload['has_review'] = (bool) $myReview;
-            $payload['my_review'] = $myReview ? [
+            $center->has_review = (bool) $myReview;
+            $center->my_review = $myReview ? [
                 'id' => (int) $myReview->id,
                 'rating' => (int) $myReview->rating,
                 'comment' => $myReview->comment,
             ] : null;
+
+            // Same include pattern: ?include=reviews
+            $includeRaw = $request->input('include', '');
+            $includes = is_array($includeRaw)
+                ? $includeRaw
+                : explode(',', (string) $includeRaw);
+            $includes = array_map(fn ($v) => strtolower(trim((string) $v)), $includes);
+            if (in_array('reviews', $includes, true)) {
+                $center->setRelation(
+                    'reviews',
+                    CenterReview::with('user')
+                        ->where('center_id', $center->id)
+                        ->latest()
+                        ->get()
+                );
+            }
+
+            $payload = json_decode(CenterResource::make($center)->toJson(), true);
+            $payload['is_favorite'] = (bool) $center->is_favorite;
+            $payload['avg_rating'] = $center->avg_rating;
+            $payload['reviews_count'] = $center->reviews_count;
+            $payload['has_review'] = (bool) $center->has_review;
+            $payload['my_review'] = $center->my_review;
 
             return MyHelper::responseJSON(__('api.doneSuccessfully'), Response::HTTP_OK, $payload);
         }

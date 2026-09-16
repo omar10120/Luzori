@@ -75,6 +75,7 @@ class CenterService
             'user_used_packages',
             'workers',      // only meaningful with categories/services
             'vacations',    // only meaningful with workers
+            'reviews',
         ];
 
         if (!$request->has('include')) {
@@ -740,6 +741,17 @@ class CenterService
             $center->user_used_packages = \App\Models\UserUsedPackage::where('user_id', $userId)
                 ->with(['service.translations'])
                 ->get();
+        }
+
+        // Reviews live on central DB — safe while mysql is on tenant
+        if (in_array('reviews', $includes, true)) {
+            $center->setRelation(
+                'reviews',
+                CenterReview::with('user')
+                    ->where('center_id', $center->id)
+                    ->latest()
+                    ->get()
+            );
         }
     }
 

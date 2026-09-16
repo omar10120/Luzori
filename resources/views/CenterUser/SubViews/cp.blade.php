@@ -283,7 +283,7 @@
         height: 10px;
         border-radius: 50%;
         flex-shrink: 0;
-    }
+}
 </style>
 @endpush
 
@@ -324,10 +324,10 @@
                     <div>
                         <div class="luzori-kpi-value">{{ number_format($statistics['customers_count']) }}</div>
                         <p class="luzori-kpi-label">{{ __('field.customers') }}</p>
-                    </div>
-                </div>
-            </div>
-        </div>
+                                </div>
+                            </div>
+                            </div>
+                        </div>
         <div class="col-xl-3 col-md-6">
             <div class="luzori-kpi-card luzori-kpi-card--services clickable-stat-card" data-type="services">
                 <div class="d-flex align-items-center gap-3">
@@ -352,10 +352,10 @@
                         <div class="luzori-kpi-value">{{ number_format($statistics['today_revenue'], 0) }} {{ $currency }}</div>
                         <p class="luzori-kpi-label">{{ __('field.today_revenue') }}</p>
                     </div>
-                </div>
-            </div>
-        </div>
-    </div>
+                                </div>
+                            </div>
+                            </div>
+                        </div>
 
     {{-- Secondary KPIs --}}
     <!-- <div class="row g-3 mb-4">
@@ -381,10 +381,10 @@
                     <div>
                         <div class="luzori-kpi-value">{{ number_format($statistics['active_workers_count']) }}</div>
                         <p class="luzori-kpi-label">{{ __('field.active_workers') }}</p>
-                    </div>
-                </div>
-            </div>
-        </div>
+                                </div>
+                            </div>
+                            </div>
+                        </div>
         <div class="col-lg-4 col-md-4">
             <div class="luzori-kpi-card luzori-kpi-card--products luzori-mini-stat clickable-stat-card" data-type="products">
                 <div class="d-flex align-items-center gap-3">
@@ -417,11 +417,11 @@
                 <div class="card-header">
                     <h5 class="luzori-panel-title">{{ __('field.most_revenue_trends') }}</h5>
                 </div>
-                <div class="card-body">
+                    <div class="card-body">
                     <div id="revenueTrendsChart"></div>
                 </div>
-            </div>
-        </div>
+                                </div>
+                            </div>
         <div class="col-xl-3 col-lg-12">
             <div class="card luzori-panel">
                 <div class="card-header">
@@ -437,7 +437,7 @@
                         <div class="luzori-earnings-legend-item">
                             <span class="luzori-earnings-dot" style="background:#6ba3c7"></span>
                             {{ __('api.inside_booking') }} ({{ $earningsWeek['inside_pct'] ?? 0 }}%)
-                        </div>
+                            </div>
                         <div class="luzori-earnings-legend-item">
                             <span class="luzori-earnings-dot" style="background:#c5d0d8"></span>
                             {{ __('field.total') }}
@@ -463,7 +463,7 @@
                         <button type="submit" name="period" value="month"
                             class="luzori-filter-btn {{ $salesPeriod === 'month' ? 'active' : '' }}">{{ __('field.month') }}</button>
                     </form>
-                </div>
+                            </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
                         <table class="table luzori-sales-table mb-0">
@@ -485,7 +485,7 @@
                                             <div class="service-cell">
                                                 <img src="{{ $sale['service_image'] }}" alt="" class="service-thumb">
                                                 <span>{{ $sale['service_name'] }}</span>
-                                            </div>
+                        </div>
                                         </td>
                                         <td>
                                             <div>{{ $sale['customer_name'] }}</div>
@@ -513,7 +513,7 @@
                     </div>
                 </div>
             </div>
-        </div>
+                            </div>
         <div class="col-xl-4 col-lg-5">
             <div class="card luzori-panel">
                 <div class="card-header">
@@ -541,7 +541,7 @@
             <div class="card luzori-performer-card">
                 <div class="card-header">
                     <h5><i class="ti ti-award me-1"></i> {{ __('field.best_service') }}</h5>
-                </div>
+                    </div>
                 <div class="card-body text-center py-4">
                     <h5 class="mb-1">{{ $statistics['best_service']['name'] }}</h5>
                     <h3 class="fw-bold text-primary mb-0">{{ $statistics['best_service']['count'] }}</h3>
@@ -553,11 +553,11 @@
             <div class="card luzori-performer-card">
                 <div class="card-header">
                     <h5><i class="ti ti-user-check me-1"></i> {{ __('field.best_worker') }}</h5>
-                </div>
+                    </div>
                 <div class="card-body text-center py-4">
                     <h5 class="mb-1">{{ $statistics['best_worker']['name'] }}</h5>
                     <h3 class="fw-bold text-primary mb-0">{{ $statistics['best_worker']['count'] }}</h3>
-                    <small class="text-muted">{{ __('field.bookings_this_month') }}</small>
+                        <small class="text-muted">{{ __('field.bookings_this_month') }}</small>
                 </div>
             </div>
         </div>
@@ -565,18 +565,18 @@
             <div class="card luzori-performer-card">
                 <div class="card-header">
                     <h5><i class="ti ti-trending-up me-1"></i> {{ __('field.best_customer') }}</h5>
-                </div>
+                    </div>
                 <div class="card-body text-center py-4">
                     <h5 class="mb-1">{{ $statistics['best_customer']['name'] }}</h5>
                     <h3 class="fw-bold text-primary mb-0">{{ $statistics['best_customer']['count'] }}</h3>
-                    <small class="text-muted">{{ __('field.bookings_this_month') }}</small>
+                        <small class="text-muted">{{ __('field.bookings_this_month') }}</small>
+                </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-@include('CenterUser.Components.detail-tables')
+    @include('CenterUser.Components.detail-tables')
 @endsection
 
 @push('scripts')
