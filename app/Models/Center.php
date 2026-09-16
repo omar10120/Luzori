@@ -113,4 +113,15 @@ class Center extends Authenticatable implements HasMedia
     {
         return $this->belongsToMany(GlobalCategory::class, 'center_global_category');
     }
+
+    public function favoritedByUsers()
+    {
+        return $this->belongsToMany(AppUser::class, 'favorite_centers', 'center_id', 'user_id')
+            ->withTimestamps();
+    }
+
+    public function favorites()
+    {
+        return $this->hasMany(FavoriteCenter::class, 'center_id');
+    }
 }

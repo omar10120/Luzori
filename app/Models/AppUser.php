@@ -83,4 +83,15 @@ class AppUser extends Authenticatable implements HasMedia
             ->withPivot('is_read', 'id')
             ->withTimestamps();
     }
+
+    public function favoriteCenters()
+    {
+        return $this->belongsToMany(Center::class, 'favorite_centers', 'user_id', 'center_id')
+            ->withTimestamps();
+    }
+
+    public function favorites()
+    {
+        return $this->hasMany(FavoriteCenter::class, 'user_id');
+    }
 }

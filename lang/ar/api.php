@@ -77,4 +77,7 @@ return [
     'forgot_password_mail_expiry'                   => 'ينتهي صلاحية هذا الرمز خلال :minutes دقائق.',
     'forgot_password_mail_ignore'                   => 'إذا لم تطلب إعادة تعيين كلمة المرور، يمكنك تجاهل هذا البريد.',
     'codeExpired'                                   => 'انتهت صلاحية رمز التحقق. يرجى طلب رمز جديد.',
+    'favoriteAdded'                                 => 'تمت إضافة المركز إلى المفضلة',
+    'favoriteRemoved'                               => 'تمت إزالة المركز من المفضلة',
+    'favoriteAlreadyExists'                         => 'المركز موجود بالفعل في المفضلة',
 ];

@@ -79,4 +79,7 @@ return [
     'forgot_password_mail_expiry'                   => 'This code expires in :minutes minutes.',
     'forgot_password_mail_ignore'                   => 'If you did not request a password reset, you can ignore this email.',
     'codeExpired'                                   => 'Verification code has expired. Please request a new one.',
+    'favoriteAdded'                                 => 'Center added to favorites',
+    'favoriteRemoved'                               => 'Center removed from favorites',
+    'favoriteAlreadyExists'                         => 'Center is already in favorites',
 ];

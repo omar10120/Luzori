@@ -9,6 +9,7 @@ use App\Http\Controllers\AppAPI\InfoController;
 use App\Http\Controllers\AppAPI\PackageController;
 use App\Http\Controllers\AppAPI\PaymentController;
 use App\Http\Controllers\AppAPI\NotificationController;
+use App\Http\Controllers\AppAPI\FavoriteCenterController;
 /*
 |--------------------------------------------------------------------------
 | App API Routes (Main Database)
@@ -49,6 +50,14 @@ Route::middleware('auth:sanctum')->group(function () {
     
     Route::prefix('payment')->group(function () {
         Route::post('create-session', [PaymentController::class, 'createSession']);
+    });
+
+    Route::prefix('favorites')->group(function () {
+        Route::get('/', [FavoriteCenterController::class, 'index']);
+        Route::post('/', [FavoriteCenterController::class, 'store']);
+        Route::post('toggle', [FavoriteCenterController::class, 'toggle']);
+        Route::get('{center_id}/check', [FavoriteCenterController::class, 'check']);
+        Route::delete('{center_id}', [FavoriteCenterController::class, 'destroy']);
     });
 
     Route::get('getnotification', [NotificationController::class, 'get']);
