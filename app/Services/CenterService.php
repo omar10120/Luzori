@@ -8,6 +8,8 @@ use App\Models\CenterUser;
 use App\Models\Package;
 use App\Models\Service;
 use App\Models\CategoryService;
+use App\Models\AppUser;
+use App\Models\FavoriteCenter;
 use App\Services\PageService;
 
 use Exception;
@@ -130,6 +132,8 @@ class CenterService
                 });
             });
 
+        $this->applyIsFavoriteFilter($centersQuery, $request);
+
         if (in_array('global_categories', $includes, true)) {
             $centersQuery->with('globalCategories');
         }
@@ -196,6 +200,7 @@ class CenterService
         $filteredCenters = [];
         $originalDb      = Config::get('database.connections.mysql.database');
         $userId          = auth('center_api')->id();
+        $favoriteIds     = $this->favoriteCenterIdsForRequest($request, collect($pageMatches)->pluck('center.id')->all());
 
         foreach ($pageMatches as $match) {
             $center = $match['center'];
@@ -211,6 +216,7 @@ class CenterService
                 $centerData['distance'] = $match['distance'] !== null
                     ? round($match['distance'], 2)
                     : null;
+                $centerData['is_favorite'] = in_array((int) $center->id, $favoriteIds, true);
 
                 $filteredCenters[] = $centerData;
             } catch (\Exception $e) {
@@ -255,6 +261,8 @@ class CenterService
                     $q->where('global_categories.id', (int) $request->global_category_id);
                 });
             });
+
+        $this->applyIsFavoriteFilter($centersQuery, $request);
 
         if (in_array('global_categories', $includes, true)) {
             $centersQuery->with('globalCategories');
@@ -304,15 +312,18 @@ class CenterService
         $filteredCenters = [];
         $originalDb      = Config::get('database.connections.mysql.database');
         $userId          = auth('center_api')->id();
+        $favoriteIds     = $this->favoriteCenterIdsForRequest($request, collect($pageMatches)->pluck('center.id')->all());
 
         foreach ($pageMatches as $match) {
             $center = $match['center'];
             try {
                 $this->hydrateCenterForList($center, $userId, $includes);
-                $filteredCenters[] = json_decode(
+                $centerData = json_decode(
                     \App\Http\Resources\CenterResource::make($center)->toJson(),
                     true
                 );
+                $centerData['is_favorite'] = in_array((int) $center->id, $favoriteIds, true);
+                $filteredCenters[] = $centerData;
             } catch (\Exception $e) {
                 Log::warning('Center detail hydrate failed', [
                     'center_id' => $center->id ?? null,
@@ -419,6 +430,66 @@ class CenterService
             DB::reconnect('mysql');
         }
         Config::set('database.connections.mysql.database', $originalDb);
+    }
+
+    /**
+     * Favorite center IDs for the authenticated AppUser (optional Bearer token).
+     *
+     * @param  array<int>  $centerIds
+     * @return array<int>
+     */
+    private function favoriteCenterIdsForRequest($request, array $centerIds): array
+    {
+        $centerIds = array_values(array_filter(array_map('intval', $centerIds)));
+        if ($centerIds === []) {
+            return [];
+        }
+
+        $user = $request->user();
+        if (!$user instanceof AppUser) {
+            return [];
+        }
+
+        return FavoriteCenter::where('user_id', $user->id)
+            ->whereIn('center_id', $centerIds)
+            ->pluck('center_id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+    }
+
+    /**
+     * Filter by isFavorite / is_favorite query param.
+     * true  → only favorited centers (requires AppUser token)
+     * false → only non-favorited centers
+     */
+    private function applyIsFavoriteFilter($centersQuery, $request): void
+    {
+        $raw = $request->input('isFavorite', $request->input('is_favorite'));
+        if ($raw === null || $raw === '') {
+            return;
+        }
+
+        $wantFavorite = filter_var($raw, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+        if ($wantFavorite === null) {
+            // Accept "1"/"0" already handled by FILTER_VALIDATE_BOOLEAN; reject invalid
+            return;
+        }
+
+        $user = $request->user();
+        if (!$user instanceof AppUser) {
+            if ($wantFavorite) {
+                $centersQuery->whereRaw('1 = 0');
+            }
+            return;
+        }
+
+        $favIds = FavoriteCenter::where('user_id', $user->id)->pluck('center_id');
+
+        if ($wantFavorite) {
+            $centersQuery->whereIn('id', $favIds);
+        } else {
+            $centersQuery->whereNotIn('id', $favIds);
+        }
     }
 
     // =========================================================================

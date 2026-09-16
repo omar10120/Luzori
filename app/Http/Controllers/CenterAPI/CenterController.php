@@ -17,6 +17,8 @@ use App\Http\Resources\InfoResource;
 use App\Services\InfoService;
 use App\Models\UserPackage;
 use App\Models\UserUsedPackage;
+use App\Models\AppUser;
+use App\Models\FavoriteCenter;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Config;
@@ -59,7 +61,7 @@ class CenterController extends Controller
      * @param int $id
      * @return \Illuminate\Http\JsonResponse
      */
-    public function show($id)
+    public function show(Request $request, $id)
     {
         $center = Center::where('status', 'approve')
             ->where(function ($q) {
@@ -95,7 +97,12 @@ class CenterController extends Controller
               
             }
 
-            return MyHelper::responseJSON(__('api.doneSuccessfully'), Response::HTTP_OK, CenterResource::make($center));
+            $center->is_favorite = $this->isFavoriteForRequest($request, (int) $center->id);
+
+            $payload = json_decode(CenterResource::make($center)->toJson(), true);
+            $payload['is_favorite'] = (bool) $center->is_favorite;
+
+            return MyHelper::responseJSON(__('api.doneSuccessfully'), Response::HTTP_OK, $payload);
         }
 
         return MyHelper::responseJSON(__('api.noDataFound'), Response::HTTP_NOT_FOUND);
@@ -123,5 +130,15 @@ class CenterController extends Controller
         return MyHelper::responseJSON(__('api.unknownError'), Response::HTTP_INTERNAL_SERVER_ERROR);
     }
 
-    
+    private function isFavoriteForRequest(Request $request, int $centerId): bool
+    {
+        $user = $request->user();
+        if (!$user instanceof AppUser) {
+            return false;
+        }
+
+        return FavoriteCenter::where('user_id', $user->id)
+            ->where('center_id', $centerId)
+            ->exists();
+    }
 }

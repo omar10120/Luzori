@@ -34,6 +34,7 @@ class CenterResource extends JsonResource
             ->toArray();
 
         $res['created_at'] = $this->created_at;
+        $res['is_favorite'] = (bool) ($this->resource->is_favorite ?? false);
 
         // ---- Optional relations (only if loaded / set by the service) ----
 
