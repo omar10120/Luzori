@@ -82,4 +82,7 @@ return [
     'favoriteAdded'                                 => 'Center added to favorites',
     'favoriteRemoved'                               => 'Center removed from favorites',
     'favoriteAlreadyExists'                         => 'Center is already in favorites',
+    'reviewAdded'                                   => 'Review added successfully',
+    'reviewUpdated'                                 => 'Review updated successfully',
+    'reviewRemoved'                                 => 'Review removed successfully',
 ];

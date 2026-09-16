@@ -10,6 +10,7 @@ use App\Models\Service;
 use App\Models\CategoryService;
 use App\Models\AppUser;
 use App\Models\FavoriteCenter;
+use App\Models\CenterReview;
 use App\Services\PageService;
 
 use Exception;
@@ -200,7 +201,10 @@ class CenterService
         $filteredCenters = [];
         $originalDb      = Config::get('database.connections.mysql.database');
         $userId          = auth('center_api')->id();
-        $favoriteIds     = $this->favoriteCenterIdsForRequest($request, collect($pageMatches)->pluck('center.id')->all());
+        $pageCenterIds   = collect($pageMatches)->pluck('center.id')->map(fn ($id) => (int) $id)->all();
+        $favoriteIds     = $this->favoriteCenterIdsForRequest($request, $pageCenterIds);
+        $reviewStats     = $this->reviewStatsForCenters($pageCenterIds);
+        $myReviews       = $this->myReviewsForRequest($request, $pageCenterIds);
 
         foreach ($pageMatches as $match) {
             $center = $match['center'];
@@ -217,6 +221,7 @@ class CenterService
                     ? round($match['distance'], 2)
                     : null;
                 $centerData['is_favorite'] = in_array((int) $center->id, $favoriteIds, true);
+                $this->attachReviewFields($centerData, (int) $center->id, $reviewStats, $myReviews);
 
                 $filteredCenters[] = $centerData;
             } catch (\Exception $e) {
@@ -312,7 +317,10 @@ class CenterService
         $filteredCenters = [];
         $originalDb      = Config::get('database.connections.mysql.database');
         $userId          = auth('center_api')->id();
-        $favoriteIds     = $this->favoriteCenterIdsForRequest($request, collect($pageMatches)->pluck('center.id')->all());
+        $pageCenterIds   = collect($pageMatches)->pluck('center.id')->map(fn ($id) => (int) $id)->all();
+        $favoriteIds     = $this->favoriteCenterIdsForRequest($request, $pageCenterIds);
+        $reviewStats     = $this->reviewStatsForCenters($pageCenterIds);
+        $myReviews       = $this->myReviewsForRequest($request, $pageCenterIds);
 
         foreach ($pageMatches as $match) {
             $center = $match['center'];
@@ -323,6 +331,7 @@ class CenterService
                     true
                 );
                 $centerData['is_favorite'] = in_array((int) $center->id, $favoriteIds, true);
+                $this->attachReviewFields($centerData, (int) $center->id, $reviewStats, $myReviews);
                 $filteredCenters[] = $centerData;
             } catch (\Exception $e) {
                 Log::warning('Center detail hydrate failed', [
@@ -455,6 +464,70 @@ class CenterService
             ->pluck('center_id')
             ->map(fn ($id) => (int) $id)
             ->all();
+    }
+
+    /**
+     * @param  array<int>  $centerIds
+     * @return array<int, array{avg_rating: ?float, reviews_count: int}>
+     */
+    private function reviewStatsForCenters(array $centerIds): array
+    {
+        $centerIds = array_values(array_filter(array_map('intval', $centerIds)));
+        if ($centerIds === []) {
+            return [];
+        }
+
+        $rows = CenterReview::whereIn('center_id', $centerIds)
+            ->selectRaw('center_id, COUNT(*) as reviews_count, AVG(rating) as avg_rating')
+            ->groupBy('center_id')
+            ->get();
+
+        $stats = [];
+        foreach ($rows as $row) {
+            $stats[(int) $row->center_id] = [
+                'avg_rating' => round((float) $row->avg_rating, 1),
+                'reviews_count' => (int) $row->reviews_count,
+            ];
+        }
+
+        return $stats;
+    }
+
+    /**
+     * @param  array<int>  $centerIds
+     * @return array<int, array{id:int,rating:int,comment:?string}>
+     */
+    private function myReviewsForRequest($request, array $centerIds): array
+    {
+        $centerIds = array_values(array_filter(array_map('intval', $centerIds)));
+        if ($centerIds === []) {
+            return [];
+        }
+
+        $user = $request->user();
+        if (!$user instanceof AppUser) {
+            return [];
+        }
+
+        return CenterReview::where('user_id', $user->id)
+            ->whereIn('center_id', $centerIds)
+            ->get(['id', 'center_id', 'rating', 'comment'])
+            ->keyBy(fn ($r) => (int) $r->center_id)
+            ->map(fn ($r) => [
+                'id' => (int) $r->id,
+                'rating' => (int) $r->rating,
+                'comment' => $r->comment,
+            ])
+            ->all();
+    }
+
+    private function attachReviewFields(array &$centerData, int $centerId, array $reviewStats, array $myReviews): void
+    {
+        $stats = $reviewStats[$centerId] ?? null;
+        $centerData['avg_rating'] = $stats['avg_rating'] ?? null;
+        $centerData['reviews_count'] = $stats['reviews_count'] ?? 0;
+        $centerData['has_review'] = isset($myReviews[$centerId]);
+        $centerData['my_review'] = $myReviews[$centerId] ?? null;
     }
 
     /**

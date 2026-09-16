@@ -19,6 +19,7 @@ use App\Models\UserPackage;
 use App\Models\UserUsedPackage;
 use App\Models\AppUser;
 use App\Models\FavoriteCenter;
+use App\Models\CenterReview;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Config;
@@ -101,6 +102,28 @@ class CenterController extends Controller
 
             $payload = json_decode(CenterResource::make($center)->toJson(), true);
             $payload['is_favorite'] = (bool) $center->is_favorite;
+
+            $stats = CenterReview::where('center_id', $center->id)
+                ->selectRaw('COUNT(*) as reviews_count, AVG(rating) as avg_rating')
+                ->first();
+            $payload['avg_rating'] = ($stats && $stats->reviews_count)
+                ? round((float) $stats->avg_rating, 1)
+                : null;
+            $payload['reviews_count'] = (int) ($stats->reviews_count ?? 0);
+
+            $myReview = null;
+            $user = $request->user();
+            if ($user instanceof AppUser) {
+                $myReview = CenterReview::where('user_id', $user->id)
+                    ->where('center_id', $center->id)
+                    ->first(['id', 'rating', 'comment']);
+            }
+            $payload['has_review'] = (bool) $myReview;
+            $payload['my_review'] = $myReview ? [
+                'id' => (int) $myReview->id,
+                'rating' => (int) $myReview->rating,
+                'comment' => $myReview->comment,
+            ] : null;
 
             return MyHelper::responseJSON(__('api.doneSuccessfully'), Response::HTTP_OK, $payload);
         }

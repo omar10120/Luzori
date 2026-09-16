@@ -35,6 +35,10 @@ class CenterResource extends JsonResource
 
         $res['created_at'] = $this->created_at;
         $res['is_favorite'] = (bool) ($this->resource->is_favorite ?? false);
+        $res['avg_rating'] = $this->resource->avg_rating ?? null;
+        $res['reviews_count'] = (int) ($this->resource->reviews_count ?? 0);
+        $res['has_review'] = (bool) ($this->resource->has_review ?? false);
+        $res['my_review'] = $this->resource->my_review ?? null;
 
         // ---- Optional relations (only if loaded / set by the service) ----
 
@@ -79,6 +83,7 @@ class CenterResource extends JsonResource
         if ($this->has('infos')) {
             $res['infos'] = InfoResource::collection($this->infos);
         }
+        
 
         return $res;
     }

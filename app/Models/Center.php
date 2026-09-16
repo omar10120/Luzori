@@ -124,4 +124,16 @@ class Center extends Authenticatable implements HasMedia
     {
         return $this->hasMany(FavoriteCenter::class, 'center_id');
     }
+
+    public function reviews()
+    {
+        return $this->hasMany(CenterReview::class, 'center_id');
+    }
+
+    public function reviewedByUsers()
+    {
+        return $this->belongsToMany(AppUser::class, 'center_reviews', 'center_id', 'user_id')
+            ->withPivot('rating', 'comment')
+            ->withTimestamps();
+    }
 }

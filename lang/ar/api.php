@@ -80,4 +80,7 @@ return [
     'favoriteAdded'                                 => 'تمت إضافة المركز إلى المفضلة',
     'favoriteRemoved'                               => 'تمت إزالة المركز من المفضلة',
     'favoriteAlreadyExists'                         => 'المركز موجود بالفعل في المفضلة',
+    'reviewAdded'                                   => 'تمت إضافة التقييم بنجاح',
+    'reviewUpdated'                                 => 'تم تحديث التقييم بنجاح',
+    'reviewRemoved'                                 => 'تم حذف التقييم بنجاح',
 ];

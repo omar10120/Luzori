@@ -10,6 +10,7 @@ use App\Http\Controllers\AppAPI\PackageController;
 use App\Http\Controllers\AppAPI\PaymentController;
 use App\Http\Controllers\AppAPI\NotificationController;
 use App\Http\Controllers\AppAPI\FavoriteCenterController;
+use App\Http\Controllers\AppAPI\CenterReviewController;
 /*
 |--------------------------------------------------------------------------
 | App API Routes (Main Database)
@@ -58,6 +59,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('toggle', [FavoriteCenterController::class, 'toggle']);
         Route::get('{center_id}/check', [FavoriteCenterController::class, 'check']);
         Route::delete('{center_id}', [FavoriteCenterController::class, 'destroy']);
+    });
+
+    Route::prefix('reviews')->group(function () {
+        Route::get('/', [CenterReviewController::class, 'index']);
+        Route::post('/', [CenterReviewController::class, 'store']);
+        Route::get('center/{center_id}', [CenterReviewController::class, 'byCenter']);
+        Route::get('{center_id}/mine', [CenterReviewController::class, 'mine']);
+        Route::put('{center_id}', [CenterReviewController::class, 'update']);
+        Route::delete('{center_id}', [CenterReviewController::class, 'destroy']);
     });
 
     Route::get('getnotification', [NotificationController::class, 'get']);
