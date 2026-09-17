@@ -116,6 +116,7 @@ class CenterService
         $userLng    = $request->input('lng');
         $radius     = (float) $request->input('radius', 50);
         $search     = $request->filled('search') ? mb_strtolower(trim($request->search)) : null;
+        $serviceName = $this->parseServiceNameFilter($request);
         $categoryId = $request->filled('category_id') ? (int) $request->category_id : null;
         $needsGeo   = $userLat !== null && $userLng !== null;
 
@@ -147,6 +148,11 @@ class CenterService
             ? $this->batchTenantSearch($centers, $search)
             : [];
 
+        // Dedicated service-name filter (centers that offer matching services)
+        $serviceNameHits = $serviceName
+            ? $this->batchTenantServiceSearch($centers, $serviceName)
+            : null;
+
         $matches = [];
 
         foreach ($centers as $center) {
@@ -162,7 +168,8 @@ class CenterService
                     $needsGeo ? (float) $userLat : null,
                     $needsGeo ? (float) $userLng : null,
                     $radius,
-                    $tenantSearchHits
+                    $tenantSearchHits,
+                    $serviceNameHits
                 );
 
                 if ($matched === false) {
@@ -251,6 +258,7 @@ class CenterService
     public function getFilteredCentersDetail($request)
     {
         $search     = $request->filled('search') ? mb_strtolower(trim($request->search)) : null;
+        $serviceName = $this->parseServiceNameFilter($request);
         $categoryId = $request->filled('category_id') ? (int) $request->category_id : null;
 
         $includes = $this->parseIncludes($request);
@@ -281,6 +289,10 @@ class CenterService
             ? $this->batchTenantSearch($centers, $search)
             : [];
 
+        $serviceNameHits = $serviceName
+            ? $this->batchTenantServiceSearch($centers, $serviceName)
+            : null;
+
         $matches = [];
 
         foreach ($centers as $center) {
@@ -296,7 +308,8 @@ class CenterService
                     null,
                     null,
                     null,
-                    $tenantSearchHits
+                    $tenantSearchHits,
+                    $serviceNameHits
                 );
 
                 if ($matched === false) {
@@ -364,6 +377,9 @@ class CenterService
      * $tenantSearchHits is a precomputed array of tenant DB names that matched
      * the search term (from batchTenantSearch). Passed in to avoid per-center
      * tenant queries.
+     *
+     * $serviceNameHits: null = no service_name filter;
+     * array of DB names that have a matching service.
      */
     private function centerMatchesFilters(
         Center $center,
@@ -372,8 +388,14 @@ class CenterService
         ?float $userLat,
         ?float $userLng,
         ?float $radius,
-        array $tenantSearchHits = []
+        array $tenantSearchHits = [],
+        ?array $serviceNameHits = null
     ) {
+        // Explicit service_name filter: center must offer that service
+        if ($serviceNameHits !== null && !in_array($center->database, $serviceNameHits, true)) {
+            return false;
+        }
+
         $matchedByName = $search
             ? str_contains(mb_strtolower($center->name ?? ''), $search)
             : true;
@@ -693,11 +715,8 @@ class CenterService
     }
 
     /**
-     * Search all tenant DBs in a single UNION query.
+     * Search tenant DBs for category/service name matches.
      * Returns an array of database names that matched.
-     *
-     * Pre-filter via information_schema so a half-setup tenant can't break the
-     * whole UNION.
      */
     private function batchTenantSearch($centers, string $search): array
     {
@@ -712,59 +731,101 @@ class CenterService
             return [];
         }
 
-        // Filter to DBs that actually exist and have the tables we need.
-        try {
-            $existing = DB::connection('mysql')
-                ->table('information_schema.tables')
-                ->whereIn('table_schema', $dbNames)
-                ->whereIn('table_name', ['category_service_translations', 'service_translations'])
-                ->pluck('table_schema')
-                ->unique()
-                ->all();
-        } catch (\Exception $e) {
-            Log::warning('batchTenantSearch prefilter failed', ['error' => $e->getMessage()]);
-            $existing = $dbNames; // fall back to trying everything
-        }
-
-        $existing = array_flip($existing);
-
-        $like     = '%' . $search . '%';
-        $unions   = [];
-        $bindings = [];
+        $like = '%' . $search . '%';
+        $hits = [];
+        $originalDb = Config::get('database.connections.mysql.database');
 
         foreach ($dbNames as $dbName) {
-            if (!isset($existing[$dbName])) {
-                continue;
+            try {
+                $safeDb = str_replace('`', '``', $dbName);
+                DB::connection('mysql')->getPdo()->exec("USE `{$safeDb}`");
+                Config::set('database.connections.mysql.database', $dbName);
+
+                $matched = DB::table('service_translations as st')
+                    ->join('services as s', function ($join) {
+                        $join->on('s.id', '=', 'st.service_id')
+                            ->whereNull('s.deleted_at');
+                    })
+                    ->whereRaw('LOWER(st.name) LIKE ?', [$like])
+                    ->exists();
+
+                if (!$matched) {
+                    $matched = DB::table('category_service_translations')
+                        ->whereRaw('LOWER(name) LIKE ?', [$like])
+                        ->exists();
+                }
+
+                if ($matched) {
+                    $hits[] = $dbName;
+                }
+            } catch (\Throwable $e) {
+                // Skip half-setup / missing-table tenants
             }
-            $db = str_replace('`', '``', $dbName);
-
-            $unions[] = "SELECT '{$db}' AS db_name
-                         FROM `{$db}`.category_service_translations
-                         WHERE LOWER(name) LIKE ? LIMIT 1";
-            $bindings[] = $like;
-
-            $unions[] = "SELECT '{$db}' AS db_name
-                         FROM `{$db}`.service_translations
-                         WHERE LOWER(name) LIKE ? LIMIT 1";
-            $bindings[] = $like;
         }
 
-        if (empty($unions)) {
+        $this->restoreMainDatabase($originalDb);
+
+        return array_values(array_unique($hits));
+    }
+
+    /**
+     * Find tenant DBs that have an active service matching the given name.
+     *
+     * @return array<int, string> database names
+     */
+    private function batchTenantServiceSearch($centers, string $serviceName): array
+    {
+        $dbNames = collect($centers)
+            ->pluck('database')
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        if (empty($dbNames)) {
             return [];
         }
 
-        try {
-            $rows = DB::connection('mysql')
-                ->select(implode(' UNION ALL ', $unions), $bindings);
-        } catch (\Exception $e) {
-            Log::warning('batchTenantSearch failed', [
-                'error'        => $e->getMessage(),
-                'tenant_count' => count($unions),
-            ]);
-            return [];
+        $like = '%' . $serviceName . '%';
+        $hits = [];
+        $originalDb = Config::get('database.connections.mysql.database');
+
+        foreach ($dbNames as $dbName) {
+            try {
+                $safeDb = str_replace('`', '``', $dbName);
+                DB::connection('mysql')->getPdo()->exec("USE `{$safeDb}`");
+                Config::set('database.connections.mysql.database', $dbName);
+
+                $matched = DB::table('service_translations as st')
+                    ->join('services as s', function ($join) {
+                        $join->on('s.id', '=', 'st.service_id')
+                            ->whereNull('s.deleted_at');
+                    })
+                    ->whereRaw('LOWER(st.name) LIKE ?', [$like])
+                    ->exists();
+
+                if ($matched) {
+                    $hits[] = $dbName;
+                }
+            } catch (\Throwable $e) {
+                // Skip broken / incomplete tenant DBs
+            }
         }
 
-        return array_values(array_unique(array_column($rows, 'db_name')));
+        $this->restoreMainDatabase($originalDb);
+
+        return array_values(array_unique($hits));
+    }
+
+    private function parseServiceNameFilter($request): ?string
+    {
+        if ($request->filled('service_name')) {
+            return mb_strtolower(trim($request->service_name));
+        }
+        if ($request->filled('service')) {
+            return mb_strtolower(trim($request->service));
+        }
+        return null;
     }
 
     // =========================================================================
