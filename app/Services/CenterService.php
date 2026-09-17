@@ -411,6 +411,91 @@ class CenterService
     }
 
     // =========================================================================
+    // ALL CENTERS SERVICES (flat public list)
+    // =========================================================================
+    public function getAllCentersServices($request)
+    {
+        $search = $request->filled('search') ? mb_strtolower(trim($request->search)) : null;
+        $isTop = $request->has('is_top')
+            ? filter_var($request->input('is_top'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE)
+            : null;
+        $centerId = $request->filled('center_id') ? (int) $request->center_id : null;
+
+        $centers = Center::where('status', 'approve')
+            ->where(function ($q) {
+                $q->whereNull('expire_date')->orWhere('expire_date', '>', now());
+            })
+            ->when($centerId, fn ($q) => $q->where('id', $centerId))
+            ->whereNotNull('database')
+            ->get(['id', 'name', 'domain', 'database']);
+
+        $allServices = [];
+        $originalDb = Config::get('database.connections.mysql.database');
+
+        foreach ($centers as $center) {
+            try {
+                $safeDb = str_replace('`', '``', $center->database);
+                DB::connection('mysql')->getPdo()->exec("USE `{$safeDb}`");
+                Config::set('database.connections.mysql.database', $center->database);
+
+                $query = Service::with(['translations', 'media'])
+                    ->when($isTop !== null, fn ($q) => $q->where('is_top', $isTop))
+                    ->when($search, function ($q) use ($search) {
+                        $q->whereHas('translations', function ($tq) use ($search) {
+                            $tq->whereRaw('LOWER(name) LIKE ?', ['%' . $search . '%']);
+                        });
+                    })
+                    ->orderBy('sort_order')
+                    ->orderBy('id');
+
+                foreach ($query->get() as $service) {
+                    $allServices[] = [
+                        'id' => $service->id,
+                        'name' => $service->name,
+                        'description' => $service->description,
+                        'price' => $service->price,
+                        'rooms_no' => $service->rooms_no,
+                        'max_time' => $service->max_time,
+                        'extra_time' => $service->extra_time,
+                        'is_top' => (bool) $service->is_top,
+                        'category_id' => $service->category_id,
+                        'image' => $service->getFirstMediaUrl('Service') ?: asset('assets/img/avatars/1.png'),
+                        'center_id' => $center->id,
+                        'center_name' => $center->name,
+                        'center_domain' => $center->domain,
+                    ];
+                }
+            } catch (\Exception $e) {
+                Log::warning('All centers services hydrate failed', [
+                    'center_id' => $center->id,
+                    'database' => $center->database,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        $this->restoreMainDatabase($originalDb);
+
+        // Optional name sort across centers
+        if ($request->input('sort') === 'name') {
+            usort($allServices, fn ($a, $b) => strcasecmp($a['name'] ?? '', $b['name'] ?? ''));
+        }
+
+        $perPage = (int) $request->input('per_page', 30);
+        $page = (int) $request->input('page', 1);
+        $total = count($allServices);
+        $items = array_slice($allServices, ($page - 1) * $perPage, $perPage);
+
+        return new LengthAwarePaginator(
+            $items,
+            $total,
+            $perPage,
+            $page,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+    }
+
+    // =========================================================================
     // TENANT CONNECTION
     // =========================================================================
     private function connectTenant(string $database): void

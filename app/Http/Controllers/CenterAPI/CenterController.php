@@ -57,6 +57,20 @@ class CenterController extends Controller
     }
 
     /**
+     * Flat list of all services across approved centers (public, no auth).
+     */
+    public function services(Request $request, CenterService $centerService)
+    {
+        $result = $centerService->getAllCentersServices($request);
+
+        if (count($result) > 0) {
+            return MyHelper::responseJSON(__('api.doneSuccessfully'), Response::HTTP_OK, $result);
+        }
+
+        return MyHelper::responseJSON(__('api.noDataFound'), Response::HTTP_NOT_FOUND);
+    }
+
+    /**
      * Fetch a single approved center by ID.
      *
      * @param int $id
