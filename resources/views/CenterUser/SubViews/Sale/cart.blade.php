@@ -2969,6 +2969,9 @@ h6,
                             $.each(wallets, function(index, item) {
                                 var wallet = item.wallet;
                                 var balance = parseFloat(item.remaining_balance || 0);
+                                if (!wallet || balance <= 0) {
+                                    return;
+                                }
                                 
                                 walletsElement += `<div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-2">
                                     <div class="form-check wallet-item" style="padding: 10px;color: #fff;background-color: #428bca;border-color: #357ebd;border-radius: 4px;min-height: 50px;display: flex;align-items: center;gap: 10px;font-size: 10px;width: 100%;">

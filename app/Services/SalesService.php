@@ -23,6 +23,7 @@ use App\Models\Wallet;
 use App\Models\UserPackage;
 use App\Models\UserUsedPackage;
 use App\Models\PackageServicePaid;
+use Illuminate\Support\Facades\Cache;
 use App\Models\PackageServiceFree;
 use App\Services\SMSGatewayService;
 use Illuminate\Support\Facades\DB;
@@ -711,26 +712,59 @@ class SalesService
             return; // User not found, skip deduction
         }
 
+        $userWallet = UserWallet::where('user_id', $user->id)
+            ->where('wallet_id', $walletId)
+            ->first();
+
+        $assignedAmount = (float) ($userWallet->amount ?? $wallet->amount ?? 0);
+        $alreadyUsed = (float) UserUsedWallet::where('user_id', $user->id)
+            ->where('wallet_id', $walletId)
+            ->sum('amount');
+        $remaining = round($assignedAmount - $alreadyUsed, 2);
+
+        if ($remaining <= 0) {
+            if (!$wallet->used) {
+                $wallet->update(['used' => true]);
+            }
+            return;
+        }
+
+        $deductAmount = min((float) $bookingAmount, $remaining);
+
         // Create UserUsedWallet record to track wallet usage
         UserUsedWallet::create([
-            'amount' => $bookingAmount, // Amount deducted from wallet
+            'amount' => $deductAmount,
             'user_id' => $user->id,
             'branch_id' => $branchId,
             'wallet_id' => $walletId,
             'booking_id' => $bookingId,
         ]);
 
-        // Deduct booking amount from user's wallet balance
+        // Deduct from user's wallet balance without going negative
         $currentBalance = (float) ($user->wallet ?? 0);
-        $newBalance = max(0, $currentBalance - $bookingAmount); // Ensure balance doesn't go negative
-        
+        $newBalance = max(0, $currentBalance - $deductAmount);
+
         $user->update([
             'wallet' => $newBalance
         ]);
 
-        // Mark wallet as used if balance reaches zero or below
-        if ($newBalance <= 0 && !$wallet->used) {
+        if (round($remaining - $deductAmount, 2) <= 0 && !$wallet->used) {
             $wallet->update(['used' => true]);
+        }
+
+        $this->forgetCustomerBookingProfileCache($clientMobile, $user);
+    }
+
+    private function forgetCustomerBookingProfileCache($clientMobile, User $user): void
+    {
+        $keys = array_filter([
+            $clientMobile,
+            $user->phone,
+            ($user->country_code ?? '') . ($user->phone ?? ''),
+        ]);
+
+        foreach (array_unique($keys) as $phone) {
+            Cache::forget('customer_booking_profile_' . md5(trim((string) $phone)));
         }
     }
 
