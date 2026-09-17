@@ -426,6 +426,8 @@ return [
     'stock_order_branches'            => 'فروع الطلب',
     'no_data_found'                   => 'لا يوجد بيانات',
     'serial_number'                   => 'رقم التسلسل',
+    'open_time '                      => 'وقت الفتح',
+    'close_time '                      => 'وقت الإغلاق',
     
     
     
