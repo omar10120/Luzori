@@ -18,6 +18,7 @@ use App\Services\InvoiceSettingsService;
 use App\Services\SalesService;
 use App\Services\SaleOtpService;
 use App\Services\CustomerSearchService;
+use App\Models\PaymentMethod;
 use App\Traits\CategoryTreeTrait;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -25,7 +26,6 @@ use Illuminate\Support\Str;
 use niklasravnsborg\LaravelPdf\Facades\Pdf;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
-
 class SalesController extends Controller
 {
     use CategoryTreeTrait;
@@ -418,7 +418,14 @@ class SalesController extends Controller
         $menu_link = route($this->indexRoute);
         $title = __('field.payment');
 
-        $paymentMethods = \App\Models\PaymentMethod::forBooking()->orWhereJsonContains('types', 'general')->get();
+        // $paymentMethods = PaymentMethod::forBooking()->orWhereJsonContains('types', 'general')->get();
+        $paymentMethods = PaymentMethod::query()
+            ->where('status', true)
+            ->where(function ($q) {
+                $q->whereJsonContains('types', 'booking')
+                ->orWhereJsonContains('types', 'general');
+            })
+            ->get();
         
         // Get selected customer if exists
         $selectedCustomer = null;

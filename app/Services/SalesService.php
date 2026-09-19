@@ -56,8 +56,10 @@ class SalesService
             ->orderBy('id')
             ->get(['id', 'price']);
     
+    
         $paymentMethodsAll = PaymentMethod::query()
-            ->select('id', 'name', 'types')
+            ->select('id', 'name', 'types', 'status')
+            ->where('status', true)
             ->get();
     
         $paymentMethods = $paymentMethodsAll->filter(function ($m) {
@@ -1076,4 +1078,3 @@ class SalesService
         return $detailTipSum <= 0;
     }
 }
-

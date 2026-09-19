@@ -68,6 +68,7 @@ class BookingWithTipsDataTable extends DataTable
         // Get all payment methods that support tips
         $tipsPaymentMethods = \App\Models\PaymentMethod::forTips()->pluck('name')->toArray();
         
+        
         return $model->query()->with($relations)->whereIn('payment_type', $tipsPaymentMethods)->withTrashed()->orderBy('bookings.id', 'DESC');
     }
 

@@ -14,6 +14,7 @@ use App\Models\User;
 use App\Models\UserWallet;
 use App\Models\Sale;
 use App\Models\UserUsedWallet;
+use App\Models\PaymentMethod;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Str;
@@ -166,8 +167,9 @@ class UserWalletController extends Controller
         $wallet = Wallet::select('id', 'code')->find($request->id);
         $workers = Worker::all();
         $users = User::all();
-        
-        $paymentMethods = \App\Models\PaymentMethod::forWallet()->get();
+
+       
+        $paymentMethods = PaymentMethod::forWallet()->where('status', true)->get();
         // $paymentMethods = $this->crudService->all('PaymentMethod')->where('type', 'wallet');
 
 
