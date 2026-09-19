@@ -160,17 +160,16 @@ class CustomerSearchService
 
         $wallets = $user->wallets->map(function ($userWallet) use ($usedWalletAmounts) {
             $used = (float) ($usedWalletAmounts[$userWallet->wallet_id] ?? 0);
-            $remaining = round((float) $userWallet->amount - $used, 2);
 
             return [
                 'id' => $userWallet->id,
-                'remaining_balance' => $remaining,
+                'remaining_balance' => (float) $userWallet->amount - $used,
                 'wallet' => [
                     'id' => $userWallet->wallet_id,
                     'code' => $userWallet->wallet->code ?? '',
                 ],
             ];
-        })->filter(fn ($wallet) => $wallet['remaining_balance'] > 0)->values();
+        })->values();
 
         $packageIds = $user->packages->pluck('id');
         $usedPackageRows = $packageIds->isEmpty()

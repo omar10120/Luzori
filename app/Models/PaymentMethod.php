@@ -11,11 +11,13 @@ class PaymentMethod extends Model
     
     protected $fillable = [
         'name',
-        'types'
+        'types',
+        'status'
     ];
 
     protected $casts = [
         'types' => 'array',
+        'status' => 'boolean'
     ];
 
     // Payment method types

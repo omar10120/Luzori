@@ -427,12 +427,7 @@ return [
     'no_data_found'                   => 'لا يوجد بيانات',
     'serial_number'                   => 'رقم التسلسل',
     'open_time '                      => 'وقت الفتح',
-    'close_time '                     => 'وقت الإغلاق',
-    'is_default'                      => 'الافتراضي',
-    'yes'                             => 'نعم',
-    'no'                              => 'لا',
-    'wallet_balance_insufficient'    => 'رصيد المحفظة غير كافٍ'
-    
+    'close_time '                      => 'وقت الإغلاق',
     
     
     

@@ -151,6 +151,7 @@ Route::group(['middleware' => 'auth_center_user:center_user'], function () {
             Route::get('index', 'index')->name('index');
             Route::get('create', 'create')->name('create');
             Route::post('updateOrCreate', 'updateOrCreate')->name('updateOrCreate');
+            Route::post('change-status', 'changeStatus')->name('changeStatus');
         });
     });
 

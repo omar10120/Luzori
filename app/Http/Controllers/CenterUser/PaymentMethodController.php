@@ -6,6 +6,7 @@ use App\Datatables\CenterUser\PaymentMethodDataTable;
 use App\Helpers\MyHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CenterUser\PaymentMethodRequest;
+use App\Models\PaymentMethod;
 use App\Services\CRUDService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -92,5 +93,23 @@ class PaymentMethodController extends Controller
         } else {
             return MyHelper::responseJSON(__('admin.an_error_occurred'), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
+    }
+
+    public function changeStatus(Request $request)
+    {
+        $can = 'UPDATE_' . Str::upper($this->plural);
+        if (!auth('center_user')->user()->can($can, 'center_api')) {
+            return abort(403);
+        }
+
+        $request->validate([
+            'id' => ['required', 'integer', 'exists:payment_methods,id'],
+            'status' => ['required', 'boolean'],
+        ]);
+
+        $paymentMethod = PaymentMethod::findOrFail($request->integer('id'));
+        $paymentMethod->update(['status' => $request->boolean('status')]);
+
+        return MyHelper::responseJSON('redirect_to_home', Response::HTTP_OK, $paymentMethod);
     }
 }

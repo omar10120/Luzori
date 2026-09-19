@@ -28,20 +28,16 @@ class PaymentMethodRequest extends FormRequest
             'name' => [
                 'required',
                 'string',
-                'max:255',
-                Rule::unique('payment_methods')->ignore($this->id)->where(function ($query) {
-                    $query->whereNull('deleted_at'); // Only check against non-soft-deleted records
-                }),
+                'max:255',Rule::unique('payment_methods')->ignore($this->id)->where(function ($query) {$query->whereNull('deleted_at'); // Only check against non-soft-deleted records
+                    }),
             ],
             'types' => [
                 'required',
                 'array',
                 'min:1'
             ],
-            'types.*' => [
-                'string',
-                Rule::in(['booking', 'product', 'wallet', 'tips', 'general'])
-            ],
+            'types.*' => ['string',Rule::in(['booking', 'product', 'wallet', 'tips', 'general'])],
+            'status' => ['nullable','boolean',],
         ];
 
         if (isset($this->id)) {

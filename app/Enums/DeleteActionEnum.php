@@ -7,6 +7,8 @@ enum DeleteActionEnum: string
     case SOFT_DELETE = "SOFT_DELETE";
     case FORCE_DELETE = "FORCE_DELETE";
     case RESTORE_DELETED = "RESTORE_DELETED";
+    case CHANGE_STATUS   = 'CHANGE_STATUS'; 
+
 
     public static function typeOf($type)
     {
@@ -23,5 +25,9 @@ enum DeleteActionEnum: string
     public static function RESTORE_DELETED(): DeleteActionEnum
     {
         return self::RESTORE_DELETED;
+    }
+    public static function CHANGE_STATUS(): DeleteActionEnum
+    {
+        return self::CHANGE_STATUS;
     }
 }

@@ -50,17 +50,17 @@ class PaymentMethodDataTable extends DataTable
                 return $badges;
             })
             ->editColumn('status', function ($row) {
-                $checked = $row->deleted_at ? '' : 'checked';
-                $operation = $row->deleted_at ? DeleteActionEnum::RESTORE_DELETED->value : DeleteActionEnum::SOFT_DELETE->value;
-                return '<label class="switch switch-square">
-                            <input onChange="changeStatus(\'' . $this->model . '\',\'' . $row->id . '\',\'' . $operation . '\')"
-                                type="checkbox" class="switch-input"' . $checked . '>
-                            <span class="switch-toggle-slider">
-                            <span class="switch-on"></span>
-                            <span class="switch-off"></span>
-                            </span>
-                        </label>';
-            })
+                    $checked = $row->status ? 'checked' : '';
+
+                    return '<label class="switch switch-square">
+                                <input onChange="updatePaymentMethodStatus(' . $row->id . ', this.checked)"
+                                    type="checkbox" class="switch-input"' . $checked . '>
+                                <span class="switch-toggle-slider">
+                                    <span class="switch-on"></span>
+                                    <span class="switch-off"></span>
+                                </span>
+                            </label>';
+                })
             ->editColumn('name', function ($row) {
                 return \App\Helpers\MyHelper::truncateWithReadMore($row->name ?? '');
             })
@@ -68,10 +68,11 @@ class PaymentMethodDataTable extends DataTable
             ->setRowId('id');
     }
 
+
     public function query(PaymentMethod $model): QueryBuilder
     {
         return $model->query()->withTrashed()->orderBy($this->plural . '.id', 'DESC');
-    }
+    }   
 
     public function html(): HtmlBuilder
     {
@@ -117,6 +118,27 @@ class PaymentMethodDataTable extends DataTable
             ->addTableClass('table table-bordered table-hover')
             ->initComplete('function () {
              $(".dt-action-buttons").append("<a href=' . $addRoute . ' class=\"btn btn-primary btn-sm mx-1 mx-md-2 px-2 px-md-3 py-1 py-md-2\">' . __('general.add_new') . '<i class=\"ti ti-plus\"></i></a>");
+             window.updatePaymentMethodStatus = function (id, status) {
+                 $.ajax({
+                     url: "' . route('center_user.payment_methods.changeStatus') . '",
+                     type: "POST",
+                     dataType: "json",
+                     data: {
+                         _token: "' . csrf_token() . '",
+                         id: id,
+                         status: status ? 1 : 0
+                     },
+                     success: function () {
+                         $("#' . $this->plural . '-table").DataTable().ajax.reload(null, false);
+                     },
+                     error: function () {
+                         $("#' . $this->plural . '-table").DataTable().ajax.reload(null, false);
+                         if (typeof fireMessage === "function") {
+                             fireMessage("' . __('admin.ok') . '", "' . __('admin.an_error_occurred') . '", "", "error");
+                         }
+                     }
+                 });
+             };
             }')
             ->parameters([]);
     }
