@@ -1,39 +1,3 @@
-<style>
-    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Tajawal:wght@200;300;400;500;700;800;900&display=swap');
-
-:root {
-    --app-font: 'Cairo', sans-serif;
-}
-
-html,
-body,
-
-table,
-th,
-td,
-tr,
-button,
-input,
-select,
-textarea,
-label,
-div,
-span,
-a,
-li,
-p,
-h1,
-h2,
-h3,
-h4,
-h5,
-h6,
-.dataTables_wrapper{
-    font-family: var(--app-font) !important;
-}
-
-
-</style>
 @extends('layouts/layoutMaster')
 
 @section('title', $title)
@@ -43,6 +7,21 @@ h6,
 @endsection
 
 @section('content')
+    @php
+        // ✅ ADDED: Auto-select the default user when no customer is chosen yet
+        if (empty($cart['client_id'])) {
+            $defaultUser = \App\Models\User::query()
+                ->where('is_default', true)
+                ->whereNull('deleted_at')
+                ->first();
+
+            if ($defaultUser) {
+                $cart['client_id'] = $defaultUser->id;
+                $selectedUser = $defaultUser;
+            }
+        }
+    @endphp
+
     <div class="container-fluid">
         @include('CenterUser.Components.breadcrumbs')
         @php
@@ -225,14 +204,6 @@ h6,
                                                                                         <option value="{{ $service->id }}" data-category-id="{{ $service->category_id }}">{{ $service->name }}</option>
                                                                                     @endforeach
                                                                                 </select>
-                                                                                <!-- <div class="mt-3 mb-1">
-                                                                                    <label for="booking-packages" class="form-label mb-0">{{ __('locale.packages') }}</label>
-                                                                                    <select class="select2 form-control " name="packages[]" id="booking-packages" multiple>
-                                                                                        @foreach ($packages as $package)
-                                                                                                <option value="{{ $package->id }}" data-price="{{ $package->price }}">{{ $package->name }} ({{ $package->price }} {{ get_currency() }})</option>
-                                                                                        @endforeach
-                                                                                    </select>
-                                                                                </div> -->
                                                                             </div>
                                                                         </div>
                                                                     </div>
@@ -1274,13 +1245,16 @@ h6,
     <script>
         $(document).ready(function() {
             let cart = @json($cart['items'] ?? []);
-            let selectedCustomerId = @json($cart['client_id'] ?? null);
-            let selectedCustomerName = null; // Will be set on load or selection
-            let selectedCustomerPhone = null; // Will be set on load or selection
+
+            // ✅ ADDED: hydrate selected customer from server (auto-selected is_default user)
+            let selectedCustomerId    = @json($cart['client_id'] ?? null);
+            let selectedCustomerName  = @json(optional($selectedUser ?? null)->name);
+            let selectedCustomerPhone = @json(optional($selectedUser ?? null)->phone);
+
             let bookingWizardData = {};
-            let bookingIds = []; // Should be array, not object
+            let bookingIds = [];
             let bookingPackageIds = [];
-            
+
             // Configuration from PHP to avoid mixing PHP and JS logic below
             const posConfig = {
                 hasCommissionPermission: {{ has_commission_permission() ? 'true' : 'false' }},
@@ -3968,6 +3942,22 @@ h6,
 
             // Initial render
             renderCart();
+
+            // ✅ ADDED: If a default customer was auto-selected on page load, reflect it in the UI
+            if (selectedCustomerId && selectedCustomerName) {
+                updateCustomerDisplay(
+                    selectedCustomerId,
+                    selectedCustomerName,
+                    @json(optional($selectedUser ?? null)->email ?? optional($selectedUser ?? null)->full_phone),
+                    @json(optional($selectedUser ?? null)->image),
+                    selectedCustomerPhone
+                );
+
+                // Preload the customer's wallets/packages/services cache so step 3 is instant
+                if (selectedCustomerPhone) {
+                    loadCustomerServices(selectedCustomerPhone);
+                }
+            }
             
             // Initial check for continue button state (customer required)
             $('#continueToPayment').prop('disabled', cart.length === 0 || !selectedCustomerId);
