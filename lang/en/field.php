@@ -455,4 +455,5 @@ return [
     'is_default'                      => 'Default',
     'yes'                             => 'Yes',
     'no'                              => 'No',
+    'wallet_balance_insufficient'     => 'Insufficient wallet balance',
 ];

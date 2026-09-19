@@ -301,6 +301,8 @@
                                                         </div>
                                                     </div>
                                                     <div id="booking-walletsElement"></div>
+                                                    <!-- ✅ ADDED: wallet balance validation error display -->
+                                                    <div class="text-danger mt-2" id="booking-wallet-balance-error" style="display: none;"></div>
                                                     <div id="booking-membershipsElement"></div>
                                                     <div id="booking-packagesElement"></div>
                                                     <div id="booking-servicesTable"></div>
@@ -1263,7 +1265,11 @@
                 translations: {
                     max_commission: '{{ __("field.max_commission") }}',
                     commission_cannot_exceed: '{{ __("field.commission_cannot_exceed_service_price") }}',
-                    select_commission: '{{ __("field.select_commission") }}'
+                    select_commission: '{{ __("field.select_commission") }}',
+                    // ✅ ADDED: wallet balance translations
+                    wallet_insufficient: '{{ __("field.wallet_balance_insufficient") ?? "Wallet balance is insufficient for this booking" }}',
+                    wallet_balance_is: '{{ __("field.wallet_balance") ?? "Wallet balance" }}',
+                    total_is: '{{ __("field.total") }}'
                 }
             };
 
@@ -1943,6 +1949,39 @@
                 return total;
             }
 
+            // ✅ ADDED: Validate that the selected wallet has enough balance for the current booking total
+            function validateWalletBalance() {
+                var $walletError = $('#booking-wallet-balance-error');
+                var $selectedWallet = $('input[name="discount_id"].booking-wallet-radio:checked');
+
+                if ($selectedWallet.length === 0) {
+                    $walletError.hide().text('');
+                    return true;
+                }
+
+                var walletBalance = parseFloat($selectedWallet.data('wallet-amount')) || 0;
+                var totalToPay = getCurrentBookingTotal();
+
+                // Round to 2 decimals to avoid floating point issues
+                walletBalance = Math.round(walletBalance * 100) / 100;
+                totalToPay = Math.round(totalToPay * 100) / 100;
+
+                if (walletBalance < totalToPay) {
+                    var diff = (totalToPay - walletBalance).toFixed(2);
+                    var msg = posConfig.translations.wallet_insufficient +
+                              ' — ' + posConfig.translations.wallet_balance_is + ': ' +
+                              walletBalance.toFixed(2) + ' ' + posConfig.currency +
+                              ', ' + posConfig.translations.total_is + ': ' +
+                              totalToPay.toFixed(2) + ' ' + posConfig.currency +
+                              ' (' + '{{ __("field.remaining_amount") }}: ' + diff + ' ' + posConfig.currency + ')';
+                    $walletError.html('<i class="ti ti-alert-triangle me-1"></i>' + msg).show();
+                    return false;
+                }
+
+                $walletError.hide().text('');
+                return true;
+            }
+
             // Real-time validation for booking payments
             function validateBookingPayments() {
                 const isMultiple = $('#booking-multiple_payments_toggle').is(':checked');
@@ -1954,8 +1993,14 @@
                 // If package is selected, package type/payment method is auto-applied.
                 if (hasPackageSelected) {
                     $errorMsg.hide();
+                    $('#booking-wallet-balance-error').hide();
                     $nextBtn.prop('disabled', false);
                     return true;
+                }
+
+                // ✅ ADDED: wallet balance check (runs regardless of mode)
+                if (!validateWalletBalance()) {
+                    isValid = false;
                 }
 
                 if (isMultiple) {
@@ -2139,6 +2184,12 @@
                 
                 // Final validation before proceeding
                 if (!validateBookingPayments()) {
+                    // ✅ ADDED: if wallet balance is the issue, scroll to it
+                    if ($('#booking-wallet-balance-error').is(':visible')) {
+                        $('html, body').animate({
+                            scrollTop: $('#booking-wallet-balance-error').offset().top - 150
+                        }, 400);
+                    }
                     return false;
                 }
 
@@ -2468,6 +2519,8 @@
                 $('#booking-service-container, #booking-review-content').empty();
                 // Clear the loaded wallet/membership HTML to prevent stale data
                 $('#booking-servicesTable, #booking-walletsElement, #booking-membershipsElement').empty();
+                // ✅ ADDED: also hide the wallet balance error
+                $('#booking-wallet-balance-error').hide().text('');
                 
                 bookingWizardData = {};
                 bookingIds = {};
@@ -2841,6 +2894,7 @@
 
             function clearCustomerBookingSections() {
                 $('#booking-servicesTable, #booking-walletsElement, #booking-membershipsElement, #booking-packagesElement').html('');
+                $('#booking-wallet-balance-error').hide().text('');
                 userPackagesData = [];
             }
 
@@ -2848,6 +2902,7 @@
                 var loadingHtml = '<div class="text-center py-3 text-muted"><i class="ti ti-loader-2 ti-spin me-1"></i>{{ __("field.searching") }}...</div>';
                 $('#booking-servicesTable').html(loadingHtml);
                 $('#booking-walletsElement, #booking-membershipsElement, #booking-packagesElement').html('');
+                $('#booking-wallet-balance-error').hide().text('');
             }
 
             function get_services(user_phone) {
@@ -3267,6 +3322,10 @@
                     // Re-render cart to update prices (reset to original)
                     renderCart();
                     calculateTotals();
+                    // ✅ ADDED: re-check wallet balance (since total may have changed)
+                    if (typeof validateWalletBalance === 'function') {
+                        validateWalletBalance();
+                    }
                 });
 
                 // Clear wallet selection
@@ -3276,6 +3335,8 @@
                     if (typeof window.togglePaymentMethodVisibility === 'function') {
                         window.togglePaymentMethodVisibility();
                     }
+                    // ✅ ADDED: hide the wallet balance error when wallet is cleared
+                    $('#booking-wallet-balance-error').hide().text('');
                     // Wallet is a payment method, doesn't affect prices - no need to re-render cart
                 });
 
@@ -3289,6 +3350,10 @@
                     updateBookingReviewServicePrices();
                     renderCart();
                     calculateTotals();
+                    // ✅ ADDED: re-check wallet balance (since total may have changed)
+                    if (typeof validateWalletBalance === 'function') {
+                        validateWalletBalance();
+                    }
                 });
 
                 // Listen for radio button changes (discount, wallet, membership)
@@ -3308,6 +3373,8 @@
                     
                     var isDiscountCode = $(this).hasClass('booking-discount-radio');
                     var isMembership = $(this).hasClass('booking-membership-radio');
+                    var isWallet = $(this).hasClass('booking-wallet-radio');
+
                     if (isDiscountCode || isMembership) {
                         updateBookingReviewServicePrices();
                         renderCart();
@@ -3316,6 +3383,17 @@
                     // Wallets and memberships are payment methods - they don't change displayed prices
                     // The backend will deduct the booking amount from wallet/membership balance
                     
+                    // ✅ ADDED: Validate wallet balance when a wallet is selected or changed
+                    if (isWallet || $('input[name="discount_id"].booking-wallet-radio:checked').length > 0) {
+                        if (typeof validateWalletBalance === 'function') {
+                            validateWalletBalance();
+                        }
+                    }
+
+                    // ✅ ADDED: also revalidate payments to update Next button state
+                    if (typeof validateBookingPayments === 'function') {
+                        validateBookingPayments();
+                    }
                     // Step 3 Next button state is updated via togglePaymentMethodVisibility which calls updateStep3NextButtonState
                 });
 
@@ -3360,6 +3438,8 @@
                     if ($(this).val() && $(this).val() !== '') {
                         $('input[name="discount_id"].booking-wallet-radio:checked').prop('checked', false);
                         toggleClearButtons();
+                        // ✅ ADDED: hide wallet error when wallet is auto-cleared
+                        $('#booking-wallet-balance-error').hide().text('');
                         if (typeof window.togglePaymentMethodVisibility === 'function') {
                             window.togglePaymentMethodVisibility();
                         }

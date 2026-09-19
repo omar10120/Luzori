@@ -431,6 +431,8 @@ return [
     'is_default'                      => 'الافتراضي',
     'yes'                             => 'نعم',
     'no'                              => 'لا',
+    'wallet_balance_insufficient'    => 'رصيد المحفظة غير كافٍ'
+    
     
     
     
