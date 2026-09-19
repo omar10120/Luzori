@@ -85,6 +85,17 @@
                         </div>
                         <div class="row">
                             <div class="col-md-12">
+                                <div class="mb-1">
+                                <label class="form-label">{{__('field.is_default')}}</label>
+                                <input type="hidden" name="is_default" value="0" />
+                                <input type="checkbox" name="is_default" value="1"
+                                    class="form-check-input"
+                                    {{ $item && $item->is_default ? 'checked' : '' }} />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
                                 @include('CenterUser.Components.image', [
                                     'item' => $item,
                                     'name' => 'image',
@@ -92,6 +103,7 @@
                                 ])
                             </div>
                         </div>
+                     
                     </div>
                     <div class="card-footer">
                         <button type="submit" class="btn btn-primary submitFrom">

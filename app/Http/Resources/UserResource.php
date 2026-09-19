@@ -21,6 +21,7 @@ class UserResource extends JsonResource
         $res['country_code'] = $this->country_code;
         $res['phone'] = $this->phone;
         $res['wallet'] = $this->wallet;
+        $res['is_default'] = $this->is_default;
         $res['image'] = $this->image;
         $res['created_at'] = $this->created_at;
         return $res;

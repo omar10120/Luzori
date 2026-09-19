@@ -54,7 +54,10 @@ class UserDataTable extends DataTable
                 $count = $row->packages->where('status', 'active')->count();
                 return '<span class="badge bg-info">' . $count . ' ' . __('locale.packages') . '</span>';
             })
-            ->rawColumns(['status', 'first_name', 'packages'], true)
+            ->editColumn('is_default', function ($row) {
+                return $row->is_default ? '<span class="badge bg-success">' . __('field.yes') . '</span>' : '<span class="badge bg-danger">' . __('field.no') . '</span>';
+            })
+            ->rawColumns(['status', 'first_name', 'packages', 'is_default'], true)
             ->setRowId('id');
     }
 
@@ -137,6 +140,7 @@ class UserDataTable extends DataTable
             Column::computed('phone')->searchable(true)->title(__('field.phone')),
             Column::make('wallet')->searchable(true)->title(__('field.wallet')),
             Column::computed('packages')->searchable(false)->title(__('locale.packages')),
+            Column::computed('is_default')->searchable(false)->title(__('field.is_default')),
             Column::computed('status')->searchable(false)->title(__('field.status')),
             Column::make('created_at')->searchable(true)->title(__('field.created_at')),
         ];

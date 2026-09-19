@@ -32,6 +32,7 @@ class AppUser extends Authenticatable implements HasMedia
         'password',
         'wallet',
         'is_active',
+        'is_default',
         'image',
         'address',
         'birth',

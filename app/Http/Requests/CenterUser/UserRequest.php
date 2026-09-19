@@ -31,6 +31,7 @@ class UserRequest extends FormRequest
                 'email' => 'nullable|email|unique:users,email,' . $this->id,
                 'country_code' => 'required|max:4',
                 'phone' => 'required|numeric|digits_between:6,10|unique:users,phone,' . $this->id,
+                'is_default'   => 'nullable|boolean', 
                 'image' => 'nullable|image|min:10|max:4096|mimes:jpg,jpeg,png,gif|mimetypes:image/jpeg,image/png',
             ];
         } else {
@@ -40,6 +41,7 @@ class UserRequest extends FormRequest
                 'email' => 'nullable|email|unique:users',
                 'country_code' => 'required|max:4',
                 'phone' => 'required|numeric|digits_between:6,10|unique:users',
+                'is_default' => 'nullable|boolean',
                 'image' => 'nullable|image|min:10|max:4096|mimes:jpg,jpeg,png,gif|mimetypes:image/jpeg,image/png',
             ];
         }

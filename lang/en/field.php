@@ -452,4 +452,7 @@ return [
     'serial_number'                   => 'Serial Number',
     'open_time '                      => 'Open Time',
     'close_time '                     => 'Close Time',
+    'is_default'                      => 'Default',
+    'yes'                             => 'Yes',
+    'no'                              => 'No',
 ];

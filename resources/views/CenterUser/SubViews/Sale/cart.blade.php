@@ -781,7 +781,15 @@ h6,
                                 <input type="tel" maxlength="7" id="quick_customer_phone" class="form-control" name="phone" required pattern="[0-9]{7}" title="{{ __('field.phone_must_be_7_digits') }}" />
                                 <div class="invalid-feedback"></div>
                             </div>
+                            <div class="col-md-12 mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="quick_customer_is_default" name="is_default" value="1" />
+                                    <label class="form-check-label" for="quick_customer_is_default">{{ __('field.is_default') }}</label>
+                                </div>
+                            </div>
                         </div>
+
+                        
                         <div class="mb-3">
                             <label for="quick_customer_image" class="form-label">
                                 {{ __('field.image') }}
@@ -861,6 +869,12 @@ h6,
                                 </label>
                                 <input type="number" maxlength="7" id="edit_customer_phone" class="form-control" name="phone" required />
                                 <div class="invalid-feedback"></div>
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="edit_customer_is_default" name="is_default" value="1" checked />
+                                    <label class="form-check-label" for="edit_customer_is_default">{{ __('field.is_default') }}</label>
+                                </div>
                             </div>
                         </div>
                         <div class="mb-3">
@@ -1266,7 +1280,7 @@ h6,
             let bookingWizardData = {};
             let bookingIds = []; // Should be array, not object
             let bookingPackageIds = [];
-
+            
             // Configuration from PHP to avoid mixing PHP and JS logic below
             const posConfig = {
                 hasCommissionPermission: {{ has_commission_permission() ? 'true' : 'false' }},
@@ -2969,9 +2983,6 @@ h6,
                             $.each(wallets, function(index, item) {
                                 var wallet = item.wallet;
                                 var balance = parseFloat(item.remaining_balance || 0);
-                                if (!wallet || balance <= 0) {
-                                    return;
-                                }
                                 
                                 walletsElement += `<div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-2">
                                     <div class="form-check wallet-item" style="padding: 10px;color: #fff;background-color: #428bca;border-color: #357ebd;border-radius: 4px;min-height: 50px;display: flex;align-items: center;gap: 10px;font-size: 10px;width: 100%;">
@@ -4178,101 +4189,6 @@ h6,
                 $('#continueToPayment').prop('disabled', cart.length === 0 || !userId);
             }
 
-            // ─────────────────────────────────────────────────────────────
-            // Auto-select the first customer on page load
-            // ─────────────────────────────────────────────────────────────
-            function loadDefaultCustomer() {
-                // If the cart session already has a customer, respect it.
-                if (selectedCustomerId !== null && selectedCustomerId !== undefined && selectedCustomerId !== '') {
-                    return;
-                }
-
-                $.ajax({
-                    url: '{{ route('center_user.sales.search-customers') }}',
-                    type: 'GET',
-                    // empty query → backend should return the first batch of customers
-                    data: { q: '' },
-                    headers: {
-                        'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    success: function (response) {
-                        // Handle both select2 format ({results:[...]}) and plain array
-                        var results = [];
-                        if (response && Array.isArray(response.results)) {
-                            results = response.results;
-                        } else if (Array.isArray(response)) {
-                            results = response;
-                        } else if (response && Array.isArray(response.data)) {
-                            results = response.data;
-                        }
-
-                        if (!results.length) {
-                            console.warn('loadDefaultCustomer: no customers returned by search endpoint');
-                            return;
-                        }
-
-                        // Prefer a literal id=0 if it happens to exist, else take the first
-                        var preferred = results.find(function (u) { return String(u.id) === '0'; });
-                        applyCustomerToUi(preferred || results[0]);
-                    },
-                    error: function (xhr) {
-                        console.warn('loadDefaultCustomer: search-customers failed', xhr && xhr.status);
-                    }
-                });
-            }
-
-            // Normalize whatever shape the search endpoint returns into the fields
-            // updateCustomerDisplay / dropdown expect.
-            function applyCustomerToUi(user) {
-                if (!user || user.id === undefined || user.id === null) {
-                    return;
-                }
-
-                const userName  = user.name
-                    || user.text
-                    || ((user.first_name || '') + ' ' + (user.last_name || '')).trim();
-
-                const userEmail = user.email || '';
-                // select2 endpoints often expose extra fields on user itself, or nested
-                const userPhone = user.phone || user.full_phone || (user.data && user.data.phone) || '';
-                const userImage = user.image || (user.data && user.data.image) || '{{ asset('assets/img/avatars/1.png') }}';
-                const branchId  = user.branch_id || (user.data && user.data.branch_id) || null;
-
-                selectedCustomerName  = userName;
-                selectedCustomerPhone = userPhone;
-
-                // This also sets selectedCustomerId globally
-                updateCustomerDisplay(user.id, userName, userEmail || userPhone, userImage, userPhone);
-
-                // Make it visible in the Select2 dropdown as the selected option
-                const label = userName
-                    + (userPhone ? ' - ' + userPhone : '')
-                    + (userEmail ? ' - ' + userEmail : '');
-
-                $('#select-customer-dropdown').find('option[value="' + user.id + '"]').remove();
-
-                const defaultOption = new Option(label, user.id, true, true);
-                $(defaultOption).attr('data-name',      userName);
-                $(defaultOption).attr('data-phone',     userPhone);
-                $(defaultOption).attr('data-email',     userEmail);
-                $(defaultOption).attr('data-image',     userImage);
-                $(defaultOption).attr('data-branch-id', branchId || '');
-
-                $('#select-customer-dropdown').append(defaultOption);
-                $('#select-customer-dropdown').val(user.id).trigger('change.select2');
-
-                // Persist to the cart session just like a manual pick
-                saveCartToSession({ clientOnly: true });
-
-                // If the wizard is already on the customer/details step, hydrate it
-                if ($('#booking-third-step').hasClass('active')) {
-                    $('#booking-step3-customer-name').text(selectedCustomerName);
-                    $('#booking-step3-customer-mobile').text(selectedCustomerPhone || '{{ __('field.no_mobile') }}');
-                    loadCustomerServices(selectedCustomerPhone);
-                }
-            }
-
             // Edit Customer Modal - Load customer data when modal opens
             $('#editCustomerModal').on('show.bs.modal', function() {
                 if (!selectedCustomerId) {
@@ -4856,9 +4772,7 @@ h6,
 
             // Auto-translation for Quick Add Service is now handled globally via translation-js.blade.php
 
-            // 👇 Auto-select the first customer after everything else is wired up
-            loadDefaultCustomer();
-
+            
         });
     </script>
 @endsection
