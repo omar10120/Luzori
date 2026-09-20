@@ -450,6 +450,9 @@ return [
     'stock_order_branches'            => 'Stock Order Branches',
     'no_data_found'                   => 'No data found',
     'serial_number'                   => 'Serial Number',
-    'open_time '                      => 'Open Time',
-    'close_time '                     => 'Close Time',
+    'open_time'                      => 'Open Time',
+    'close_time'                     => 'Close Time',
+    'is_default'                     => 'Is default',
+    'yes'                             => 'Yes',
+    'no'                              => 'No',
 ];
