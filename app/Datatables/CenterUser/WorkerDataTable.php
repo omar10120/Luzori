@@ -43,6 +43,8 @@ class WorkerDataTable extends DataTable
             ->editColumn('image', function ($row) {
                 return '<img src="' . $row->image . '" style="width:75px;height:75px;" >';
             })
+            
+            
             ->editColumn('status', function ($row) {
                 $checked = $row->deleted_at ? '' : 'checked';
                 $operation = $row->deleted_at ? DeleteActionEnum::RESTORE_DELETED->value : DeleteActionEnum::SOFT_DELETE->value;
@@ -58,7 +60,10 @@ class WorkerDataTable extends DataTable
             ->editColumn('name', function ($row) {
                 return \App\Helpers\MyHelper::truncateWithReadMore($row->name ?? '');
             })
-            ->rawColumns(['services.service.translation.name', 'image', 'status', 'name'], true)
+            ->editColumn('percentage', function ($row) {
+                return number_format((float) $row->percentage, 2) . ' %';
+            })
+            ->rawColumns(['services.service.translation.name', 'image', 'status', 'name', 'percentage'], true)
             ->setRowId('id');
     }
 
@@ -156,6 +161,7 @@ class WorkerDataTable extends DataTable
             Column::computed('image')->searchable(false)->title(__('field.image')),
             Column::computed('name')->searchable(true)->title(__('field.name')),
             Column::computed('email')->searchable(true)->title(__('field.email')),
+            Column::computed('percentage')->searchable(true)->title(__('field.percentage')),
             Column::computed('phone')->searchable(true)->title(__('field.phone')),
             Column::computed('salary')->searchable(true)->title(__('field.salary')),
             Column::computed('visa_start_date')->searchable(true)->title(__('field.visa_start_date')),

@@ -77,12 +77,23 @@
                                     <small class="text-muted">Used for login and notifications.</small>
                                 </div>
                             </div>
+                          
                             <div class="col-md-12 mb-2">
                                 <div class="mb-1">
-                                    <label for="salary" class="form-label">{{ __('field.salary') }}  
+                                    <label for="salary" class="form-label">{{ __('field.salary') }}</label>
                                     <small class="text-muted">{{__('general.enter_the_salary_of_the_employee')}}</small>
                                     <input type="number" id="salary" class="form-control" name="salary"
                                         placeholder="{{ __('field.salary') }}" value="{{ $item ? $item->salary : null }}" />
+                                </div>
+                            </div>
+                            <div class="col-md-12 mb-2">
+                                <div class="mb-1">
+                                    <label for="percentage" class="form-label">{{ __('field.percentage') }}</label>
+                                    <small class="text-muted">{{ __('general.enter_the_percentage_of_the_employee') }}</small>
+                                    <input type="number" id="percentage" class="form-control" name="percentage"
+                                        step="0.01" min="0" max="100"
+                                        placeholder="{{ __('field.percentage') }}"
+                                        value="{{ $item ? $item->percentage : 0 }}" />
                                 </div>
                             </div>
                             <div class="col-md-12 mb-2">

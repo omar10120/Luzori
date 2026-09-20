@@ -456,4 +456,5 @@ return [
     'yes'                             => 'Yes',
     'no'                              => 'No',
     'wallet_balance_insufficient'     => 'Insufficient wallet balance',
+    'percentage'                      => 'percentage'
 ];

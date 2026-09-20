@@ -20,6 +20,7 @@ class Worker extends Model implements HasMedia
     protected $fillable = [
         'name',
         'email',
+        'percentage',
         'country_code',
         'phone',
         'has_commission',
