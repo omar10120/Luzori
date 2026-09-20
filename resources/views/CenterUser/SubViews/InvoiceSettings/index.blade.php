@@ -108,6 +108,21 @@
                                 </div>
                             </div>
 
+                            <hr class="my-2" />
+
+                            <div class="d-flex align-items-center gap-2 mb-3 mt-4">
+                                <i class="ti ti-printer fs-4 text-primary"></i>
+                                <h5 class="mb-0 fw-semibold">{{ __('field.auto_print_sale') ?? 'Automatic sale printing' }}</h5>
+                            </div>
+                            <div class="form-check form-switch mb-3">
+                                <input type="hidden" name="auto_print_sale" value="0">
+                                <input class="form-check-input" type="checkbox" role="switch" id="auto_print_sale"
+                                    name="auto_print_sale" value="1" @checked($item->auto_print_sale)>
+                                <label class="form-check-label" for="auto_print_sale">
+                                    {{ __('general.auto_print_sale_after_payment') ?? 'Print the sale invoice automatically after payment' }}
+                                </label>
+                            </div>
+
                         </div>
                     </div>
                 </div>

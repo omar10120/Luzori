@@ -507,7 +507,13 @@ class SalesController extends Controller
             // Clear cart
             session()->forget('sales_cart');
 
-            return MyHelper::responseJSON('redirect_to_home', Response::HTTP_CREATED, route('center_user.sales.index'));
+            $autoPrint = app(InvoiceSettingsService::class)->first()->auto_print_sale;
+
+            return MyHelper::responseJSON('redirect_to_home', Response::HTTP_CREATED, [
+                'redirect_url' => route('center_user.sales.index'),
+                'sale_id' => $sale->id,
+                'print_url' => $autoPrint ? route('center_user.sales.print', ['id' => $sale->id]) : null,
+            ]);
         } catch (\Exception $e) {
             return MyHelper::responseJSON($e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
             

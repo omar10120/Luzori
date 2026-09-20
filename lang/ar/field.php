@@ -426,13 +426,15 @@ return [
     'stock_order_branches'            => 'فروع الطلب',
     'no_data_found'                   => 'لا يوجد بيانات',
     'serial_number'                   => 'رقم التسلسل',
-    'open_time'                      => 'وقت الفتح',
-    'close_time'                     => 'وقت الإغلاق',
-    'is_default'                     => 'الافتراضي',
+    'open_time'                       => 'وقت الفتح',
+    'close_time'                      => 'وقت الإغلاق',
+    'is_default'                      => 'الافتراضي',
     'yes'                             => 'نعم',
     'no'                              => 'لا',
-    'wallet_balance_insufficient'    => 'رصيد المحفظة غير كافٍ',
-    'percentage'                     => 'النسبة المؤية'
+    'wallet_balance_insufficient'     => 'رصيد المحفظة غير كافٍ',
+    'percentage'                      => 'النسبة المؤية',
+    'auto_print_sale'                 => 'الطباعة التلقائية لعملية البيع'
+    
     
     
     

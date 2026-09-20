@@ -19,5 +19,10 @@ class Invoice_Settings extends Model
 		'phone_number_3',
 		'emirate',
 		'tax_number',
+		'auto_print_sale',
+	];
+
+	protected $casts = [
+		'auto_print_sale' => 'boolean',
 	];
 }

@@ -19,6 +19,14 @@ class InvoiceSettingRequest extends FormRequest
             'phone_number_3' => 'nullable|string|max:255',
             'emirate'        => 'nullable|string|max:255',
             'tax_number'     => 'nullable|string|max:255',
+            'auto_print_sale' => 'boolean',
         ];
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'auto_print_sale' => $this->boolean('auto_print_sale'),
+        ]);
     }
 }

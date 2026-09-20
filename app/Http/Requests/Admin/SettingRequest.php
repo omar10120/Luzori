@@ -30,6 +30,7 @@ class SettingRequest extends FormRequest
                 'Auther_' . $locale => $this->$locale[PageEnum::Auther->value],
                 'WebsiteDescription_' . $locale => $this->$locale[PageEnum::WebsiteDescription->value],
                 'Address_' . $locale => $this->$locale[PageEnum::Address->value],
+                
                 'FooterText_' . $locale => $this->$locale[PageEnum::FooterText->value],
             ]);
         }

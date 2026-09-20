@@ -218,6 +218,8 @@ return [
     'enter_the_visa_start_date_of_the_employee' => 'Enter the visa start date of the employee',
     'enter_the_visa_end_date_of_the_employee'=> 'Enter the visa end date of the employee',
     'enter_the_serial_number_of_the_wallet' => 'Enter the serial number of the wallet',
-    'enter_the_percentage_of_the_employee' => 'Enter the employees percentage.'
+    'enter_the_percentage_of_the_employee' => 'Enter the employees percentage.',
+    'enter_the_name_of_the_website' => 'Enter the name of the website',
+    'auto_print_sale_after_payment'=> 'Auto Print Sale After Payment',
 
 ];

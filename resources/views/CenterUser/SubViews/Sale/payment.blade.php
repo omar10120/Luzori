@@ -376,7 +376,37 @@ h6,
                     },
                     success: function(response) {
                         if (response.message === 'redirect_to_home') {
-                            window.location.href = response.data;
+                            const result = response.data || {};
+                            const redirectUrl = result.redirect_url || response.data;
+                            if (result.print_url) {
+                                const printFrame = document.createElement('iframe');
+                                printFrame.style.position = 'fixed';
+                                printFrame.style.width = '1px';
+                                printFrame.style.height = '1px';
+                                printFrame.style.border = '0';
+                                printFrame.src = result.print_url;
+                                document.body.appendChild(printFrame);
+                                let redirected = false;
+                                const redirect = function () {
+                                    if (!redirected) {
+                                        redirected = true;
+                                        window.location.href = redirectUrl;
+                                    }
+                                };
+                                printFrame.onload = function () {
+                                    try {
+                                        printFrame.contentWindow.focus();
+                                        printFrame.contentWindow.print();
+                                    } catch (error) {
+                                        window.open(result.print_url, '_blank');
+                                    }
+                                    setTimeout(function () { printFrame.remove(); }, 3000);
+                                    setTimeout(redirect, 500);
+                                };
+                                setTimeout(redirect, 5000);
+                            } else {
+                                window.location.href = redirectUrl;
+                            }
                         } else {
                             if (typeof toastr !== 'undefined') {
                                 toastr.error(response.message || '{{ __('admin.an_error_occurred') }}');

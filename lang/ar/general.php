@@ -216,7 +216,9 @@ return [
     'enter_the_visa_start_date_of_the_employee' => 'أدخل تاريخ بداية التأشيرة للموظف',
     'enter_the_visa_end_date_of_the_employee'=> 'أدخل تاريخ نهاية التأشيرة للموظف',
     'enter_the_serial_number_of_the_wallet' => 'أدخل رقم التسلسل للمحفظة',
-    'enter_the_percentage_of_the_employee' => 'أدخل نسبة الموظف'
+    'enter_the_percentage_of_the_employee' => 'أدخل نسبة الموظف',
+    'enter_the_name_of_the_website' => 'أدخل اسم الموقع الإلكتروني',
+    'auto_print_sale_after_payment'=> 'طباعة الفاتورة تلقائياً بعد الدفع',
 ];
 
 

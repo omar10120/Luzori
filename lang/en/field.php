@@ -456,5 +456,6 @@ return [
     'yes'                             => 'Yes',
     'no'                              => 'No',
     'wallet_balance_insufficient'     => 'Insufficient wallet balance',
-    'percentage'                      => 'percentage'
+    'percentage'                      => 'percentage',
+    'auto_print_sale'                 => 'Automatic printing of the sales transaction'
 ];
