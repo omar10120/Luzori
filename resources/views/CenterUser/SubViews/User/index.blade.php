@@ -36,9 +36,9 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-1">
-                                    <label class="form-label">{{__('field.email')}} <span class="text-danger">*</span></label>
+                                    <label class="form-label">{{__('field.email')}} </label>
                                     <input type="email" name="email" class="form-control dt-email"
-                                        placeholder="example@domain.com" value="{{ $item ? $item->email : null }}" required />
+                                        placeholder="example@domain.com" value="{{ $item ? $item->email : null }}" />
                                 </div>
                             </div>
                             <div class="col-md-2">

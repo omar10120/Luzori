@@ -1,39 +1,3 @@
-<style>
-    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Tajawal:wght@200;300;400;500;700;800;900&display=swap');
-
-:root {
-    --app-font: 'Cairo', sans-serif;
-}
-
-html,
-body,
-
-table,
-th,
-td,
-tr,
-button,
-input,
-select,
-textarea,
-label,
-div,
-span,
-a,
-li,
-p,
-h1,
-h2,
-h3,
-h4,
-h5,
-h6,
-.dataTables_wrapper{
-    font-family: var(--app-font) !important;
-}
-
-
-</style>
 @extends('layouts/layoutMaster')
 
 @section('title', $title)
@@ -43,6 +7,21 @@ h6,
 @endsection
 
 @section('content')
+    @php
+        // ✅ ADDED: Auto-select the default user when no customer is chosen yet
+        if (empty($cart['client_id'])) {
+            $defaultUser = \App\Models\User::query()
+                ->where('is_default', true)
+                ->whereNull('deleted_at')
+                ->first();
+
+            if ($defaultUser) {
+                $cart['client_id'] = $defaultUser->id;
+                $selectedUser = $defaultUser;
+            }
+        }
+    @endphp
+
     <div class="container-fluid">
         @include('CenterUser.Components.breadcrumbs')
         @php
@@ -225,14 +204,6 @@ h6,
                                                                                         <option value="{{ $service->id }}" data-category-id="{{ $service->category_id }}">{{ $service->name }}</option>
                                                                                     @endforeach
                                                                                 </select>
-                                                                                <!-- <div class="mt-3 mb-1">
-                                                                                    <label for="booking-packages" class="form-label mb-0">{{ __('locale.packages') }}</label>
-                                                                                    <select class="select2 form-control " name="packages[]" id="booking-packages" multiple>
-                                                                                        @foreach ($packages as $package)
-                                                                                                <option value="{{ $package->id }}" data-price="{{ $package->price }}">{{ $package->name }} ({{ $package->price }} {{ get_currency() }})</option>
-                                                                                        @endforeach
-                                                                                    </select>
-                                                                                </div> -->
                                                                             </div>
                                                                         </div>
                                                                     </div>
@@ -330,6 +301,8 @@ h6,
                                                         </div>
                                                     </div>
                                                     <div id="booking-walletsElement"></div>
+                                                    <!-- ✅ ADDED: wallet balance validation error display -->
+                                                    <div class="text-danger mt-2" id="booking-wallet-balance-error" style="display: none;"></div>
                                                     <div id="booking-membershipsElement"></div>
                                                     <div id="booking-packagesElement"></div>
                                                     <div id="booking-servicesTable"></div>
@@ -781,7 +754,15 @@ h6,
                                 <input type="tel" maxlength="7" id="quick_customer_phone" class="form-control" name="phone" required pattern="[0-9]{7}" title="{{ __('field.phone_must_be_7_digits') }}" />
                                 <div class="invalid-feedback"></div>
                             </div>
+                            <div class="col-md-12 mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="quick_customer_is_default" name="is_default" value="1" />
+                                    <label class="form-check-label" for="quick_customer_is_default">{{ __('field.is_default') }}</label>
+                                </div>
+                            </div>
                         </div>
+
+                        
                         <div class="mb-3">
                             <label for="quick_customer_image" class="form-label">
                                 {{ __('field.image') }}
@@ -861,6 +842,12 @@ h6,
                                 </label>
                                 <input type="number" maxlength="7" id="edit_customer_phone" class="form-control" name="phone" required />
                                 <div class="invalid-feedback"></div>
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="edit_customer_is_default" name="is_default" value="1" checked />
+                                    <label class="form-check-label" for="edit_customer_is_default">{{ __('field.is_default') }}</label>
+                                </div>
                             </div>
                         </div>
                         <div class="mb-3">
@@ -1260,11 +1247,14 @@ h6,
     <script>
         $(document).ready(function() {
             let cart = @json($cart['items'] ?? []);
-            let selectedCustomerId = @json($cart['client_id'] ?? null);
-            let selectedCustomerName = null; // Will be set on load or selection
-            let selectedCustomerPhone = null; // Will be set on load or selection
+
+            // ✅ ADDED: hydrate selected customer from server (auto-selected is_default user)
+            let selectedCustomerId    = @json($cart['client_id'] ?? null);
+            let selectedCustomerName  = @json(optional($selectedUser ?? null)->name);
+            let selectedCustomerPhone = @json(optional($selectedUser ?? null)->phone);
+
             let bookingWizardData = {};
-            let bookingIds = []; // Should be array, not object
+            let bookingIds = [];
             let bookingPackageIds = [];
 
             // Configuration from PHP to avoid mixing PHP and JS logic below
@@ -1275,7 +1265,11 @@ h6,
                 translations: {
                     max_commission: '{{ __("field.max_commission") }}',
                     commission_cannot_exceed: '{{ __("field.commission_cannot_exceed_service_price") }}',
-                    select_commission: '{{ __("field.select_commission") }}'
+                    select_commission: '{{ __("field.select_commission") }}',
+                    //  ADDED: wallet balance translations
+                    wallet_insufficient: '{{ __("field.wallet_balance_insufficient") ?? "Wallet balance is insufficient for this booking" }}',
+                    wallet_balance_is: '{{ __("field.wallet_balance") ?? "Wallet balance" }}',
+                    total_is: '{{ __("field.total") }}'
                 }
             };
 
@@ -1955,6 +1949,39 @@ h6,
                 return total;
             }
 
+            // ✅ ADDED: Validate that the selected wallet has enough balance for the current booking total
+            function validateWalletBalance() {
+                var $walletError = $('#booking-wallet-balance-error');
+                var $selectedWallet = $('input[name="discount_id"].booking-wallet-radio:checked');
+
+                if ($selectedWallet.length === 0) {
+                    $walletError.hide().text('');
+                    return true;
+                }
+
+                var walletBalance = parseFloat($selectedWallet.data('wallet-amount')) || 0;
+                var totalToPay = getCurrentBookingTotal();
+
+                // Round to 2 decimals to avoid floating point issues
+                walletBalance = Math.round(walletBalance * 100) / 100;
+                totalToPay = Math.round(totalToPay * 100) / 100;
+
+                if (walletBalance < totalToPay) {
+                    var diff = (totalToPay - walletBalance).toFixed(2);
+                    var msg = posConfig.translations.wallet_insufficient +
+                              ' — ' + posConfig.translations.wallet_balance_is + ': ' +
+                              walletBalance.toFixed(2) + ' ' + posConfig.currency +
+                              ', ' + posConfig.translations.total_is + ': ' +
+                              totalToPay.toFixed(2) + ' ' + posConfig.currency +
+                              ' (' + '{{ __("field.remaining_amount") }}: ' + diff + ' ' + posConfig.currency + ')';
+                    $walletError.html('<i class="ti ti-alert-triangle me-1"></i>' + msg).show();
+                    return false;
+                }
+
+                $walletError.hide().text('');
+                return true;
+            }
+
             // Real-time validation for booking payments
             function validateBookingPayments() {
                 const isMultiple = $('#booking-multiple_payments_toggle').is(':checked');
@@ -1966,8 +1993,14 @@ h6,
                 // If package is selected, package type/payment method is auto-applied.
                 if (hasPackageSelected) {
                     $errorMsg.hide();
+                    $('#booking-wallet-balance-error').hide();
                     $nextBtn.prop('disabled', false);
                     return true;
+                }
+
+                // ✅ ADDED: wallet balance check (runs regardless of mode)
+                if (!validateWalletBalance()) {
+                    isValid = false;
                 }
 
                 if (isMultiple) {
@@ -2151,6 +2184,12 @@ h6,
                 
                 // Final validation before proceeding
                 if (!validateBookingPayments()) {
+                    // ✅ ADDED: if wallet balance is the issue, scroll to it
+                    if ($('#booking-wallet-balance-error').is(':visible')) {
+                        $('html, body').animate({
+                            scrollTop: $('#booking-wallet-balance-error').offset().top - 150
+                        }, 400);
+                    }
                     return false;
                 }
 
@@ -2480,6 +2519,8 @@ h6,
                 $('#booking-service-container, #booking-review-content').empty();
                 // Clear the loaded wallet/membership HTML to prevent stale data
                 $('#booking-servicesTable, #booking-walletsElement, #booking-membershipsElement').empty();
+                // ✅ ADDED: also hide the wallet balance error
+                $('#booking-wallet-balance-error').hide().text('');
                 
                 bookingWizardData = {};
                 bookingIds = {};
@@ -2853,6 +2894,7 @@ h6,
 
             function clearCustomerBookingSections() {
                 $('#booking-servicesTable, #booking-walletsElement, #booking-membershipsElement, #booking-packagesElement').html('');
+                $('#booking-wallet-balance-error').hide().text('');
                 userPackagesData = [];
             }
 
@@ -2860,6 +2902,7 @@ h6,
                 var loadingHtml = '<div class="text-center py-3 text-muted"><i class="ti ti-loader-2 ti-spin me-1"></i>{{ __("field.searching") }}...</div>';
                 $('#booking-servicesTable').html(loadingHtml);
                 $('#booking-walletsElement, #booking-membershipsElement, #booking-packagesElement').html('');
+                $('#booking-wallet-balance-error').hide().text('');
             }
 
             function get_services(user_phone) {
@@ -3279,6 +3322,10 @@ h6,
                     // Re-render cart to update prices (reset to original)
                     renderCart();
                     calculateTotals();
+                    // ✅ ADDED: re-check wallet balance (since total may have changed)
+                    if (typeof validateWalletBalance === 'function') {
+                        validateWalletBalance();
+                    }
                 });
 
                 // Clear wallet selection
@@ -3288,6 +3335,8 @@ h6,
                     if (typeof window.togglePaymentMethodVisibility === 'function') {
                         window.togglePaymentMethodVisibility();
                     }
+                    // ✅ ADDED: hide the wallet balance error when wallet is cleared
+                    $('#booking-wallet-balance-error').hide().text('');
                     // Wallet is a payment method, doesn't affect prices - no need to re-render cart
                 });
 
@@ -3301,6 +3350,10 @@ h6,
                     updateBookingReviewServicePrices();
                     renderCart();
                     calculateTotals();
+                    // ✅ ADDED: re-check wallet balance (since total may have changed)
+                    if (typeof validateWalletBalance === 'function') {
+                        validateWalletBalance();
+                    }
                 });
 
                 // Listen for radio button changes (discount, wallet, membership)
@@ -3320,6 +3373,8 @@ h6,
                     
                     var isDiscountCode = $(this).hasClass('booking-discount-radio');
                     var isMembership = $(this).hasClass('booking-membership-radio');
+                    var isWallet = $(this).hasClass('booking-wallet-radio');
+
                     if (isDiscountCode || isMembership) {
                         updateBookingReviewServicePrices();
                         renderCart();
@@ -3328,6 +3383,17 @@ h6,
                     // Wallets and memberships are payment methods - they don't change displayed prices
                     // The backend will deduct the booking amount from wallet/membership balance
                     
+                    // ✅ ADDED: Validate wallet balance when a wallet is selected or changed
+                    if (isWallet || $('input[name="discount_id"].booking-wallet-radio:checked').length > 0) {
+                        if (typeof validateWalletBalance === 'function') {
+                            validateWalletBalance();
+                        }
+                    }
+
+                    // ✅ ADDED: also revalidate payments to update Next button state
+                    if (typeof validateBookingPayments === 'function') {
+                        validateBookingPayments();
+                    }
                     // Step 3 Next button state is updated via togglePaymentMethodVisibility which calls updateStep3NextButtonState
                 });
 
@@ -3372,6 +3438,8 @@ h6,
                     if ($(this).val() && $(this).val() !== '') {
                         $('input[name="discount_id"].booking-wallet-radio:checked').prop('checked', false);
                         toggleClearButtons();
+                        // ✅ ADDED: hide wallet error when wallet is auto-cleared
+                        $('#booking-wallet-balance-error').hide().text('');
                         if (typeof window.togglePaymentMethodVisibility === 'function') {
                             window.togglePaymentMethodVisibility();
                         }
@@ -3954,6 +4022,22 @@ h6,
 
             // Initial render
             renderCart();
+
+            // ✅ ADDED: If a default customer was auto-selected on page load, reflect it in the UI
+            if (selectedCustomerId && selectedCustomerName) {
+                updateCustomerDisplay(
+                    selectedCustomerId,
+                    selectedCustomerName,
+                    @json(optional($selectedUser ?? null)->email ?? optional($selectedUser ?? null)->full_phone),
+                    @json(optional($selectedUser ?? null)->image),
+                    selectedCustomerPhone
+                );
+
+                // Preload the customer's wallets/packages/services cache so step 3 is instant
+                if (selectedCustomerPhone) {
+                    loadCustomerServices(selectedCustomerPhone);
+                }
+            }
             
             // Initial check for continue button state (customer required)
             $('#continueToPayment').prop('disabled', cart.length === 0 || !selectedCustomerId);
@@ -4173,101 +4257,6 @@ h6,
                 }
                 // Update continue button state based on customer and cart
                 $('#continueToPayment').prop('disabled', cart.length === 0 || !userId);
-            }
-
-            // ─────────────────────────────────────────────────────────────
-            // Auto-select the first customer on page load
-            // ─────────────────────────────────────────────────────────────
-            function loadDefaultCustomer() {
-                // If the cart session already has a customer, respect it.
-                if (selectedCustomerId !== null && selectedCustomerId !== undefined && selectedCustomerId !== '') {
-                    return;
-                }
-
-                $.ajax({
-                    url: '{{ route('center_user.sales.search-customers') }}',
-                    type: 'GET',
-                    // empty query → backend should return the first batch of customers
-                    data: { q: '' },
-                    headers: {
-                        'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    success: function (response) {
-                        // Handle both select2 format ({results:[...]}) and plain array
-                        var results = [];
-                        if (response && Array.isArray(response.results)) {
-                            results = response.results;
-                        } else if (Array.isArray(response)) {
-                            results = response;
-                        } else if (response && Array.isArray(response.data)) {
-                            results = response.data;
-                        }
-
-                        if (!results.length) {
-                            console.warn('loadDefaultCustomer: no customers returned by search endpoint');
-                            return;
-                        }
-
-                        // Prefer a literal id=0 if it happens to exist, else take the first
-                        var preferred = results.find(function (u) { return String(u.id) === '0'; });
-                        applyCustomerToUi(preferred || results[0]);
-                    },
-                    error: function (xhr) {
-                        console.warn('loadDefaultCustomer: search-customers failed', xhr && xhr.status);
-                    }
-                });
-            }
-
-            // Normalize whatever shape the search endpoint returns into the fields
-            // updateCustomerDisplay / dropdown expect.
-            function applyCustomerToUi(user) {
-                if (!user || user.id === undefined || user.id === null) {
-                    return;
-                }
-
-                const userName  = user.name
-                    || user.text
-                    || ((user.first_name || '') + ' ' + (user.last_name || '')).trim();
-
-                const userEmail = user.email || '';
-                // select2 endpoints often expose extra fields on user itself, or nested
-                const userPhone = user.phone || user.full_phone || (user.data && user.data.phone) || '';
-                const userImage = user.image || (user.data && user.data.image) || '{{ asset('assets/img/avatars/1.png') }}';
-                const branchId  = user.branch_id || (user.data && user.data.branch_id) || null;
-
-                selectedCustomerName  = userName;
-                selectedCustomerPhone = userPhone;
-
-                // This also sets selectedCustomerId globally
-                updateCustomerDisplay(user.id, userName, userEmail || userPhone, userImage, userPhone);
-
-                // Make it visible in the Select2 dropdown as the selected option
-                const label = userName
-                    + (userPhone ? ' - ' + userPhone : '')
-                    + (userEmail ? ' - ' + userEmail : '');
-
-                $('#select-customer-dropdown').find('option[value="' + user.id + '"]').remove();
-
-                const defaultOption = new Option(label, user.id, true, true);
-                $(defaultOption).attr('data-name',      userName);
-                $(defaultOption).attr('data-phone',     userPhone);
-                $(defaultOption).attr('data-email',     userEmail);
-                $(defaultOption).attr('data-image',     userImage);
-                $(defaultOption).attr('data-branch-id', branchId || '');
-
-                $('#select-customer-dropdown').append(defaultOption);
-                $('#select-customer-dropdown').val(user.id).trigger('change.select2');
-
-                // Persist to the cart session just like a manual pick
-                saveCartToSession({ clientOnly: true });
-
-                // If the wizard is already on the customer/details step, hydrate it
-                if ($('#booking-third-step').hasClass('active')) {
-                    $('#booking-step3-customer-name').text(selectedCustomerName);
-                    $('#booking-step3-customer-mobile').text(selectedCustomerPhone || '{{ __('field.no_mobile') }}');
-                    loadCustomerServices(selectedCustomerPhone);
-                }
             }
 
             // Edit Customer Modal - Load customer data when modal opens
@@ -4853,9 +4842,7 @@ h6,
 
             // Auto-translation for Quick Add Service is now handled globally via translation-js.blade.php
 
-            // 👇 Auto-select the first customer after everything else is wired up
-            loadDefaultCustomer();
-
+            
         });
     </script>
 @endsection
