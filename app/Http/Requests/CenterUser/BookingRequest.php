@@ -48,6 +48,10 @@ class BookingRequest extends FormRequest
                 foreach ($this->service as $serviceId => $serviceData) {
                     if (isset($serviceData['commission_type']) && $serviceData['commission_type'] === 'fixed') {
                         $service = \App\Models\Service::find($serviceId);
+                        $workerPercentage = \App\Models\Worker::whereKey($serviceData['worker_id'] ?? null)->value('percentage');
+                        if ((float) $workerPercentage > 0) {
+                            continue;
+                        }
                         if ($service && isset($serviceData['commission'])) {
                             $commissionValue = floatval($serviceData['commission']);
                             $servicePrice = floatval($service->price);

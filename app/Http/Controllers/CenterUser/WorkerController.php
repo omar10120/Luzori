@@ -87,9 +87,10 @@ class WorkerController extends Controller
         }
         $services = Service::with(['translation'])->get();
         $shifts = Shift::all();
+        $canManagePercentage = (int) get_user_role() === 1;
 
         $view = 'CenterUser.SubViews.' . $this->model . '.index';
-        return view($view, compact('item', 'branches', 'services', 'shifts', 'requestUrl', 'title', 'menu', 'menu_link'));
+        return view($view, compact('item', 'branches', 'services', 'shifts', 'requestUrl', 'title', 'menu', 'menu_link', 'canManagePercentage'));
     }
 
     public function updateOrCreate(WorkerRequest $request)
@@ -104,7 +105,12 @@ class WorkerController extends Controller
             return abort(403);
         }
 
-        $item = $this->crudService->updateOrCreate($this->model, $request->validated(), true);
+        $data = $request->validated();
+        if ((int) get_user_role() !== 1) {
+            unset($data['percentage']);
+        }
+
+        $item = $this->crudService->updateOrCreate($this->model, $data, true);
         if ($item) {
             return MyHelper::responseJSON('redirect_to_home', Response::HTTP_CREATED, route('center_user.workers.index'));
         } else {

@@ -507,6 +507,7 @@ class SalesService
                 if (!$service) {
                     throw new \Exception('Service not found: ' . ($svc['id'] ?? ''));
                 }
+                $workerPercentage = (float) Worker::whereKey($svc['worker_id'])->value('percentage');
                 $current_tip = 0;
                 if ($tip > 0 && ($tipWorkerId == null || $tipWorkerId == $svc['worker_id'])) {
                     $current_tip = $tip;
@@ -555,8 +556,8 @@ class SalesService
                     'tip' =>  $current_tip,
                     'from_time' => $svc['from_time'],
                     'to_time' => $svc['to_time'],
-                    'commission' => $svc['commission'] ?? null,
-                    'commission_type' => $svc['commission_type'] ?? null,
+                    'commission' => $workerPercentage > 0 ? $workerPercentage : null,
+                    'commission_type' => $workerPercentage > 0 ? 'percentage' : null,
                     'booking_source' => $item['booking_source'] ?? 'inside_booking',
                     'status' => ($item['booking_source'] ?? 'inside_booking') === 'outside_booking' ? 'pending' : 'confirmed',
                 ]);
@@ -579,6 +580,7 @@ class SalesService
             if (!$service) {
                 throw new \Exception('Service not found');
             }
+            $workerPercentage = (float) Worker::whereKey($item['worker_id'])->value('percentage');
             $current_tip = 0;
             if ($tip > 0 && ($tipWorkerId == null || $tipWorkerId == $item['worker_id'])) {
                 $current_tip = $tip;
@@ -627,8 +629,8 @@ class SalesService
                 'worker_id' => $item['worker_id'],
                 'from_time' => $item['from_time'],
                 'to_time' => $item['to_time'],
-                'commission' => $item['commission'] ?? null,
-                'commission_type' => $item['commission_type'] ?? null,
+                'commission' => $workerPercentage > 0 ? $workerPercentage : null,
+                'commission_type' => $workerPercentage > 0 ? 'percentage' : null,
                 'booking_source' => $item['booking_source'] ?? 'inside_booking',
                 'status' => ($item['booking_source'] ?? 'inside_booking') === 'outside_booking' ? 'pending' : 'confirmed',
             ]);
@@ -775,11 +777,12 @@ class SalesService
 
         // Get common fields from first product (they should all have same discount, etc.)
         $firstProduct = $productItems[0];
+        $workerPercentage = (float) Worker::whereKey($firstProduct['worker_id'] ?? null)->value('percentage');
         
         $buyProduct = BuyProduct::create([
             'payment_type' => $paymentType, // Use payment type from payment section (sale payment_type)
             'discount' => $firstProduct['discount'] ?? null,
-            'commission' => $firstProduct['commission'] ?? null,
+            'commission' => $workerPercentage > 0 ? $workerPercentage : null,
             'sales_worker_id' => $firstProduct['sales_worker_id'] ?? null,
             'worker_id' => $firstProduct['worker_id'] ?? null,
             'created_by' => auth('center_user')->id() ?? auth('center_api')->id(),

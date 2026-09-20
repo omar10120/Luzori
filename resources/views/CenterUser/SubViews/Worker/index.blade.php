@@ -93,7 +93,8 @@
                                     <input type="number" id="percentage" class="form-control" name="percentage"
                                         step="0.01" min="0" max="100"
                                         placeholder="{{ __('field.percentage') }}"
-                                        value="{{ $item ? $item->percentage : 0 }}" />
+                                        value="{{ $item ? $item->percentage : 0 }}"
+                                        {{ empty($canManagePercentage) ? 'readonly' : '' }} />
                                 </div>
                             </div>
                             <div class="col-md-12 mb-2">

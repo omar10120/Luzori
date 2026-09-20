@@ -13,6 +13,7 @@ use App\Models\UserUsedCard;
 use App\Models\UserUsedDiscount;
 use App\Models\UserUsedWallet;
 use App\Models\Wallet;
+use App\Models\Worker;
 use Illuminate\Support\Facades\DB;
 
 class BookingService
@@ -37,6 +38,8 @@ class BookingService
         $booking = Booking::create($request);
         foreach ($request['service'] as $key => $service) {
             $serviceInfo = Service::find($key);
+            $worker = Worker::findOrFail($service['worker_id']);
+            $workerPercentage = (float) ($worker->percentage ?? 0);
             $booking->details()->create([
                 'service_id' => $serviceInfo->id,
                 'price' => $serviceInfo->price,
@@ -44,8 +47,8 @@ class BookingService
                 'worker_id' => $service['worker_id'],
                 'from_time' => $service['from_time'],
                 'to_time' => $service['to_time'],
-                'commission' => isset($service['commission']) && $service['commission'] !== '' ? $service['commission'] : null,
-                'commission_type' => isset($service['commission_type']) && $service['commission_type'] !== '' ? $service['commission_type'] : null,
+                'commission' => $workerPercentage > 0 ? $workerPercentage : null,
+                'commission_type' => $workerPercentage > 0 ? 'percentage' : null,
             ]);
 
             if (User::where('phone', $request['mobile'])->exists()) {

@@ -1620,12 +1620,12 @@
                             <div class="col-md-3">
                                 <div class="mb-1">
                                     <label class="form-label">{{ __('field.worker') }}</label>
-                                    <select class="form-control" name="service[${service.id}][worker_id]">`;
+                                    <select class="form-control booking-worker-select" name="service[${service.id}][worker_id]" data-service-id="${service.id}">`;
                     $.each(workers, function(index, worker) {
                         const centerUserName = '{{ $centerUser->name ?? "" }}';
                         const workerPhone = worker.phone || '';
                         const displayText = `${worker.name} - ${workerPhone} (${centerUserName})`;
-                        service_info += `<option value="${worker.id}">${displayText}</option>`;
+                        service_info += `<option value="${worker.id}" data-worker-percentage="${worker.percentage || 0}">${displayText}</option>`;
                     });
                     service_info += `</select></div></div>
                         <div class="col-md-3">
@@ -1680,6 +1680,28 @@
                     service_info += `</div>`;
 
                     $('#booking-service-container').append(service_info);
+
+                    $('#booking-service-container .booking-worker-select[data-service-id="' + service.id + '"]').on('change', function () {
+                        const percentage = parseFloat($(this).find('option:selected').data('worker-percentage')) || 0;
+                        const $commissionType = $('input[name="service[' + service.id + '][commission_type]"]');
+                        const $percentage = $('#booking-commission_percentage_' + service.id);
+                        const $fixed = $('#booking-commission_fixed_' + service.id);
+
+                        if (percentage > 0) {
+                            $commissionType.val('percentage');
+                            if ($percentage.length) {
+                                $percentage.val(String(percentage));
+                            }
+                            if ($fixed.length) {
+                                $fixed.val('');
+                            }
+                        } else {
+                            $commissionType.val(posConfig.allowedCommissionType || '');
+                            if ($percentage.length) {
+                                $percentage.val('');
+                            }
+                        }
+                    }).trigger('change');
                     
                     // Add real-time validation for fixed commission input after element is appended
                     if (posConfig.hasCommissionPermission && posConfig.allowedCommissionType === 'fixed') {
