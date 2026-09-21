@@ -22,7 +22,7 @@ class BannerController extends Controller
             'center_id' => ['nullable', 'integer', 'exists:central.centers,id'],
         ]);
 
-        $perPage = (int) ($validated['per_page'] ?? 15);
+        $perPage = (int) ($validated['per_page'] ?? 100);
 
         $paginator = Banner::query()
             ->with(['center', 'globalCategory'])
