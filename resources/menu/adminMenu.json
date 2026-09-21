@@ -62,6 +62,17 @@
             ]
         },
         {
+            "url": "admin/banners/index",
+            "name": "banners",
+            "external_icon": "categories",
+            "slug": [
+                "banners"
+            ],
+            "permissions": [
+                "VIEW_BANNERS"
+            ]
+        },
+        {
             "url": "admin/bookings/index",
             "name": "bookings",
             "icon": "calendar",

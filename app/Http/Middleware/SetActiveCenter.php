@@ -45,6 +45,9 @@ class SetActiveCenter
         if ($request->is('center_api/services')) {
             return $next($request);
         }
+          if ($request->is('center_api/banners')) {
+            return $next($request);
+        }
 
         $domain = $request->header('domain');
         if ($domain) {

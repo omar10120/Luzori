@@ -66,6 +66,7 @@ return [
     'withdrawal_requests'               => 'Withdrawal Requests',
     'globalcategories'                  => 'Global Categories',
     'global-categories'                 => 'Global Categories',
+    'banners'                            => 'Banners',
     'global_categories'                 => 'Global Categories',
     'center_info'                       => 'Center Details',
     'InvoiceSettings'                   => 'Invoice Settings',

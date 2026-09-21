@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\WithdrawalRequestController;
 use App\Http\Controllers\Admin\BookingController;
 use App\Http\Controllers\Admin\NotificationController;
+use App\Http\Controllers\Admin\BannerController;
 
 /*
 |--------------------------------------------------------------------------
@@ -132,6 +133,14 @@ Route::group(['middleware' => 'auth:admin'], function () {
     Route::group(['prefix' => 'global-categories', 'as' => 'global-categories.'], function () {
         Route::controller(GlobalCategoryController::class)->group(function () {
             Route::get('index', 'index')->name('index');
+            Route::get('create', 'create')->name('create');
+            Route::post('updateOrCreate', 'updateOrCreate')->name('updateOrCreate');
+        });
+    });
+
+    Route::group(['prefix' => 'banners', 'as' => 'banners.'], function () {
+        Route::controller(BannerController::class)->group(function () {
+            Route::get('index', 'index')->name('index')->can('VIEW_BANNERS');
             Route::get('create', 'create')->name('create');
             Route::post('updateOrCreate', 'updateOrCreate')->name('updateOrCreate');
         });

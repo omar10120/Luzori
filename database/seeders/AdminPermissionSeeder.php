@@ -218,6 +218,36 @@ class AdminPermissionSeeder extends Seeder
             ['name_ar' => 'تعديل إعدادات Firebase', 'group' => 'Notifications']
         );
         // END NOTIFICATIONS
+
+        Permission::firstOrCreate([
+            'name' => 'VIEW_BANNERS',
+            'guard_name' => 'admin',
+        ], [
+            'name_ar' => 'عرض البانرات',
+            'group' => 'Banners',
+        ]);
+        Permission::firstOrCreate([
+            'name' => 'CREATE_BANNERS',
+            'guard_name' => 'admin',
+        ], [
+            'name_ar' => 'إضافة بانر',
+            'group' => 'Banners',
+        ]);
+        Permission::firstOrCreate([
+            'name' => 'UPDATE_BANNERS',
+            'guard_name' => 'admin',
+        ], [
+            'name_ar' => 'تعديل بانر',
+            'group' => 'Banners',
+        ]);
+        Permission::firstOrCreate([
+            'name' => 'DELETE_BANNERS',
+            'guard_name' => 'admin',
+        ], [
+            'name_ar' => 'حذف بانر',
+            'group' => 'Banners',
+        ]);
+
         
     }
 }

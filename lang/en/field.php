@@ -457,5 +457,10 @@ return [
     'no'                              => 'No',
     'wallet_balance_insufficient'     => 'Insufficient wallet balance',
     'percentage'                      => 'percentage',
-    'auto_print_sale'                 => 'Automatic printing of the sales transaction'
+    'auto_print_sale'                 => 'Automatic printing of the sales transaction',
+    'placement'                       => 'placement' ,
+    'link_type'                       => 'link type',
+    'target'                          => 'target',
+    'external_url'                    => 'external url',
+    
 ];

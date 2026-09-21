@@ -66,6 +66,7 @@ return [
     'withdrawal_requests'               => 'طلبات السحب',
     'globalcategories'                  => 'الفئات العامة',
     'global-categories'                 => 'الفئات العامة',
+    'banners'                            => 'البانرات',
     'global_categories'                 => 'الفئات العامة',
     'center_info'                       => 'بيانات المركز',
     'InvoiceSettings'                   => 'إعدادات الفاتورة',

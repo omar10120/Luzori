@@ -34,6 +34,8 @@ use App\Http\Controllers\CenterAPI\GlobalCategoryController;
 use App\Http\Controllers\CenterAPI\PaymentController;
 use App\Http\Controllers\SMSController;
 use App\Http\Controllers\CenterAPI\InvoiceSettingController;
+use App\Http\Controllers\CenterAPI\BannerController;
+use App\Http\Controllers\CenterUser\UserPackageController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -57,6 +59,7 @@ Route::middleware('OptionalAuth:sanctum')->group(function () {
     Route::get('services', [CenterController::class, 'services']);
 });
 Route::get('global-categories', [GlobalCategoryController::class, 'index']);
+Route::get('banners', [BannerController::class, 'index']);
 
 Route::group(['prefix' => 'auth'], function () {
     Route::controller(AuthController::class)->group(function () {

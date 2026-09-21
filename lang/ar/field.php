@@ -433,7 +433,12 @@ return [
     'no'                              => 'لا',
     'wallet_balance_insufficient'     => 'رصيد المحفظة غير كافٍ',
     'percentage'                      => 'النسبة المؤية',
-    'auto_print_sale'                 => 'الطباعة التلقائية لعملية البيع'
+    'auto_print_sale'                 => 'الطباعة التلقائية لعملية البيع',
+    'placement'                       => 'المكان' ,
+    'link_type'                       => 'طريقة الربط',
+    'target'                          => 'الهدف',
+    'external_url'                    => 'رابط',
+
     
     
     
