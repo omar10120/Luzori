@@ -38,6 +38,16 @@ class PaymentController extends Controller
         ];
     }
 
+    public static function smsPackages(): array
+    {
+        return [
+            'sms_50' => ['requests' => 50, 'amount' => 50, 'symbol' => 'AED', 'label' => '50 SMS requests'],
+            'sms_150' => ['requests' => 150, 'amount' => 150, 'symbol' => 'AED', 'label' => '150 SMS requests'],
+            'sms_500' => ['requests' => 500, 'amount' => 500, 'symbol' => 'AED', 'label' => '500 SMS requests'],
+            'sms_1000' => ['requests' => 1000, 'amount' => 1000, 'symbol' => 'AED', 'label' => '1000 SMS requests'],
+        ];
+    }
+
     public function plans()
     {
         $center    = $this->resolveActiveCenter();
@@ -173,6 +183,102 @@ class PaymentController extends Controller
             Log::error('MyFatoorah createSession exception: ' . $e->getMessage());
 
             return response()->json(['success' => false, 'message' => __('api.unknownError')], 500);
+        }
+    }
+
+    public function createSmsSession(Request $request)
+    {
+        $request->validate([
+            'package' => 'required|string|in:' . implode(',', array_keys(self::smsPackages())),
+        ]);
+
+        $package = self::smsPackages()[$request->string('package')->toString()];
+
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . env('MYFATOORAH_TOKEN'),
+                'Content-Type'  => 'application/json',
+            ])->post(rtrim(env('MYFATOORAH_BASE_URL'), '/') . '/v3/sessions', [
+                'PaymentMode' => 'COMPLETE_PAYMENT',
+                'Order'       => ['Amount' => $package['amount']],
+            ]);
+
+            if ($response->successful() && $response->json('IsSuccess') === true) {
+                $data = $response->json('Data');
+                session([
+                    'pending_sms_payment' => true,
+                    'pending_sms_package' => $package,
+                    'myfatoorah_sms_encryption_key' => $data['EncryptionKey'],
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'session_id' => $data['SessionId'],
+                    'encryption_key' => $data['EncryptionKey'],
+                    'amount' => $package['amount'],
+                    'symbol' => $package['symbol'],
+                    'requests' => $package['requests'],
+                    'label' => $package['label'],
+                ]);
+            }
+
+            Log::error('MyFatoorah SMS createSession failed', ['response' => $response->json()]);
+            return response()->json([
+                'success' => false,
+                'message' => $response->json('Message') ?? __('api.unknownError'),
+            ], 500);
+        } catch (\Exception $e) {
+            Log::error('MyFatoorah SMS createSession exception: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => __('api.unknownError')], 500);
+        }
+    }
+
+    public function smsCallback(Request $request)
+    {
+        $paymentData = $request->input('paymentData');
+        $encryptionKey = $request->input('encryptionKey') ?: session('myfatoorah_sms_encryption_key');
+
+        if (!session('pending_sms_payment') || !$request->boolean('paymentCompleted') || !$paymentData || !$encryptionKey) {
+            return response()->json(['success' => false, 'message' => 'Payment not completed or missing data.'], 400);
+        }
+
+        try {
+            $paymentResult = json_decode($this->decryptPaymentData($paymentData, $encryptionKey), true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                return response()->json(['success' => false, 'message' => 'Invalid payment data.'], 400);
+            }
+
+            if (data_get($paymentResult, 'Invoice.Status') !== 'PAID' || data_get($paymentResult, 'Transaction.Status') !== 'SUCCESS') {
+                return response()->json(['success' => false, 'message' => 'Payment failed.'], 400);
+            }
+
+            $center = $this->resolveActiveCenter();
+            if (!$center) {
+                return response()->json(['success' => false, 'message' => 'Center not found.'], 404);
+            }
+
+            $package = session('pending_sms_package');
+            if (!is_array($package) || empty($package['requests'])) {
+                return response()->json(['success' => false, 'message' => 'SMS package not found.'], 400);
+            }
+
+            $center->increment('sms_request_package', (int) $package['requests']);
+            $pendingSettings = session('pending_invoice_settings');
+            if (is_array($pendingSettings)) {
+                app(\App\Services\InvoiceSettingsService::class)->update($pendingSettings);
+            }
+
+            session()->forget([
+                'pending_sms_payment',
+                'pending_sms_package',
+                'myfatoorah_sms_encryption_key',
+                'pending_invoice_settings',
+            ]);
+
+            return response()->json(['success' => true, 'message' => 'SMS package purchased successfully.']);
+        } catch (\Exception $e) {
+            Log::error('SMS payment callback error: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'An error occurred.'], 500);
         }
     }
 

@@ -219,6 +219,13 @@ return [
     'enter_the_percentage_of_the_employee' => 'أدخل نسبة الموظف',
     'enter_the_name_of_the_website' => 'أدخل اسم الموقع الإلكتروني',
     'auto_print_sale_after_payment'=> 'طباعة الفاتورة تلقائياً بعد الدفع',
+    'allow_sms'=> 'السماح بإرسال رسائل نصية',
+    'sms_package'=> 'حزمة الرسائل النصية',
+    'sms_package_balance' => 'رصيد حزمة الرسائل النصية',
+    'requests' => 'طلبات',
+    'sms_package_required' => 'حزمة الرسائل النصية مطلوبة.',
+    'choose_sms_package' => 'ختر الحزمة الرسائل النصية',
+    
 ];
 
 

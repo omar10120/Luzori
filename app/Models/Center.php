@@ -43,6 +43,7 @@ class Center extends Authenticatable implements HasMedia
         'bank_name',
         'admin_discount',
         'expire_date',
+        'sms_request_package',
         // Supplier (MyFatoorah)
         'supplier_code',
         'supplier_email',
@@ -66,7 +67,8 @@ class Center extends Authenticatable implements HasMedia
         'expire_date'   => 'datetime',
         'supplier_date' => 'datetime',
         'is_supplier'   => 'boolean',
-        'supplier_code' => 'integer'
+        'supplier_code' => 'integer',
+        'sms_request_package' => 'integer',
  
         
     ];

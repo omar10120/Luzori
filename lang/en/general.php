@@ -221,5 +221,12 @@ return [
     'enter_the_percentage_of_the_employee' => 'Enter the employees percentage.',
     'enter_the_name_of_the_website' => 'Enter the name of the website',
     'auto_print_sale_after_payment'=> 'Auto Print Sale After Payment',
+    'allow_sms'=> 'Allow SMS',
+    'sms_package' => 'SMS Package',
+    'sms_package_balance' => 'SMS Package Balance',
+    'requests' => 'Requests',
+    'sms_package_required' => 'SMS package is required.',
+    'choose_sms_package' => 'Choose SMS Package',
+    
 
 ];

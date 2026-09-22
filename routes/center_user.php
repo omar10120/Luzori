@@ -86,6 +86,8 @@ Route::group(['middleware' => 'auth_center_user:center_user'], function () {
             Route::get('plans', 'plans')->name('plans');
             Route::post('create-session', 'createSession')->name('create-session');
             Route::post('callback', 'callback')->name('callback');
+            Route::post('sms/create-session', 'createSmsSession')->name('sms.create-session');
+            Route::post('sms/callback', 'smsCallback')->name('sms.callback');
         });
     });
 
