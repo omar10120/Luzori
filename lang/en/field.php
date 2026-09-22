@@ -458,6 +458,7 @@ return [
     'wallet_balance_insufficient'     => 'Insufficient wallet balance',
     'percentage'                      => 'percentage',
     'auto_print_sale'                 => 'Automatic printing of the sales transaction',
+    'sms_allow'                       => 'Allow SMS',
     'placement'                       => 'placement' ,
     'link_type'                       => 'link type',
     'target'                          => 'target',

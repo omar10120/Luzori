@@ -434,6 +434,7 @@ return [
     'wallet_balance_insufficient'     => 'رصيد المحفظة غير كافٍ',
     'percentage'                      => 'النسبة المؤية',
     'auto_print_sale'                 => 'الطباعة التلقائية لعملية البيع',
+    'sms_allow'                       => 'السماح للرسائل',
     'placement'                       => 'المكان' ,
     'link_type'                       => 'طريقة الربط',
     'target'                          => 'الهدف',

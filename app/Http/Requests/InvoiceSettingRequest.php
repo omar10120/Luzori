@@ -19,7 +19,8 @@ class InvoiceSettingRequest extends FormRequest
             'phone_number_3' => 'nullable|string|max:255',
             'emirate'        => 'nullable|string|max:255',
             'tax_number'     => 'nullable|string|max:255',
-            'auto_print_sale' => 'boolean',
+            'auto_print_sale'=> 'boolean',
+            'sms_allow'      => 'boolean',
         ];
     }
 
@@ -27,6 +28,7 @@ class InvoiceSettingRequest extends FormRequest
     {
         $this->merge([
             'auto_print_sale' => $this->boolean('auto_print_sale'),
+            'sms_allow' => $this->boolean('sms_allow'),
         ]);
     }
 }

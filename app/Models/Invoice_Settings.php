@@ -20,9 +20,11 @@ class Invoice_Settings extends Model
 		'emirate',
 		'tax_number',
 		'auto_print_sale',
+		'sms_allow'
 	];
 
 	protected $casts = [
 		'auto_print_sale' => 'boolean',
+		'sms_allow' => 'boolean',
 	];
 }
