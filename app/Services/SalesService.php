@@ -31,6 +31,8 @@ use App\Models\Package;
 use App\Models\PaymentMethod;
 use App\Models\Worker;
 use App\Models\InventoryMovement;
+use App\Models\Invoice_Settings;
+use App\Models\Center;
 
 
 
@@ -367,9 +369,14 @@ class SalesService
         }
     }
 
-    private function sendSaleConfirmationSMS(Sale $sale): void
+   private function sendSaleConfirmationSMS(Sale $sale): void
     {
         try {
+            // ✅ NEW: skip everything if SMS is disabled in invoice settings
+            if (!$this->isSmsEnabled()) {
+                return;
+            }
+
             if (!$sale->client_id) {
                 return;
             }
@@ -388,7 +395,7 @@ class SalesService
             }
 
             $locale = app()->getLocale();
-            
+
             $template = trans('general.sms_sale_confirmation', [], $locale);
 
             $fullPhone = ($client->country_code ?? '') . ($client->phone ?? '');
@@ -398,17 +405,17 @@ class SalesService
 
             $smsGateway = new SMSGatewayService();
             $formattedPhone = $smsGateway->formatPhoneNumber($fullPhone);
-            
-            // $result = $smsGateway->sendSMSWithTemplate(
-            //     $formattedPhone,
-            //     $template,
-            //     [
-            //         'user_name' => $userName,
-            //         'salon_name' => $salonName,
-            //         'bill_number' => $sale->id,
-            //     ],
-            //     $locale
-            // );
+
+            $result = $smsGateway->sendSMSWithTemplate(
+                $formattedPhone,
+                $template,
+                [
+                    'user_name' => $userName,
+                    'salon_name' => $salonName,
+                    'bill_number' => $sale->id,
+                ],
+                $locale
+            );
 
             if (!$result['success']) {
                 Log::warning('Failed to send sale confirmation SMS', [
@@ -417,7 +424,10 @@ class SalesService
                     'formatted_phone' => $formattedPhone,
                     'result' => $result,
                 ]);
+                return;
             }
+
+            $this->consumeSmsRequest($sale->id);
         } catch (\Exception $e) {
             Log::error('Error sending sale confirmation SMS', [
                 'sale_id' => $sale->id,
@@ -1079,5 +1089,58 @@ class SalesService
             ->sum(fn ($d) => (float) ($d->tip ?? 0));
 
         return $detailTipSum <= 0;
+    }
+    /**
+     * Whether sale-confirmation SMS is enabled in invoice settings.
+     * Defaults to false when no settings row exists, so we never send by accident.
+     */
+    private function isSmsEnabled(): bool
+    {
+        $settings = Invoice_Settings::query()->first();
+
+        return (bool) ($settings->sms_allow ?? false)
+            && (int) ($this->resolveActiveCenter()?->sms_request_package ?? 0) > 0;
+    }
+
+    private function consumeSmsRequest(int $saleId): void
+    {
+        $center = $this->resolveActiveCenter();
+        if (!$center) {
+            Log::warning('SMS sent but center could not be resolved for package usage.', [
+                'sale_id' => $saleId,
+            ]);
+            return;
+        }
+
+        $updated = Center::query()
+            ->whereKey($center->getKey())
+            ->where('sms_request_package', '>', 0)
+            ->decrement('sms_request_package');
+
+        if (!$updated) {
+            Log::warning('SMS sent but package balance could not be decremented.', [
+                'sale_id' => $saleId,
+                'center_id' => $center->getKey(),
+            ]);
+            return;
+        }
+
+        $remaining = (int) Center::query()
+            ->whereKey($center->getKey())
+            ->value('sms_request_package');
+
+        if ($remaining === 0) {
+            Invoice_Settings::query()->update(['sms_allow' => false]);
+        }
+    }
+
+    private function resolveActiveCenter(): ?Center
+    {
+        $domain = session('active_center_domain');
+        if (!$domain && in_array(request()->getHost(), ['127.0.0.1', 'localhost'], true)) {
+            $domain = 'center';
+        }
+
+        return $domain ? Center::where('domain', $domain)->first() : null;
     }
 }
