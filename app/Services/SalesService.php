@@ -472,7 +472,7 @@ class SalesService
      * Create Booking from cart item (one booking with one or more services)
      */
     
-    private function createBookingFromCartItem($item, $saleId, $branchId, $paymentType = null, $bookingTotal = 0,$is_free, &$tip, $tipWorkerId = null, $clientId = null, $createdBy = null)
+    private function createBookingFromCartItem($item, $saleId, $branchId, $paymentType = null, $bookingTotal = 0, $is_free, &$tip, $tipWorkerId = null, $clientId = null, $createdBy = null)
     {
         $services = $item['services'] ?? null;
         if (!empty($services) && is_array($services)) {
@@ -484,7 +484,7 @@ class SalesService
         if (empty($bookingDate)) {
             throw new \Exception('Booking date is required');
         }
-
+    
         $booking = Booking::create([
             'booking_date' => $bookingDate,
             'full_name' => $item['client_name'] ?? 'Walk-in',
@@ -496,7 +496,7 @@ class SalesService
             'sale_id' => $saleId,
             'created_by' => $createdBy ?? (auth('center_user')->id() ?? auth('center_api')->id()),
         ]);
-
+    
         // Load selected user packages and their definitions
         $userPackages = [];
         if (!empty($item['user_package_ids']) && is_array($item['user_package_ids'])) {
@@ -504,10 +504,10 @@ class SalesService
                 ->with(['package.packageServicePaid', 'package.packageServiceFree'])
                 ->get();
         }
-
+    
         // Keep track of used slots during this booking creation
         $packageUsageLog = [];
-
+    
         if (!empty($services) && is_array($services)) {
             foreach ($services as $svc) {
                 if (empty($svc['worker_id']) || empty($svc['from_time']) || empty($svc['to_time'])) {
@@ -517,17 +517,30 @@ class SalesService
                 if (!$service) {
                     throw new \Exception('Service not found: ' . ($svc['id'] ?? ''));
                 }
-                $workerPercentage = (float) Worker::whereKey($svc['worker_id'])->value('percentage');
+    
+                // ✅ FIX: Prefer commission sent from the POS dropdown; fall back to worker's stored percentage
+                $commissionFromCart = $svc['commission'] ?? null;
+                $commissionTypeFromCart = $svc['commission_type'] ?? null;
+    
+                if ($commissionFromCart === null || $commissionFromCart === '') {
+                    $workerPercentage = (float) Worker::whereKey($svc['worker_id'])->value('percentage');
+                    $commissionValue = $workerPercentage > 0 ? $workerPercentage : null;
+                    $commissionTypeValue = $workerPercentage > 0 ? 'percentage' : null;
+                } else {
+                    $commissionValue = (float) $commissionFromCart;
+                    $commissionTypeValue = !empty($commissionTypeFromCart) ? $commissionTypeFromCart : 'percentage';
+                }
+    
                 $current_tip = 0;
                 if ($tip > 0 && ($tipWorkerId == null || $tipWorkerId == $svc['worker_id'])) {
                     $current_tip = $tip;
                     $tip = 0; // Use tip only once
                 }
-
+    
                 $coveredByPackage = false;
                 $userPackageIdUsed = null;
                 $isFreePackageSlot = 0;
-
+    
                 foreach ($userPackages as $up) {
                     // Check paid services first
                     $paidSlot = $up->package->packageServicePaid->where('service_id', $service->id)->first();
@@ -541,7 +554,7 @@ class SalesService
                             break;
                         }
                     }
-
+    
                     // Then check free services
                     $freeSlot = $up->package->packageServiceFree->where('service_id', $service->id)->first();
                     if ($freeSlot) {
@@ -555,7 +568,7 @@ class SalesService
                         }
                     }
                 }
-
+    
                 $bookingDetail = BookingDetail::create([
                     'booking_id' => $booking->id,
                     'service_id' => $service->id,
@@ -566,12 +579,12 @@ class SalesService
                     'tip' =>  $current_tip,
                     'from_time' => $svc['from_time'],
                     'to_time' => $svc['to_time'],
-                    'commission' => $workerPercentage > 0 ? $workerPercentage : null,
-                    'commission_type' => $workerPercentage > 0 ? 'percentage' : null,
+                    'commission' => $commissionValue,
+                    'commission_type' => $commissionTypeValue,
                     'booking_source' => $item['booking_source'] ?? 'inside_booking',
                     'status' => ($item['booking_source'] ?? 'inside_booking') === 'outside_booking' ? 'pending' : 'confirmed',
                 ]);
-
+    
                 if ($coveredByPackage) {
                     UserUsedPackage::create([
                         'user_id' => $clientId,
@@ -590,17 +603,30 @@ class SalesService
             if (!$service) {
                 throw new \Exception('Service not found');
             }
-            $workerPercentage = (float) Worker::whereKey($item['worker_id'])->value('percentage');
+    
+            // ✅ FIX: Prefer commission sent from the POS dropdown; fall back to worker's stored percentage
+            $commissionFromCart = $item['commission'] ?? null;
+            $commissionTypeFromCart = $item['commission_type'] ?? null;
+    
+            if ($commissionFromCart === null || $commissionFromCart === '') {
+                $workerPercentage = (float) Worker::whereKey($item['worker_id'])->value('percentage');
+                $commissionValue = $workerPercentage > 0 ? $workerPercentage : null;
+                $commissionTypeValue = $workerPercentage > 0 ? 'percentage' : null;
+            } else {
+                $commissionValue = (float) $commissionFromCart;
+                $commissionTypeValue = !empty($commissionTypeFromCart) ? $commissionTypeFromCart : 'percentage';
+            }
+    
             $current_tip = 0;
             if ($tip > 0 && ($tipWorkerId == null || $tipWorkerId == $item['worker_id'])) {
                 $current_tip = $tip;
                 $tip = 0; // Use tip only once
             }
-
+    
             $coveredByPackage = false;
             $userPackageIdUsed = null;
             $isFreePackageSlot = 0;
-
+    
             foreach ($userPackages as $up) {
                 // First check paid services
                 $paidSlot = $up->package->packageServicePaid->where('service_id', $service->id)->first();
@@ -614,7 +640,7 @@ class SalesService
                         break;
                     }
                 }
-
+    
                 // Then check free services
                 $freeSlot = $up->package->packageServiceFree->where('service_id', $service->id)->first();
                 if ($freeSlot) {
@@ -628,7 +654,7 @@ class SalesService
                     }
                 }
             }
-
+    
             $bookingDetail = BookingDetail::create([
                 'booking_id' => $booking->id,
                 'service_id' => $service->id,
@@ -639,12 +665,12 @@ class SalesService
                 'worker_id' => $item['worker_id'],
                 'from_time' => $item['from_time'],
                 'to_time' => $item['to_time'],
-                'commission' => $workerPercentage > 0 ? $workerPercentage : null,
-                'commission_type' => $workerPercentage > 0 ? 'percentage' : null,
+                'commission' => $commissionValue,
+                'commission_type' => $commissionTypeValue,
                 'booking_source' => $item['booking_source'] ?? 'inside_booking',
                 'status' => ($item['booking_source'] ?? 'inside_booking') === 'outside_booking' ? 'pending' : 'confirmed',
             ]);
-
+    
             if ($coveredByPackage) {
                 UserUsedPackage::create([
                     'user_id' => $clientId,
@@ -655,7 +681,7 @@ class SalesService
                 ]);
             }
         }
-
+    
         // Calculate monetary discount amount
         $bookingOriginalTotal = 0;
         $bookingTotalCalc = 0;
@@ -669,12 +695,12 @@ class SalesService
             $bookingTotalCalc = (float) ($item['price'] ?? 0);
         }
         $discountAmountAED = max(0, $bookingOriginalTotal - $bookingTotalCalc);
-
+    
         // Handle wallet payment - deduct booking amount from wallet balance
         if (!empty($item['wallet_id'])) {
             $this->deductWalletBalance($item['wallet_id'], $item['client_mobile'], $bookingTotal, $booking->id, $branchId);
         }
-
+    
         // Handle membership payment - deduct booking amount from membership balance
         if (!empty($item['membership_id'])) {
             $membership = Membership::find($item['membership_id']);
@@ -686,7 +712,7 @@ class SalesService
                         $userId = $user->id;
                     }
                 }
-
+    
                 UserUsedCard::create([
                     'code' => $membership->membership_no,
                     'amount' => $membership->percent,
@@ -696,12 +722,12 @@ class SalesService
                 ]);
             }
         }
-
+    
         // Handle discount code - create UserUsedDiscount record for daily report tracking
         if (!empty($item['discount_id'])) {
             $this->recordDiscountUsage($item['discount_id'], $item['client_mobile'] ?? null, $booking->id, $discountAmountAED);
         }
-
+    
         return $booking;
     }
 
