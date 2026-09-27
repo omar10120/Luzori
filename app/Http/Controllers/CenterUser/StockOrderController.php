@@ -51,7 +51,7 @@ class StockOrderController extends Controller
         $menu_link = route($this->indexRoute);
         $title = __('general.add') . ' ' . __('locale.stockorder');
         $requestUrl = route('center_user.stockorders.updateOrCreate');
-        $branches = Branch::with('translation')->get();
+        $branches = Branch::with('translation')->where('id', 1)->get();
         $suppliers = ProductSupplier::query()->orderBy('name')->get(['id', 'name']);
 
         return view('CenterUser.SubViews.StockOrder.create', compact(

@@ -66,7 +66,7 @@ class ProductController extends Controller
         $brands = \App\Models\Brand::all();
         $categories = \App\Models\Category::all();
         $productSuppliers = \App\Models\ProductSupplier::all();
-        $branches = \App\Models\Branch::with('translation')->get();
+        $branches = \App\Models\Branch::with('translation')->where('id', 1)->get();
 
         if (is_null($item)) {
             $title = __('general.add');
