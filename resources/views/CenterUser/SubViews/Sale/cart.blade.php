@@ -415,7 +415,7 @@
                                                 <select class="select2 form-control" name="products[]" id="product-products" multiple>
                                                     <option value="">{{ __('field.select_products') }}</option>
                                                     @foreach ($products as $product)
-                                                        <option value="{{ $product->id }}">{{ $product->name }}</option>
+                                                        <option value="{{ $product->id }}">{{ $product->name }} - {{ $product->barcode }}</option>
                                                     @endforeach
                                                 </select>
                                             </div>
