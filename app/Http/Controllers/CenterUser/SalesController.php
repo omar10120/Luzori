@@ -153,6 +153,8 @@ class SalesController extends Controller
                     'price' => $price,
                     'supply_price' => (float) ($product->supply_price ?? 0),
                     'retail_price' => (float) ($product->retail_price ?? 0),
+                    'stock_quantity' => $branchStock->stock_quantity ?? 0,
+
                 ],
             ];
         });

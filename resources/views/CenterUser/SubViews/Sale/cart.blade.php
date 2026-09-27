@@ -415,7 +415,12 @@
                                                 <select class="select2 form-control" name="products[]" id="product-products" multiple>
                                                     <option value="">{{ __('field.select_products') }}</option>
                                                     @foreach ($products as $product)
-                                                        <option value="{{ $product->id }}">{{ $product->name }} - {{ $product->barcode }}</option>
+                                                        @php
+                                                            $stock = (int) optional($product->productBranches->first())->stock_quantity;
+                                                        @endphp
+                                                        <option value="{{ $product->id }}">
+                                                            {{ $product->name }} - {{ $stock }}
+                                                        </option>
                                                     @endforeach
                                                 </select>
                                             </div>

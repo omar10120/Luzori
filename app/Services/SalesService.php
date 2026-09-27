@@ -43,45 +43,8 @@ class SalesService
         $services = Service::with('translation')
             ->orderBy('id')
             ->get(['id', 'category_id', 'price', 'has_commission']);
-    
-        $products = Product::with('translation')
-            ->orderBy('id')
-            ->get(['id', 'supply_price', 'retail_price']);
-    
-        $discounts = Discount::query()
-            ->select('id', 'code', 'type', 'amount', 'start_at', 'end_at')
-            ->orderBy('id')
-            ->get();
-    
-        // Packages list for selects only — no users / nested services on first paint
-        $packages = Package::with('translation')
-            ->orderBy('id')
-            ->get(['id', 'price']);
-    
-    
-        $paymentMethodsAll = PaymentMethod::query()
-            ->select('id', 'name', 'types', 'status')
-            ->where('status', true)
-            ->get();
-    
-        $paymentMethods = $paymentMethodsAll->filter(function ($m) {
-            $types = $m->types ?? [];
-            return in_array(PaymentMethod::TYPE_BOOKING, $types, true)
-                || in_array(PaymentMethod::TYPE_GENERAL, $types, true);
-        })->values();
-    
-        $productPaymentMethods = $paymentMethodsAll->filter(function ($m) {
-            $types = $m->types ?? [];
-            return in_array(PaymentMethod::TYPE_PRODUCT, $types, true)
-                || in_array(PaymentMethod::TYPE_GENERAL, $types, true);
-        })->values();
-    
-        $walletPaymentMethods = $paymentMethodsAll->filter(function ($m) {
-            $types = $m->types ?? [];
-            return in_array(PaymentMethod::TYPE_WALLET, $types, true)
-                || in_array(PaymentMethod::TYPE_GENERAL, $types, true);
-        })->values();
-    
+
+        // Resolve the branch up-front so products can be scoped to it
         $selectedId = !empty($cart['client_id']) ? (int) $cart['client_id'] : null;
         $selectedUser = $selectedId
             ? User::query()
@@ -89,28 +52,74 @@ class SalesService
                 ->with('media')
                 ->find($selectedId)
             : null;
-    
+
         $branchId = $selectedUser?->branch_id ?? $centerUser->branch_id ?? null;
-    
+        
+
+        
+        $products = Product::with([
+                'translation',
+                'productBranches' => function ($q) use ($branchId) {
+                    if ($branchId) {
+                        $q->where('branch_id', $branchId);
+                    }
+                },
+            ])
+            ->orderBy('id')
+            ->get(['id', 'supply_price', 'retail_price']);
+            LOG::info("products now : " . $products);
+        $discounts = Discount::query()
+            ->select('id', 'code', 'type', 'amount', 'start_at', 'end_at')
+            ->orderBy('id')
+            ->get();
+
+        // Packages list for selects only — no users / nested services on first paint
+        $packages = Package::with('translation')
+            ->orderBy('id')
+            ->get(['id', 'price']);
+
+        $paymentMethodsAll = PaymentMethod::query()
+            ->select('id', 'name', 'types', 'status')
+            ->where('status', true)
+            ->get();
+
+        $paymentMethods = $paymentMethodsAll->filter(function ($m) {
+            $types = $m->types ?? [];
+            return in_array(PaymentMethod::TYPE_BOOKING, $types, true)
+                || in_array(PaymentMethod::TYPE_GENERAL, $types, true);
+        })->values();
+
+        $productPaymentMethods = $paymentMethodsAll->filter(function ($m) {
+            $types = $m->types ?? [];
+            return in_array(PaymentMethod::TYPE_PRODUCT, $types, true)
+                || in_array(PaymentMethod::TYPE_GENERAL, $types, true);
+        })->values();
+
+        $walletPaymentMethods = $paymentMethodsAll->filter(function ($m) {
+            $types = $m->types ?? [];
+            return in_array(PaymentMethod::TYPE_WALLET, $types, true)
+                || in_array(PaymentMethod::TYPE_GENERAL, $types, true);
+        })->values();
+
         // Admins / super-admins (role 1) see workers from EVERY branch.
         // Everyone else is scoped to the resolved branch.
         $workers = Worker::query()
             ->when(! $isAdmin && $branchId, fn ($q) => $q->where('branch_id', $branchId))
             ->orderBy('name')
             ->get(['id', 'name', 'phone', 'is_center_user']);
-    
+
         return [
-            'services' => $services,
-            'products' => $products,
-            'discounts' => $discounts,
-            'packages' => $packages,
-            'paymentMethods' => $paymentMethods,
-            'productPaymentMethods' => $productPaymentMethods,
+            'services'             => $services,
+            'products'             => $products,
+            'discounts'            => $discounts,
+            'packages'             => $packages,
+            'paymentMethods'       => $paymentMethods,
+            'productPaymentMethods'=> $productPaymentMethods,
             'walletPaymentMethods' => $walletPaymentMethods,
-            'wallets' => collect(), // lazy-loaded
-            'selectedUser' => $selectedUser,
-            'workers' => $workers,
-            'branchId' => $branchId,
+            'wallets'              => collect(), // lazy-loaded
+            'selectedUser'         => $selectedUser,
+            'workers'              => $workers,
+            'branchId'             => $branchId,
         ];
     }
         /**
@@ -884,6 +893,7 @@ class SalesService
         $productBranch = ProductBranch::where('product_id', $productId)
             ->where('branch_id', $branchId)
             ->first();
+        LOG::info("prdoucts branch" . $productBranch);
 
         // Enforce stock limits when tracking is enabled or branch stock is configured
         if (!$product->track_stock && !$productBranch) {

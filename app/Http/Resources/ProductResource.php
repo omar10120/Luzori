@@ -18,6 +18,7 @@ class ProductResource extends JsonResource
         $res['name'] = $this->translate(app()->getLocale())->name;
         $res['text'] = $this->translate(app()->getLocale())->text;
         $res['price'] = $this->retail_price;
+        
         $res['image'] = $this->image;
         $res['created_at'] = $this->created_at;
         return $res;
