@@ -418,8 +418,8 @@
                                                         @php
                                                             $stock = (int) optional($product->productBranches->first())->stock_quantity;
                                                         @endphp
-                                                        <option value="{{ $product->id }}">
-                                                            {{ $product->name }} - {{ $stock }}
+                                                        <option value="{{ $product->id }}" data-stock="{{ $stock }}">
+                                                            {{ $product->name }} - {{ $stock }}{{ $stock <= 0 ? ' ('.__('field.out_of_stock').')' : '' }}
                                                         </option>
                                                     @endforeach
                                                 </select>
@@ -2605,10 +2605,31 @@
                     const branchId = {{ auth('center_user')->user()->branch_id ?? 'null' }};
     
                     // Add each selected product to cart
+                    const outOfStockProducts = [];   // collect names of out-of-stock products
+
                     let productsAdded = 0;
                     selectedProducts.forEach(productId => {
                         const productData = productsData[productId];
                         if (!productData) return;
+
+                         // ✅ NEW: stock validation
+                      // ✅ NEW: stock validation — read from option's data-stock (source of truth)
+                        const $option = $('#product-products').find('option[value="' + productId + '"]');
+                        let stockQty = parseInt($option.attr('data-stock'), 10);
+
+                        // Fallback to productsData if the attribute is missing for some reason
+                        if (isNaN(stockQty)) {
+                            stockQty = parseInt(productData.stock_quantity, 10);
+                        }
+                        if (isNaN(stockQty)) {
+                            stockQty = 0;
+                        }
+
+                        if (stockQty <= 0) {
+                            outOfStockProducts.push(productData.name || ('#' + productId));
+                            return;
+                        }
+                        
     
                         // Check if product already in cart (as part of a buy_product group)
                         // For now, we'll allow multiple products in one buy_product entry
@@ -2669,6 +2690,28 @@
                     }
 
                     // Remove loading state
+                    // ✅ NEW: notify about out-of-stock products
+                    console.log("outOfStockProducts is : " + outOfStockProducts.length);
+                    if (outOfStockProducts.length > 0) {
+                        if (typeof toastr !== 'undefined') {
+                            toastr.error(
+                                '{{ __('field.out_of_stock') }}: ' + outOfStockProducts.join(', '),
+                                '{{ __('field.out_of_stock') }}'
+                            );
+                        } else {
+                            alert('{{ __('field.out_of_stock') }}: ' + outOfStockProducts.join(', '));
+                        }
+                    }
+
+                    if (productsAdded > 0) {
+                        // ... existing success logic
+                    } else if (outOfStockProducts.length === 0) {
+                        // only show "already in cart" if nothing was out of stock either
+                        if (typeof toastr !== 'undefined') {
+                            toastr.warning('{{ __('field.all_selected_products_already_in_cart') }}');
+                        }
+                    }
+
                     $btn.prop('disabled', false).html(originalHtml);
                 }, 100);
             });

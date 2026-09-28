@@ -463,5 +463,6 @@ return [
     'link_type'                       => 'link type',
     'target'                          => 'target',
     'external_url'                    => 'external url',
+    'out_of_stock'                    => 'Out of stock',
     
 ];

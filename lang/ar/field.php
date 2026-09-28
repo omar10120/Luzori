@@ -439,6 +439,7 @@ return [
     'link_type'                       => 'طريقة الربط',
     'target'                          => 'الهدف',
     'external_url'                    => 'رابط',
+    'out_of_stock'                    => 'إنتهى من المخزن ',
 
     
     
