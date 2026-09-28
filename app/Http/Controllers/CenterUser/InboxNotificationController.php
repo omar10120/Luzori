@@ -36,7 +36,7 @@ class InboxNotificationController extends Controller
         $menu = __('locale.notifications');
         $menu_link = route('center_user.notifications.inbox');
 
-        $notifications = $service->getForCenter($center, 20);
+        $notifications = $service->getForCenter($center, 20, (int) get_user_role() === 1);
 
         return view('CenterUser.SubViews.Notification.inbox', compact(
             'title',

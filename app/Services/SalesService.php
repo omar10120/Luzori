@@ -122,6 +122,7 @@ class SalesService
             'branchId'             => $branchId,
         ];
     }
+
         /**
      * Coupons table payload for cart wallet tab (lazy).
      *

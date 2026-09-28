@@ -21,6 +21,7 @@ class AppNotificationService
         $targetType = $data['target_type'] ?? 'users';
         $recipients = $data['recipients'] ?? ['all'];
         $sendToAll = in_array('all', $recipients, true);
+        $sendPush = $data['send_push'] ?? true;
 
         if ($targetType === 'users') {
             $ids = $sendToAll
@@ -73,7 +74,7 @@ class AppNotificationService
                 'target_type' => $targetType,
                 'status' => true,
                 'sent_count' => count($ids),
-                'type' => 'admin',
+                'type' => $data['type'] ?? 'admin',
             ]));
 
             if ($targetType === 'users') {
@@ -83,7 +84,9 @@ class AppNotificationService
                         $user->appNotifications()->attach($notification->id, ['is_read' => 0]);
                     }
                 }
-                $this->pushToAppUsers($ids, $translations, $notification);
+                if ($sendPush) {
+                    $this->pushToAppUsers($ids, $translations, $notification);
+                }
             } else {
                 foreach ($ids as $id) {
                     $center = Center::find($id);
@@ -91,7 +94,9 @@ class AppNotificationService
                         $center->notifications()->attach($notification->id, ['is_read' => 0]);
                     }
                 }
-                $this->pushToCenters($ids, $translations, $notification);
+                if ($sendPush) {
+                    $this->pushToCenters($ids, $translations, $notification);
+                }
             }
 
             DB::connection('central')->commit();
@@ -185,23 +190,41 @@ class AppNotificationService
         return true;
     }
 
-    public function getForCenter(Center $center, int $perPage = 20)
+    public function getForCenter(Center $center, int $perPage = 20, bool $includeStockAlerts = false)
     {
-        return $center->notifications()
+        $query = $center->notifications()
             ->with('translations')
-            ->orderByDesc('notifications.id')
-            ->paginate($perPage);
+            ->orderByDesc('notifications.id');
+
+        if (!$includeStockAlerts) {
+            $query->where(function ($query) {
+                $query->whereNull('notifications.type')
+                    ->orWhere('notifications.type', '!=', 'stock_alert');
+            });
+        }
+
+        return $query->paginate($perPage);
     }
 
-    public function navbarForCenter(Center $center, int $limit = 10): array
+    public function navbarForCenter(Center $center, int $limit = 10, bool $includeStockAlerts = false): array
     {
-        $items = $center->notifications()
+        $itemsQuery = $center->notifications()
             ->with('translations')
             ->orderByDesc('notifications.id')
-            ->limit($limit)
-            ->get();
+            ->limit($limit);
+        $unreadQuery = $center->notifications()->wherePivot('is_read', 0);
 
-        $unread = $center->notifications()->wherePivot('is_read', 0)->count();
+        if (!$includeStockAlerts) {
+            $excludeStockAlerts = function ($query) {
+                $query->whereNull('notifications.type')
+                    ->orWhere('notifications.type', '!=', 'stock_alert');
+            };
+            $itemsQuery->where($excludeStockAlerts);
+            $unreadQuery->where($excludeStockAlerts);
+        }
+
+        $items = $itemsQuery->get();
+        $unread = $unreadQuery->count();
 
         return [
             'items' => $items,

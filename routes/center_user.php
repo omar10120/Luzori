@@ -352,6 +352,7 @@ Route::group(['middleware' => 'auth_center_user:center_user'], function () {
             Route::match(['get', 'post'], 'cart', 'cart')->name('cart');
             Route::get('cart/wallets', 'cartWallets')->name('cart.wallets');
             Route::get('cart/packages', 'cartPackages')->name('cart.packages');
+            Route::post('cart/notify-out-of-stock', 'notifyMainBranchOutOfStock')->name('cart.notify-out-of-stock');
             Route::get('search-customers', 'searchCustomers')->name('search-customers');
             Route::get('customer/{id}', 'getCustomer')->name('get-customer');
             Route::post('add-service-to-cart', 'addServiceToCart')->name('add-service-to-cart');

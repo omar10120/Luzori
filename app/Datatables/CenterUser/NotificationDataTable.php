@@ -28,16 +28,19 @@ class NotificationDataTable extends DataTable
                     'operation' => DeleteActionEnum::FORCE_DELETE->value,
                     'with_trashed' => 0,
                 ];
-                $html = view()->make('_partials.center_actions', compact('id', 'route', 'options', 'model'))->render();
-                return $html;
+                return view()->make('_partials.center_actions', compact('id', 'route', 'options', 'model'))->render();
+            })
+            // ✅ Flatten nested translation fields
+            ->addColumn('title', function ($row) {
+                return $row->translation->title ?? '—';
+            })
+            ->addColumn('text', function ($row) {
+                return \App\Helpers\MyHelper::truncateWithReadMore($row->translation->text ?? '');
             })
             ->editColumn('users', function ($row) {
                 return $row->users->count();
             })
-            ->editColumn('translation.text', function ($row) {
-                return \App\Helpers\MyHelper::truncateWithReadMore($row->translation->text ?? '');
-            })
-            ->rawColumns(['translation.text'], true)
+            ->rawColumns(['action', 'text'], true)
             ->setRowId('id');
     }
 
@@ -104,11 +107,11 @@ class NotificationDataTable extends DataTable
     public function getColumns(): array
     {
         return [
-            Column::make('id')->searchable(true)->title('#'),
-            Column::make('translation.title')->searchable(true)->title(__('field.title')),
-            Column::make('translation.text')->searchable(true)->title(__('field.text')),
-            Column::computed('users')->searchable(false)->title(__('field.users')),
-            Column::make('created_at')->searchable(true)->title(__('field.created_at')),
+        Column::make('id')->searchable(true)->title('#'),
+        Column::computed('title')->searchable(true)->title(__('field.title')),
+        Column::computed('text')->searchable(true)->title(__('field.text')),
+        Column::computed('users')->searchable(false)->title(__('field.users')),
+        Column::make('created_at')->searchable(true)->title(__('field.created_at'))
         ];
     }
 

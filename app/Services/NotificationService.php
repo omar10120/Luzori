@@ -3,9 +3,9 @@
 namespace App\Services;
 
 use App\Models\Center;
-use App\Models\CenterUser;
 use App\Models\User;
 use App\Services\FirebaseNotification;
+use Illuminate\Support\Facades\Log;
 
 class NotificationService
 {
@@ -14,6 +14,7 @@ class NotificationService
     {
         $this->firebaseNotification = new FirebaseNotification();
     }
+
 
     public function getByUser($user_id)
     {
@@ -54,4 +55,5 @@ class NotificationService
             return false;
         }
     }
+
 }

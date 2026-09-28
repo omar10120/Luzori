@@ -416,13 +416,14 @@
                                                     <option value="">{{ __('field.select_products') }}</option>
                                                     @foreach ($products as $product)
                                                         @php
-                                                            $stock = (int) optional($product->productBranches->first())->stock_quantity;
+                                                            $stock = (int) (optional($product->productBranches->firstWhere('branch_id', $destinationBranchId))->stock_quantity ?? 0);
                                                         @endphp
                                                         <option value="{{ $product->id }}" data-stock="{{ $stock }}">
                                                             {{ $product->name }} - {{ $stock }}{{ $stock <= 0 ? ' ('.__('field.out_of_stock').')' : '' }}
                                                         </option>
                                                     @endforeach
                                                 </select>
+                                                <div id="product-out-of-stock-panel" class="alert alert-warning mt-2 mb-0" style="display: none;"></div>
                                             </div>
                                         </div>
                                         <div class="col-md-12 mb-2">
@@ -2557,6 +2558,71 @@
             // Product Tab Functions - Match BuyProduct Structure
             // Store product data
             let productsData = @json($productsData ?? new \stdClass());
+            const notifiedOutOfStockProducts = new Set();
+
+            function refreshOutOfStockPanel() {
+                const outOfStockProducts = ($('#product-products').val() || []).filter(function(productId) {
+                    const $option = $('#product-products').find('option[value="' + productId + '"]');
+                    return (parseInt($option.attr('data-stock'), 10) || 0) <= 0;
+                });
+                const $panel = $('#product-out-of-stock-panel');
+
+                if (outOfStockProducts.length === 0) {
+                    $panel.hide().empty();
+                    return;
+                }
+
+                const buttons = outOfStockProducts.map(function(productId) {
+                    const $option = $('#product-products').find('option[value="' + productId + '"]');
+                    const productName = $option.text().replace(/\s*-\s*\d+.*$/, '').trim();
+                    const alreadyNotified = notifiedOutOfStockProducts.has(String(productId));
+                    return `<div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+                        <span>${escapeHtml(productName)}</span>
+                        <button type="button" class="btn btn-sm btn-outline-warning notify-main-branch" data-product-id="${productId}" ${alreadyNotified ? 'disabled' : ''}>
+                            <i class="ti ti-bell me-1"></i>${alreadyNotified ? '{{ __('field.out_of_stock_notification_sent') }}' : '{{ __('field.notify_main_branch') }}'}
+                        </button>
+                    </div>`;
+                }).join('');
+
+                $panel.html(`<strong>{{ __('field.out_of_stock') }}</strong>${buttons}`).show();
+            }
+
+            $('#product-products').on('change', refreshOutOfStockPanel);
+
+            $(document).on('click', '.notify-main-branch', function() {
+                const $button = $(this);
+                const productId = String($button.data('product-id'));
+                const originalHtml = $button.html();
+                $button.prop('disabled', true).html('<i class="ti ti-loader-2 me-1"></i>{{ __('admin.sending') }}');
+
+                $.ajax({
+                    url: '{{ route('center_user.sales.cart.notify-out-of-stock') }}',
+                    type: 'POST',
+                    data: {
+                        _token: '{{ csrf_token() }}',
+                        product_id: productId
+                    },
+                    success: function(response) {
+                        notifiedOutOfStockProducts.add(productId);
+                        refreshOutOfStockPanel();
+                        if (typeof toastr !== 'undefined') {
+                            toastr.success(response.message);
+                        }
+                    },
+                    error: function(xhr) {
+                        $button.prop('disabled', false).html(originalHtml);
+                        const message = xhr.responseJSON?.message || '{{ __('admin.an_error_occurred') }}';
+                        if (typeof toastr !== 'undefined') {
+                            toastr.error(message);
+                        }
+                    },
+                    complete: function() {
+                        if (!notifiedOutOfStockProducts.has(productId)) {
+                            $button.prop('disabled', false).html(originalHtml);
+                        }
+                    }
+                });
+            });
 
             $('#addProductBtn').on('click', function() {
                 const selectedProducts = $('#product-products').val();
@@ -2612,7 +2678,6 @@
                         const productData = productsData[productId];
                         if (!productData) return;
 
-                         // ✅ NEW: stock validation
                       // ✅ NEW: stock validation — read from option's data-stock (source of truth)
                         const $option = $('#product-products').find('option[value="' + productId + '"]');
                         let stockQty = parseInt($option.attr('data-stock'), 10);

@@ -8,6 +8,7 @@ use App\Helpers\MyHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Branch;
 use App\Models\Center;
+use App\Models\CenterUser;
 use App\Models\Product;
 use App\Models\Service;
 use App\Models\Setting;
@@ -16,6 +17,7 @@ use App\Models\User;
 use App\Models\Worker;
 use App\Services\InvoiceSettingsService;
 use App\Services\SalesService;
+use App\Services\AppNotificationService;
 use App\Services\SaleOtpService;
 use App\Services\CustomerSearchService;
 use App\Models\PaymentMethod;
@@ -125,6 +127,7 @@ class SalesController extends Controller
         $wallets = $data['wallets'];
         $selectedUser = $data['selectedUser'];
         $workers = $data['workers'];
+        $destinationBranchId = $data['branchId'];
 
         $categoriesJson = $this->getFormattedCategories();
 
@@ -141,11 +144,11 @@ class SalesController extends Controller
             ];
         });
 
-        $productsData = $products->mapWithKeys(function ($product) {
+        $productsData = $products->mapWithKeys(function ($product) use ($destinationBranchId) {
             $price = $product->retail_price && $product->retail_price > 0
                 ? (float) $product->retail_price
                 : (float) ($product->supply_price ?? 0);
-
+            $branchStock = $product->productBranches->firstWhere('branch_id', $destinationBranchId);
             return [
                 $product->id => [
                     'id' => $product->id,
@@ -153,7 +156,7 @@ class SalesController extends Controller
                     'price' => $price,
                     'supply_price' => (float) ($product->supply_price ?? 0),
                     'retail_price' => (float) ($product->retail_price ?? 0),
-                    'stock_quantity' => $branchStock->stock_quantity ?? 0,
+                    'stock_quantity' => $branchStock?->stock_quantity ?? 0,
 
                 ],
             ];
@@ -178,8 +181,68 @@ class SalesController extends Controller
             'categoriesJson',
             'centerUser',
             'servicesData',
-            'productsData'
+            'productsData',
+            'destinationBranchId'
         ));
+    }
+
+    public function notifyMainBranchOutOfStock(Request $request, AppNotificationService $notificationService)
+    {
+        $can = 'CREATE_' . Str::upper($this->plural);
+        if (!auth('center_user')->user()->can($can, 'center_api')) {
+            return abort(403);
+        }
+
+        $validated = $request->validate([
+            'product_id' => 'required|integer|exists:products,id',
+        ]);
+
+        $hasSuperAdmin = CenterUser::whereHas('roles', function ($query) {
+            $query->where('roles.id', 1);
+        })->exists();
+
+        if (!$hasSuperAdmin) {
+            return response()->json([
+                'message' => __('field.no_super_admin_available'),
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $product = Product::with('translation')->findOrFail($validated['product_id']);
+        $center = Center::where('database', config('database.connections.mysql.database'))->first()
+            ?? $this->resolveActiveCenter();
+
+        if (!$center) {
+            return response()->json([
+                'message' => __('api.unknownError'),
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $productNameEn = $product->translate('en')?->name ?: $product->name;
+        $productNameAr = $product->translate('ar')?->name ?: $product->name;
+        $notification = $notificationService->sendAdminNotification([
+            'target_type' => 'centers',
+            'type' => 'stock_alert',
+            'send_push' => false,
+            'recipients' => [(string) $center->id],
+            'en' => [
+                'title' => 'Product out of stock',
+                'text' => 'The quantity is out of stock for product: ' . $productNameEn,
+            ],
+            'ar' => [
+                'title' => 'منتج غير متوفر',
+                'text' => 'الكمية غير متوفرة للمنتج: ' . $productNameAr,
+            ],
+        ]);
+
+        if (!$notification) {
+            return response()->json([
+                'message' => __('admin.an_error_occurred'),
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        return response()->json([
+            'message' => __('field.out_of_stock_notification_sent'),
+        ]);
     }
 
     /**

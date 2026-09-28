@@ -80,7 +80,7 @@ class AppServiceProvider extends ServiceProvider
                         }
 
                         if ($center) {
-                            $nav = $service->navbarForCenter($center);
+                            $nav = $service->navbarForCenter($center, 10, (int) get_user_role() === 1);
                             $view->with('number_notifications', $nav['unread']);
                             $view->with('notis', $nav['items']);
                             $view->with('notifications_view_all_url', route('center_user.notifications.inbox'));
