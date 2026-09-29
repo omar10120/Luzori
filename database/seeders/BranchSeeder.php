@@ -15,10 +15,10 @@ class BranchSeeder extends Seeder
     public function run()
     {
         Branch::create([
-            'longitude' => '',
-            'latitude' => '',    
-            'open_time' => '',
-            'close_time' => '',
+            'longitude'  => 46.6753,  
+            'latitude'   => 24.7136,
+            'open_time'  => '09:00:00',
+            'close_time' => '22:00:00',
         ]);
 
         // Branch::factory()->count(15)->create();

@@ -16,16 +16,16 @@ class BranchTranslationSeeder extends Seeder
     {
         BranchTranslation::create([
             'branch_id' => 1,
-            'name' => 'Branch 1',
-            'city' => 'City 1',
+            'name' => 'Main Branch',
+            'city' => 'Main Branch',
             'address' => 'Address 1',
             'locale' => 'en',
         ]);
 
         BranchTranslation::create([
             'branch_id' => 1,
-            'name' => 'Branch 1',
-            'city' => 'Branch 1',
+            'name' => 'الفرع الرئيسي',
+            'city' => 'الفرع الرئيسي',
             'address' => 'Address 1',
             'locale' => 'ar',
         ]);

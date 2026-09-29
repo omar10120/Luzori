@@ -76,6 +76,7 @@ class CenterService
             'workers',      // only meaningful with categories/services
             'vacations',    // only meaningful with workers
             'reviews',
+             'infos',     // only meaningful with categories/services
         ];
 
         if (!$request->has('include')) {
@@ -106,6 +107,78 @@ class CenterService
 
         return $items;
     }
+
+    /**
+ * Single center detail — same include semantics as the list endpoint.
+ * Returns a ready-to-serialize array, or null if not found.
+ */
+    public function getCenterById($request, int $id): ?array
+    {
+        $includes = $this->parseIncludes($request);
+
+        $query = Center::where('status', 'approve')
+            ->where(function ($q) {
+                $q->whereNull('expire_date')->orWhere('expire_date', '>', now());
+            });
+
+        if (in_array('global_categories', $includes, true)) {
+            $query->with('globalCategories');
+        }
+
+        $center = $query->find($id);
+
+        if (!$center) {
+            return null;
+        }
+
+        $originalDb = Config::get('database.connections.mysql.database');
+        $userId     = auth('center_api')->id();
+
+        if ($center->database) {
+            try {
+                $this->hydrateCenterForList($center, $userId, $includes);
+
+                // Serialize WHILE still on tenant DB so lazy-loaded translations
+                // (branch_translations, service_translations, ...) resolve.
+                $payload = json_decode(
+                    \App\Http\Resources\CenterResource::make($center)->toJson(),
+                    true
+                );
+            } catch (\Exception $e) {
+                Log::warning('Center show hydrate failed', [
+                    'center_id' => $center->id,
+                    'database'  => $center->database,
+                    'error'     => $e->getMessage(),
+                ]);
+
+                // still return base center so the client gets *something*
+                $payload = json_decode(
+                    \App\Http\Resources\CenterResource::make($center)->toJson(),
+                    true
+                );
+            } finally {
+                // *** critical: always put mysql back on the central DB ***
+                $this->restoreMainDatabase($originalDb);
+            }
+        } else {
+            $payload = json_decode(
+                \App\Http\Resources\CenterResource::make($center)->toJson(),
+                true
+            );
+        }
+
+        $centerId = (int) $center->id;
+
+        $favoriteIds = $this->favoriteCenterIdsForRequest($request, [$centerId]);
+        $reviewStats = $this->reviewStatsForCenters([$centerId]);
+        $myReviews   = $this->myReviewsForRequest($request, [$centerId]);
+
+        $payload['is_favorite'] = in_array($centerId, $favoriteIds, true);
+        $this->attachReviewFields($payload, $centerId, $reviewStats, $myReviews);
+
+        return $payload;
+    }
+
 
     // =========================================================================
     // LIST (with geo + search + filters)
@@ -888,6 +961,11 @@ class CenterService
                 ->with(['service.translations'])
                 ->get();
         }
+
+        if (in_array('infos', $includes, true)) {
+        $center->setRelation('infos', Info::all());
+        }
+
 
         // Reviews live on central DB — safe while mysql is on tenant
         if (in_array('reviews', $includes, true)) {
