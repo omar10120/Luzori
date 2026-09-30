@@ -99,6 +99,10 @@ class CenterService
             $items = array_values(array_diff($items, ['workers', 'vacations']));
         }
 
+        if (!$request->has('include')) {
+            return ['global_categories'];   // good, keep it
+        }
+
         if (!in_array('global_categories', $items, true)) {
             // global_categories is cheap (main DB) — keep it always on unless
             // the client explicitly asked for a very narrow include set.
@@ -1203,5 +1207,99 @@ class CenterService
         $center->fcmTokens()->delete();
         $center->delete();
         return $center;
+    }
+
+        /**
+     * Paginated workers for a single center.
+     * Returns null if the center doesn't exist, or a LengthAwarePaginator.
+     */
+    public function getCenterWorkers($request, int $id): ?LengthAwarePaginator
+    {
+        $perPage = (int) $request->input('per_page', 20);
+        $perPage = max(1, min($perPage, 100));
+        $page    = max(1, (int) $request->input('page', 1));
+
+        $center = Center::where('status', 'approve')
+            ->where(function ($q) {
+                $q->whereNull('expire_date')->orWhere('expire_date', '>', now());
+            })
+            ->find($id);
+
+        if (!$center) {return null;}
+
+        // No tenant DB → empty page
+        if (!$center->database) {
+            return new LengthAwarePaginator(
+                [],
+                0,
+                $perPage,
+                $page,
+                ['path' => $request->url(), 'query' => $request->query()]
+            );
+        }
+
+        $originalDb = Config::get('database.connections.mysql.database');
+
+        try {
+            // Switch to tenant DB
+            $safeDb = str_replace('`', '``', $center->database);
+            DB::connection('mysql')->getPdo()->exec("USE `{$safeDb}`");
+            Config::set('database.connections.mysql.database', $center->database);
+
+            // --- optional filters ---
+            $branchId  = $request->filled('branch_id')  ? (int) $request->branch_id  : null;
+            $search    = $request->filled('search')
+                ? '%' . mb_strtolower(trim($request->search)) . '%'
+                : null;
+
+            $paginator = \App\Models\Worker::query()
+                ->with(['vacations', 'branch', 'media'])
+                ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
+                ->when($search,   fn ($q) => $q->whereRaw('LOWER(name) LIKE ?', [$search]))
+                ->orderBy('id')
+                ->paginate($perPage, ['*'], 'page', $page);
+
+            // Map while still on tenant connection so media() resolves
+            $items = collect($paginator->items())->map(function ($worker) {
+                return [
+                    'id'              => (int) $worker->id,
+                    'name'            => $worker->name,
+                    'image'           => $worker->getFirstMediaUrl('Worker')
+                                            ?: asset('assets/img/avatars/1.png'),
+                    'has_commission'  => (int) $worker->has_commission,
+                    'email'           => $worker->email,
+                    'phone'           => $worker->phone,
+                    'country_code'    => $worker->country_code,
+                    'is_professional' => (int) $worker->is_professional,
+                    'branch_id'       => (int) $worker->branch_id,
+                    'branch_name'     => optional($worker->branch)->name,
+                    'vacations'       => $worker->vacations,
+                ];
+            })->all();
+
+            return new LengthAwarePaginator(
+                $items,
+                $paginator->total(),
+                $perPage,
+                $page,
+                ['path' => $request->url(), 'query' => $request->query()]
+            );
+        } catch (\Exception $e) {
+            Log::warning('Center workers pagination failed', [
+                'center_id' => $center->id,
+                'database'  => $center->database,
+                'error'     => $e->getMessage(),
+            ]);
+
+            return new LengthAwarePaginator(
+                [],
+                0,
+                $perPage,
+                $page,
+                ['path' => $request->url(), 'query' => $request->query()]
+            );
+        } finally {
+            $this->restoreMainDatabase($originalDb);
+        }
     }
 }

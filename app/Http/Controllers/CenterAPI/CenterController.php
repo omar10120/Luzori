@@ -7,23 +7,23 @@ use App\Helpers\MyHelper;
 use App\Http\Resources\CenterResource;
 use App\Http\Requests\CenterAPI\RegisterRequest;
 use App\Services\CenterService;
-use App\Models\Center;
-use App\Models\Branch;
-use App\Models\CategoryService;
-use App\Models\Service;
-use App\Models\Package;
-use App\Models\Info;
-use App\Http\Resources\InfoResource;
-use App\Services\InfoService;
-use App\Models\UserPackage;
-use App\Models\UserUsedPackage;
 use App\Models\AppUser;
 use App\Models\FavoriteCenter;
-use App\Models\CenterReview;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\DB;
+// use App\Models\Center;
+// use App\Models\Branch;
+// use App\Models\CategoryService;
+// use App\Models\Service;
+// use App\Models\Package;
+// use App\Models\Info;
+// use App\Http\Resources\InfoResource;
+// use App\Services\InfoService;
+// use App\Models\UserPackage;
+// use App\Models\UserUsedPackage;
+// use App\Models\CenterReview;
+// use Illuminate\Support\Facades\Config;
+// use Illuminate\Support\Facades\DB;
 
 class CenterController extends Controller
 {
@@ -119,5 +119,21 @@ class CenterController extends Controller
         return FavoriteCenter::where('user_id', $user->id)
             ->where('center_id', $centerId)
             ->exists();
+    }
+
+
+    public function workers(Request $request, int $id, CenterService $centerService)
+    {
+        $paginator = $centerService->getCenterWorkers($request, $id);
+    
+        if ($paginator === null) {
+            return MyHelper::responseJSON(__('api.noDataFound'), Response::HTTP_NOT_FOUND);
+        }
+    
+        return MyHelper::responseJSON(
+            __('api.doneSuccessfully'),
+            Response::HTTP_OK,
+            $paginator
+        );
     }
 }
