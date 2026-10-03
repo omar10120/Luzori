@@ -443,6 +443,7 @@ return [
     'target'                          => 'الهدف',
     'external_url'                    => 'رابط',
     'out_of_stock'                    => 'إنتهى من المخزن ',
+    'expire_date'                     => 'فترة صلاحية',
 
     
     

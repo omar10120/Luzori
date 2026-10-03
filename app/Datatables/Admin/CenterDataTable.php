@@ -90,6 +90,11 @@ class CenterDataTable extends DataTable
                 }
                 return '<span class="badge bg-label-danger"><i class="ti ti-x me-1"></i>Not Registered</span>';
             })
+            ->editColumn('expire_date', function ($row) {
+                return $row->expire_date
+                    ? \Carbon\Carbon::parse($row->expire_date)->format('Y-m-d')
+                    : '---';
+            })
             ->rawColumns(['status', 'name', 'approval_status', 'primary_image', 'is_supplier'], true)
             ->setRowId('id');
     }
@@ -176,6 +181,7 @@ class CenterDataTable extends DataTable
             Column::computed('approval_status')->title(__('field.status')),
             Column::computed('is_supplier')->title('Supplier'),
             Column::make('rate')->title(__('field.rate')),
+            Column::make('expire_date')->title(__('field.expire_date')),
             Column::computed('status')->title(__('field.active')),
             Column::make('created_at')->title(__('field.created_at')),
         ];

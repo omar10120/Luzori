@@ -467,5 +467,6 @@ return [
     'target'                          => 'target',
     'external_url'                    => 'external url',
     'out_of_stock'                    => 'Out of stock',
+    'expire_date'                     => 'ُExpire date',
     
 ];

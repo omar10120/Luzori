@@ -182,6 +182,13 @@
                             </div>
                             <div class="col-md-4">
                                 <div class="mb-1">
+                                    <label class="form-label">Expire Date</label>
+                                    <input type="date" class="form-control" name="expire_date"
+                                        value="{{ $item && $item->expire_date ? \Carbon\Carbon::parse($item->expire_date)->format('Y-m-d') : '' }}" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-1">
                                     <label class="form-label">Bank Name</label>
                                     <input type="text" class="form-control" name="bank_name" maxlength="40" disabled
                                         placeholder="Bank Name (max 40 chars)" value="{{ $item ? $item->bank_name : '' }}" />
