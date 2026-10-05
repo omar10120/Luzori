@@ -29,6 +29,7 @@
         "VIEW_BUYPRODUCTS",
         "VIEW_STOCKTAKES",
         "VIEW_STOCKORDERS",
+        "VIEW_MAINSTOCKS",
         "VIEW_INVENTORYMOVEMENTS",
         "VIEW_DAILY_REPORTS",
         "VIEW_SALES_REPORTS",
@@ -195,6 +196,7 @@
         "buyproducts",
         "stocktakes",
         "stockorders",
+        "mainstocks",
         "inventorymovements"
       ],
       "permissions": [
@@ -202,6 +204,7 @@
         "VIEW_BUYPRODUCTS",
         "VIEW_STOCKTAKES",
         "VIEW_STOCKORDERS",
+        "VIEW_MAINSTOCKS",
         "VIEW_INVENTORYMOVEMENTS"
       ],
       "submenu": [
@@ -217,6 +220,17 @@
           ]
         },
    
+        {
+          "url": "center_user/mainstocks/index",
+          "name": "mainstocks",
+          "external_icon": "stock",
+          "slug": [
+            "mainstocks"
+          ],
+          "permissions": [
+            "VIEW_MAINSTOCKS"
+          ]
+        },
         {
           "url": "center_user/stockorders/index",
           "name": "stockorders",

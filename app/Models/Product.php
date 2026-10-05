@@ -77,6 +77,11 @@ class Product extends Model implements HasMedia
         return $this->hasMany(ProductBranch::class);
     }
 
+    public function mainStocks(): HasMany
+    {
+        return $this->hasMany(MainStock::class);
+    }
+
     public function branches(): BelongsToMany
     {
         return $this->belongsToMany(Branch::class, 'product_branches')

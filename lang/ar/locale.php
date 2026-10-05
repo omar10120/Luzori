@@ -56,6 +56,7 @@ return [
     'stocktakes'                        => 'المخزون',
     'stockorders'                       => 'طلبات المخزون',
     'stockorder'                        => 'طلب مخزون',
+    'mainstocks'                        => 'المخزون الرئيسي',
     'inventorymovements'                => 'حركة المخزون',
     'inventorymovement'                 => 'حركة مخزون',
     'stocktake_details'                 => 'تفاصيل المخزون',

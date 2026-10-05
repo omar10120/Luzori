@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\ProductBranch;
 use App\Models\ProductSupplier;
 use App\Models\StockOrder;
 use Illuminate\Support\Facades\DB;
@@ -13,11 +12,14 @@ class StockOrderService
     public function create(array $data, ?int $createdBy = null): StockOrder
     {
         return DB::transaction(function () use ($data, $createdBy) {
-            $supplier = ProductSupplier::findOrFail($data['product_supplier_id']);
+            $sourceType = $data['source_type'] ?? 'supplier';
+            $supplier = $sourceType === 'supplier'
+                ? ProductSupplier::findOrFail($data['product_supplier_id'])
+                : null;
             $branchIds = array_values(array_unique(array_map('intval', $data['branch_ids'] ?? [])));
 
-            if (empty($branchIds)) {
-                throw new Exception('At least one branch is required');
+            if ($sourceType === 'main_stock' && empty($branchIds)) {
+                throw new Exception('At least one destination branch is required');
             }
 
             $totalCost = 0;
@@ -25,7 +27,7 @@ class StockOrderService
 
             foreach ($data['items'] as $item) {
                 $orderQty = (float) $item['order_qty'];
-                $unitCost = (float) $item['unit_cost'];
+                $unitCost = $sourceType === 'supplier' ? (float) $item['unit_cost'] : 0;
                 $lineTotal = round($orderQty * $unitCost, 2);
                 $totalCost += $lineTotal;
 
@@ -39,8 +41,9 @@ class StockOrderService
 
             $order = StockOrder::create([
                 'order_number' => StockOrder::nextOrderNumber(),
-                'product_supplier_id' => (int) $data['product_supplier_id'],
-                'deliver_from' => $supplier->name,
+                'product_supplier_id' => $supplier?->id,
+                'source_type' => $sourceType,
+                'deliver_from' => $supplier?->name ?? 'Main Stock',
                 'expected_at' => $data['expected_at'] ?? null,
                 'total_cost' => round($totalCost, 2),
                 'status' => 'ordered',
@@ -53,25 +56,48 @@ class StockOrderService
                 $order->items()->create($line);
             }
 
+            if ($sourceType === 'main_stock') {
+                app(CreateTransferOrder::class)->reserve($order);
+            }
+
             return $order->load(['items.product.translation', 'branches.translation', 'supplier']);
         });
     }
 
     public function receive(StockOrder $order, array $itemsData): StockOrder
     {
-        if ($order->status !== 'ordered') {
-            throw new Exception('Order already received');
-        }
-
         return DB::transaction(function () use ($order, $itemsData) {
+            $order = StockOrder::query()->lockForUpdate()->findOrFail($order->id);
+            if ($order->status !== 'ordered') {
+                throw new Exception('Order already received');
+            }
+
             $totalCost = 0;
             $itemsById = collect($itemsData)->keyBy('id');
-            $order->loadMissing(['items.product.primarySku', 'branches']);
+            $order->load(['items.product.primarySku', 'branches']);
 
-            $branchIds = $order->branches->pluck('id')->map(fn ($id) => (int) $id)->all();
-            if (empty($branchIds)) {
-                throw new Exception('Stock order has no branches');
+            if ($itemsById->count() !== $order->items->count()) {
+                throw new Exception('Receive quantities are required for every order item');
             }
+
+            foreach ($itemsById as $itemId => $payload) {
+                if (!$order->items->contains('id', (int) $itemId)) {
+                    throw new Exception('Receive item does not belong to this order');
+                }
+            }
+
+            if ($order->source_type === 'main_stock') {
+                app(ReceiveTransferOrder::class)->receive($order, $itemsById);
+                $order->update([
+                    'status' => 'received',
+                    'received_at' => now(),
+                    'total_cost' => 0,
+                ]);
+
+                return $order->fresh(['items.product.translation', 'branches.translation', 'supplier']);
+            }
+
+            $purchaseReceiver = app(ReceivePurchaseOrder::class);
 
             foreach ($order->items as $item) {
                 if (!$itemsById->has($item->id)) {
@@ -81,6 +107,9 @@ class StockOrderService
                 $payload = $itemsById->get($item->id);
                 $receivedQty = (float) $payload['received_qty'];
                 $unitCost = (float) $payload['unit_cost'];
+                if ($receivedQty > (float) $item->order_qty) {
+                    throw new Exception('Received quantity cannot exceed the ordered quantity');
+                }
                 $lineTotal = round($receivedQty * $unitCost, 2);
                 $totalCost += $lineTotal;
 
@@ -90,35 +119,7 @@ class StockOrderService
                     'line_total' => $lineTotal,
                 ]);
 
-                if ($receivedQty <= 0) {
-                    continue;
-                }
-
-                foreach ($branchIds as $branchId) {
-                    $productBranch = ProductBranch::withTrashed()->firstOrCreate(
-                        [
-                            'product_id' => $item->product_id,
-                            'branch_id' => $branchId,
-                        ],
-                        ['stock_quantity' => 0]
-                    );
-
-                    if ($productBranch->trashed()) {
-                        $productBranch->restore();
-                    }
-
-                    $productBranch->increment('stock_quantity', $receivedQty);
-
-                    app(InventoryMovementService::class)->record(
-                        (int) $item->product_id,
-                        $branchId,
-                        (int) $receivedQty,
-                        \App\Models\InventoryMovement::TYPE_STOCK_ORDER,
-                        $order,
-                        $item->product?->primarySku?->id,
-                        'Stock order receive ' . $order->order_number
-                    );
-                }
+                $purchaseReceiver->receive($order, $item, (int) $receivedQty);
             }
 
             $order->update([

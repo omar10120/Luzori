@@ -13,14 +13,19 @@ class StockOrderRequest extends FormRequest
 
     public function rules(): array
     {
+        $isTransfer = $this->input('source_type') === 'main_stock';
+
         return [
-            'branch_ids' => 'required|array|min:1',
+            'source_type' => 'required|in:supplier,main_stock',
+            'branch_ids' => $isTransfer ? 'required|array|min:1' : 'nullable|array',
             'branch_ids.*' => 'required|exists:branches,id',
-            'product_supplier_id' => 'required|exists:product_suppliers,id',
+            'product_supplier_id' => $isTransfer
+                ? 'nullable|exists:product_suppliers,id'
+                : 'required|exists:product_suppliers,id',
             'expected_at' => 'nullable|date',
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
-            'items.*.order_qty' => 'required|numeric|min:0.01',
+            'items.*.order_qty' => 'required|integer|min:1',
             'items.*.unit_cost' => 'required|numeric|min:0',
         ];
     }

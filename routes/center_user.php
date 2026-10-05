@@ -25,6 +25,7 @@ use App\Http\Controllers\CenterUser\ServiceController;
 use App\Http\Controllers\CenterUser\StocktakeController;
 use App\Http\Controllers\CenterUser\StockOrderController;
 use App\Http\Controllers\CenterUser\InventoryMovementController;
+use App\Http\Controllers\CenterUser\MainStockController;
 use App\Http\Controllers\CenterUser\ShiftController;
 use App\Http\Controllers\CenterUser\UserController;
 use App\Http\Controllers\CenterUser\VacationController;
@@ -294,6 +295,10 @@ Route::group(['middleware' => 'auth_center_user:center_user'], function () {
             Route::post('receive/{id}', 'receiveStore')->name('receive.store');
             Route::get('show/{id}', 'show')->name('show');
         });
+    });
+
+    Route::group(['prefix' => 'mainstocks', 'as' => 'mainstocks.'], function () {
+        Route::get('index', [MainStockController::class, 'index'])->name('index');
     });
 
     Route::group(['prefix' => 'inventorymovements', 'as' => 'inventorymovements.'], function () {

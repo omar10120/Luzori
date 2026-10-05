@@ -12,12 +12,13 @@ class InventoryMovementService
      */
     public function record(
         int $productId,
-        int $branchId,
+        ?int $branchId,
         int $quantity,
         string $type,
         ?Model $reference = null,
         ?int $skuId = null,
-        ?string $notes = null
+        ?string $notes = null,
+        bool $isMainStock = false
     ): ?InventoryMovement {
         if ($quantity === 0) {
             return null;
@@ -30,6 +31,7 @@ class InventoryMovementService
         return InventoryMovement::create([
             'product_id' => $productId,
             'branch_id' => $branchId,
+            'is_main_stock' => $isMainStock,
             'sku_id' => $skuId,
             'quantity' => $quantity,
             'movement_type' => $type,

@@ -861,6 +861,15 @@ class CenterPermissionSeeder extends Seeder
         ]);
         // END STOCKORDERS
 
+        // START MAIN STOCK
+        Permission::create([
+            'name' => 'VIEW_MAINSTOCKS',
+            'name_ar' => 'عرض المخزون الرئيسي',
+            'group' => 'Main Stock',
+            'guard_name' => 'center',
+        ]);
+        // END MAIN STOCK
+
         // START INVENTORY MOVEMENTS
         Permission::create([
             'name' => 'VIEW_INVENTORYMOVEMENTS',

@@ -56,6 +56,7 @@ return [
     'stocktakes'                        => 'Stocktakes',
     'stockorders'                       => 'Stock Orders',
     'stockorder'                        => 'Stock Order',
+    'mainstocks'                        => 'Main Stock',
     'inventorymovements'                => 'Inventory Movements',
     'inventorymovement'                 => 'Inventory Movement',
     'stocktake_details'                 => 'Stocktake Details',

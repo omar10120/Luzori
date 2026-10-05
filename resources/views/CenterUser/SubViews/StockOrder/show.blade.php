@@ -28,6 +28,10 @@
             <div class="card-body">
                 <div class="row mb-4">
                     <div class="col-md-3">
+                        <div class="text-muted small">{{ __('field.stock_order_source') }}</div>
+                        <div class="fw-semibold">{{ $order->source_type === 'main_stock' ? __('field.main_stock') : __('locale.suppliers') }}</div>
+                    </div>
+                    <div class="col-md-3">
                         <div class="text-muted small">{{ __('field.created') }}</div>
                         <div class="fw-semibold">{{ $order->created_at ?: '-' }}</div>
                     </div>
@@ -58,8 +62,8 @@
                                 <th>{{ __('field.name') }}</th>
                                 <th>{{ __('field.ordered') }}</th>
                                 <th>{{ __('field.received') }}</th>
-                                <th>{{ __('field.unit_cost') }}</th>
-                                <th>{{ __('field.total_cost') }}</th>
+                                <th class="{{ $order->source_type === 'main_stock' ? 'd-none' : '' }}">{{ __('field.unit_cost') }}</th>
+                                <th class="{{ $order->source_type === 'main_stock' ? 'd-none' : '' }}">{{ __('field.total_cost') }}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -75,8 +79,8 @@
                                     </td>
                                     <td>{{ number_format((float) $item->order_qty, 2) }}</td>
                                     <td>{{ $item->received_qty !== null ? number_format((float) $item->received_qty, 2) : '-' }}</td>
-                                    <td>{{ number_format((float) $item->unit_cost, 2) }} {{ get_currency() }}</td>
-                                    <td class="fw-bold">{{ number_format((float) $item->line_total, 2) }} {{ get_currency() }}</td>
+                                    <td class="{{ $order->source_type === 'main_stock' ? 'd-none' : '' }}">{{ number_format((float) $item->unit_cost, 2) }} {{ get_currency() }}</td>
+                                    <td class="fw-bold {{ $order->source_type === 'main_stock' ? 'd-none' : '' }}">{{ number_format((float) $item->line_total, 2) }} {{ get_currency() }}</td>
                                 </tr>
                             @empty
                                 <tr>
@@ -86,8 +90,8 @@
                         </tbody>
                         <tfoot>
                             <tr>
-                                <td colspan="4" class="text-end fw-bold">{{ __('field.total_cost') }}</td>
-                                <td class="fw-bold">{{ number_format((float) $order->total_cost, 2) }} {{ get_currency() }}</td>
+                                <td colspan="4" class="text-end fw-bold {{ $order->source_type === 'main_stock' ? 'd-none' : '' }}">{{ __('field.total_cost') }}</td>
+                                <td class="fw-bold {{ $order->source_type === 'main_stock' ? 'd-none' : '' }}">{{ number_format((float) $order->total_cost, 2) }} {{ get_currency() }}</td>
                             </tr>
                         </tfoot>
                     </table>

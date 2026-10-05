@@ -16,7 +16,7 @@ class StockOrderReceiveRequest extends FormRequest
         return [
             'items' => 'required|array|min:1',
             'items.*.id' => 'required|exists:stock_order_items,id',
-            'items.*.received_qty' => 'required|numeric|min:0',
+            'items.*.received_qty' => 'required|integer|min:0',
             'items.*.unit_cost' => 'required|numeric|min:0',
         ];
     }

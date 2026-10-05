@@ -422,6 +422,16 @@ return [
     'tip_already_added'               => 'تم إضافة البقشيش مسبقاً لهذه المبيعة',
     'no_bookings_for_tip'             => 'لا توجد حجوزات لإضافة بقشيش لهذه المبيعة',
     'stock_order_flow_hint'           => 'اختر المورد ← المنتجات ← فرع أو أكثر',
+        'stock_order_source'              => 'المصدر',
+        'main_stock'                      => 'المخزون الرئيسي',
+        'invalid_stock_order_source'      => 'اختر مصدر طلب مخزون صالحًا.',
+        'available_quantity'              => 'الكمية المتاحة',
+        'reserved_quantity'                => 'الكمية المحجوزة',
+        'reorder_level'                     => 'حد إعادة الطلب',
+        'order_qty_per_selected_branch'   => 'يتم نقل كمية الطلب إلى كل فرع محدد.',
+        'stock_order_supplier_flow_hint'  => 'المورد ← المخزون الرئيسي. استلام الطلب يضيف الكمية إلى المستودع.',
+        'stock_order_transfer_flow_hint'  => 'المخزون الرئيسي ← الفروع المحددة. يتم حجز الكمية المتاحة عند حفظ الطلب.',
+        'stock_order_main_stock_insufficient' => 'المخزون الرئيسي المتاح غير كافٍ للفروع المحددة',
     'select_all_branches'             => 'تحديد كل الفروع',
     'select_one_or_more_branches'     => 'اختر فرعاً واحداً أو أكثر كوجهة',
     'select_supplier_first'           => 'اختر المورد أولاً',
@@ -444,6 +454,9 @@ return [
     'external_url'                    => 'رابط',
     'out_of_stock'                    => 'إنتهى من المخزن ',
     'expire_date'                     => 'فترة صلاحية',
+    'available'                       => 'متاح', 
+    'received_hint_main_stock'        => ' المستودع يحتوي على المنتجات للطلبات',
+    
 
     
     

@@ -51,7 +51,7 @@ class StockOrderController extends Controller
         $menu_link = route($this->indexRoute);
         $title = __('general.add') . ' ' . __('locale.stockorder');
         $requestUrl = route('center_user.stockorders.updateOrCreate');
-        $branches = Branch::with('translation')->where('id', 1)->get();
+        $branches = Branch::with('translation')->get();
         $suppliers = ProductSupplier::query()->orderBy('name')->get(['id', 'name']);
 
         return view('CenterUser.SubViews.StockOrder.create', compact(
@@ -82,6 +82,8 @@ class StockOrderController extends Controller
                 Response::HTTP_CREATED,
                 ['id' => $order->id, 'redirect_url' => route($this->indexRoute)]
             );
+        } catch (\RuntimeException $e) {
+            return MyHelper::responseJSON($e->getMessage(), Response::HTTP_UNPROCESSABLE_ENTITY);
         } catch (\Exception $e) {
             return MyHelper::responseJSON($e->getMessage() ?: __('admin.an_error_occurred'), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
@@ -114,10 +116,15 @@ class StockOrderController extends Controller
         }
 
         $supplierId = (int) $request->get('supplier_id');
+        $sourceType = (string) $request->get('source_type', 'supplier');
         $search = trim((string) $request->get('q', ''));
         $branchIds = array_filter(array_map('intval', (array) $request->get('branch_ids', [])));
 
-        if (!$supplierId) {
+        if (!in_array($sourceType, ['supplier', 'main_stock'], true)) {
+            return response()->json(['message' => __('field.invalid_stock_order_source')], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        if ($sourceType === 'supplier' && !$supplierId) {
             return response()->json(['data' => []]);
         }
 
@@ -126,11 +133,13 @@ class StockOrderController extends Controller
             'category',
             'primarySku',
             'productBranches',
-        ])
-            ->whereHas('productSuppliers', fn ($q) => $q->where('product_suppliers.id', $supplierId));
+            'mainStocks',
+        ]);
 
-        if (!empty($branchIds)) {
-            $query->whereHas('productBranches', fn ($q) => $q->whereIn('branch_id', $branchIds));
+        if ($sourceType === 'supplier') {
+            $query->whereHas('productSuppliers', fn ($q) => $q->where('product_suppliers.id', $supplierId));
+        } else {
+            $query->whereHas('mainStocks', fn ($q) => $q->available());
         }
 
         if ($search !== '') {
@@ -147,12 +156,21 @@ class StockOrderController extends Controller
         }
 
         $products = $query->orderBy('id')->limit(100)->get();
+        if ($sourceType === 'main_stock') {
+            $products = $products->filter(function ($product) {
+                $skuId = $product->primarySku?->id;
+                $mainStock = $product->mainStocks->first(fn ($stock) => $stock->sku_id == $skuId);
+                return ($mainStock?->available_quantity ?? 0) > 0;
+            })->values();
+        }
 
-        $data = $products->map(function ($product) use ($branchIds) {
+        $data = $products->map(function ($product) use ($branchIds, $sourceType) {
             $branches = $product->productBranches;
             if (!empty($branchIds)) {
                 $branches = $branches->whereIn('branch_id', $branchIds);
             }
+            $skuId = $product->primarySku?->id;
+            $mainStock = $product->mainStocks->first(fn ($stock) => $stock->sku_id == $skuId);
 
             return [
                 'id' => $product->id,
@@ -160,7 +178,10 @@ class StockOrderController extends Controller
                 'barcode' => $product->barcode,
                 'sku' => $product->primarySku->sku ?? null,
                 'category' => $product->category->name ?? '-',
-                'stock_quantity' => (float) $branches->sum('stock_quantity'),
+                'stock_quantity' => $sourceType === 'main_stock'
+                    ? (int) ($mainStock?->available_quantity ?? 0)
+                    : (float) $branches->sum('stock_quantity'),
+                'available_quantity' => (int) ($mainStock?->available_quantity ?? 0),
                 'supply_price' => (float) ($product->supply_price ?? 0),
                 'image' => method_exists($product, 'getFirstMediaUrl') ? ($product->getFirstMediaUrl('image') ?: null) : null,
             ];

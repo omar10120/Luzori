@@ -14,7 +14,7 @@
             <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <div>
                     <h2 class="mb-1">{{ $title }}</h2>
-                    <p class="text-muted mb-0">{{ __('field.stock_order_flow_hint') }}</p>
+                    <p class="text-muted mb-0" id="source-flow-hint">{{ __('field.stock_order_supplier_flow_hint') }}</p>
                 </div>
                 <div class="d-flex gap-2">
                     <a href="{{ route('center_user.stockorders.index') }}" class="btn btn-outline-secondary">{{ __('general.close') }}</a>
@@ -27,7 +27,14 @@
                 </div>
 
                 <div class="row g-3 mb-4">
-                    <div class="col-md-6">
+                    <div class="col-md-4">
+                        <label for="source_type" class="form-label">{{ __('field.stock_order_source') }} <span class="text-danger">*</span></label>
+                        <select id="source_type" class="form-control select2" required>
+                            <option value="supplier">{{ __('locale.suppliers') }}</option>
+                            <option value="main_stock">{{ __('field.main_stock') }}</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4" id="supplier-field">
                         <label class="form-label">{{ __('locale.suppliers') }} <span class="text-danger">*</span></label>
                         <select id="product_supplier_id" class="form-control select2" required>
                             <option value="">{{ __('field.select_supplier') }}</option>
@@ -36,13 +43,13 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <label class="form-label">{{ __('field.expected') }}</label>
                         <input type="date" id="expected_at" class="form-control">
                     </div>
                 </div>
 
-                <div class="mb-4">
+                <div class="mb-4 d-none" id="branches-selection">
                     <label class="form-label d-block">{{ __('locale.branches') }} <span class="text-danger">*</span></label>
                     <div class="border rounded p-3" id="branches-checkbox-list">
                         <div class="form-check mb-2">
@@ -65,6 +72,7 @@
                         </div>
                     </div>
                     <small class="text-muted">{{ __('field.select_one_or_more_branches') }}</small>
+                                    <small class="text-muted d-block d-none" id="transfer-branch-hint">{{ __('field.order_qty_per_selected_branch') }}</small>
                 </div>
 
                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -80,8 +88,8 @@
                             <tr>
                                 <th>{{ __('field.product_name') }}</th>
                                 <th style="width: 140px;">{{ __('field.order_qty') }}</th>
-                                <th style="width: 160px;">{{ __('field.unit_cost') }}</th>
-                                <th style="width: 140px;">{{ __('field.total_cost') }}</th>
+                                <th class="supplier-cost-column" style="width: 160px;">{{ __('field.unit_cost') }}</th>
+                                <th class="supplier-cost-column" style="width: 140px;">{{ __('field.total_cost') }}</th>
                                 <th style="width: 80px;"></th>
                             </tr>
                         </thead>
@@ -92,8 +100,8 @@
                         </tbody>
                         <tfoot>
                             <tr>
-                                <td colspan="3" class="text-end fw-bold">{{ __('field.total_cost') }}</td>
-                                <td class="fw-bold" id="order-total-cost">0.00 {{ get_currency() }}</td>
+                                <td colspan="3" class="text-end fw-bold supplier-cost-column">{{ __('field.total_cost') }}</td>
+                                <td class="fw-bold supplier-cost-column" id="order-total-cost">0.00 {{ get_currency() }}</td>
                                 <td></td>
                             </tr>
                         </tfoot>
@@ -125,8 +133,8 @@
                                     <th style="width:40px;"><input type="checkbox" id="check-all-products"></th>
                                     <th>{{ __('field.product_name') }}</th>
                                     <th>{{ __('field.category') }}</th>
-                                    <th>{{ __('field.quantity') }}</th>
-                                    <th>{{ __('field.product_cost') }}</th>
+                                    <th>{{ __('field.available_quantity') }}</th>
+                                    <th class="supplier-cost-column">{{ __('field.product_cost') }}</th>
                                 </tr>
                             </thead>
                             <tbody id="picker-products-body">
@@ -154,6 +162,7 @@ $(function () {
     const currency = @json(get_currency());
     const productsUrl = @json(route('center_user.stockorders.products'));
     const saveUrl = @json($requestUrl);
+    const sourceType = () => $('#source_type').val();
     let selectedItems = {};
     let pickerProducts = [];
     let searchTimer = null;
@@ -175,8 +184,26 @@ $(function () {
     }
 
     function syncAddProductsBtn() {
-        const ready = !!$('#product_supplier_id').val();
+        const ready = sourceType() === 'main_stock'
+            ? selectedBranchIds().length > 0
+            : !!$('#product_supplier_id').val();
         $('#btnOpenProducts').prop('disabled', !ready);
+    }
+
+    function syncSourceFields() {
+        const isTransfer = sourceType() === 'main_stock';
+        $('#supplier-field').toggleClass('d-none', isTransfer);
+        $('#product_supplier_id').prop('required', !isTransfer);
+        $('#branches-selection').toggleClass('d-none', !isTransfer);
+        $('.supplier-cost-column').toggleClass('d-none', isTransfer);
+        $('#transfer-branch-hint').toggleClass('d-none', !isTransfer);
+        $('#source-flow-hint').text(isTransfer
+            ? @json(__('field.stock_order_transfer_flow_hint'))
+            : @json(__('field.stock_order_supplier_flow_hint')));
+        if (!isTransfer) {
+            $('.branch-check, #check-all-branches').prop('checked', false);
+        }
+        syncAddProductsBtn();
     }
 
     function recalcTotals() {
@@ -208,38 +235,40 @@ $(function () {
                         </small>
                     </td>
                     <td>
-                        <input type="number" min="0.01" step="0.01" class="form-control form-control-sm item-order-qty" value="${item.order_qty}">
+                        <input type="number" min="1" step="1" class="form-control form-control-sm item-order-qty" value="${item.order_qty}">
                     </td>
-                    <td>
+                    <td class="supplier-cost-column">
                         <div class="input-group input-group-sm">
                             <span class="input-group-text">${escapeHtml(currency)}</span>
                             <input type="number" min="0" step="0.01" class="form-control item-unit-cost" value="${item.unit_cost}">
                         </div>
                     </td>
-                    <td class="item-line-total">${formatMoney(lineTotal)}</td>
+                    <td class="item-line-total supplier-cost-column">${formatMoney(lineTotal)}</td>
                     <td>
                         <button type="button" class="btn btn-sm btn-outline-danger btn-remove-item"><i class="ti ti-trash"></i></button>
                     </td>
                 </tr>
             `;
         }).join(''));
+        $('.supplier-cost-column').toggleClass('d-none', sourceType() === 'main_stock');
         recalcTotals();
     }
 
     function loadPickerProducts() {
         const supplierId = $('#product_supplier_id').val();
+        const isTransfer = sourceType() === 'main_stock';
         const q = $('#product-search').val();
         const branchIds = selectedBranchIds();
         const $body = $('#picker-products-body');
 
-        if (!supplierId) {
+        if (!isTransfer && !supplierId) {
             $body.html(`<tr><td colspan="5" class="text-center text-muted">{{ __('field.select_supplier_first') }}</td></tr>`);
             return;
         }
 
         $body.html(`<tr><td colspan="5" class="text-center text-muted py-3">{{ __('general.loading') ?? 'Loading...' }}</td></tr>`);
 
-        const params = { supplier_id: supplierId, q: q };
+        const params = { source_type: sourceType(), supplier_id: supplierId, q: q };
         if (branchIds.length) {
             params['branch_ids'] = branchIds;
         }
@@ -262,8 +291,8 @@ $(function () {
                                 <small class="text-muted">Barcode: ${escapeHtml(p.barcode || '-')}</small>
                             </td>
                             <td>${escapeHtml(p.category || '-')}</td>
-                            <td>${Number(p.stock_quantity || 0)}</td>
-                            <td>${formatMoney(p.supply_price)}</td>
+                            <td>${Number(isTransfer ? p.available_quantity : p.stock_quantity || 0)}</td>
+                            <td class="supplier-cost-column ${isTransfer ? 'd-none' : ''}">${formatMoney(p.supply_price)}</td>
                         </tr>
                     `;
                 }).join(''));
@@ -276,14 +305,23 @@ $(function () {
         syncAddProductsBtn();
     });
 
+    $('#source_type').on('change', function () {
+        $('#product_supplier_id').val(null).trigger('change.select2');
+        selectedItems = {};
+        renderOrderItems();
+        syncSourceFields();
+    });
+
     $('#check-all-branches').on('change', function () {
         $('.branch-check').prop('checked', $(this).is(':checked'));
+        syncAddProductsBtn();
     });
 
     $(document).on('change', '.branch-check', function () {
         const total = $('.branch-check').length;
         const checked = $('.branch-check:checked').length;
         $('#check-all-branches').prop('checked', total > 0 && checked === total);
+        syncAddProductsBtn();
     });
 
     $('#btnOpenProducts').on('click', function () {
@@ -314,7 +352,8 @@ $(function () {
                     barcode: product.barcode,
                     sku: product.sku,
                     order_qty: 1,
-                    unit_cost: Number(product.supply_price || 0),
+                    available_quantity: Number(product.available_quantity || 0),
+                    unit_cost: sourceType() === 'supplier' ? Number(product.supply_price || 0) : 0,
                 };
             }
         });
@@ -342,16 +381,32 @@ $(function () {
     $('#btnSaveOrder').on('click', function () {
         const $btn = $(this);
         const supplierId = $('#product_supplier_id').val();
-        const branchIds = selectedBranchIds();
+        const currentSource = sourceType();
+        const branchIds = currentSource === 'main_stock' ? selectedBranchIds() : [];
         const items = Object.values(selectedItems);
 
         $('#listError').empty();
         $('#alertError').addClass('d-none');
 
-        if (!supplierId || !branchIds.length || !items.length) {
+        if ((currentSource === 'supplier' && !supplierId)
+            || (currentSource === 'main_stock' && !branchIds.length)
+            || !items.length) {
             $('#listError').append(`<li>{{ __('field.please_complete_order_fields') }}</li>`);
             $('#alertError').removeClass('d-none');
             return;
+        }
+
+        if (currentSource === 'main_stock') {
+            const insufficientItem = items.find(function (item) {
+                return Number(item.order_qty) * branchIds.length > Number(item.available_quantity);
+            });
+            if (insufficientItem) {
+                $('#listError').append($('<li>').text(
+                    '{{ __('field.stock_order_main_stock_insufficient') }}: ' + insufficientItem.name
+                ));
+                $('#alertError').removeClass('d-none');
+                return;
+            }
         }
 
         $btn.prop('disabled', true);
@@ -361,14 +416,15 @@ $(function () {
             type: 'POST',
             data: {
                 _token: '{{ csrf_token() }}',
+                source_type: currentSource,
                 branch_ids: branchIds,
-                product_supplier_id: supplierId,
+                product_supplier_id: currentSource === 'supplier' ? supplierId : null,
                 expected_at: $('#expected_at').val() || null,
                 items: items.map(function (item) {
                     return {
                         product_id: item.id,
                         order_qty: item.order_qty,
-                        unit_cost: item.unit_cost,
+                        unit_cost: currentSource === 'supplier' ? item.unit_cost : 0,
                     };
                 }),
             },
@@ -400,7 +456,7 @@ $(function () {
         });
     });
 
-    syncAddProductsBtn();
+    syncSourceFields();
     renderOrderItems();
 });
 </script>

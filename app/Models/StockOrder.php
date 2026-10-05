@@ -18,6 +18,7 @@ class StockOrder extends Model
     protected $fillable = [
         'order_number',
         'product_supplier_id',
+        'source_type',
         'deliver_from',
         'expected_at',
         'total_cost',
@@ -30,6 +31,7 @@ class StockOrder extends Model
         'expected_at' => 'date',
         'received_at' => 'datetime',
         'total_cost' => 'decimal:2',
+        'source_type' => 'string',
     ];
 
     public function branches(): BelongsToMany

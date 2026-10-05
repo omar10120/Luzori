@@ -12,6 +12,7 @@ class InventoryMovement extends Model
     protected $fillable = [
         'product_id',
         'branch_id',
+        'is_main_stock',
         'sku_id',
         'quantity',
         'movement_type',
@@ -23,6 +24,7 @@ class InventoryMovement extends Model
 
     protected $casts = [
         'quantity' => 'integer',
+        'is_main_stock' => 'boolean',
     ];
 
     public const TYPE_PURCHASE = 'purchase';
