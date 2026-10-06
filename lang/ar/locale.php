@@ -66,6 +66,7 @@ return [
     'workers'                           => 'الموظفين',
     'withdrawal_requests'               => 'طلبات السحب',
     'globalcategories'                  => 'الفئات العامة',
+    'globalproducts'                    => 'المنتجات العامة',
     'global-categories'                 => 'الفئات العامة',
     'banners'                            => 'البانرات',
     'global_categories'                 => 'الفئات العامة',

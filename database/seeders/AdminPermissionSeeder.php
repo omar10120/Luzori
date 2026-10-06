@@ -219,6 +219,23 @@ class AdminPermissionSeeder extends Seeder
         );
         // END NOTIFICATIONS
 
+        Permission::firstOrCreate(
+            ['name' => 'VIEW_GLOBALPRODUCTS', 'guard_name' => 'admin'],
+            ['name_ar' => 'عرض المنتجات العامة', 'group' => 'Global Products']
+        );
+        Permission::firstOrCreate( 
+            ['name' => 'CREATE_GLOBALPRODUCTS', 'guard_name' => 'admin'],
+            ['name_ar' => 'إضافة منتج عام', 'group' => 'Global Products']
+        );
+        Permission::firstOrCreate(
+            ['name' => 'UPDATE_GLOBALPRODUCTS', 'guard_name' => 'admin'],
+            ['name_ar' => 'تعديل المنتجات العامة', 'group' => 'Global Products']
+        );
+        Permission::firstOrCreate(
+            ['name' => 'DELETE_GLOBALPRODUCTS', 'guard_name' => 'admin'],
+            ['name_ar' => 'حذف المنتجات العامة', 'group' => 'Global Products']
+        );
+
         Permission::firstOrCreate([
             'name' => 'VIEW_BANNERS',
             'guard_name' => 'admin',

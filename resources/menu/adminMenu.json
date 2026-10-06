@@ -17,6 +17,7 @@
                 "VIEW_SETTINGS",
                 "VIEW_USERS",
                 "VIEW_GLOBALCATEGORIES",
+                "VIEW_GLOBALPRODUCTS",
                 "VIEW_NOTIFICATIONS"
             ]
         },
@@ -59,6 +60,17 @@
             ],
             "permissions": [
                 "VIEW_GLOBALCATEGORIES"
+            ]
+        },
+        {
+            "url": "admin/global-products/index",
+            "name": "globalproducts",
+            "external_icon": "products",
+            "slug": [
+                "global-products"
+            ],
+            "permissions": [
+                "VIEW_GLOBALPRODUCTS"
             ]
         },
         {

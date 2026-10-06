@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\SettingController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\GlobalCategoryController;
+use App\Http\Controllers\Admin\GlobalProductController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\WithdrawalRequestController;
 use App\Http\Controllers\Admin\BookingController;
@@ -135,6 +136,15 @@ Route::group(['middleware' => 'auth:admin'], function () {
             Route::get('index', 'index')->name('index');
             Route::get('create', 'create')->name('create');
             Route::post('updateOrCreate', 'updateOrCreate')->name('updateOrCreate');
+        });
+    });
+
+    Route::group(['prefix' => 'global-products', 'as' => 'global-products.'], function () {
+        Route::controller(GlobalProductController::class)->group(function () {
+            Route::get('index', 'index')->name('index')->can('VIEW_GLOBALPRODUCTS');
+            Route::get('create', 'create')->name('create')->can('CREATE_GLOBALPRODUCTS');
+            Route::get('centers/{center}/products', 'products')->name('products')->can('CREATE_GLOBALPRODUCTS');
+            Route::post('store', 'store')->name('store')->can('CREATE_GLOBALPRODUCTS');
         });
     });
 

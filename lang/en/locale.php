@@ -66,6 +66,7 @@ return [
     'workers'                           => 'employees',
     'withdrawal_requests'               => 'Withdrawal Requests',
     'globalcategories'                  => 'Global Categories',
+    'globalproducts'                    => 'Global Products',
     'global-categories'                 => 'Global Categories',
     'banners'                            => 'Banners',
     'global_categories'                 => 'Global Categories',

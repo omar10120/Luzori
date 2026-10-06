@@ -11,6 +11,7 @@ use App\Http\Controllers\AppAPI\PaymentController;
 use App\Http\Controllers\AppAPI\NotificationController;
 use App\Http\Controllers\AppAPI\FavoriteCenterController;
 use App\Http\Controllers\AppAPI\CenterReviewController;
+use App\Http\Controllers\AppAPI\GlobalProductController;
 /*
 |--------------------------------------------------------------------------
 | App API Routes (Main Database)
@@ -35,6 +36,8 @@ Route::prefix('auth')->group(function () {
 
 
 Route::middleware('auth:sanctum')->group(function () {
+    Route::get('global-products', [GlobalProductController::class, 'index']);
+
     Route::prefix('booking')->group(function () {
         Route::post('store', [BookingController::class, 'store']);
         Route::get('list', [BookingController::class, 'list']);
