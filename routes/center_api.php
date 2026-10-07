@@ -57,6 +57,9 @@ Route::middleware('OptionalAuth:sanctum')->group(function () {
     Route::get('centers/detial', [CenterController::class, 'filter']);
     Route::get('centers/{id}', [CenterController::class, 'show']);
     Route::get('centers/{id}/workers', [CenterController::class, 'workers']);
+    Route::get('centers/{id}/products', [CenterController::class, 'products']);
+    Route::get('centers/{id}/products/{productId}', [CenterController::class, 'product']);
+
     Route::get('services', [CenterController::class, 'services']);
 });
 Route::get('global-categories', [GlobalCategoryController::class, 'index']);

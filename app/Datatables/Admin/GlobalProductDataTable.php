@@ -6,6 +6,7 @@ use App\Enums\DeleteActionEnum;
 use App\Models\GlobalProduct;
 use App\Services\GlobalProductService;
 use Illuminate\Database\Eloquent\Builder as QueryBuilder;
+use Throwable;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\Html\Builder as HtmlBuilder;
 use Yajra\DataTables\Html\Button;
@@ -14,6 +15,8 @@ use Yajra\DataTables\Services\DataTable;
 
 class GlobalProductDataTable extends DataTable
 {
+    private array $productDetailsCache = [];
+
     public function __construct(private GlobalProductService $globalProductService)
     {
     }
@@ -22,7 +25,13 @@ class GlobalProductDataTable extends DataTable
     {
         return (new EloquentDataTable($query))
             ->addColumn('center_name', fn (GlobalProduct $item) => e($item->center?->domain ?? '-'))
-            ->editColumn('name', fn (GlobalProduct $item) => e($item->name ?? '-'))
+            ->addColumn('product_name', fn (GlobalProduct $item) => e($this->productDetails($item)['name'] ?? $item->name ?? '-'))
+            ->addColumn('barcode', fn (GlobalProduct $item) => e($this->productDetails($item)['barcode'] ?? '-'))
+            ->addColumn('primary_sku', fn (GlobalProduct $item) => e($this->productDetails($item)['primary_sku']['sku'] ?? '-'))
+            ->addColumn('category', fn (GlobalProduct $item) => e($this->productDetails($item)['category'] ?? '-'))
+            ->addColumn('brand', fn (GlobalProduct $item) => e($this->productDetails($item)['brand'] ?? '-'))
+            ->addColumn('retail_price', fn (GlobalProduct $item) => number_format((float) ($this->productDetails($item)['retail_price'] ?? 0), 2))
+            ->addColumn('supply_price', fn (GlobalProduct $item) => number_format((float) ($this->productDetails($item)['supply_price'] ?? 0), 2))
             
             // 1. Separate Status Column
             ->editColumn('status', function (GlobalProduct $item) {
@@ -60,6 +69,22 @@ class GlobalProductDataTable extends DataTable
     public function query(GlobalProduct $model): QueryBuilder
     {
         return $this->globalProductService->query();
+    }
+
+    private function productDetails(GlobalProduct $item): array
+    {
+        $cacheKey = $item->center_id . ':' . $item->product_id;
+        if (!array_key_exists($cacheKey, $this->productDetailsCache)) {
+            try {
+                $this->productDetailsCache[$cacheKey] = $item->center
+                    ? ($this->globalProductService->productDetailsForCenter($item->center, (int) $item->product_id) ?? [])
+                    : [];
+            } catch (Throwable) {
+                $this->productDetailsCache[$cacheKey] = [];
+            }
+        }
+
+        return $this->productDetailsCache[$cacheKey];
     }
 
     public function html(): HtmlBuilder
@@ -109,8 +134,14 @@ class GlobalProductDataTable extends DataTable
         return [
             Column::make('id')->title('#'),
             Column::computed('center_name')->title(__('field.center'))->searchable(false)->orderable(false),
-            Column::make('name')->title(__('field.product_name')),
+            Column::computed('product_name')->title(__('field.product_name'))->searchable(false)->orderable(false),
             Column::make('product_id')->title(__('field.product_id')),
+            Column::computed('barcode')->title(__('field.barcode'))->searchable(false)->orderable(false),
+            Column::computed('primary_sku')->title(__('field.sku'))->searchable(false)->orderable(false),
+            Column::computed('category')->title(__('field.category'))->searchable(false)->orderable(false),
+            Column::computed('brand')->title(__('field.brand'))->searchable(false)->orderable(false),
+            Column::computed('retail_price')->title(__('field.retail_price'))->searchable(false)->orderable(false),
+            Column::computed('supply_price')->title(__('field.supply_price'))->searchable(false)->orderable(false),
             Column::make('sort_order')->title(__('field.sort_order')),
             // 4. Add the status column definition here
             Column::computed('status')->title(__('field.status'))->searchable(false)->orderable(false),

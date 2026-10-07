@@ -11,7 +11,7 @@
                 <h2 class="mb-0">{{ $title }}</h2>
             </div>
             <div class="card-body">
-                <div id="global-product-error" class="alert alert-danger d-none" role="alert"></div>
+                <div id="global-product-error" class="alertcenters alert-danger d-none" role="alert"></div>
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label for="center_id" class="form-label">{{ __('locale.centers') }} <span class="text-danger">*</span></label>

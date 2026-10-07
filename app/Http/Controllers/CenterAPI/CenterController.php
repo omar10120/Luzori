@@ -136,4 +136,32 @@ class CenterController extends Controller
             $paginator
         );
     }
+     public function products(Request $request, int $id, CenterService $centerService)
+    {
+        $paginator = $centerService->getCenterProducts($request, $id);
+    
+        if ($paginator === null) {
+            return MyHelper::responseJSON(__('api.noDataFound'), Response::HTTP_NOT_FOUND);
+        }
+    
+        return MyHelper::responseJSON(
+            __('api.doneSuccessfully'),
+            Response::HTTP_OK,
+            $paginator
+        );
+    }
+        public function product(Request $request, int $id, int $productId, CenterService $centerService)
+    {
+        $product = $centerService->getCenterProductById($request, $id, $productId);
+
+        if ($product === null) {
+            return MyHelper::responseJSON(__('api.noDataFound'), Response::HTTP_NOT_FOUND);
+        }
+
+        return MyHelper::responseJSON(
+            __('api.doneSuccessfully'),
+            Response::HTTP_OK,
+            $product
+        );
+    }
 }

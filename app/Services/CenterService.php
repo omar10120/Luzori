@@ -12,7 +12,7 @@ use App\Models\AppUser;
 use App\Models\FavoriteCenter;
 use App\Models\CenterReview;
 use App\Services\PageService;
-
+use App\Models\product;
 use Exception;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Config;
@@ -1298,6 +1298,260 @@ class CenterService
                 $page,
                 ['path' => $request->url(), 'query' => $request->query()]
             );
+        } finally {
+            $this->restoreMainDatabase($originalDb);
+        }
+    }
+        /**
+     * Paginated products for a single center.
+     * Returns null if the center doesn't exist, or a LengthAwarePaginator.
+     */
+   public function getCenterProducts($request, int $id): ?LengthAwarePaginator
+    {
+        $perPage = (int) $request->input('per_page', 20);
+        $perPage = max(1, min($perPage, 100));
+        $page    = max(1, (int) $request->input('page', 1));
+
+        $center = Center::where('status', 'approve')
+            ->where(function ($q) {
+                $q->whereNull('expire_date')->orWhere('expire_date', '>', now());
+            })
+            ->find($id);
+
+        if (!$center) {
+            return null;
+        }
+
+        if (!$center->database) {
+            return new LengthAwarePaginator(
+                [], 0, $perPage, $page,
+                ['path' => $request->url(), 'query' => $request->query()]
+            );
+        }
+
+        $originalDb = Config::get('database.connections.mysql.database');
+
+        try {
+            $safeDb = str_replace('`', '``', $center->database);
+            DB::connection('mysql')->getPdo()->exec("USE `{$safeDb}`");
+            Config::set('database.connections.mysql.database', $center->database);
+
+            // --- filters that match the real schema ---
+            $branchId   = $request->filled('branch_id')   ? (int) $request->branch_id   : null;
+            $categoryId = $request->filled('category_id') ? (int) $request->category_id : null;
+            $brandId    = $request->filled('brand_id')    ? (int) $request->brand_id    : null;
+            $search     = $request->filled('search')
+                ? '%' . mb_strtolower(trim($request->search)) . '%'
+                : null;
+
+            $paginator = \App\Models\Product::query()
+                ->with([
+                    'translations',
+                    'media',
+                    'brand',
+                    'category',
+                    'skus',
+                    'primarySku',
+                    'branches',   // pivot: stock_quantity
+                ])
+                ->when($categoryId, fn ($q) => $q->where('category_id', $categoryId))
+                ->when($brandId,    fn ($q) => $q->where('brand_id', $brandId))
+                // branch filter goes through the pivot, not a column
+                ->when($branchId, fn ($q) => $q->whereHas('branches', function ($bq) use ($branchId) {
+                    $bq->where('branches.id', $branchId);
+                }))
+                // search only inside translations (name + text)
+                ->when($search, function ($q) use ($search) {
+                    $q->whereHas('translations', function ($tq) use ($search) {
+                        $tq->whereRaw('LOWER(name) LIKE ?', [$search])
+                        ->orWhereRaw('LOWER(text) LIKE ?', [$search]);
+                    });
+                })
+                ->orderBy('id')
+                ->paginate($perPage, ['*'], 'page', $page);
+
+            $items = collect($paginator->items())->map(function ($product) use ($branchId) {
+                // if a specific branch was requested, expose its stock
+                $stockQuantity = null;
+                if ($branchId && $product->relationLoaded('branches')) {
+                    $pivot = $product->branches->firstWhere('id', $branchId);
+                    $stockQuantity = $pivot?->pivot?->stock_quantity;
+                }
+
+                return [
+                    'id'               => (int) $product->id,
+                    'name'             => $product->name,          // auto from translation
+                    'text'             => $product->text,
+                    'short_description'=> $product->short_description,
+                    'barcode'          => $product->barcode,
+                    'brand_id'         => $product->brand_id !== null ? (int) $product->brand_id : null,
+                    'brand_name'       => optional($product->brand)->name,
+                    'category_id'      => $product->category_id !== null ? (int) $product->category_id : null,
+                    'category_name'    => optional($product->category)->name,
+                    'measure_unit'     => $product->measure_unit,
+                    'measure_amount'   => $product->measure_amount,
+                    'supply_price'     => $product->supply_price,
+                    'retail_price'     => $product->retail_price,
+                    'markup'           => $product->markup,
+                    'allow_retail_sales' => (bool) $product->allow_retail_sales,
+                    'track_stock'      => (bool) $product->track_stock,
+                    'image'            => $product->getFirstMediaUrl('Product')
+                                            ?: asset('assets/img/avatars/1.png'),
+                    'stock_quantity'   => $stockQuantity,
+                    'skus'             => $product->relationLoaded('skus')
+                        ? $product->skus->map(fn ($s) => [
+                            'id'    => (int) $s->id,
+                            'name'  => $s->name  ?? null,
+                            'price' => $s->price ?? null,
+                            'type'  => $s->type  ?? null,
+                        ])->values()->all()
+                        : [],
+                    'translations' => $product->relationLoaded('translations')
+                        ? $product->translations->map(fn ($t) => [
+                            'locale' => $t->locale,
+                            'name'   => $t->name,
+                            'text'   => $t->text,
+                        ])->values()->all()
+                        : [],
+                ];
+            })->all();
+
+            return new LengthAwarePaginator(
+                $items,
+                $paginator->total(),
+                $perPage,
+                $page,
+                ['path' => $request->url(), 'query' => $request->query()]
+            );
+        } catch (\Exception $e) {
+            Log::warning('Center products pagination failed', [
+                'center_id' => $center->id,
+                'database'  => $center->database,
+                'error'     => $e->getMessage(),
+                'sql'       => $e instanceof \Illuminate\Database\QueryException ? $e->getSql() : null,
+            ]);
+
+            return new LengthAwarePaginator(
+                [], 0, $perPage, $page,
+                ['path' => $request->url(), 'query' => $request->query()]
+            );
+        } finally {
+            $this->restoreMainDatabase($originalDb);
+        }
+    }
+        /**
+     * Single product for a specific center.
+     * Returns null if the center or product doesn't exist.
+     */
+    public function getCenterProductById($request, int $centerId, int $productId): ?array
+    {
+        $center = Center::where('status', 'approve')
+            ->where(function ($q) {
+                $q->whereNull('expire_date')->orWhere('expire_date', '>', now());
+            })
+            ->find($centerId);
+
+        if (!$center || !$center->database) {
+            return null;
+        }
+
+        $originalDb = Config::get('database.connections.mysql.database');
+
+        try {
+            // Switch to tenant DB
+            $safeDb = str_replace('`', '``', $center->database);
+            DB::connection('mysql')->getPdo()->exec("USE `{$safeDb}`");
+            Config::set('database.connections.mysql.database', $center->database);
+
+            $product = \App\Models\Product::query()
+                ->with([
+                    'translations',
+                    'media',
+                    'brand',
+                    'category',
+                    'skus',
+                    'primarySku',
+                    'branches',   // pivot: stock_quantity
+                    'mainStocks',
+                ])
+                ->find($productId);
+
+            if (!$product) {
+                return null;
+            }
+
+            // Map while still on tenant connection so media()/relations resolve
+            return [
+                'id'                 => (int) $product->id,
+                'center_id'          => (int) $center->id,
+                'center_name'        => $center->name,
+                'center_domain'      => $center->domain,
+
+                'name'               => $product->name,   // from translation
+                'text'               => $product->text,
+                'short_description'  => $product->short_description,
+                'barcode'            => $product->barcode,
+
+                'brand_id'           => $product->brand_id !== null ? (int) $product->brand_id : null,
+                'brand_name'         => optional($product->brand)->name,
+                'category_id'        => $product->category_id !== null ? (int) $product->category_id : null,
+                'category_name'      => optional($product->category)->name,
+
+                'measure_unit'       => $product->measure_unit,
+                'measure_amount'     => $product->measure_amount,
+                'supply_price'       => $product->supply_price,
+                'retail_price'       => $product->retail_price,
+                'markup'             => $product->markup,
+                'allow_retail_sales' => (bool) $product->allow_retail_sales,
+                'track_stock'        => (bool) $product->track_stock,
+
+                'image'              => $product->getFirstMediaUrl('Product')
+                                            ?: asset('assets/img/avatars/1.png'),
+                'gallery'            => $product->relationLoaded('media')
+                    ? $product->getMedia('Product')->map(fn ($m) => $m->getUrl())->values()->all()
+                    : [],
+
+                'skus' => $product->relationLoaded('skus')
+                    ? $product->skus->map(fn ($s) => [
+                        'id'    => (int) $s->id,
+                        'name'  => $s->name  ?? null,
+                        'price' => $s->price ?? null,
+                        'type'  => $s->type  ?? null,
+                        'order' => $s->order ?? null,
+                    ])->values()->all()
+                    : [],
+
+                'primary_sku' => $product->primarySku ? [
+                    'id'    => (int) $product->primarySku->id,
+                    'name'  => $product->primarySku->name  ?? null,
+                    'price' => $product->primarySku->price ?? null,
+                ] : null,
+
+                'branches' => $product->relationLoaded('branches')
+                    ? $product->branches->map(fn ($b) => [
+                        'id'             => (int) $b->id,
+                        'name'           => $b->name,
+                        'stock_quantity' => $b->pivot->stock_quantity ?? null,
+                    ])->values()->all()
+                    : [],
+
+                'translations' => $product->relationLoaded('translations')
+                    ? $product->translations->map(fn ($t) => [
+                        'locale' => $t->locale,
+                        'name'   => $t->name,
+                        'text'   => $t->text,
+                    ])->values()->all()
+                    : [],
+            ];
+        } catch (\Exception $e) {
+            Log::warning('Center product show failed', [
+                'center_id'  => $center->id,
+                'product_id' => $productId,
+                'database'   => $center->database,
+                'error'      => $e->getMessage(),
+            ]);
+
+            return null;
         } finally {
             $this->restoreMainDatabase($originalDb);
         }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\AppAPI;
 
 use App\Helpers\MyHelper;
 use App\Http\Controllers\Controller;
+use App\Models\Center;
 use App\Services\GlobalProductService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -23,21 +24,48 @@ class GlobalProductController extends Controller
         );
 
         return MyHelper::responseJSON(__('api.doneSuccessfully'), Response::HTTP_OK, [
-            'products' => collect($products->items())->map(fn ($item) => [
-                'id' => (int) $item->id,
-                'center_id' => (int) $item->center_id,
-                'center_name' => $item->center?->name,
-                'center_domain' => $item->center?->domain,
-                'product_id' => (int) $item->product_id,
-                'name' => $item->name,
-                'sort_order' => (int) $item->sort_order,
-            ])->values(),
-            'pagination' => [
-                'current_page' => $products->currentPage(),
-                'last_page' => $products->lastPage(),
-                'per_page' => $products->perPage(),
-                'total' => $products->total(),
-            ],
+            'products' => $products->items(),
+            'pagination' => $this->pagination($products),
         ]);
+    }
+
+    public function centerProducts(Request $request, int $centerId, GlobalProductService $globalProductService)
+    {
+        $validated = $request->validate([
+            'per_page' => 'nullable|integer|min:1|max:100',
+        ]);
+        $center = Center::findOrFail($centerId);
+        $products = $globalProductService->publicProductsForCenter(
+            $center,
+            (int) ($validated['per_page'] ?? 20)
+        );
+
+        return MyHelper::responseJSON(__('api.doneSuccessfully'), Response::HTTP_OK, [
+            'center_id' => $center->id,
+            'products' => $products->items(),
+            'pagination' => $this->pagination($products),
+        ]);
+    }
+
+    public function show(int $centerId, int $productId, GlobalProductService $globalProductService)
+    {
+        $center = Center::findOrFail($centerId);
+        $product = $globalProductService->publicProductForCenter($center, $productId);
+
+        if (!$product) {
+            return MyHelper::responseJSON(__('api.noDataFound'), Response::HTTP_NOT_FOUND);
+        }
+
+        return MyHelper::responseJSON(__('api.doneSuccessfully'), Response::HTTP_OK, $product);
+    }
+
+    private function pagination($paginator): array
+    {
+        return [
+            'current_page' => $paginator->currentPage(),
+            'last_page' => $paginator->lastPage(),
+            'per_page' => $paginator->perPage(),
+            'total' => $paginator->total(),
+        ];
     }
 }
