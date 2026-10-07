@@ -2,6 +2,10 @@
 
 @section('title', $title)
 
+@section('vendor-style')
+    @vite('resources/assets/vendor/libs/select2/select2.scss')
+@endsection
+
 @section('content')
     <div class="container">
         @include('Admin.Components.breadcrumbs')
@@ -15,7 +19,7 @@
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label for="center_id" class="form-label">{{ __('locale.centers') }} <span class="text-danger">*</span></label>
-                        <select id="center_id" class="form-select" required>
+                        <select id="center_id" class="form-select select2" data-select="true" required>
                             <option value="">{{ __('field.select_center') }}</option>
                             @foreach ($centers as $center)
                                 <option value="{{ $center->id }}">{{ $center->domain }}</option>
@@ -24,7 +28,7 @@
                     </div>
                     <div class="col-md-6">
                         <label for="product_id" class="form-label">{{ __('locale.products') }} <span class="text-danger">*</span></label>
-                        <select id="product_id" class="form-select" disabled required>
+                        <select id="product_id" class="form-select select2" data-select="true" required>
                             <option value="">{{ __('field.select_center_first') }}</option>
                         </select>
                     </div>
@@ -44,20 +48,53 @@
     </div>
 @endsection
 
+@section('vendor-script')
+    @vite('resources/assets/vendor/libs/select2/select2.js')
+@endsection
+
 @section('page-script')
 <script>
 $(function () {
     const productsUrlTemplate = @json($productsUrl);
     const storeUrl = @json($storeUrl);
     const centerPlaceholder = @json(__('field.select_center_first'));
+    const productPlaceholder = @json(__('field.select_product'));
     const emptyProductsText = @json(__('field.no_data_found'));
+    const dropdownParent = $('#center_id').closest('.card-body');
     let request = null;
 
+    // --- Select2 init helper ---
+    function initSelect($el, placeholder) {
+        if ($el.hasClass('select2-hidden-accessible')) {
+            $el.select2('destroy');
+        }
+        $el.select2({
+            placeholder: placeholder,
+            allowClear: true,
+            width: '100%',
+            dropdownParent: dropdownParent,
+        });
+    }
+
+    // --- Initial setup ---
+    initSelect($('#center_id'), $('#center_id').find('option:first').text());
+    initSelect($('#product_id'), centerPlaceholder);
+    $('#product_id').prop('disabled', true);
+
+    // --- Center change: fetch products for that center ---
     $('#center_id').on('change', function () {
         const centerId = $(this).val();
         const $product = $('#product_id');
+
         $('#global-product-error').addClass('d-none').text('');
-        $product.prop('disabled', true).html(`<option value="">${centerPlaceholder}</option>`);
+
+        // Reset product select (empty + disabled) while loading
+        if ($product.hasClass('select2-hidden-accessible')) {
+            $product.select2('destroy');
+        }
+        $product.empty().append(`<option value="">${centerPlaceholder}</option>`);
+        $product.prop('disabled', true);
+        initSelect($product, centerPlaceholder);
 
         if (!centerId) return;
         if (request && request.readyState !== 4) request.abort();
@@ -65,22 +102,29 @@ $(function () {
         request = $.getJSON(productsUrlTemplate.replace('__CENTER__', encodeURIComponent(centerId)))
             .done(function (response) {
                 const products = response.data || [];
+
+                if ($product.hasClass('select2-hidden-accessible')) {
+                    $product.select2('destroy');
+                }
+                $product.empty();
+
                 if (!products.length) {
-                    $product.html(`<option value="">${emptyProductsText}</option>`);
+                    $product.append(`<option value="">${emptyProductsText}</option>`);
+                    initSelect($product, emptyProductsText);
+                    $product.prop('disabled', true);
                     return;
                 }
 
-                $product.html('<option value="">{{ __('field.select_product') }}</option>');
+                $product.append('<option value=""></option>');
                 products.forEach(function (product) {
                     const label = product.barcode
                         ? product.name + ' (' + product.barcode + ')'
                         : product.name;
-                    const option = document.createElement('option');
-                    option.value = product.id;
-                    option.textContent = label;
-                    $product.append(option);
+                    $product.append(new Option(label, product.id, false, false));
                 });
+
                 $product.prop('disabled', false);
+                initSelect($product, productPlaceholder);
             })
             .fail(function (xhr) {
                 if (xhr.statusText === 'abort') return;
@@ -89,6 +133,7 @@ $(function () {
             });
     });
 
+    // --- Save ---
     $('#save-global-product').on('click', function () {
         const $button = $(this);
         const $error = $('#global-product-error');
