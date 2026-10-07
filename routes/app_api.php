@@ -35,11 +35,11 @@ Route::prefix('auth')->group(function () {
 });
 
 
+Route::get('global-products', [GlobalProductController::class, 'index']);
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('global-products', [GlobalProductController::class, 'index']);
-    Route::get('centers/{centerId}/global-products', [GlobalProductController::class, 'centerProducts']);
     Route::get('centers/{centerId}/global-products/{productId}', [GlobalProductController::class, 'show']);
-
+    Route::get('centers/{centerId}/global-products', [GlobalProductController::class, 'centerProducts']);
+    
     Route::prefix('booking')->group(function () {
         Route::post('store', [BookingController::class, 'store']);
         Route::get('list', [BookingController::class, 'list']);
