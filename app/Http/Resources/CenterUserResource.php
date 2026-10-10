@@ -19,6 +19,7 @@ class CenterUserResource extends JsonResource
         $res['email'] = $this->email;
         $res['branch'] = BranchDetailsResource::make($this->branch);
         $res['country_code'] = $this->country_code;
+        $res['rate'] = $this->rate;
         $res['phone'] = $this->phone;
         $res['image'] = $this->image;
         $res['role'] = $this->getRoleNames()->first();
