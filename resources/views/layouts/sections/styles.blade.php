@@ -12,6 +12,10 @@
 'resources/assets/vendor/scss'.$configData['rtlSupport'].'/' .$configData['theme'] .($configData['style'] !== 'light' ? '-' . $configData['style'] : '') .'.scss',
 'resources/assets/css/demo.css'])
 
+@if (!str_contains(url()->current(), 'admin') && (str_contains(url()->current(), 'center_user') || auth('center_user')->check()))
+<link rel="stylesheet" href="{{ asset('assets/css/luzori-center.css') }}">
+@endif
+
 @vite([
   'resources/assets/vendor/libs/node-waves/node-waves.scss',
   'resources/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.scss',

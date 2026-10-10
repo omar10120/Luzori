@@ -65,6 +65,7 @@ return [
     'read_less'               => 'Read Less',
     'location_on_map'         => 'Location On Map',
     'enter_the_official_name_of_the_branch' => 'Enter the official name of the branch',
+    'provide_the_physical_location_details' => 'Provide the physical location details',
     'select_a_city_or_type_for_custom_city' => 'Select a city or type for custom city',
     'select_a_location_on_the_map' => 'Select a location on the map',
     'select_a_city' => 'Select a city',

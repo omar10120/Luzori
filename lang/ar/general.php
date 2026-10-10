@@ -64,6 +64,7 @@ return [
     'close'                   => 'إغلاق',
     'location_on_map'         => 'الموقع على الخريطة',
     'enter_the_official_name_of_the_branch' => 'أدخل اسم الفرع الرسمي',
+    'provide_the_physical_location_details' => 'أدخل تفاصيل الموقع الفعلي',
     'select_a_city_or_type_for_custom_city' => 'اختر مدينة أو أدخل مدينة خاصة',
     'select_a_location_on_the_map' => 'اختر موقع على الخريطة',
     'select_a_city' => 'اختر مدينة',

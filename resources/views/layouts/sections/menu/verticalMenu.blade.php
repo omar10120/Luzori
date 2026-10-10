@@ -23,13 +23,11 @@
                     </span>
                 </a>
             @else
-                <a href="{{ route('center_user.cp') }}" class="app-brand-link">
-                    <span class="app-brand-logo demo">
-                            @if ($configData['style'] === 'light')
-                            @include('_partials.macros', ['height' => 20])
-                        @else
-                            @include('_partials.macros_light', ['height' => 20])
-                        @endif
+                <a href="{{ route('center_user.cp') }}" class="app-brand-link luzori-brand-link">
+                    <span class="app-brand-logo demo luzori-brand-logo">
+                        <img src="{{ asset('assets/img/branding/luzori-logo-beige.png') }}"
+                             alt="LUZORI"
+                             class="luzori-sidebar-logo">
                     </span>
                 </a>
             @endif
@@ -70,9 +68,13 @@
                         @endisset
                         @isset($menu->external_icon)
                             @php
+                                $isCenterTheme = !str_contains(url()->current(), 'admin');
                                 $isDark = $configData['style'] !== 'light';
                                 $iconName = $menu->external_icon;
-                                if ($isDark) {
+                                if ($isCenterTheme) {
+                                    // Keep light icons on dark green sidebar
+                                    $iconName = $menu->external_icon;
+                                } elseif ($isDark) {
                                     if (isset($menu->external_icon_dark)) {
                                         $iconName = $menu->external_icon_dark;
                                     } elseif (!\Illuminate\Support\Str::contains($iconName, '-dark')) {
@@ -101,6 +103,15 @@
             @endif
         @endforeach
     </ul>
+
+    @if (!str_contains(url()->current(), 'admin'))
+        <div class="luzori-menu-footer">
+            <div class="luzori-menu-footer-text">
+                {{ __('field.better_management') }}<br>
+                {{ __('field.bigger_growth') }}
+            </div>
+        </div>
+    @endif
 </aside>
 
 

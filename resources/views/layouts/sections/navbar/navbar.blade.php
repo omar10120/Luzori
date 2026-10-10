@@ -59,9 +59,16 @@
     </div>
 @endif
 
-<div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
+<div class="navbar-nav-right d-flex align-items-center w-100" id="navbar-collapse">
     
-    @if (!isset($menuHorizontal))
+    @if (!isset($menuHorizontal) && $guard === 'center_user')
+        <div class="luzori-nav-search d-none d-md-block">
+            <div class="luzori-nav-search-wrap">
+                <i class="ti ti-search"></i>
+                <input type="search" class="form-control" placeholder="{{ __('field.search_by_customer_service_invoice') }}" aria-label="{{ __('field.search_by_customer_service_invoice') }}">
+            </div>
+        </div>
+    @elseif (!isset($menuHorizontal))
         <!-- Search -->
         {{-- <div class="navbar-nav align-items-center">
             <div class="nav-item navbar-search-wrapper mb-0">
@@ -329,9 +336,22 @@
         <!-- User -->
         <li class="nav-item navbar-dropdown dropdown-user dropdown">
             <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
-                <div class="avatar avatar-online">
-                    <img src="{{ auth($guard)->user()->image }}" alt class="rounded-circle">
-                </div>
+                @if ($guard === 'center_user')
+                    <div class="luzori-user-chip">
+                        <div class="avatar avatar-online">
+                            <img src="{{ auth($guard)->user()->image }}" alt class="rounded-circle">
+                        </div>
+                        <div class="luzori-user-meta d-none d-lg-block">
+                            <span class="luzori-user-hi">{{ __('field.hi') }}, {{ auth($guard)->user()->name }}</span>
+                            <span class="luzori-user-role">{{ ucfirst(auth($guard)->user()->getRoleNames()->first() ?? 'Admin') }}</span>
+                        </div>
+                        <i class="ti ti-chevron-down ti-xs d-none d-lg-inline-block text-muted"></i>
+                    </div>
+                @else
+                    <div class="avatar avatar-online">
+                        <img src="{{ auth($guard)->user()->image }}" alt class="rounded-circle">
+                    </div>
+                @endif
             </a>
             <ul class="dropdown-menu dropdown-menu-end">
                 <li>

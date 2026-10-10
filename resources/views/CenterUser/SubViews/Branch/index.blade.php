@@ -9,27 +9,27 @@
         #map {
             height: 350px;
             width: 100%;
-            border-radius: 8px;
+            border-radius: 14px;
             margin-bottom: 20px;
-            border: 1px solid #ddd;
+            border: 1px solid #e5ddd2;
         }
         .position-relative {
             position: relative;
         }
         #search-results {
             margin-top: 2px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 1px solid #e5ddd2;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 43, 38, 0.08);
             background-color: #fff;
         }
         #search-results .list-group-item {
             cursor: pointer;
             border: none;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid #f1ebe3;
         }
         #search-results .list-group-item:hover {
-            background-color: #f8f9fa;
+            background-color: #f9f6f1;
         }
         #search-results .list-group-item:last-child {
             border-bottom: none;
@@ -37,160 +37,183 @@
         .search-loading {
             text-align: center;
             padding: 10px;
-            color: #666;
+            color: #7a8582;
+        }
+        .luzori-page .breadcrumb-wrapper .breadcrumb {
+            margin-bottom: 0.75rem;
+            background: transparent;
+        }
+        .luzori-page .breadcrumb-item a {
+            color: #7a8582;
+        }
+        .luzori-page .breadcrumb-item.active {
+            color: #002b26;
+            font-weight: 600;
         }
         @media screen and (max-width: 768px) {
             #map  {
-                height: 150px;
-            }
-            #search-results{
-                font-size:5px;
+                height: 180px;
             }
             #search-location-btn{
                 font-size: 12px;
             }
             #address{
                 height: 100px;
-         
             }
         }
     </style>
 @endsection
 
 @section('content')
-    <div class="container">
+    <div class="luzori-page lz-branch-form-page">
         @include('CenterUser.Components.breadcrumbs')
 
-        <div class="row">
-            <form class="pt-0" id="frmSubmit">
-                @csrf
-                <div class="card">
-                    <div class="card-header">
-                        <h2>{{ $title }}</h2>
-                    </div>
-                    <div class="card-body"> 
-                        <div class="container">
-                            @include('CenterUser.Components.languages-tabs')
-                            
-                            <div class="tab-content">
-                                @foreach (Config::get('translatable.locales') as $locale)
-                                    <div class="tab-pane {{ $loop->first ? 'active' : null }}" id="{{ $locale }}-add"
-                                        aria-labelledby="{{ $locale }}-tab-add" role="tabpanel">
-                                        <div class="row">
-                                            <div class="col-md-12 mb-2">
-                                                <div class="mb-1">
-                                                    <label class="form-label">{{__('field.name')}}  <span class="text-danger">*</span></label>
-                                                    <small class="text-muted">{{__('general.enter_the_official_name_of_the_branch')}}</small>
-                                                    <input type="text" id="name_{{ $locale }}" class="form-control"
-                                                        name="{{ $locale }}[name]" placeholder="{{__('field.name')}}"
-                                                        value="{{ $item ? $item->translate($locale)->name : '' }}" />
-                                                    
-                                                </div>
-                                            </div>
-                                            <div class="col-md-12 mb-2">
-                                                <div class="mb-1">
-                                                    <label class="form-label">{{__('field.city')}}  <span class="text-danger">*</span></label>
-                                                    <small class="text-muted">{{__('general.select_a_city_from_the_list')}}</small>
-                                                    <select id="city_{{ $locale }}" class="form-select select2" name="{{ $locale }}[city]">
-                                                        <option value="">{{__('general.select_a_city')}}</option>
-                                                        @if($locale == 'ar')
-                                                            <option value="أبو ظبي" {{ ($item && $item->translate($locale)->city == 'أبو ظبي') ? 'selected' : '' }}>أبو ظبي</option>
-                                                            <option value="دبي" {{ ($item && $item->translate($locale)->city == 'دبي') ? 'selected' : '' }}>دبي</option>
-                                                            <option value="الشارقة" {{ ($item && $item->translate($locale)->city == 'الشارقة') ? 'selected' : '' }}>الشارقة</option>
-                                                            <option value="عجمان" {{ ($item && $item->translate($locale)->city == 'عجمان') ? 'selected' : '' }}>عجمان</option>
-                                                            <option value="رأس الخيمة" {{ ($item && $item->translate($locale)->city == 'رأس الخيمة') ? 'selected' : '' }}>رأس الخيمة</option>
-                                                            <option value="أم القيوين" {{ ($item && $item->translate($locale)->city == 'أم القيوين') ? 'selected' : '' }}>أم القيوين</option>
-                                                            <option value="الفجيرة" {{ ($item && $item->translate($locale)->city == 'الفجيرة') ? 'selected' : '' }}>الفجيرة</option>
-                                                        @else
-                                                            <option value="Abu Dhabi" {{ ($item && $item->translate($locale)->city == 'Abu Dhabi') ? 'selected' : '' }}>Abu Dhabi</option>
-                                                            <option value="Dubai" {{ ($item && $item->translate($locale)->city == 'Dubai') ? 'selected' : '' }}>Dubai</option>
-                                                            <option value="Sharjah" {{ ($item && $item->translate($locale)->city == 'Sharjah') ? 'selected' : '' }}>Sharjah</option>
-                                                            <option value="Ajman" {{ ($item && $item->translate($locale)->city == 'Ajman') ? 'selected' : '' }}>Ajman</option>
-                                                            <option value="Ras Al Khaimah" {{ ($item && $item->translate($locale)->city == 'Ras Al Khaimah') ? 'selected' : '' }}>Ras Al Khaimah</option>
-                                                            <option value="Umm Al Quwain" {{ ($item && $item->translate($locale)->city == 'Umm Al Quwain') ? 'selected' : '' }}>Umm Al Quwain</option>
-                                                            <option value="Fujairah" {{ ($item && $item->translate($locale)->city == 'Fujairah') ? 'selected' : '' }}>Fujairah</option>
-                                                        @endif
-                                                    </select>
-                                                    
-                                                </div>
-                                            </div>
-                                            <div class="col-md-12">
-                                                <div class="mb-1">
-                                                    <label class="form-label">{{__('field.address')}}  <span class="text-danger">*</span></label>
-                                                    <small class="text-muted">Provide the physical location details.</small>
-                                                    <textarea id="address_{{ $locale }}" name="{{ $locale }}[address]" class="form-control" cols="25" 
-                                                        rows="10" placeholder="{{__('field.address')}}">{{ $item ? $item->translate($locale)->address : '' }}</textarea>
-                                                    
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
+        <div class="lz-page-toolbar">
+            <div class="lz-page-title-wrap">
+                <div class="lz-page-icon">
+                    <i class="ti ti-building-store"></i>
+                </div>
+                <h1 class="lz-page-title">
+                    @if (is_null($item))
+                        {{ __('general.add_new') }} {{ __('locale.branch') }}
+                    @else
+                        {{ __('general.edit') }} {{ __('locale.branch') }}
+                    @endif
+                </h1>
+            </div>
+        </div>
 
-                            <div class="row">
-                                <div class="col-md-12 mb-3">
-                                    <label class="form-label">{{ __('general.location_on_map') ?? 'Location on Map' }}  <span class="text-danger">*</span></label>
-                                    <small class="text-muted d-block mb-2">{{__('general.select_a_location_on_the_map')}}</small>
-                                    <div class="position-relative">
-                                        <div class="input-group mb-2">
-                                            <input type="text" id="location-search" class="form-control" 
-                                                placeholder="{{ __('field.search_location') ?? 'Search for location (e.g., Dubai, Burj Khalifa)' }}" 
-                                                autocomplete="off" />
-                                            <button class="btn btn-primary" type="button" id="search-location-btn">
-                                                <i class="ti ti-search"></i> {{ __('general.search') ?? 'Search' }}
-                                            </button>
-                                        </div>
-                                        <div id="search-results" class="list-group" style="display: none; max-height: 200px; overflow-y: auto; position: absolute; z-index: 1000; width: 100%; top: 100%;"></div>
+        <form class="pt-0" id="frmSubmit">
+            @csrf
+            <div class="card lz-form-card">
+                <div class="card-body">
+                    <ul class="nav nav-tabs lz-lang-tabs" role="tablist">
+                        @foreach (Config::get('translatable.locales') as $locale)
+                            <li class="nav-item" role="presentation">
+                                <a class="nav-link {{ $loop->first ? 'active' : null }}"
+                                    id="{{ $locale }}-tab-add" data-bs-toggle="tab"
+                                    href="#{{ $locale }}-add" aria-controls="{{ $locale }}-add"
+                                    role="tab" aria-selected="{{ $loop->first ? 'true' : 'false' }}">
+                                    @if ($locale === 'en')
+                                        <span class="fi fi-gb fis rounded-circle" style="width:1rem;height:1rem;"></span>
+                                    @elseif ($locale === 'ar')
+                                        <span class="fi fi-ae fis rounded-circle" style="width:1rem;height:1rem;"></span>
+                                    @else
+                                        <i class="ti ti-flag"></i>
+                                    @endif
+                                    {{ Str::upper($locale) }}
+                                </a>
+                            </li>
+                        @endforeach
+                    </ul>
+
+                    <div class="tab-content">
+                        @foreach (Config::get('translatable.locales') as $locale)
+                            <div class="tab-pane {{ $loop->first ? 'active' : null }}" id="{{ $locale }}-add"
+                                aria-labelledby="{{ $locale }}-tab-add" role="tabpanel">
+                                <div class="row">
+                                    <div class="col-md-12 mb-3">
+                                        <label class="lz-field-label" for="name_{{ $locale }}">
+                                            {{ __('field.name') }} <span class="text-danger">*</span>
+                                        </label>
+                                        <small class="lz-field-help">{{ __('general.enter_the_official_name_of_the_branch') }}</small>
+                                        <input type="text" id="name_{{ $locale }}" class="form-control"
+                                            name="{{ $locale }}[name]" placeholder="{{ __('field.name') }}"
+                                            value="{{ $item ? $item->translate($locale)->name : '' }}" />
                                     </div>
-                                    <div id="map"></div>
-                                </div>
-                                <div class="col-md-6 mb-2">
-                                    <div class="mb-1">
-                                        <label for="longitude" class="form-label">{{__('field.longitude')}}  <span class="text-danger">*</span></label>
-                                        <input type="text" id="longitude" class="form-control"
-                                            name="longitude" placeholder="{{__('field.longitude')}}"
-                                            value="{{ $item ? $item->longitude : '' }}" readonly />
+                                    <div class="col-md-12 mb-3">
+                                        <label class="lz-field-label" for="city_{{ $locale }}">
+                                            {{ __('field.city') }} <span class="text-danger">*</span>
+                                        </label>
+                                        <small class="lz-field-help">{{ __('general.select_a_city_from_the_list') }}</small>
+                                        <select id="city_{{ $locale }}" class="form-select select2" name="{{ $locale }}[city]">
+                                            <option value="">{{ __('general.select_a_city') }}</option>
+                                            @if ($locale == 'ar')
+                                                <option value="أبو ظبي" {{ ($item && $item->translate($locale)->city == 'أبو ظبي') ? 'selected' : '' }}>أبو ظبي</option>
+                                                <option value="دبي" {{ ($item && $item->translate($locale)->city == 'دبي') ? 'selected' : '' }}>دبي</option>
+                                                <option value="الشارقة" {{ ($item && $item->translate($locale)->city == 'الشارقة') ? 'selected' : '' }}>الشارقة</option>
+                                                <option value="عجمان" {{ ($item && $item->translate($locale)->city == 'عجمان') ? 'selected' : '' }}>عجمان</option>
+                                                <option value="رأس الخيمة" {{ ($item && $item->translate($locale)->city == 'رأس الخيمة') ? 'selected' : '' }}>رأس الخيمة</option>
+                                                <option value="أم القيوين" {{ ($item && $item->translate($locale)->city == 'أم القيوين') ? 'selected' : '' }}>أم القيوين</option>
+                                                <option value="الفجيرة" {{ ($item && $item->translate($locale)->city == 'الفجيرة') ? 'selected' : '' }}>الفجيرة</option>
+                                            @else
+                                                <option value="Abu Dhabi" {{ ($item && $item->translate($locale)->city == 'Abu Dhabi') ? 'selected' : '' }}>Abu Dhabi</option>
+                                                <option value="Dubai" {{ ($item && $item->translate($locale)->city == 'Dubai') ? 'selected' : '' }}>Dubai</option>
+                                                <option value="Sharjah" {{ ($item && $item->translate($locale)->city == 'Sharjah') ? 'selected' : '' }}>Sharjah</option>
+                                                <option value="Ajman" {{ ($item && $item->translate($locale)->city == 'Ajman') ? 'selected' : '' }}>Ajman</option>
+                                                <option value="Ras Al Khaimah" {{ ($item && $item->translate($locale)->city == 'Ras Al Khaimah') ? 'selected' : '' }}>Ras Al Khaimah</option>
+                                                <option value="Umm Al Quwain" {{ ($item && $item->translate($locale)->city == 'Umm Al Quwain') ? 'selected' : '' }}>Umm Al Quwain</option>
+                                                <option value="Fujairah" {{ ($item && $item->translate($locale)->city == 'Fujairah') ? 'selected' : '' }}>Fujairah</option>
+                                            @endif
+                                        </select>
                                     </div>
-                                </div>
-                                <div class="col-md-6 mb-2">
-                                    <div class="mb-1">
-                                        <label for="latitude" class="form-label">{{__('field.latitude')}}  <span class="text-danger">*</span></label>
-                                        <input type="text" id="latitude" class="form-control"
-                                            name="latitude" placeholder="{{__('field.latitude')}}"
-                                            value="{{ $item ? $item->latitude : '' }}" readonly />
+                                    <div class="col-md-12 mb-3">
+                                        <label class="lz-field-label" for="address_{{ $locale }}">
+                                            {{ __('field.address') }} <span class="text-danger">*</span>
+                                        </label>
+                                        <small class="lz-field-help">{{ __('general.provide_the_physical_location_details') }}</small>
+                                        <textarea id="address_{{ $locale }}" name="{{ $locale }}[address]" class="form-control" cols="25"
+                                            rows="5" placeholder="{{ __('field.address') }}">{{ $item ? $item->translate($locale)->address : '' }}</textarea>
                                     </div>
                                 </div>
                             </div>
-                            <div class="row">
-                                <div class="col-md-6 mb-2">
-                                    <div class="mb-1">
-                                        <label for="open_time" class="form-label">{{__('field.open_time')}}  <span class="text-danger">*</span></label>
-                                        <input type="time" id="open_time" class="form-control"
-                                            name="open_time" placeholder="{{__('field.open_time')}}"
-                                            value="{{ $item ? $item->open_time : '' }}" />
-                                    </div>
+                        @endforeach
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label class="lz-field-label">{{ __('general.location_on_map') ?? 'Location on Map' }} <span class="text-danger">*</span></label>
+                            <small class="lz-field-help">{{ __('general.select_a_location_on_the_map') }}</small>
+                            <div class="position-relative">
+                                <div class="input-group mb-2 lz-map-search">
+                                    <input type="text" id="location-search" class="form-control"
+                                        placeholder="{{ __('field.search_location') ?? 'Search for location (e.g., Dubai, Burj Khalifa)' }}"
+                                        autocomplete="off" />
+                                    <button class="btn" type="button" id="search-location-btn">
+                                        <i class="ti ti-search"></i> {{ __('general.search') ?? 'Search' }}
+                                    </button>
                                 </div>
-                                <div class="col-md-6 mb-2">
-                                    <div class="mb-1">
-                                        <label for="close_time" class="form-label">{{__('field.close_time')}}  <span class="text-danger">*</span></label>
-                                        <input type="time" id="close_time" class="form-control"
-                                            name="close_time" placeholder="{{__('field.close_time')}}"
-                                            value="{{ $item ? $item->close_time : '' }}" />
-                                    </div>
-                                </div>
+                                <div id="search-results" class="list-group" style="display: none; max-height: 200px; overflow-y: auto; position: absolute; z-index: 1000; width: 100%; top: 100%;"></div>
                             </div>
+                            <div id="map"></div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="longitude" class="lz-field-label">{{ __('field.longitude') }} <span class="text-danger">*</span></label>
+                            <input type="text" id="longitude" class="form-control"
+                                name="longitude" placeholder="{{ __('field.longitude') }}"
+                                value="{{ $item ? $item->longitude : '' }}" readonly />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="latitude" class="lz-field-label">{{ __('field.latitude') }} <span class="text-danger">*</span></label>
+                            <input type="text" id="latitude" class="form-control"
+                                name="latitude" placeholder="{{ __('field.latitude') }}"
+                                value="{{ $item ? $item->latitude : '' }}" readonly />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="open_time" class="lz-field-label">{{ __('field.open_time') }} <span class="text-danger">*</span></label>
+                            <input type="time" id="open_time" class="form-control"
+                                name="open_time" placeholder="{{ __('field.open_time') }}"
+                                value="{{ $item ? $item->open_time : '' }}" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="close_time" class="lz-field-label">{{ __('field.close_time') }} <span class="text-danger">*</span></label>
+                            <input type="time" id="close_time" class="form-control"
+                                name="close_time" placeholder="{{ __('field.close_time') }}"
+                                value="{{ $item ? $item->close_time : '' }}" />
                         </div>
                     </div>
-                    <div class="card-footer">
-                        <button type="submit" class="btn btn-primary btn-sm submitFrom">
-                            <i class="menu-icon tf-icons ti ti-check"></i>
-                            <span>{{ __('general.save') }}</span>
-                        </button>
-                    </div>
                 </div>
-            </form>
-        </div>
+                <div class="card-footer d-flex justify-content-end gap-2">
+                    <a href="{{ route('center_user.branches.index') }}" class="btn btn-luzori-beige">
+                        {{ __('general.cancel') ?? 'Cancel' }}
+                    </a>
+                    <button type="submit" class="btn btn-luzori-primary submitFrom">
+                        <i class="ti ti-check me-1"></i>
+                        <span>{{ __('general.save') }}</span>
+                    </button>
+                </div>
+            </div>
+        </form>
     </div>
 @endsection
 

@@ -9,140 +9,261 @@
 @section('content')
 @push('styles')
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Tajawal:wght@200;300;400;500;700;800;900&display=swap');
-
     .luzori-dashboard {
-        /* --luzori-teal: #0a4a44; */
-        --luzori-peach: #fde8d8;
-        --luzori-mint: #d8f5eb;
-        --luzori-coral: #f8d9d4;
-        --luzori-lavender: #e8e0f5;
-        --luzori-chart-mint: #b8e4d4;
-        --luzori-muted: #6b7c79;
-        font-family: 'Cairo', sans-serif;
+        --lz-forest: #002b26;
+        --lz-cream: #f9f6f1;
+        --lz-cream-card: #fffdf9;
+        --lz-gold: #c5a070;
+        --lz-gold-soft: #e8d5b5;
+        --lz-mint: #d8f0e6;
+        --lz-mint-text: #1a6b5a;
+        --lz-peach: #f8e6d4;
+        --lz-peach-text: #b06a2b;
+        --lz-muted: #7a8582;
+        --lz-text: #1a2a27;
+        --lz-radius: 18px;
+        --lz-shadow: 0 10px 30px rgba(0, 43, 38, 0.07);
+        --lz-font-display: 'Cormorant Garamond', Georgia, serif;
+        --lz-font-body: 'DM Sans', 'Cairo', sans-serif;
+        font-family: var(--lz-font-body);
+        color: var(--lz-text);
     }
 
-    .luzori-dashboard .dashboard-title {
-        /* color: var(--luzori-teal); */
-        font-weight: 700;
-        font-size: 1.35rem;
-        margin-bottom: 1.25rem;
+    html[dir='rtl'] .luzori-dashboard {
+        --lz-font-body: 'Cairo', 'DM Sans', sans-serif;
     }
 
-    .luzori-kpi-card {
+    .luzori-dashboard .lz-greeting {
+        font-family: var(--lz-font-display);
+        font-size: clamp(1.85rem, 2.6vw, 2.4rem);
+        font-weight: 600;
+        color: var(--lz-forest);
+        margin: 0 0 .35rem;
+        letter-spacing: -0.01em;
+        line-height: 1.15;
+    }
+
+    .luzori-dashboard .lz-greeting-sub {
+        color: var(--lz-muted);
+        font-size: .92rem;
+        margin: 0;
+    }
+
+    .luzori-dashboard .lz-date-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: .55rem;
+        background: #fff;
+        border: 1px solid rgba(0, 43, 38, 0.08);
+        border-radius: 999px;
+        padding: .55rem 1rem;
+        color: var(--lz-text);
+        font-size: .85rem;
+        font-weight: 500;
+        box-shadow: 0 4px 14px rgba(0, 43, 38, 0.04);
+        white-space: nowrap;
+    }
+
+    .luzori-dashboard .lz-date-chip i {
+        color: var(--lz-gold-deep, #9a6923);
+    }
+
+    .luzori-dashboard .lz-kpi {
+        position: relative;
         border: none;
-        border-radius: 18px;
-        padding: 1.35rem 1.5rem;
+        border-radius: var(--lz-radius);
+        padding: 1.35rem 1.4rem 1.2rem;
         height: 100%;
+        min-height: 148px;
+        overflow: hidden;
+        box-shadow: var(--lz-shadow);
         transition: transform .2s ease, box-shadow .2s ease;
-        box-shadow: 0 4px 18px rgba(10, 74, 68, .06);
     }
 
-    .luzori-kpi-card.clickable-stat-card {
+    .luzori-dashboard .lz-kpi.clickable-stat-card {
         cursor: pointer;
     }
 
-    .luzori-kpi-card.clickable-stat-card:hover {
+    .luzori-dashboard .lz-kpi.clickable-stat-card:hover {
         transform: translateY(-3px);
-        box-shadow: 0 10px 28px rgba(10, 74, 68, .12);
+        box-shadow: 0 14px 34px rgba(0, 43, 38, 0.12);
     }
 
-    .luzori-kpi-card--bookings { background: var(--luzori-peach); }
-    .luzori-kpi-card--customers { background: var(--luzori-mint); }
-    .luzori-kpi-card--services { background: var(--luzori-coral); }
-    .luzori-kpi-card--revenue { background: var(--luzori-lavender); }
-    .luzori-kpi-card--coupons { background: #fff4dc; }
-    .luzori-kpi-card--workers { background: #e8f0ff; }
-    .luzori-kpi-card--products { background: #f0f0f0; }
+    .luzori-dashboard .lz-kpi--dark {
+        background: linear-gradient(145deg, #003830 0%, #002b26 55%, #001f1b 100%);
+        color: #fff;
+    }
 
-    .luzori-kpi-icon {
-        width: 52px;
-        height: 52px;
-        border-radius: 50%;
+    .luzori-dashboard .lz-kpi--dark::after {
+        content: '';
+        position: absolute;
+        right: -20px;
+        bottom: -28px;
+        width: 150px;
+        height: 90px;
+        background: radial-gradient(ellipse at center, rgba(255,255,255,.12) 0%, transparent 70%);
+        pointer-events: none;
+    }
+
+    .luzori-dashboard .lz-kpi--light {
+        background: var(--lz-cream-card);
+        color: var(--lz-text);
+    }
+
+    .luzori-dashboard .lz-kpi-top {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        margin-bottom: .85rem;
+    }
+
+    .luzori-dashboard .lz-kpi-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
         display: flex;
         align-items: center;
         justify-content: center;
         flex-shrink: 0;
+        font-size: 1.35rem;
+    }
+
+    .luzori-dashboard .lz-kpi--dark .lz-kpi-icon {
+        background: rgba(255, 255, 255, 0.12);
+        color: #fff;
+        backdrop-filter: blur(6px);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+    }
+
+    .luzori-dashboard .lz-kpi--light .lz-kpi-icon {
+        background: #efe2d0;
+        color: #7a5a2f;
+    }
+
+    .luzori-dashboard .lz-kpi-label {
+        font-size: .88rem;
+        margin: 0 0 .35rem;
+        opacity: .85;
+        font-weight: 500;
+    }
+
+    .luzori-dashboard .lz-kpi--dark .lz-kpi-label {
+        color: rgba(255, 255, 255, 0.78);
+    }
+
+    .luzori-dashboard .lz-kpi--light .lz-kpi-label {
+        color: var(--lz-muted);
+    }
+
+    .luzori-dashboard .lz-kpi-value {
+        font-size: 1.85rem;
+        font-weight: 700;
+        line-height: 1.1;
+        margin: 0;
+        letter-spacing: -0.02em;
+    }
+
+    .luzori-dashboard .lz-kpi--dark .lz-kpi-value {
         color: #fff;
     }
 
-    .luzori-kpi-icon--dark { background: #3d4f4c; }
-    .luzori-kpi-icon--teal { background: #1a5c55; }
-    .luzori-kpi-icon--brown { background: #5c3d35; }
-    .luzori-kpi-icon--gold { background: #8a6d2f; }
-    .luzori-kpi-icon--blue { background: #3d5a80; }
-    .luzori-kpi-icon--slate { background: #4a5568; }
-
-    .luzori-kpi-value {
-        font-size: 1.75rem;
-        font-weight: 700;
-        color: #1f2d2b;
-        line-height: 1.1;
-        margin-bottom: .15rem;
+    .luzori-dashboard .lz-kpi-arrow {
+        position: absolute;
+        inset-inline-end: 1rem;
+        bottom: 1rem;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .95rem;
+        z-index: 1;
     }
 
-    .luzori-kpi-label {
-        color: var(--luzori-muted);
-        font-size: .9rem;
-        margin: 0;
+    .luzori-dashboard .lz-kpi--dark .lz-kpi-arrow {
+        background: rgba(255, 255, 255, 0.12);
+        color: #fff;
     }
 
-    .luzori-panel {
+    .luzori-dashboard .lz-kpi--light .lz-kpi-arrow {
+        background: #f1ebe3;
+        color: var(--lz-forest);
+    }
+
+    .luzori-dashboard .lz-panel {
         border: none;
-        border-radius: 18px;
-        box-shadow: 0 4px 18px rgba(10, 74, 68, .06);
+        border-radius: var(--lz-radius);
+        box-shadow: var(--lz-shadow);
         height: 100%;
         background: #fff;
     }
 
-    .luzori-panel .card-header {
+    .luzori-dashboard .lz-panel .card-header {
         background: transparent;
         border-bottom: none;
-        padding: 1.25rem 1.5rem .5rem;
+        padding: 1.25rem 1.35rem .35rem;
     }
 
-    .luzori-panel .card-body {
-        padding: .5rem 1.5rem 1.25rem;
+    .luzori-dashboard .lz-panel .card-body {
+        padding: .4rem 1.35rem 1.25rem;
     }
 
-    .luzori-panel-title {
-        color: var(--luzori-teal);
-        
+    .luzori-dashboard .lz-panel-title {
+        color: var(--lz-forest);
         font-weight: 700;
         font-size: 1rem;
         margin: 0;
     }
 
-    .luzori-mini-stat {
-        border-radius: 14px;
-        padding: 1rem 1.1rem;
-        height: 100%;
+    .luzori-dashboard .lz-filter-btn {
+        border-radius: 999px;
+        padding: .35rem .9rem;
+        font-size: .78rem;
+        border: 1px solid #e5ddd2;
+        background: #fff;
+        color: var(--lz-muted);
+        font-weight: 500;
     }
 
-    .luzori-sales-table thead th {
-        /* background: var(--luzori-teal); */
-        color: #fff;
+    .luzori-dashboard .lz-filter-btn:hover {
+        color: var(--lz-forest);
+        border-color: var(--lz-gold);
+    }
+
+    .luzori-dashboard .lz-filter-btn.active {
+        background: var(--lz-forest) !important;
+        border-color: var(--lz-forest) !important;
+        color: #fff !important;
+    }
+
+    .luzori-dashboard .lz-sales-table thead th {
+        background: transparent;
+        color: var(--lz-muted);
         font-weight: 600;
-        font-size: .78rem;
+        font-size: .75rem;
         border: none;
+        border-bottom: 1px solid #efe9e0;
         padding: .85rem .75rem;
         white-space: nowrap;
+        text-transform: none;
     }
 
-    .luzori-sales-table tbody td {
+    .luzori-dashboard .lz-sales-table tbody td {
         vertical-align: middle;
         font-size: .82rem;
-        padding: .75rem;
-        border-color: #eef2f1;
+        padding: .8rem .75rem;
+        border-color: #f3eee7;
+        color: var(--lz-text);
     }
 
-    .luzori-sales-table .service-cell {
+    .luzori-dashboard .lz-sales-table .service-cell {
         display: flex;
         align-items: center;
         gap: .65rem;
     }
 
-    .luzori-sales-table .service-thumb {
+    .luzori-dashboard .lz-sales-table .service-thumb {
         width: 38px;
         height: 38px;
         border-radius: 10px;
@@ -150,140 +271,209 @@
         background: #f3f5f4;
     }
 
-    .luzori-sales-table .customer-email {
-        color: var(--luzori-muted);
+    .luzori-dashboard .lz-sales-table .customer-email {
+        color: var(--lz-muted);
         font-size: .72rem;
     }
 
-    .luzori-status-badge {
+    .luzori-dashboard .lz-status-badge {
         border-radius: 999px;
         padding: .28rem .75rem;
         font-size: .72rem;
         font-weight: 600;
     }
 
-    .luzori-status-badge--confirmed {
-        background: #d8f5eb;
-        color: #0a4a44;
+    .luzori-dashboard .lz-status-badge--confirmed {
+        background: var(--lz-mint);
+        color: var(--lz-mint-text);
     }
 
-    .luzori-status-badge--pending {
-        background: #fff4dc;
-        color: #9a6b00;
+    .luzori-dashboard .lz-status-badge--pending {
+        background: var(--lz-peach);
+        color: var(--lz-peach-text);
     }
 
-    .luzori-filter-btn {
-        border-radius: 999px;
-        padding: .35rem .9rem;
-        font-size: .78rem;
-        border: 1px solid #dce5e3;
-        background: #fff;
-        color: var(--luzori-muted);
-    }
-
-    .luzori-filter-btn:hover {
-        /* color: var(--luzori-teal); */
-        /* border-color: var(--luzori-teal); */
-    }
-
-    .luzori-filter-btn.active {
-        background: #0a4a44 !important;
-        border-color: #0a4a44 !important;
-        color: #fff !important;
-    }
-
-    .luzori-rating-bubbles {
-        position: relative;
-        min-height: 220px;
+    .luzori-dashboard .lz-performer-row {
         display: flex;
         align-items: center;
-        justify-content: center;
+        gap: .85rem;
+        padding: .7rem 0;
     }
 
-    .luzori-rating-bubble {
-        position: absolute;
+    .luzori-dashboard .lz-performer-row + .lz-performer-row {
+        border-top: 1px solid #f1ebe3;
+    }
+
+    .luzori-dashboard .lz-rank {
+        width: 28px;
+        height: 28px;
         border-radius: 50%;
+        background: #f3ebe0;
+        color: var(--lz-forest);
         display: flex;
-        flex-direction: column;
         align-items: center;
         justify-content: center;
-        text-align: center;
-        color: #fff;
+        font-size: .78rem;
         font-weight: 700;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, .08);
+        flex-shrink: 0;
     }
 
-    .luzori-rating-bubble small {
-        font-size: .62rem;
-        font-weight: 500;
-        opacity: .9;
-        max-width: 80%;
-        line-height: 1.2;
-    }
-
-    .luzori-rating-bubble--1 {
-        width: 110px;
-        height: 110px;
-        top: 10px;
-        left: 50%;
-        transform: translateX(-50%);
-    }
-
-    .luzori-rating-bubble--2 {
-        width: 95px;
-        height: 95px;
-        right: 8%;
-        top: 42%;
-    }
-
-    .luzori-rating-bubble--3 {
-        width: 88px;
-        height: 88px;
-        left: 10%;
-        bottom: 8%;
-    }
-
-    .luzori-performer-card {
-        border: none;
-        border-radius: 16px;
-        background: #f8fbfa;
-        height: 100%;
-    }
-
-    .luzori-performer-card .card-header {
-        /* background: var(--luzori-teal); */
-        color: #fff;
-        border-radius: 16px 16px 0 0;
-        border: none;
-        padding: .85rem 1rem;
-    }
-
-    .luzori-performer-card .card-header h5 {
-        font-size: .88rem;
-        margin: 0;
-    }
-
-    .luzori-earnings-legend {
-        display: flex;
-        flex-direction: column;
-        gap: .65rem;
-        margin-top: .5rem;
-    }
-
-    .luzori-earnings-legend-item {
+    .luzori-dashboard .lz-performer-avatar {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #d4b483, #efe2d0);
+        color: var(--lz-forest);
         display: flex;
         align-items: center;
-        gap: .5rem;
-        font-size: .8rem;
-        color: var(--luzori-muted);
+        justify-content: center;
+        font-weight: 700;
+        font-size: .85rem;
+        flex-shrink: 0;
+        overflow: hidden;
     }
 
-    .luzori-earnings-dot {
+    .luzori-dashboard .lz-performer-meta {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .luzori-dashboard .lz-performer-name {
+        font-weight: 600;
+        font-size: .88rem;
+        margin: 0 0 .15rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .luzori-dashboard .lz-performer-sub {
+        font-size: .72rem;
+        color: var(--lz-muted);
+        margin: 0 0 .4rem;
+    }
+
+    .luzori-dashboard .lz-progress {
+        height: 5px;
+        background: #f1ebe3;
+        border-radius: 999px;
+        overflow: hidden;
+    }
+
+    .luzori-dashboard .lz-progress > span {
+        display: block;
+        height: 100%;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #0a3a34, #c5a070);
+    }
+
+    .luzori-dashboard .lz-earnings-legend {
+        display: flex;
+        flex-direction: column;
+        gap: .75rem;
+        margin-top: .75rem;
+    }
+
+    .luzori-dashboard .lz-earnings-legend-item {
+        font-size: .8rem;
+        color: var(--lz-muted);
+    }
+
+    .luzori-dashboard .lz-earnings-legend-item .d-flex {
+        margin-bottom: .3rem;
+    }
+
+    .luzori-dashboard .lz-earnings-dot {
         width: 10px;
         height: 10px;
         border-radius: 50%;
         flex-shrink: 0;
-}
+    }
+
+    .luzori-dashboard .lz-earnings-bar {
+        height: 6px;
+        background: #f1ebe3;
+        border-radius: 999px;
+        overflow: hidden;
+    }
+
+    .luzori-dashboard .lz-earnings-bar > span {
+        display: block;
+        height: 100%;
+        border-radius: 999px;
+        background: var(--lz-forest);
+    }
+
+    .luzori-dashboard .lz-promo {
+        position: relative;
+        border-radius: var(--lz-radius);
+        overflow: hidden;
+        min-height: 220px;
+        height: calc(100% - 0px);
+        background:
+            linear-gradient(115deg, rgba(0, 30, 26, 0.88) 0%, rgba(0, 43, 38, 0.55) 48%, rgba(20, 30, 28, 0.35) 100%),
+            url('https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=800&q=80') center/cover no-repeat;
+        color: #fff;
+        box-shadow: var(--lz-shadow);
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+    }
+
+    .luzori-dashboard .lz-promo::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160' fill='none'%3E%3Cpath d='M30 120c25-40 50-55 70-58 10 22 6 48-8 70' stroke='%23c5a070' stroke-opacity='.25'/%3E%3Cpath d='M70 130c28-42 52-55 75-58' stroke='%23c5a070' stroke-opacity='.18'/%3E%3Ccircle cx='95' cy='45' r='4' fill='%23c5a070' fill-opacity='.3'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right -10px top -10px;
+        opacity: .55;
+        pointer-events: none;
+    }
+
+    .luzori-dashboard .lz-promo-eyebrow {
+        position: relative;
+        font-size: .72rem;
+        letter-spacing: .14em;
+        text-transform: uppercase;
+        color: var(--lz-gold-soft);
+        font-weight: 600;
+        margin-bottom: .35rem;
+    }
+
+    .luzori-dashboard .lz-promo-title {
+        position: relative;
+        font-family: var(--lz-font-display);
+        font-size: 1.55rem;
+        font-weight: 600;
+        line-height: 1.2;
+        margin: 0 0 1rem;
+        max-width: 12ch;
+    }
+
+    .luzori-dashboard .lz-promo-btn {
+        position: relative;
+        align-self: flex-start;
+        background: linear-gradient(90deg, #d4b483, #e8d5b5);
+        color: var(--lz-forest);
+        border: none;
+        border-radius: 999px;
+        padding: .55rem 1.1rem;
+        font-size: .82rem;
+        font-weight: 700;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        transition: transform .15s ease, box-shadow .15s ease;
+    }
+
+    .luzori-dashboard .lz-promo-btn:hover {
+        color: var(--lz-forest);
+        transform: translateY(-1px);
+        box-shadow: 0 8px 18px rgba(197, 160, 112, 0.35);
+    }
 </style>
 @endpush
 
@@ -295,117 +485,87 @@
     $ratingStats = $chartData['rating_stats'] ?? [];
     $currency = trim(get_currency());
     $salesPeriod = $salesPeriod ?? 'day';
+    $userName = auth('center_user')->user()->name ?? '';
+    $hour = (int) now()->format('H');
+    if ($hour < 12) {
+        $greeting = __('field.good_morning');
+    } elseif ($hour < 18) {
+        $greeting = __('field.good_afternoon');
+    } else {
+        $greeting = __('field.good_evening');
+    }
 @endphp
 
 <div class="luzori-dashboard">
-    <h4 class="dashboard-title">{{ __('locale.statistics') }}</h4>
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
+        <div>
+            <h1 class="lz-greeting">{{ $greeting }}, {{ $userName }}</h1>
+            <p class="lz-greeting-sub">{{ __('field.dashboard_subtitle') }}</p>
+        </div>
+        <div class="lz-date-chip">
+            <i class="ti ti-calendar-event"></i>
+            <span>{{ __('field.today') }}, {{ now()->translatedFormat('d M Y') }}</span>
+        </div>
+    </div>
 
     {{-- Primary KPIs --}}
     <div class="row g-3 mb-4">
         <div class="col-xl-3 col-md-6">
-            <div class="luzori-kpi-card luzori-kpi-card--bookings clickable-stat-card" data-type="bookings">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="luzori-kpi-icon luzori-kpi-icon--dark">
-                        <i class="ti ti-calendar-event ti-md"></i>
-                    </div>
+            <div class="lz-kpi lz-kpi--dark clickable-stat-card" data-type="bookings">
+                <div class="lz-kpi-top">
+                    <div class="lz-kpi-icon"><i class="ti ti-calendar-event"></i></div>
                     <div>
-                        <div class="luzori-kpi-value">{{ number_format($statistics['today_bookings_count']) }}</div>
-                        <p class="luzori-kpi-label">{{ __('field.today_bookings') }}</p>
+                        <p class="lz-kpi-label">{{ __('field.today_bookings') }}</p>
+                        <p class="lz-kpi-value">{{ number_format($statistics['today_bookings_count']) }}</p>
                     </div>
                 </div>
+                <span class="lz-kpi-arrow"><i class="ti ti-arrow-up-right"></i></span>
             </div>
         </div>
         <div class="col-xl-3 col-md-6">
-            <div class="luzori-kpi-card luzori-kpi-card--customers clickable-stat-card" data-type="customers">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="luzori-kpi-icon luzori-kpi-icon--teal">
-                        <i class="ti ti-users ti-md"></i>
-                    </div>
+            <div class="lz-kpi lz-kpi--light clickable-stat-card" data-type="customers">
+                <div class="lz-kpi-top">
+                    <div class="lz-kpi-icon"><i class="ti ti-users"></i></div>
                     <div>
-                        <div class="luzori-kpi-value">{{ number_format($statistics['customers_count']) }}</div>
-                        <p class="luzori-kpi-label">{{ __('field.customers') }}</p>
-                                </div>
-                            </div>
-                            </div>
-                        </div>
-        <div class="col-xl-3 col-md-6">
-            <div class="luzori-kpi-card luzori-kpi-card--services clickable-stat-card" data-type="services">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="luzori-kpi-icon luzori-kpi-icon--brown">
-                    <img src="{{ asset('assets/icons/profile-2.svg') }}" alt="icon" style="width: 22px; height: 22px; object-fit: contain;">    
-                    </div>
-                    <div>
-                        <div class="luzori-kpi-value">{{ number_format($statistics['services_count']) }}</div>
-                        <p class="luzori-kpi-label">{{ __('field.services') }}</p>
+                        <p class="lz-kpi-label">{{ __('field.customers') }}</p>
+                        <p class="lz-kpi-value">{{ number_format($statistics['customers_count']) }}</p>
                     </div>
                 </div>
+                <span class="lz-kpi-arrow"><i class="ti ti-arrow-up-right"></i></span>
             </div>
         </div>
         <div class="col-xl-3 col-md-6">
-            <div class="luzori-kpi-card luzori-kpi-card--revenue clickable-stat-card" data-type="revenue">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="luzori-kpi-icon luzori-kpi-icon--teal">
-                        <!-- <i class="ti ti-trending-up ti-md"></i> -->
-                        <img src="{{ asset('assets/icons/profit_1.svg') }}" alt="icon" style="width: 20px; height: 20px; object-fit: contain;">    
-                    </div>
+            <div class="lz-kpi lz-kpi--light clickable-stat-card" data-type="services">
+                <div class="lz-kpi-top">
+                    <div class="lz-kpi-icon"><i class="ti ti-scissors"></i></div>
                     <div>
-                        <div class="luzori-kpi-value">{{ number_format($statistics['today_revenue'], 0) }} {{ $currency }}</div>
-                        <p class="luzori-kpi-label">{{ __('field.today_revenue') }}</p>
-                    </div>
-                                </div>
-                            </div>
-                            </div>
-                        </div>
-
-    {{-- Secondary KPIs --}}
-    <!-- <div class="row g-3 mb-4">
-        <div class="col-lg-4 col-md-4">
-            <div class="luzori-kpi-card luzori-kpi-card--coupons luzori-mini-stat clickable-stat-card" data-type="coupons">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="luzori-kpi-icon luzori-kpi-icon--gold">
-                        <i class="ti ti-discount-2 ti-md"></i>
-                    </div>
-                    <div>
-                        <div class="luzori-kpi-value">{{ $statistics['active_coupons_count'] }}%</div>
-                        <p class="luzori-kpi-label">{{ __('field.active_coupons') }}</p>
+                        <p class="lz-kpi-label">{{ __('field.services') }}</p>
+                        <p class="lz-kpi-value">{{ number_format($statistics['services_count']) }}</p>
                     </div>
                 </div>
+                <span class="lz-kpi-arrow"><i class="ti ti-arrow-up-right"></i></span>
             </div>
         </div>
-        <div class="col-lg-4 col-md-4">
-            <div class="luzori-kpi-card luzori-kpi-card--workers luzori-mini-stat clickable-stat-card" data-type="workers">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="luzori-kpi-icon luzori-kpi-icon--blue">
-                        <i class="ti ti-briefcase ti-md"></i>
-                    </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="lz-kpi lz-kpi--dark clickable-stat-card" data-type="revenue">
+                <div class="lz-kpi-top">
+                    <div class="lz-kpi-icon"><i class="ti ti-coin"></i></div>
                     <div>
-                        <div class="luzori-kpi-value">{{ number_format($statistics['active_workers_count']) }}</div>
-                        <p class="luzori-kpi-label">{{ __('field.active_workers') }}</p>
-                                </div>
-                            </div>
-                            </div>
-                        </div>
-        <div class="col-lg-4 col-md-4">
-            <div class="luzori-kpi-card luzori-kpi-card--products luzori-mini-stat clickable-stat-card" data-type="products">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="luzori-kpi-icon luzori-kpi-icon--slate">
-                        <i class="ti ti-package ti-md"></i>
-                    </div>
-                    <div>
-                        <div class="luzori-kpi-value">{{ number_format($statistics['available_products_count']) }}</div>
-                        <p class="luzori-kpi-label">{{ __('field.available_products') }}</p>
+                        <p class="lz-kpi-label">{{ __('field.today_revenue') }}</p>
+                        <p class="lz-kpi-value">{{ number_format($statistics['today_revenue'], 0) }} {{ $currency }}</p>
                     </div>
                 </div>
+                <span class="lz-kpi-arrow"><i class="ti ti-arrow-up-right"></i></span>
             </div>
         </div>
-    </div> -->
+    </div>
 
     {{-- Charts Row --}}
     <div class="row g-3 mb-4">
         <div class="col-xl-4 col-lg-5">
-            <div class="card luzori-panel">
+            <div class="card lz-panel">
                 <div class="card-header">
-                    <h5 class="luzori-panel-title">{{ __('field.most_popular_services') }}</h5>
+                    <h5 class="lz-panel-title">{{ __('field.most_popular_services') }}</h5>
                 </div>
                 <div class="card-body">
                     <div id="popularServicesChart"></div>
@@ -413,34 +573,42 @@
             </div>
         </div>
         <div class="col-xl-5 col-lg-7">
-            <div class="card luzori-panel">
+            <div class="card lz-panel">
                 <div class="card-header">
-                    <h5 class="luzori-panel-title">{{ __('field.most_revenue_trends') }}</h5>
+                    <h5 class="lz-panel-title">{{ __('field.most_revenue_trends') }}</h5>
                 </div>
-                    <div class="card-body">
+                <div class="card-body">
                     <div id="revenueTrendsChart"></div>
                 </div>
-                                </div>
-                            </div>
+            </div>
+        </div>
         <div class="col-xl-3 col-lg-12">
-            <div class="card luzori-panel">
+            <div class="card lz-panel">
                 <div class="card-header">
-                    <h5 class="luzori-panel-title">{{ __('field.earnings_per_week') }}</h5>
+                    <h5 class="lz-panel-title">{{ __('field.earnings_per_week') }}</h5>
                 </div>
                 <div class="card-body">
                     <div id="earningsWeekChart"></div>
-                    <div class="luzori-earnings-legend">
-                        <div class="luzori-earnings-legend-item">
-                            <span class="luzori-earnings-dot" style="background:#1e3a5f"></span>
-                            {{ __('api.outside_booking') }} ({{ $earningsWeek['outside_pct'] ?? 0 }}%)
-                        </div>
-                        <div class="luzori-earnings-legend-item">
-                            <span class="luzori-earnings-dot" style="background:#6ba3c7"></span>
-                            {{ __('api.inside_booking') }} ({{ $earningsWeek['inside_pct'] ?? 0 }}%)
+                    <div class="lz-earnings-legend">
+                        <div class="lz-earnings-legend-item">
+                            <div class="d-flex align-items-center justify-content-between gap-2">
+                                <span class="d-flex align-items-center gap-2">
+                                    <span class="lz-earnings-dot" style="background:#8a9a96"></span>
+                                    {{ __('api.outside_booking') }}
+                                </span>
+                                <span>{{ $earningsWeek['outside_pct'] ?? 0 }}%</span>
                             </div>
-                        <div class="luzori-earnings-legend-item">
-                            <span class="luzori-earnings-dot" style="background:#c5d0d8"></span>
-                            {{ __('field.total') }}
+                            <div class="lz-earnings-bar"><span style="width: {{ $earningsWeek['outside_pct'] ?? 0 }}%; background:#8a9a96"></span></div>
+                        </div>
+                        <div class="lz-earnings-legend-item">
+                            <div class="d-flex align-items-center justify-content-between gap-2">
+                                <span class="d-flex align-items-center gap-2">
+                                    <span class="lz-earnings-dot" style="background:#002b26"></span>
+                                    {{ __('api.inside_booking') }}
+                                </span>
+                                <span>{{ $earningsWeek['inside_pct'] ?? 0 }}%</span>
+                            </div>
+                            <div class="lz-earnings-bar"><span style="width: {{ $earningsWeek['inside_pct'] ?? 0 }}%"></span></div>
                         </div>
                     </div>
                 </div>
@@ -448,25 +616,25 @@
         </div>
     </div>
 
-    {{-- Latest Sales + Rating --}}
+    {{-- Latest Sales + Top Performers + Promo --}}
     <div class="row g-3 mb-4">
-        <div class="col-xl-8 col-lg-7">
-            <div class="card luzori-panel">
+        <div class="col-xl-8">
+            <div class="card lz-panel">
                 <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-                    <h5 class="luzori-panel-title">{{ __('field.latest_sales') }}</h5>
+                    <h5 class="lz-panel-title">{{ __('field.latest_sales') }}</h5>
                     <form method="POST" action="{{ route('center_user.cp') }}" class="d-flex gap-2 align-items-center mb-0">
                         @csrf
                         <button type="submit" name="period" value="day"
-                            class="luzori-filter-btn {{ $salesPeriod === 'day' ? 'active' : '' }}">{{ __('field.day') }}</button>
+                            class="lz-filter-btn {{ $salesPeriod === 'day' ? 'active' : '' }}">{{ __('field.day') }}</button>
                         <button type="submit" name="period" value="week"
-                            class="luzori-filter-btn {{ $salesPeriod === 'week' ? 'active' : '' }}">{{ __('field.week') }}</button>
+                            class="lz-filter-btn {{ $salesPeriod === 'week' ? 'active' : '' }}">{{ __('field.week') }}</button>
                         <button type="submit" name="period" value="month"
-                            class="luzori-filter-btn {{ $salesPeriod === 'month' ? 'active' : '' }}">{{ __('field.month') }}</button>
+                            class="lz-filter-btn {{ $salesPeriod === 'month' ? 'active' : '' }}">{{ __('field.month') }}</button>
                     </form>
-                            </div>
+                </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table luzori-sales-table mb-0">
+                        <table class="table lz-sales-table mb-0">
                             <thead>
                                 <tr>
                                     <th>{{ __('field.service') }}</th>
@@ -485,7 +653,7 @@
                                             <div class="service-cell">
                                                 <img src="{{ $sale['service_image'] }}" alt="" class="service-thumb">
                                                 <span>{{ $sale['service_name'] }}</span>
-                        </div>
+                                            </div>
                                         </td>
                                         <td>
                                             <div>{{ $sale['customer_name'] }}</div>
@@ -498,7 +666,7 @@
                                         <td>{{ ucfirst(str_replace('_', ' ', $sale['payment_type'])) }}</td>
                                         <td>{{ number_format($sale['total'], 2) }} {{ $currency }}</td>
                                         <td>
-                                            <span class="luzori-status-badge luzori-status-badge--{{ $sale['status'] === 'pending' ? 'pending' : 'confirmed' }}">
+                                            <span class="lz-status-badge lz-status-badge--{{ $sale['status'] === 'pending' ? 'pending' : 'confirmed' }}">
                                                 {{ ucfirst($sale['status']) }}
                                             </span>
                                         </td>
@@ -513,81 +681,59 @@
                     </div>
                 </div>
             </div>
-                            </div>
-        <div class="col-xl-4 col-lg-5">
-            <div class="card luzori-panel">
+        </div>
+
+        <div class="col-xl-4">
+            <div class="card lz-panel mb-3">
                 <div class="card-header">
-                    <h5 class="luzori-panel-title">{{ __('field.top_performers') }}</h5>
+                    <h5 class="lz-panel-title">{{ __('field.top_performers') }}</h5>
                     <p class="text-muted mb-0 mt-1" style="font-size:.78rem">{{ __('field.bookings_this_month') }}</p>
                 </div>
                 <div class="card-body">
-                    <div class="luzori-rating-bubbles">
-                        @foreach ($ratingStats as $index => $stat)
-                            <div class="luzori-rating-bubble luzori-rating-bubble--{{ $index + 1 }}"
-                                style="background: {{ $stat['color'] }}">
-                                <div>{{ $stat['pct'] }}%</div>
-                                <small>{{ Str::limit($stat['label'], 18) }}</small>
+                    @forelse ($ratingStats as $index => $stat)
+                        <div class="lz-performer-row">
+                            <div class="lz-rank">{{ $index + 1 }}</div>
+                            <div class="lz-performer-avatar">
+                                {{ mb_strtoupper(mb_substr($stat['label'] ?? 'N', 0, 1)) }}
                             </div>
-                        @endforeach
-                    </div>
+                            <div class="lz-performer-meta">
+                                <p class="lz-performer-name">{{ $stat['label'] }}</p>
+                                <p class="lz-performer-sub">{{ $stat['value'] }} {{ __('field.bookings_count') }} · {{ $stat['subtitle'] }}</p>
+                                <div class="lz-progress"><span style="width: {{ $stat['pct'] }}%"></span></div>
+                            </div>
+                        </div>
+                    @empty
+                        <p class="text-muted text-center py-4 mb-0">{{ __('general.no_data') }}</p>
+                    @endforelse
                 </div>
+            </div>
+
+            <div class="lz-promo">
+                <div class="lz-promo-eyebrow">{{ __('field.luxury_care') }}</div>
+                <h3 class="lz-promo-title">{{ __('field.more_bookings_more_growth') }}</h3>
+                <a href="{{ route('center_user.settings.index') }}" class="lz-promo-btn">
+                    {{ __('field.explore_features') }}
+                    <i class="ti ti-arrow-right"></i>
+                </a>
             </div>
         </div>
     </div>
+</div>
 
-    {{-- Top Performers Detail Cards --}}
-    <div class="row g-3 mb-2">
-        <div class="col-lg-4">
-            <div class="card luzori-performer-card">
-                <div class="card-header">
-                    <h5><i class="ti ti-award me-1"></i> {{ __('field.best_service') }}</h5>
-                    </div>
-                <div class="card-body text-center py-4">
-                    <h5 class="mb-1">{{ $statistics['best_service']['name'] }}</h5>
-                    <h3 class="fw-bold text-primary mb-0">{{ $statistics['best_service']['count'] }}</h3>
-                    <small class="text-muted">{{ __('field.bookings_this_month') }}</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-4">
-            <div class="card luzori-performer-card">
-                <div class="card-header">
-                    <h5><i class="ti ti-user-check me-1"></i> {{ __('field.best_worker') }}</h5>
-                    </div>
-                <div class="card-body text-center py-4">
-                    <h5 class="mb-1">{{ $statistics['best_worker']['name'] }}</h5>
-                    <h3 class="fw-bold text-primary mb-0">{{ $statistics['best_worker']['count'] }}</h3>
-                        <small class="text-muted">{{ __('field.bookings_this_month') }}</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-4">
-            <div class="card luzori-performer-card">
-                <div class="card-header">
-                    <h5><i class="ti ti-trending-up me-1"></i> {{ __('field.best_customer') }}</h5>
-                    </div>
-                <div class="card-body text-center py-4">
-                    <h5 class="mb-1">{{ $statistics['best_customer']['name'] }}</h5>
-                    <h3 class="fw-bold text-primary mb-0">{{ $statistics['best_customer']['count'] }}</h3>
-                        <small class="text-muted">{{ __('field.bookings_this_month') }}</small>
-                </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    @include('CenterUser.Components.detail-tables')
+@include('CenterUser.Components.detail-tables')
 @endsection
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const teal = '#0a4a44';
-    const chartMint = '#b8e4d4';
-    const peachFill = '#fde8d8';
+    const forest = '#002b26';
+    const gold = '#c5a070';
+    const sage = '#7d9b8f';
+    const tan = '#d4b483';
+    const cream = '#e8d5b5';
     const isDarkStyle = document.documentElement.classList.contains('dark-style');
-    const chartLabelColor = isDarkStyle ? '#e4e6e8' : '#384551';
+    const chartLabelColor = isDarkStyle ? '#e4e6e8' : '#3d4f4c';
 
     const popularServices = @json($popularServices);
     const revenueTrends = @json($revenueTrends);
@@ -595,15 +741,15 @@ document.addEventListener('DOMContentLoaded', function () {
     const currency = @json($currency);
 
     if (popularServices.length && document.querySelector('#popularServicesChart')) {
-        const maxCount = Math.max(...popularServices.map(s => s.count));
-        const barColors = popularServices.map(s => s.count === maxCount ? teal : chartMint);
+        const palette = [forest, sage, tan, cream, '#5f7a72', '#b8956a'];
+        const barColors = popularServices.map((_, i) => palette[i % palette.length]);
 
         new ApexCharts(document.querySelector('#popularServicesChart'), {
-            chart: { type: 'bar', height: 260, toolbar: { show: false } },
+            chart: { type: 'bar', height: 280, toolbar: { show: false }, fontFamily: 'DM Sans, Cairo, sans-serif' },
             plotOptions: {
                 bar: {
-                    borderRadius: 8,
-                    columnWidth: '48%',
+                    borderRadius: 10,
+                    columnWidth: '45%',
                     distributed: true
                 }
             },
@@ -612,10 +758,12 @@ document.addEventListener('DOMContentLoaded', function () {
             series: [{ name: '{{ __("field.services") }}', data: popularServices.map(s => s.count) }],
             xaxis: {
                 categories: popularServices.map(s => s.name),
-                labels: { style: { fontSize: '11px' }, rotate: -35 }
+                labels: { style: { fontSize: '11px', colors: chartLabelColor }, rotate: -30, trim: true },
+                axisBorder: { show: false },
+                axisTicks: { show: false }
             },
-            yaxis: { labels: { style: { fontSize: '11px' } } },
-            grid: { borderColor: '#eef2f1', strokeDashArray: 4 },
+            yaxis: { labels: { style: { fontSize: '11px', colors: chartLabelColor } } },
+            grid: { borderColor: '#f1ebe3', strokeDashArray: 4 },
             legend: { show: false },
             tooltip: { theme: 'light' }
         }).render();
@@ -625,18 +773,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (revenueTrends.length && document.querySelector('#revenueTrendsChart')) {
         new ApexCharts(document.querySelector('#revenueTrendsChart'), {
-            chart: { type: 'area', height: 260, toolbar: { show: false }, zoom: { enabled: false } },
-            colors: [teal],
+            chart: { type: 'area', height: 280, toolbar: { show: false }, zoom: { enabled: false }, fontFamily: 'DM Sans, Cairo, sans-serif' },
+            colors: [forest],
             fill: {
                 type: 'gradient',
                 gradient: {
                     shadeIntensity: 1,
-                    opacityFrom: .45,
+                    opacityFrom: .4,
                     opacityTo: .05,
                     stops: [0, 90, 100],
                     colorStops: [
-                        { offset: 0, color: peachFill, opacity: .8 },
-                        { offset: 100, color: peachFill, opacity: .1 }
+                        { offset: 0, color: '#7d9b8f', opacity: .45 },
+                        { offset: 100, color: '#f9f6f1', opacity: .05 }
                     ]
                 }
             },
@@ -645,16 +793,18 @@ document.addEventListener('DOMContentLoaded', function () {
             series: [{ name: '{{ __("field.today_revenue") }}', data: revenueTrends.map(r => r.revenue) }],
             xaxis: {
                 categories: revenueTrends.map(r => r.day),
-                labels: { style: { fontSize: '10px' } },
-                tickAmount: 10
+                labels: { style: { fontSize: '10px', colors: chartLabelColor } },
+                tickAmount: 10,
+                axisBorder: { show: false },
+                axisTicks: { show: false }
             },
             yaxis: {
                 labels: {
-                    style: { fontSize: '10px' },
+                    style: { fontSize: '10px', colors: chartLabelColor },
                     formatter: val => Math.round(val).toLocaleString()
                 }
             },
-            grid: { borderColor: '#eef2f1', strokeDashArray: 4 },
+            grid: { borderColor: '#f1ebe3', strokeDashArray: 4 },
             tooltip: {
                 y: { formatter: val => val.toLocaleString() + ' ' + currency }
             }
@@ -664,28 +814,46 @@ document.addEventListener('DOMContentLoaded', function () {
     if (document.querySelector('#earningsWeekChart')) {
         const insidePct = earningsWeek.inside_pct || 0;
         const outsidePct = earningsWeek.outside_pct || 0;
+        const totalLabel = '{{ __("field.total") }}';
 
         new ApexCharts(document.querySelector('#earningsWeekChart'), {
-            chart: { type: 'radialBar', height: 220, toolbar: { show: false } },
+            chart: { type: 'donut', height: 220, fontFamily: 'DM Sans, Cairo, sans-serif' },
+            series: [outsidePct || 0.001, insidePct || 0.001],
+            labels: ['{{ __("api.outside_booking") }}', '{{ __("api.inside_booking") }}'],
+            colors: ['#8a9a96', forest],
+            stroke: { width: 0 },
             plotOptions: {
-                radialBar: {
-                    hollow: { size: '30%' },
-                    track: { background: '#eef2f1', strokeWidth: '100%' },
-                    dataLabels: {
-                        name: { fontSize: '11px', color: chartLabelColor },
-                        value: { fontSize: '14px', fontWeight: 700, color: chartLabelColor },
-                        total: {
+                pie: {
+                    donut: {
+                        size: '72%',
+                        labels: {
                             show: true,
-                            label: '{{ __("field.total") }}',
-                            color: chartLabelColor,
-                            formatter: () => (earningsWeek.all || 0).toLocaleString() + ' ' + currency
+                            name: { show: true, fontSize: '12px', color: chartLabelColor, offsetY: 18 },
+                            value: {
+                                show: true,
+                                fontSize: '15px',
+                                fontWeight: 700,
+                                color: forest,
+                                offsetY: -12,
+                                formatter: () => (earningsWeek.all || 0).toLocaleString()
+                            },
+                            total: {
+                                show: true,
+                                showAlways: true,
+                                label: totalLabel,
+                                fontSize: '12px',
+                                color: chartLabelColor,
+                                formatter: () => (earningsWeek.all || 0).toLocaleString() + ' ' + currency
+                            }
                         }
                     }
                 }
             },
-            colors: ['#1e3a5f', '#6ba3c7', '#c5d0d8'],
-            labels: ['{{ __("api.outside_booking") }}', '{{ __("api.inside_booking") }}', '{{ __("field.total") }}'],
-            series: [outsidePct, insidePct, Math.min(100, outsidePct + insidePct)]
+            dataLabels: { enabled: false },
+            legend: { show: false },
+            tooltip: {
+                y: { formatter: val => val + '%' }
+            }
         }).render();
     }
 });

@@ -33,7 +33,9 @@ $contentLayout = (isset($container) ? (($container === 'container-xxl') ? "layou
   @include('layouts/sections/scriptsIncludes' . $isFront)
 </head>
 
-<body>
+<body @class([
+  'luzori-center' => !str_contains(url()->current(), 'admin') && (str_contains(url()->current(), 'center_user') || auth('center_user')->check()),
+])>
   
 
   <!-- Layout Content -->
