@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Datatables\CenterUser;
 
 use App\Enums\DeleteActionEnum;
@@ -14,7 +15,7 @@ class PaymentMethodDataTable extends DataTable
 {
     private $model = 'PaymentMethod';
     private $plural = 'payment_methods';
-    
+
     public function dataTable(QueryBuilder $query): EloquentDataTable
     {
         return (new EloquentDataTable($query))
@@ -28,96 +29,63 @@ class PaymentMethodDataTable extends DataTable
                     'operation' => DeleteActionEnum::FORCE_DELETE->value,
                     'with_trashed' => 1,
                 ];
-                $html = view()->make('_partials.center_actions', compact('id', 'route', 'options', 'model'))->render();
-                return $html;
+                return view()->make('_partials.center_action_icons', compact('id', 'route', 'options', 'model'))->render();
             })
             ->editColumn('types', function ($row) {
                 if (!$row->types || empty($row->types)) {
-                    return '<span class="badge bg-secondary">No types</span>';
+                    return '<span class="lz-type-badge is-default">—</span>';
                 }
-                
+
                 $badges = '';
                 foreach ($row->types as $type) {
-                    $badgeClass = match($type) {
-                        'booking' => 'bg-primary',
-                        'product' => 'bg-success', 
-                        'wallet' => 'bg-warning',
-                        'general' => 'bg-info',
-                        default => 'bg-secondary'
+                    $class = match ($type) {
+                        'booking' => 'is-booking',
+                        'product' => 'is-product',
+                        'wallet' => 'is-wallet',
+                        'general' => 'is-general',
+                        'tips' => 'is-tips',
+                        default => 'is-default',
                     };
-                    $badges .= '<span class="badge ' . $badgeClass . ' me-1">' . ucfirst($type) . '</span>';
+                    $badges .= '<span class="lz-type-badge ' . $class . '">' . e(ucfirst($type)) . '</span>';
                 }
                 return $badges;
             })
             ->editColumn('status', function ($row) {
-                    $checked = $row->status ? 'checked' : '';
-
-                    return '<label class="switch switch-square">
-                                <input onChange="updatePaymentMethodStatus(' . $row->id . ', this.checked)"
-                                    type="checkbox" class="switch-input"' . $checked . '>
-                                <span class="switch-toggle-slider">
-                                    <span class="switch-on"></span>
-                                    <span class="switch-off"></span>
-                                </span>
-                            </label>';
-                })
+                $checked = $row->status ? 'checked' : '';
+                return '<label class="switch switch-square" onclick="event.stopPropagation()">
+                            <input onChange="updatePaymentMethodStatus(' . $row->id . ', this.checked)"
+                                type="checkbox" class="switch-input"' . $checked . '>
+                            <span class="switch-toggle-slider">
+                                <span class="switch-on"></span>
+                                <span class="switch-off"></span>
+                            </span>
+                        </label>';
+            })
             ->editColumn('name', function ($row) {
                 return \App\Helpers\MyHelper::truncateWithReadMore($row->name ?? '');
             })
-            ->rawColumns(['types', 'status', 'name'], true)
+            ->rawColumns(['action', 'types', 'status', 'name'], true)
             ->setRowId('id');
     }
-
 
     public function query(PaymentMethod $model): QueryBuilder
     {
         return $model->query()->withTrashed()->orderBy($this->plural . '.id', 'DESC');
-    }   
+    }
 
     public function html(): HtmlBuilder
     {
-        $buttonClass = 'btn mx-1 mx-md-2 px-2 px-md-4 py-1 py-md-2 btn-sm';
+        $buttonClass = 'btn mx-1 px-3 py-2 btn-sm';
         $addRoute = route('center_user.' . $this->plural . '.create');
 
-        return $this->builder()
-            ->setTableId($this->plural . '-table')
-            ->addTableClass('dt-responsive')
-            ->columns($this->getColumns())
-            ->minifiedAjax()
-            ->orderBy(1)
-            ->responsive(true)
-            ->dom('
-                <"card-header border-bottom p-3 d-flex justify-content-between align-items-center"
-                    <"head-label"><"dt-action-buttons"B>
-                >
-                <"d-flex justify-content-between align-items-center mx-0 row"
-                    <"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"fr>
-                >
-                <"table-responsive"t>
-                <"d-flex justify-content-between mx-0 row"
-                    <"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>
-                >
-            ')
-            ->selectStyleSingle()
-            ->addAction(['printable' => false, 'exportable' => false, 'className' => 'dt-center', 'title' => __('general.actions')])
-            ->buttons([
-                Button::make('colvis')->addClass($buttonClass . ' btn-warning')->text(__('general.column_visibility')),
-                [
-                    'extend' => 'collection',
-                    'text' => __('general.export'),  'className' => $buttonClass,
-                    'buttons' => [
-                        'excel',
-                        'csv',
-                        'pdf',
-                        'print',
-                        'copy',
-                    ],
-                ],
-            ])
-            ->language($this->getDataTableLanguageUrl())
-            ->addTableClass('table table-bordered table-hover')
-            ->initComplete('function () {
-             $(".dt-action-buttons").append("<a href=' . $addRoute . ' class=\"btn btn-primary btn-sm mx-1 mx-md-2 px-2 px-md-3 py-1 py-md-2\">' . __('general.add_new') . '<i class=\"ti ti-plus\"></i></a>");
+        $canCreate = auth('center_user')->check() && auth('center_user')->user()->can('CREATE_PAYMENT_METHODS', 'center_api');
+
+        $initCompleteJs = 'function () {';
+        $initCompleteJs .= 'var $lzAct=$(".lz-page-actions").first();if(!$lzAct.length)$lzAct=$(".dt-action-buttons");';
+        if ($canCreate) {
+            $initCompleteJs .= '$lzAct.append("<a href=\'' . $addRoute . '\' class=\"btn btn-luzori-primary btn-sm mx-1 px-3 py-2\">' . __('general.add_new') . ' <i class=\"ti ti-plus\"></i></a>");';
+        }
+        $initCompleteJs .= '
              window.updatePaymentMethodStatus = function (id, status) {
                  $.ajax({
                      url: "' . route('center_user.payment_methods.changeStatus') . '",
@@ -129,35 +97,86 @@ class PaymentMethodDataTable extends DataTable
                          status: status ? 1 : 0
                      },
                      success: function () {
-                         $("#' . $this->plural . '-table").DataTable().ajax.reload(null, false);
+                         $("#payment_methods-table").DataTable().ajax.reload(null, false);
                      },
                      error: function () {
-                         $("#' . $this->plural . '-table").DataTable().ajax.reload(null, false);
+                         $("#payment_methods-table").DataTable().ajax.reload(null, false);
                          if (typeof fireMessage === "function") {
                              fireMessage("' . __('admin.ok') . '", "' . __('admin.an_error_occurred') . '", "", "error");
                          }
                      }
                  });
              };
-            }')
+            }';
+
+        return $this->builder()
+            ->setTableId($this->plural . '-table')
+            ->addTableClass('dt-responsive')
+            ->columns($this->getColumns())
+            ->minifiedAjax()
+            ->orderBy(1)
+            ->responsive([
+                'details' => [
+                    'type' => 'column',
+                    'target' => 0,
+                ],
+            ])
+            ->dom('
+                <"card-header border-bottom p-3 d-flex justify-content-between align-items-center"
+                    <"head-label"><"dt-action-buttons"B>
+                >
+                <"d-flex justify-content-between align-items-center mx-0 row px-1 pt-2"
+                    <"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"fr>
+                >
+                <"table-responsive"t>
+                <"d-flex justify-content-between mx-0 row px-1 pt-2"
+                    <"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>
+                >
+            ')
+            ->selectStyleSingle()
+            ->addAction([
+                'printable' => false,
+                'exportable' => false,
+                'responsivePriority' => 1,
+                'className' => 'dt-center lz-actions-col',
+                'title' => __('general.actions'),
+            ])
+            ->buttons([
+                Button::make('colvis')->addClass($buttonClass . ' btn-luzori-beige')->text(__('general.column_visibility')),
+                [
+                    'extend' => 'collection',
+                    'text' => __('general.export'),
+                    'className' => $buttonClass . ' btn-luzori-muted',
+                    'buttons' => [
+                        'excel',
+                        'csv',
+                        'pdf',
+                        'print',
+                        'copy',
+                    ],
+                ],
+            ])
+            ->language($this->getDataTableLanguageUrl())
+            ->addTableClass('table table-hover')
+            ->initComplete($initCompleteJs)
             ->parameters([]);
     }
 
     public function getDataTableLanguageUrl()
     {
         return app()->getLocale() == "ar" ?
-                asset('js/lang/ar_custom.json') :
-        "https://cdn.datatables.net/plug-ins/2.0.7/i18n/en-GB.json";
+            asset('js/lang/ar_custom.json') :
+            "https://cdn.datatables.net/plug-ins/2.0.7/i18n/en-GB.json";
     }
 
     public function getColumns(): array
     {
         return [
-            Column::make('id')->searchable(true)->title('#'),
-            Column::make('name')->searchable(true)->title(__('field.name')),
-            Column::computed('types')->searchable(false)->title(__('field.type')),
-            Column::computed('status')->searchable(false)->title(__('field.status')),
-            Column::make('created_at')->searchable(true)->title(__('field.created_at')),
+            Column::make('id')->searchable(true)->title('#')->responsivePriority(1)->addClass('dtr-control all'),
+            Column::make('name')->searchable(true)->title(__('field.name'))->responsivePriority(1)->addClass('all'),
+            Column::computed('types')->searchable(false)->title(__('field.type'))->responsivePriority(2)->addClass('all'),
+            Column::computed('status')->searchable(false)->title(__('field.status'))->responsivePriority(2)->addClass('all'),
+            Column::make('created_at')->searchable(true)->title(__('field.created_at'))->addClass('none'),
         ];
     }
 

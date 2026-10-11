@@ -11,6 +11,12 @@
             <i class="ti ti-pencil"></i>
         </a>
     @endisset
+    @isset($options['receive_url'])
+        <a class="lz-action-btn" href="{{ $options['receive_url'] }}"
+            title="{{ __('general.receive') }}">
+            <i class="ti ti-package-import"></i>
+        </a>
+    @endisset
     @isset($options['show'])
         <a class="lz-action-btn" href="{{ route($route . '.show', ['id' => $id]) }}"
             title="{{ __('general.show') }}">

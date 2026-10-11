@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Datatables\CenterUser;
 
 use App\Enums\DeleteActionEnum;
@@ -28,13 +29,12 @@ class ProductDataTable extends DataTable
                     'operation' => DeleteActionEnum::FORCE_DELETE->value,
                     'with_trashed' => 1,
                 ];
-                $html = view()->make('_partials.center_actions', compact('id', 'route', 'options', 'model'))->render();
-                return $html;
+                return view()->make('_partials.center_action_icons', compact('id', 'route', 'options', 'model'))->render();
             })
             ->editColumn('status', function ($row) {
                 $checked = $row->deleted_at ? '' : 'checked';
                 $operation = $row->deleted_at ? DeleteActionEnum::RESTORE_DELETED->value : DeleteActionEnum::SOFT_DELETE->value;
-                return '<label class="switch switch-square">
+                return '<label class="switch switch-square" onclick="event.stopPropagation()">
                             <input onChange="changeStatus(\'' . $this->model . '\',\'' . $row->id . '\',\'' . $operation . '\')"
                                 type="checkbox" class="switch-input"' . $checked . '>
                             <span class="switch-toggle-slider">
@@ -44,32 +44,31 @@ class ProductDataTable extends DataTable
                         </label>';
             })
             ->editColumn('image', function ($row) {
-                return '<img src="' . $row->image . '" style="width:75px;height:75px;" >';
+                return '<img src="' . e($row->image) . '" alt="">';
             })
             ->editColumn('skus', function ($row) {
                 $skus = $row->skus;
                 if ($skus && $skus->count() > 0) {
-                    $skuList = $skus->pluck('sku')->toArray();
-                    return '<div>' . implode('<br>', $skuList) . '</div>';
+                    return '<div>' . e(implode(', ', $skus->pluck('sku')->toArray())) . '</div>';
                 }
-                return '-';
+                return '—';
             })
             ->editColumn('productSuppliers', function ($row) {
                 $suppliers = $row->productSuppliers;
                 if ($suppliers && $suppliers->count() > 0) {
-                    return $suppliers->pluck('name')->join(', ');
+                    return e($suppliers->pluck('name')->join(', '));
                 }
-                return '-';
+                return '—';
             })
             ->editColumn('qty', function ($row) {
                 $branches = $row->productBranches;
                 if (!$branches || $branches->isEmpty()) {
-                    return '0';
+                    return '<span class="lz-qty-total">0</span>';
                 }
 
                 $total = (int) $branches->sum('stock_quantity');
                 if ($branches->count() === 1) {
-                    return (string) $total;
+                    return '<span class="lz-qty-total">' . $total . '</span>';
                 }
 
                 $details = $branches->map(function ($pb) {
@@ -77,12 +76,15 @@ class ProductDataTable extends DataTable
                     return e($name) . ': ' . (int) $pb->stock_quantity;
                 })->implode('<br>');
 
-                return '<div><strong>' . $total . '</strong><br><small class="text-muted">' . $details . '</small></div>';
+                return '<div><span class="lz-qty-total">' . $total . '</span><br><small class="text-muted">' . $details . '</small></div>';
             })
             ->editColumn('translation.name', function ($row) {
                 return \App\Helpers\MyHelper::truncateWithReadMore($row->translation->name ?? '');
             })
-            ->rawColumns(['image', 'status', 'skus', 'qty', 'translation.name'], true)
+            ->editColumn('translation.text', function ($row) {
+                return \App\Helpers\MyHelper::truncateWithReadMore($row->translation->text ?? '', 100);
+            })
+            ->rawColumns(['action', 'image', 'status', 'skus', 'qty', 'translation.name', 'translation.text'], true)
             ->setRowId('id');
     }
 
@@ -96,16 +98,14 @@ class ProductDataTable extends DataTable
 
     public function html(): HtmlBuilder
     {
-        $buttonClass = 'btn mx-1 mx-md-2 px-2 px-md-4 py-1 py-md-2 btn-sm';
+        $buttonClass = 'btn mx-1 px-3 py-2 btn-sm';
         $addRoute = route('center_user.' . $this->plural . '.create');
 
-        // Check if user has permission to create products
         $canCreate = auth('center_user')->check() && auth('center_user')->user()->can('CREATE_PRODUCTS', 'center_api');
-        
-        // Build initComplete JavaScript - conditionally include add button
+
         $initCompleteJs = 'function () {';
         if ($canCreate) {
-            $initCompleteJs .= '$(".dt-action-buttons").append("<a href=\'' . $addRoute . '\' class=\"btn btn-primary btn-sm mx-1 mx-md-2 px-2 px-md-3 py-1 py-md-2\">' . __('general.add_new') . '<i class=\"ti ti-plus\"></i></a>");';
+            $initCompleteJs .= 'var $lzAct=$(".lz-page-actions").first();if(!$lzAct.length)$lzAct=$(".dt-action-buttons");$lzAct.append("<a href=\'' . $addRoute . '\' class=\"btn btn-luzori-primary btn-sm mx-1 px-3 py-2\">' . __('general.add_new') . ' <i class=\"ti ti-plus\"></i></a>");';
         }
         $initCompleteJs .= '}';
 
@@ -115,26 +115,38 @@ class ProductDataTable extends DataTable
             ->columns($this->getColumns())
             ->minifiedAjax()
             ->orderBy(1)
-            ->responsive(true)
+            ->responsive([
+                'details' => [
+                    'type' => 'column',
+                    'target' => 0,
+                ],
+            ])
             ->dom('
                 <"card-header border-bottom p-3 d-flex justify-content-between align-items-center"
                     <"head-label"><"dt-action-buttons"B>
                 >
-                <"d-flex justify-content-between align-items-center mx-0 row"
+                <"d-flex justify-content-between align-items-center mx-0 row px-1 pt-2"
                     <"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"fr>
                 >
                 <"table-responsive"t>
-                <"d-flex justify-content-between mx-0 row"
+                <"d-flex justify-content-between mx-0 row px-1 pt-2"
                     <"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>
                 >
             ')
             ->selectStyleSingle()
-            ->addAction(['printable' => false, 'exportable' => false, 'className' => 'dt-center', 'title' => __('general.actions')])
+            ->addAction([
+                'printable' => false,
+                'exportable' => false,
+                'responsivePriority' => 1,
+                'className' => 'dt-center lz-actions-col',
+                'title' => __('general.actions'),
+            ])
             ->buttons([
-                Button::make('colvis')->addClass($buttonClass . ' btn-warning')->text(__('general.column_visibility')),
+                Button::make('colvis')->addClass($buttonClass . ' btn-luzori-beige')->text(__('general.column_visibility')),
                 [
                     'extend' => 'collection',
-                    'text' => __('general.export'),  'className' => $buttonClass,
+                    'text' => __('general.export'),
+                    'className' => $buttonClass . ' btn-luzori-muted',
                     'buttons' => [
                         'excel',
                         'csv',
@@ -145,7 +157,7 @@ class ProductDataTable extends DataTable
                 ],
             ])
             ->language($this->getDataTableLanguageUrl())
-            ->addTableClass('table table-bordered table-hover')
+            ->addTableClass('table table-hover')
             ->initComplete($initCompleteJs)
             ->parameters([]);
     }
@@ -153,26 +165,28 @@ class ProductDataTable extends DataTable
     public function getDataTableLanguageUrl()
     {
         return app()->getLocale() == "ar" ?
-        asset('js/lang/ar_custom.json') :
-        "https://cdn.datatables.net/plug-ins/2.0.7/i18n/en-GB.json";
+            asset('js/lang/ar_custom.json') :
+            "https://cdn.datatables.net/plug-ins/2.0.7/i18n/en-GB.json";
     }
 
     public function getColumns(): array
     {
         return [
-            Column::make('id')->searchable(true)->title('#'),
-            Column::make('created_at')->searchable(true)->title(__('field.created_at')),
-            Column::computed('translation.name')->searchable(true)->title(__('field.name')),
-            Column::computed('skus')->searchable(false)->title(__('field.sku')),
-            Column::computed('brand.name')->searchable(true)->title(__('field.brand')),
-            Column::computed('category.name')->searchable(true)->title(__('field.category')),
-            Column::computed('productSuppliers')->searchable(false)->title(__('field.suppliers')),
-            Column::computed('qty')->searchable(false)->title(__('field.quantity')),
-            Column::make('barcode')->searchable(true)->title(__('field.barcode')),
-            Column::make('supply_price')->searchable(true)->title(__('field.supply_price')),
-            Column::make('retail_price')->searchable(true)->title(__('field.retail_price')),
-            Column::computed('translation.text')->searchable(true)->title(__('field.description')),
-            Column::computed('image')->searchable(false)->title(__('field.image')),
+            Column::make('id')->searchable(true)->title('#')->responsivePriority(1)->addClass('dtr-control all'),
+            Column::computed('translation.name')->searchable(true)->title(__('field.name'))->responsivePriority(1)->addClass('all'),
+            Column::computed('skus')->searchable(false)->title(__('field.sku'))->responsivePriority(2)->addClass('all'),
+            Column::computed('brand.name')->searchable(true)->title(__('field.brand'))->responsivePriority(3)->addClass('all'),
+            Column::computed('category.name')->searchable(true)->title(__('field.category'))->responsivePriority(3)->addClass('all'),
+            Column::computed('qty')->searchable(false)->title(__('field.quantity'))->responsivePriority(2)->addClass('all'),
+            Column::computed('status')->searchable(false)->title(__('field.status'))->responsivePriority(2)->addClass('all'),
+            // Expandable details
+            Column::make('created_at')->searchable(true)->title(__('field.created_at'))->addClass('none'),
+            Column::computed('productSuppliers')->searchable(false)->title(__('field.suppliers'))->addClass('none'),
+            Column::make('barcode')->searchable(true)->title(__('field.barcode'))->addClass('none'),
+            Column::make('supply_price')->searchable(true)->title(__('field.supply_price'))->addClass('none'),
+            Column::make('retail_price')->searchable(true)->title(__('field.retail_price'))->addClass('none'),
+            Column::computed('translation.text')->searchable(true)->title(__('field.description'))->addClass('none'),
+            Column::computed('image')->searchable(false)->title(__('field.image'))->addClass('none'),
         ];
     }
 

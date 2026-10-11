@@ -18,6 +18,6 @@ class MainStockController extends Controller
         }
 
         $title = __('locale.' . $this->plural);
-        return $dataTable->render('CenterUser.SubViews.core-table', compact('title'));
+        return $dataTable->render('CenterUser.SubViews.MainStock.list', compact('title'));
     }
 }

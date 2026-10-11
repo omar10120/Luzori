@@ -24,55 +24,50 @@ class StockOrderDataTable extends DataTable
                 $id = $item->id;
                 $model = $this->model;
                 $options = [
-                    'edit' => false,
-                    'show' => false,
+                    'show' => true,
                     'delete' => true,
                     'operation' => DeleteActionEnum::FORCE_DELETE->value,
                     'with_trashed' => 1,
                 ];
 
-                $actions = '';
                 if ($item->status === 'ordered') {
-                    $actions .= '<a href="' . route('center_user.stockorders.receive', ['id' => $id]) . '" class="btn btn-sm btn-primary me-1" title="' . e(__('general.receive')) . '"><i class="ti ti-package-import"></i></a>';
+                    $options['receive_url'] = route('center_user.stockorders.receive', ['id' => $id]);
                 }
-                $actions .= '<a href="' . route('center_user.stockorders.show', ['id' => $id]) . '" class="btn btn-sm btn-success me-1" title="' . e(__('general.show')) . '"><i class="ti ti-eye"></i></a>';
 
-                $html = view()->make('_partials.center_actions', compact('id', 'route', 'options', 'model'))->render();
-                return $actions . $html;
+                return view()->make('_partials.center_action_icons', compact('id', 'route', 'options', 'model'))->render();
             })
             ->editColumn('order_number', function ($row) {
-                return e($row->order_number);
+                return '<span class="lz-order-num">' . e($row->order_number) . '</span>';
             })
             ->editColumn('expected_at', function ($row) {
                 if (!$row->expected_at) {
-                    return '-';
+                    return '—';
                 }
                 return $row->expected_at instanceof \Carbon\Carbon
                     ? $row->expected_at->format('Y-m-d')
                     : \Carbon\Carbon::parse($row->expected_at)->format('Y-m-d');
             })
             ->editColumn('deliver_from', function ($row) {
-                return e($row->deliver_from ?: ($row->supplier->name ?? '-'));
+                return e($row->deliver_from ?: ($row->supplier->name ?? '—'));
             })
             ->editColumn('branch_name', function ($row) {
                 $names = $row->branches->map(fn ($b) => $b->name)->filter()->values();
-                return $names->isEmpty() ? '-' : e($names->implode(', '));
+                return $names->isEmpty() ? '—' : e($names->implode(', '));
             })
             ->editColumn('total_cost', function ($row) {
-                return number_format((float) $row->total_cost, 2) . ' ' . get_currency();
+                return '<span class="lz-cost">' . number_format((float) $row->total_cost, 2) . ' ' . e(get_currency()) . '</span>';
             })
             ->editColumn('status', function ($row) {
-                $class = $row->status === 'received' ? 'bg-label-success' : 'bg-label-warning';
+                $class = $row->status === 'received' ? 'is-received' : 'is-ordered';
                 $label = $row->status === 'received'
                     ? __('field.received')
                     : __('field.ordered');
-                return '<span class="badge ' . $class . '">' . e($label) . '</span>';
+                return '<span class="lz-status-badge ' . $class . '">' . e($label) . '</span>';
             })
             ->editColumn('created_at', function ($row) {
-                // CreatedAtTrait already returns a formatted string
-                return $row->created_at ?: '-';
+                return $row->created_at ?: '—';
             })
-            ->rawColumns(['action', 'status'])
+            ->rawColumns(['action', 'status', 'order_number', 'total_cost'])
             ->setRowId('id');
     }
 
@@ -86,8 +81,17 @@ class StockOrderDataTable extends DataTable
 
     public function html(): HtmlBuilder
     {
-        $buttonClass = 'btn mx-1 mx-md-2 px-2 px-md-4 py-1 py-md-2 btn-sm';
+        $buttonClass = 'btn mx-1 px-3 py-2 btn-sm';
         $addRoute = route('center_user.' . $this->plural . '.create');
+
+        $canCreate = auth('center_user')->check() && auth('center_user')->user()->can('CREATE_STOCKORDERS', 'center_api');
+
+        $initCompleteJs = 'function () {';
+        $initCompleteJs .= 'var $lzAct=$(".lz-page-actions").first();if(!$lzAct.length)$lzAct=$(".dt-action-buttons");';
+        if ($canCreate) {
+            $initCompleteJs .= '$lzAct.append("<a href=\'' . $addRoute . '\' class=\"btn btn-luzori-primary btn-sm mx-1 px-3 py-2\">' . __('general.add_new') . ' <i class=\"ti ti-plus\"></i></a>");';
+        }
+        $initCompleteJs .= '}';
 
         return $this->builder()
             ->setTableId($this->plural . '-table')
@@ -95,27 +99,38 @@ class StockOrderDataTable extends DataTable
             ->columns($this->getColumns())
             ->minifiedAjax()
             ->orderBy(1)
-            ->responsive(true)
+            ->responsive([
+                'details' => [
+                    'type' => 'column',
+                    'target' => 0,
+                ],
+            ])
             ->dom('
                 <"card-header border-bottom p-3 d-flex justify-content-between align-items-center"
                     <"head-label"><"dt-action-buttons"B>
                 >
-                <"d-flex justify-content-between align-items-center mx-0 row"
+                <"d-flex justify-content-between align-items-center mx-0 row px-1 pt-2"
                     <"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"fr>
                 >
                 <"table-responsive"t>
-                <"d-flex justify-content-between mx-0 row"
+                <"d-flex justify-content-between mx-0 row px-1 pt-2"
                     <"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>
                 >
             ')
             ->selectStyleSingle()
-            ->addAction(['printable' => false, 'exportable' => false, 'className' => 'dt-center', 'title' => __('general.actions')])
+            ->addAction([
+                'printable' => false,
+                'exportable' => false,
+                'responsivePriority' => 1,
+                'className' => 'dt-center lz-actions-col',
+                'title' => __('general.actions'),
+            ])
             ->buttons([
-                Button::make('colvis')->addClass($buttonClass . ' btn-warning')->text(__('general.column_visibility')),
+                Button::make('colvis')->addClass($buttonClass . ' btn-luzori-beige')->text(__('general.column_visibility')),
                 [
                     'extend' => 'collection',
                     'text' => __('general.export'),
-                    'className' => $buttonClass,
+                    'className' => $buttonClass . ' btn-luzori-muted',
                     'buttons' => [
                         'excel',
                         'csv',
@@ -126,30 +141,28 @@ class StockOrderDataTable extends DataTable
                 ],
             ])
             ->language($this->getDataTableLanguageUrl())
-            ->addTableClass('table table-bordered table-hover')
-            ->initComplete('function () {
-                $(".dt-action-buttons").append("<a href=' . $addRoute . ' class=\"btn btn-primary mx-2\">' . __('general.add_new') . ' <i class=\"ti ti-plus\"></i></a>");
-            }')
+            ->addTableClass('table table-hover')
+            ->initComplete($initCompleteJs)
             ->parameters([]);
     }
 
     public function getDataTableLanguageUrl()
     {
         return app()->getLocale() == 'ar'
-            ? 'https://cdn.datatables.net/plug-ins/2.0.7/i18n/ar.json'
+            ? asset('js/lang/ar_custom.json')
             : 'https://cdn.datatables.net/plug-ins/2.0.7/i18n/en-GB.json';
     }
 
     public function getColumns(): array
     {
         return [
-            Column::make('order_number')->searchable(true)->title(__('field.order_number')),
-            Column::make('created_at')->searchable(true)->title(__('field.created')),
-            Column::make('expected_at')->searchable(false)->title(__('field.expected')),
-            Column::computed('branch_name')->searchable(false)->title(__('field.branch')),
-            Column::make('deliver_from')->searchable(true)->title(__('field.deliver_from')),
-            Column::make('total_cost')->searchable(false)->title(__('field.total_cost')),
-            Column::computed('status')->searchable(false)->title(__('field.status')),
+            Column::make('order_number')->searchable(true)->title(__('field.order_number'))->responsivePriority(1)->addClass('dtr-control all'),
+            Column::make('created_at')->searchable(true)->title(__('field.created'))->responsivePriority(2)->addClass('all'),
+            Column::make('expected_at')->searchable(false)->title(__('field.expected'))->responsivePriority(3)->addClass('all'),
+            Column::computed('branch_name')->searchable(false)->title(__('field.branch'))->responsivePriority(2)->addClass('all'),
+            Column::make('deliver_from')->searchable(true)->title(__('field.deliver_from'))->responsivePriority(3)->addClass('all'),
+            Column::make('total_cost')->searchable(false)->title(__('field.total_cost'))->responsivePriority(2)->addClass('all'),
+            Column::computed('status')->searchable(false)->title(__('field.status'))->responsivePriority(1)->addClass('all'),
         ];
     }
 
