@@ -28,13 +28,12 @@ class BranchDataTable extends DataTable
                     'operation' => DeleteActionEnum::FORCE_DELETE->value,
                     'with_trashed' => 1,
                 ];
-                $html = view()->make('_partials.center_actions', compact('id', 'route', 'options', 'model'))->render();
-                return $html;
+                return view()->make('_partials.center_action_icons', compact('id', 'route', 'options', 'model'))->render();
             })
             ->editColumn('status', function ($row) {
                 $checked = $row->deleted_at ? '' : 'checked';
                 $operation = $row->deleted_at ? DeleteActionEnum::RESTORE_DELETED->value : DeleteActionEnum::SOFT_DELETE->value;
-                return '<label class="switch switch-square">
+                return '<label class="switch switch-square" onclick="event.stopPropagation()">
                             <input onChange="changeStatus(\'' . $this->model . '\',\'' . $row->id . '\',\'' . $operation . '\')"
                                 type="checkbox" class="switch-input"' . $checked . '>
                             <span class="switch-toggle-slider">
@@ -52,7 +51,7 @@ class BranchDataTable extends DataTable
             ->editColumn('translation.address', function ($row) {
                 return \App\Helpers\MyHelper::truncateWithReadMore($row->translation->address ?? '', 100);
             })
-            ->rawColumns(['status', 'translation.name', 'translation.address'], true)
+            ->rawColumns(['action', 'status', 'translation.name', 'translation.address'], true)
             ->setRowId('id');
     }
 
@@ -66,10 +65,8 @@ class BranchDataTable extends DataTable
         $buttonClass = 'btn mx-1 px-3 py-2 btn-sm';
         $addRoute = route('center_user.' . $this->plural . '.create');
 
-        // Check if user has permission to create branches
         $canCreate = auth('center_user')->check() && auth('center_user')->user()->can('CREATE_BRANCHES', 'center_api');
         
-        // Build initComplete JavaScript - conditionally include add button
         $initCompleteJs = 'function () {';
         if ($canCreate) {
             $initCompleteJs .= '$(".dt-action-buttons").append("<a href=\'' . $addRoute . '\' class=\"btn btn-luzori-primary btn-sm mx-1 px-3 py-2\">' . __('general.add_new') . ' <i class=\"ti ti-plus\"></i></a>");';
@@ -82,7 +79,12 @@ class BranchDataTable extends DataTable
             ->columns($this->getColumns())
             ->minifiedAjax()
             ->orderBy(1)
-            ->responsive(true)
+            ->responsive([
+                'details' => [
+                    'type' => 'column',
+                    'target' => 0,
+                ],
+            ])
             ->dom('
                 <"card-header border-bottom p-3 d-flex justify-content-between align-items-center"
                     <"head-label"><"dt-action-buttons"B>
@@ -96,7 +98,13 @@ class BranchDataTable extends DataTable
                 >
             ')
             ->selectStyleSingle()
-            ->addAction(['printable' => false, 'exportable' => false, 'className' => 'dt-center', 'title' => __('general.actions')])
+            ->addAction([
+                'printable' => false,
+                'exportable' => false,
+                'responsivePriority' => 1,
+                'className' => 'dt-center lz-actions-col',
+                'title' => __('general.actions'),
+            ])
             ->buttons([
                 Button::make('colvis')->addClass($buttonClass . ' btn-luzori-beige')->text(__('general.column_visibility')),
                 [
@@ -128,12 +136,13 @@ class BranchDataTable extends DataTable
     public function getColumns(): array
     {
         return [
-            Column::make('id')->searchable(true)->title('#'),
-            Column::computed('translation.name')->searchable(true)->title(__('field.name')),
-            Column::computed('translation.city')->searchable(true)->title(__('field.city')),
-            Column::computed('translation.address')->searchable(true)->title(__('field.address')),
-            Column::computed('status')->searchable(false)->title(__('field.status')),
-            Column::make('created_at')->searchable(true)->title(__('field.created_at')),
+            Column::make('id')->searchable(true)->title('#')->responsivePriority(1)->addClass('dtr-control all'),
+            Column::computed('translation.name')->searchable(true)->title(__('field.name'))->responsivePriority(1)->addClass('all'),
+            Column::computed('translation.city')->searchable(true)->title(__('field.city'))->responsivePriority(2)->addClass('all'),
+            Column::computed('status')->searchable(false)->title(__('field.status'))->responsivePriority(2)->addClass('all'),
+            // Expandable details
+            Column::computed('translation.address')->searchable(true)->title(__('field.address'))->addClass('none'),
+            Column::make('created_at')->searchable(true)->title(__('field.created_at'))->addClass('none'),
         ];
     }
 

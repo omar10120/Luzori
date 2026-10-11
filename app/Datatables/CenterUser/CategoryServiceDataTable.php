@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Datatables\CenterUser;
 
 use App\Enums\DeleteActionEnum;
@@ -28,13 +29,12 @@ class CategoryServiceDataTable extends DataTable
                     'operation' => DeleteActionEnum::FORCE_DELETE->value,
                     'with_trashed' => 1,
                 ];
-                $html = view()->make('_partials.center_actions', compact('id', 'route', 'options', 'model'))->render();
-                return $html;
+                return view()->make('_partials.center_action_icons', compact('id', 'route', 'options', 'model'))->render();
             })
             ->editColumn('status', function ($row) {
                 $checked = $row->deleted_at ? '' : 'checked';
                 $operation = $row->deleted_at ? DeleteActionEnum::RESTORE_DELETED->value : DeleteActionEnum::SOFT_DELETE->value;
-                return '<label class="switch switch-square">
+                return '<label class="switch switch-square" onclick="event.stopPropagation()">
                             <input onChange="changeStatus(\'' . $this->model . '\',\'' . $row->id . '\',\'' . $operation . '\')"
                                 type="checkbox" class="switch-input"' . $checked . '>
                             <span class="switch-toggle-slider">
@@ -56,12 +56,16 @@ class CategoryServiceDataTable extends DataTable
                     $combinedName = trim($nameAr . ' , ' . $nameEn, ' , ');
                     return \App\Helpers\MyHelper::truncateWithReadMore($combinedName);
                 }
-                return '-';
+                return '—';
             })
             ->editColumn('translation.description', function ($row) {
                 return \App\Helpers\MyHelper::truncateWithReadMore($row->translation->description ?? '', 100);
             })
-            ->rawColumns(['status', 'translation.name', 'parent.name', 'translation.description'], true)
+            ->editColumn('translation.keywords', function ($row) {
+                $keywords = $row->translation->keywords ?? '';
+                return $keywords !== '' ? \App\Helpers\MyHelper::truncateWithReadMore($keywords) : '—';
+            })
+            ->rawColumns(['action', 'status', 'translation.name', 'parent.name', 'translation.description', 'translation.keywords'], true)
             ->setRowId('id');
     }
 
@@ -72,16 +76,14 @@ class CategoryServiceDataTable extends DataTable
 
     public function html(): HtmlBuilder
     {
-        $buttonClass = 'btn mx-1 mx-md-2 px-2 px-md-4 py-1 py-md-2 btn-sm';
+        $buttonClass = 'btn mx-1 px-3 py-2 btn-sm';
         $addRoute = route('center_user.' . $this->plural . '.create');
 
-        // Check if user has permission to create categories
         $canCreate = auth('center_user')->check() && auth('center_user')->user()->can('CREATE_CATEGORIES', 'center_api');
-        
-        // Build initComplete JavaScript - conditionally include add button
+
         $initCompleteJs = 'function () {';
         if ($canCreate) {
-            $initCompleteJs .= '$(".dt-action-buttons").append("<a href=\'' . $addRoute . '\' class=\"btn btn-primary btn-sm mx-1 mx-md-2 px-2 px-md-3 py-1 py-md-2\">' . __('general.add_new') . '<i class=\"ti ti-plus\"></i></a>");';
+            $initCompleteJs .= '$(".dt-action-buttons").append("<a href=\'' . $addRoute . '\' class=\"btn btn-luzori-primary btn-sm mx-1 px-3 py-2\">' . __('general.add_new') . ' <i class=\"ti ti-plus\"></i></a>");';
         }
         $initCompleteJs .= '}';
 
@@ -91,26 +93,38 @@ class CategoryServiceDataTable extends DataTable
             ->columns($this->getColumns())
             ->minifiedAjax()
             ->orderBy(1)
-            ->responsive(true)
+            ->responsive([
+                'details' => [
+                    'type' => 'column',
+                    'target' => 0,
+                ],
+            ])
             ->dom('
                 <"card-header border-bottom p-3 d-flex justify-content-between align-items-center"
                     <"head-label"><"dt-action-buttons"B>
                 >
-                <"d-flex justify-content-between align-items-center mx-0 row"
+                <"d-flex justify-content-between align-items-center mx-0 row px-1 pt-2"
                     <"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"fr>
                 >
                 <"table-responsive"t>
-                <"d-flex justify-content-between mx-0 row"
+                <"d-flex justify-content-between mx-0 row px-1 pt-2"
                     <"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>
                 >
             ')
             ->selectStyleSingle()
-            ->addAction(['printable' => false, 'exportable' => false, 'className' => 'dt-center', 'title' => __('general.actions')])
+            ->addAction([
+                'printable' => false,
+                'exportable' => false,
+                'responsivePriority' => 1,
+                'className' => 'dt-center lz-actions-col',
+                'title' => __('general.actions'),
+            ])
             ->buttons([
-                Button::make('colvis')->addClass($buttonClass . ' btn-warning')->text(__('general.column_visibility')),
+                Button::make('colvis')->addClass($buttonClass . ' btn-luzori-beige')->text(__('general.column_visibility')),
                 [
                     'extend' => 'collection',
-                    'text' => __('general.export'),  'className' => $buttonClass,
+                    'text' => __('general.export'),
+                    'className' => $buttonClass . ' btn-luzori-muted',
                     'buttons' => [
                         'excel',
                         'csv',
@@ -121,7 +135,7 @@ class CategoryServiceDataTable extends DataTable
                 ],
             ])
             ->language($this->getDataTableLanguageUrl())
-            ->addTableClass('table table-bordered table-hover')
+            ->addTableClass('table table-hover')
             ->initComplete($initCompleteJs)
             ->parameters([]);
     }
@@ -129,20 +143,21 @@ class CategoryServiceDataTable extends DataTable
     public function getDataTableLanguageUrl()
     {
         return app()->getLocale() == "ar" ?
-        asset('js/lang/ar_custom.json') :
-        "https://cdn.datatables.net/plug-ins/2.0.7/i18n/en-GB.json";
+            asset('js/lang/ar_custom.json') :
+            "https://cdn.datatables.net/plug-ins/2.0.7/i18n/en-GB.json";
     }
 
     public function getColumns(): array
     {
         return [
-            Column::make('id')->searchable(true)->title('#'),
-            Column::computed('translation.name')->searchable(true)->title(__('field.name')),
-            Column::computed('parent.name')->searchable(false)->title(__('field.parent_category')),
-            Column::computed('translation.description')->searchable(true)->title(__('field.description')),
-            Column::computed('translation.keywords')->searchable(true)->title(__('field.keywords')),
-            Column::computed('status')->searchable(false)->title(__('field.status')),
-            Column::make('created_at')->searchable(true)->title(__('field.created_at')),
+            Column::make('id')->searchable(true)->title('#')->responsivePriority(1)->addClass('dtr-control all'),
+            Column::computed('translation.name')->searchable(true)->title(__('field.name'))->responsivePriority(1)->addClass('all'),
+            Column::computed('parent.name')->searchable(false)->title(__('field.parent_category'))->responsivePriority(2)->addClass('all'),
+            Column::computed('status')->searchable(false)->title(__('field.status'))->responsivePriority(2)->addClass('all'),
+            // Expandable details
+            Column::computed('translation.description')->searchable(true)->title(__('field.description'))->addClass('none'),
+            Column::computed('translation.keywords')->searchable(true)->title(__('field.keywords'))->addClass('none'),
+            Column::make('created_at')->searchable(true)->title(__('field.created_at'))->addClass('none'),
         ];
     }
 

@@ -21,6 +21,14 @@ body.luzori-center {
   --lz-font-display: 'Cormorant Garamond', Georgia, serif;
   --lz-font-body: 'DM Sans', 'Cairo', sans-serif;
 
+  /* Remap theme / Bootstrap primary (blue/purple) → Luzori forest */
+  --bs-primary: #002b26;
+  --bs-primary-rgb: 0, 43, 38;
+  --bs-link-color: #0a3a34;
+  --bs-link-hover-color: #002b26;
+  --primary: #002b26;
+  --primary-rgb: 0, 43, 38;
+
   font-family: var(--lz-font-body);
   background: var(--lz-cream) !important;
 }
@@ -56,54 +64,103 @@ body.luzori-center .bg-menu-theme {
   position: relative;
 }
 
-body.luzori-center .layout-menu .app-brand {
+body.luzori-center .layout-menu .app-brand.demo,
+body.luzori-center .light-style .menu .app-brand.demo,
+body.luzori-center.light-style .menu .app-brand.demo,
+html.light-style body.luzori-center .menu .app-brand.demo {
+  height: auto !important;
+  min-height: 110px;
   background: transparent;
-  padding: 1.75rem 1.25rem 1.25rem;
+  padding: 1.35rem 1rem 0.85rem !important;
   justify-content: center;
+  align-items: center;
+  overflow: visible !important;
+}
+
+body.luzori-center .layout-menu .app-brand .layout-menu-toggle {
+  position: absolute;
+  inset-inline-end: 0.35rem;
+  top: 0.55rem;
 }
 
 body.luzori-center .layout-menu .app-brand-logo.demo,
 body.luzori-center .layout-menu .luzori-brand-logo {
-  width: 138px;
-  height: auto;
-  display: flex;
+  width: 150px !important;
+  height: auto !important;
+  max-height: none !important;
+  display: flex !important;
   align-items: center;
   justify-content: center;
+  overflow: visible !important;
 }
 
 body.luzori-center .layout-menu .app-brand-logo.demo svg {
-  width: 120px;
+  width: 140px;
   height: auto;
 }
 
 body.luzori-center .layout-menu .luzori-sidebar-logo {
-  width: 138px;
-  height: auto;
+  width: 168px !important;
+  height: auto !important;
   max-width: 100%;
   object-fit: contain;
-  display: block;
+  display: block !important;
   filter: none !important;
+  -webkit-filter: none !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  mix-blend-mode: normal;
 }
 
 body.luzori-center .layout-menu .menu-inner-shadow {
   display: none;
 }
 
+/* No sidebar scroll */
+body.luzori-center .layout-menu,
+body.luzori-center .layout-menu.menu-vertical,
+body.luzori-center #layout-menu,
+body.luzori-center .layout-menu .menu-inner,
+body.luzori-center .layout-menu .ps,
+body.luzori-center .layout-menu .ps__rail-y,
+body.luzori-center .layout-menu .ps__rail-x {
+  overflow: hidden !important;
+}
+
 body.luzori-center .layout-menu .menu-inner {
-  padding: 0.5rem 0.85rem 5.5rem !important;
+  padding: 0.35rem 0.75rem 5rem !important;
+  overflow: hidden !important;
+  height: auto !important;
+  max-height: none !important;
+}
+
+body.luzori-center .layout-menu .ps__rail-y,
+body.luzori-center .layout-menu .ps__rail-x,
+body.luzori-center .layout-menu .ps__thumb-y,
+body.luzori-center .layout-menu .ps__thumb-x {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
 }
 
 body.luzori-center .layout-menu .menu-item {
-  margin-bottom: 0.2rem;
+  margin-bottom: 0.12rem;
 }
 
+/* One horizontal alignment: icon | label | chevron */
 body.luzori-center .layout-menu .menu-link {
-  color: rgba(255, 245, 230, 0.72) !important;
+  display: flex !important;
+  align-items: center !important;
+  color: rgba(255, 245, 230, 0.78) !important;
   border-radius: 999px !important;
-  padding: 0.7rem 1rem !important;
-  font-size: 0.82rem !important;
+  padding: 0.55rem 0.85rem !important;
+  font-size: 0.78rem !important;
   font-weight: 500;
   letter-spacing: 0.01em;
+  gap: 0.65rem !important;
+  min-height: 2.35rem;
+  background: transparent !important;
+  box-shadow: none !important;
   transition: background 0.2s ease, color 0.2s ease;
 }
 
@@ -112,51 +169,178 @@ body.luzori-center .layout-menu .menu-link:hover {
   color: #fff8ee !important;
 }
 
-body.luzori-center .layout-menu .menu-item.active > .menu-link {
+/* Icon column fixed width for straight alignment */
+body.luzori-center .layout-menu .menu-icon,
+body.luzori-center .layout-menu .menu-link > i.menu-icon {
+  width: 1.4rem !important;
+  min-width: 1.4rem !important;
+  height: 1.4rem !important;
+  margin: 0 !important;
+  flex-shrink: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 1.15rem !important;
+  color: rgba(255, 214, 168, 0.8) !important;
+}
+
+body.luzori-center .layout-menu .menu-link > .lz-menu-icon-wrap,
+body.luzori-center .layout-menu .menu-link > div[style*='padding'] {
+  padding: 0 !important;
+  width: 1.4rem !important;
+  min-width: 1.4rem !important;
+  height: 1.4rem !important;
+  margin: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+}
+
+body.luzori-center .layout-menu .menu-link > .lz-menu-icon-wrap img,
+body.luzori-center .layout-menu .menu-link > div[style*='padding'] img,
+body.luzori-center .layout-menu .menu-link img:not(.luzori-sidebar-logo) {
+  width: 1.15rem !important;
+  height: 1.15rem !important;
+  margin: 0 !important;
+  filter: brightness(0) saturate(100%) invert(88%) sepia(18%) saturate(450%) hue-rotate(345deg);
+  opacity: 0.95;
+}
+
+/* Label takes remaining space, stays on one line with icon + chevron */
+body.luzori-center .layout-menu .menu-link > div:not(.lz-menu-icon-wrap):not(.badge) {
+  flex: 1 1 auto !important;
+  min-width: 0;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: block;
+  align-self: center;
+}
+
+body.luzori-center .layout-menu .menu-toggle::after {
+  position: static !important;
+  top: auto !important;
+  inset: auto !important;
+  margin: 0 0 0 auto !important;
+  transform: rotate(45deg) !important;
+  flex-shrink: 0;
+  color: rgba(255, 214, 168, 0.55) !important;
+  inline-size: 0.45rem;
+  block-size: 0.45rem;
+  width: 0.45rem !important;
+  height: 0.45rem !important;
+  display: inline-block !important;
+  align-self: center;
+}
+
+body.luzori-center .layout-menu .menu-item.open:not(.menu-item-closing) > .menu-toggle::after {
+  transform: rotate(135deg) !important;
+}
+
+html[dir='rtl'] body.luzori-center .layout-menu .menu-toggle::after {
+  margin: 0 auto 0 0 !important;
+  transform: rotate(-45deg) !important;
+}
+
+html[dir='rtl'] body.luzori-center .layout-menu .menu-item.open:not(.menu-item-closing) > .menu-toggle::after {
+  transform: rotate(-135deg) !important;
+}
+
+/* Expanded / parent toggle: keep open, NEVER white (override theme-default) */
+body.luzori-center .bg-menu-theme .menu-inner .menu-item.open > .menu-link.menu-toggle,
+body.luzori-center .bg-menu-theme .menu-inner .menu-item.active > .menu-link.menu-toggle,
+body.luzori-center .bg-menu-theme .menu-inner .menu-item.open.active > .menu-link.menu-toggle,
+body.luzori-center .layout-menu .menu-item.open > .menu-link,
+body.luzori-center .layout-menu .menu-item.open > .menu-link.menu-toggle,
+body.luzori-center .layout-menu .menu-item.active.open > .menu-link.menu-toggle,
+body.luzori-center .layout-menu .menu-item.active > .menu-link.menu-toggle,
+html:not(.layout-menu-collapsed) body.luzori-center .bg-menu-theme .menu-inner .menu-item.open > .menu-link.menu-toggle,
+html:not(.layout-menu-collapsed) body.luzori-center .bg-menu-theme .menu-inner .menu-item.active > .menu-link.menu-toggle {
+  background: rgba(255, 214, 168, 0.1) !important;
+  background-image: none !important;
+  color: #fff8ee !important;
+  font-weight: 600;
+  box-shadow: none !important;
+}
+
+body.luzori-center .layout-menu .menu-item.open > .menu-link .menu-icon,
+body.luzori-center .layout-menu .menu-item.open > .menu-link i,
+body.luzori-center .layout-menu .menu-item.active.open > .menu-link.menu-toggle .menu-icon,
+body.luzori-center .layout-menu .menu-item.active > .menu-link.menu-toggle i,
+body.luzori-center .bg-menu-theme .menu-inner .menu-item.open > .menu-link.menu-toggle i,
+body.luzori-center .bg-menu-theme .menu-inner .menu-item.active > .menu-link.menu-toggle i {
+  color: rgba(255, 214, 168, 0.9) !important;
+}
+
+body.luzori-center .layout-menu .menu-item.open > .menu-link img:not(.luzori-sidebar-logo),
+body.luzori-center .layout-menu .menu-item.active > .menu-link.menu-toggle img:not(.luzori-sidebar-logo),
+body.luzori-center .bg-menu-theme .menu-inner .menu-item.open > .menu-link.menu-toggle img:not(.luzori-sidebar-logo),
+body.luzori-center .bg-menu-theme .menu-inner .menu-item.active > .menu-link.menu-toggle img:not(.luzori-sidebar-logo) {
+  filter: brightness(0) saturate(100%) invert(88%) sepia(18%) saturate(450%) hue-rotate(345deg) !important;
+  opacity: 1;
+}
+
+/* Only leaf items (no submenu toggle) get the gold active pill */
+body.luzori-center .layout-menu .menu-item.active > .menu-link:not(.menu-toggle) {
   background: linear-gradient(90deg, #d4b483 0%, #e8d5b5 55%, #f3e6cf 100%) !important;
   color: var(--lz-forest) !important;
   font-weight: 600;
   box-shadow: 0 4px 14px rgba(197, 160, 112, 0.35);
 }
 
-body.luzori-center .layout-menu .menu-item.active > .menu-link .menu-icon,
-body.luzori-center .layout-menu .menu-item.active > .menu-link i {
+body.luzori-center .layout-menu .menu-item.active > .menu-link:not(.menu-toggle) .menu-icon,
+body.luzori-center .layout-menu .menu-item.active > .menu-link:not(.menu-toggle) i {
   color: var(--lz-forest) !important;
 }
 
-body.luzori-center .layout-menu .menu-icon,
-body.luzori-center .layout-menu .menu-link i {
-  color: rgba(255, 214, 168, 0.75) !important;
-}
-
-body.luzori-center .layout-menu .menu-link img:not(.luzori-sidebar-logo) {
-  filter: brightness(0) saturate(100%) invert(88%) sepia(18%) saturate(450%) hue-rotate(345deg);
-  opacity: 0.9;
-}
-
-body.luzori-center .layout-menu .menu-item.active > .menu-link img:not(.luzori-sidebar-logo) {
-  filter: brightness(0) saturate(100%);
+body.luzori-center .layout-menu .menu-item.active > .menu-link:not(.menu-toggle) img:not(.luzori-sidebar-logo) {
+  filter: brightness(0) saturate(100%) !important;
   opacity: 0.85;
 }
 
-body.luzori-center .layout-menu .menu-link {
-  gap: 0.15rem;
+/* Submenu panel */
+body.luzori-center .layout-menu .menu-sub {
+  background: transparent !important;
+  padding: 0.15rem 0 0.25rem 0.35rem !important;
+  margin: 0 !important;
+  box-shadow: none !important;
 }
 
-body.luzori-center .layout-menu .menu-icon {
-  font-size: 1.2rem !important;
+body.luzori-center .layout-menu .menu-sub .menu-link {
+  color: rgba(255, 245, 230, 0.65) !important;
+  background: transparent !important;
+  padding: 0.45rem 0.85rem !important;
+  min-height: 2.1rem;
+  box-shadow: none !important;
+}
+
+body.luzori-center .bg-menu-theme.menu-vertical .menu-sub > .menu-item > .menu-link::before {
+  display: none !important;
+  content: none !important;
+}
+
+body.luzori-center .layout-menu .menu-sub .menu-item.active > .menu-link {
+  background: linear-gradient(90deg, #d4b483 0%, #e8d5b5 55%, #f3e6cf 100%) !important;
+  color: var(--lz-forest) !important;
+  font-weight: 600;
+  box-shadow: 0 4px 14px rgba(197, 160, 112, 0.3);
+}
+
+body.luzori-center .layout-menu .menu-sub .menu-item.active > .menu-link .menu-icon,
+body.luzori-center .layout-menu .menu-sub .menu-item.active > .menu-link i {
+  color: var(--lz-forest) !important;
+}
+
+body.luzori-center .layout-menu .menu-sub .menu-item.active > .menu-link img:not(.luzori-sidebar-logo) {
+  filter: brightness(0) saturate(100%) !important;
 }
 
 body.luzori-center .layout-menu .menu-header-text {
   color: rgba(255, 214, 168, 0.45) !important;
-}
-
-body.luzori-center .layout-menu .menu-sub .menu-link {
-  color: rgba(255, 245, 230, 0.6) !important;
-}
-
-body.luzori-center .layout-menu .menu-toggle::after {
-  color: rgba(255, 214, 168, 0.55) !important;
 }
 
 body.luzori-center .layout-menu .layout-menu-toggle i {
@@ -166,6 +350,7 @@ body.luzori-center .layout-menu .layout-menu-toggle i {
 body.luzori-center .layout-menu .badge {
   background: #e25555 !important;
   color: #fff !important;
+  margin-inline-start: 0.25rem;
 }
 
 body.luzori-center .luzori-menu-footer {
@@ -173,9 +358,11 @@ body.luzori-center .luzori-menu-footer {
   left: 0;
   right: 0;
   bottom: 0;
-  padding: 1rem 1.25rem 1.35rem;
+  padding: 1rem 1.25rem 1.5rem;
   pointer-events: none;
   overflow: hidden;
+  z-index: 2;
+  background: linear-gradient(180deg, transparent 0%, rgba(0, 43, 38, 0.92) 35%, #002b26 100%);
 }
 
 body.luzori-center .luzori-menu-footer::before {
@@ -478,8 +665,21 @@ body.luzori-center .lz-table-card .dataTables_wrapper .dataTables_paginate .pagi
   border-radius: 8px !important;
 }
 
-body.luzori-center .lz-table-card .switch-input:checked ~ .switch-toggle-slider {
+body.luzori-center .lz-table-card .switch-input:checked ~ .switch-toggle-slider,
+body.luzori-center .switch .switch-input:checked ~ .switch-toggle-slider,
+body.luzori-center .switch-primary .switch-input:checked ~ .switch-toggle-slider {
   background: #1a6b5a !important;
+  border-color: #1a6b5a !important;
+  box-shadow: none !important;
+}
+
+body.luzori-center .switch .switch-toggle-slider {
+  border-radius: 999px !important;
+}
+
+body.luzori-center .switch .switch-input:checked ~ .switch-toggle-slider::after,
+body.luzori-center .switch .switch-input:checked ~ .switch-toggle-slider .switch-on {
+  color: #fff !important;
 }
 
 /* ---------- Forms ---------- */
@@ -636,6 +836,12 @@ body.luzori-center table.dataTable.dtr-column > tbody > tr > td.dtr-control {
 
 body.luzori-center table.dataTable > tbody > tr.child {
   cursor: default;
+  background: #fff !important;
+}
+
+body.luzori-center table.dataTable > tbody > tr.child > td {
+  background: #fff !important;
+  box-shadow: none !important;
 }
 
 body.luzori-center table.dataTable > tbody > tr.child ul.dtr-details {
@@ -646,4 +852,184 @@ body.luzori-center table.dataTable > tbody > tr.child span.dtr-title {
   color: var(--lz-forest);
   font-weight: 700;
   min-width: 140px;
+}
+
+/* Expanded / selected DataTable rows — no theme blue */
+body.luzori-center table.dataTable > tbody > tr.parent,
+body.luzori-center table.dataTable > tbody > tr.parent > *,
+body.luzori-center table.dataTable > tbody > tr.selected,
+body.luzori-center table.dataTable > tbody > tr.selected > *,
+body.luzori-center table.dataTable.stripe > tbody > tr.parent,
+body.luzori-center table.dataTable.display > tbody > tr.parent,
+body.luzori-center table.dataTable.hover > tbody > tr.parent:hover,
+body.luzori-center table.dataTable.display > tbody > tr.parent:hover,
+body.luzori-center .table-primary,
+body.luzori-center .table-primary > th,
+body.luzori-center .table-primary > td,
+body.luzori-center tr.table-primary,
+body.luzori-center tr.table-primary > th,
+body.luzori-center tr.table-primary > td {
+  background-color: #efe6d8 !important;
+  background: #efe6d8 !important;
+  color: var(--lz-forest) !important;
+  box-shadow: none !important;
+  --bs-table-bg: #efe6d8;
+  --bs-table-color: #002b26;
+  --bs-table-striped-bg: #ebe2d2;
+  --bs-table-hover-bg: #e8dccb;
+  --bs-table-border-color: #e5ddd2;
+}
+
+body.luzori-center table.dataTable > tbody > tr.parent > td,
+body.luzori-center table.dataTable > tbody > tr.parent > th,
+body.luzori-center table.dataTable > tbody > tr.selected > td,
+body.luzori-center table.dataTable > tbody > tr.selected > th {
+  background-color: #efe6d8 !important;
+  color: var(--lz-forest) !important;
+  box-shadow: inset 0 0 0 9999px #efe6d8 !important;
+  border-color: #e5ddd2 !important;
+}
+
+body.luzori-center table.dataTable.hover > tbody > tr:hover > *,
+body.luzori-center table.dataTable.display > tbody > tr:hover > *,
+body.luzori-center .lz-table-card table tbody tr:hover > td {
+  background-color: #f7f2ea !important;
+  box-shadow: inset 0 0 0 9999px #f7f2ea !important;
+  color: var(--lz-text) !important;
+}
+
+/* ---------- Global primary remap (replace blue/purple accents) ---------- */
+body.luzori-center .btn-primary,
+body.luzori-center .btn-primary:focus,
+body.luzori-center .btn-primary:active,
+body.luzori-center .btn-primary.active,
+body.luzori-center .btn-primary.show {
+  background-color: var(--lz-forest) !important;
+  border-color: var(--lz-forest) !important;
+  color: #fff !important;
+  box-shadow: none !important;
+}
+
+body.luzori-center .btn-primary:hover {
+  background-color: var(--lz-forest-soft) !important;
+  border-color: var(--lz-forest-soft) !important;
+  color: #fff !important;
+}
+
+body.luzori-center .btn-outline-primary {
+  color: var(--lz-forest) !important;
+  border-color: var(--lz-forest) !important;
+  background: transparent !important;
+}
+
+body.luzori-center .btn-outline-primary:hover,
+body.luzori-center .btn-outline-primary.active,
+body.luzori-center .btn-outline-primary:active,
+body.luzori-center .btn-check:checked + .btn-outline-primary {
+  background-color: var(--lz-forest) !important;
+  border-color: var(--lz-forest) !important;
+  color: #fff !important;
+}
+
+body.luzori-center .bg-primary,
+body.luzori-center .badge.bg-primary,
+body.luzori-center .alert-primary {
+  background-color: var(--lz-forest) !important;
+  border-color: var(--lz-forest) !important;
+  color: #fff !important;
+}
+
+body.luzori-center .text-primary,
+body.luzori-center a.text-primary,
+body.luzori-center .link-primary {
+  color: var(--lz-forest) !important;
+}
+
+body.luzori-center .border-primary {
+  border-color: var(--lz-forest) !important;
+}
+
+body.luzori-center .form-check-input:checked {
+  background-color: var(--lz-forest) !important;
+  border-color: var(--lz-forest) !important;
+}
+
+body.luzori-center .form-check-input:focus,
+body.luzori-center .form-control:focus,
+body.luzori-center .form-select:focus {
+  border-color: var(--lz-gold) !important;
+  box-shadow: 0 0 0 0.2rem rgba(197, 160, 112, 0.22) !important;
+}
+
+body.luzori-center .nav-pills .nav-link.active,
+body.luzori-center .nav-tabs .nav-link.active {
+  background-color: var(--lz-forest) !important;
+  color: #fff !important;
+  border-color: var(--lz-forest) !important;
+}
+
+body.luzori-center .page-item.active .page-link,
+body.luzori-center .pagination .page-item.active .page-link {
+  background-color: var(--lz-forest) !important;
+  border-color: var(--lz-forest) !important;
+  color: #fff !important;
+}
+
+body.luzori-center .page-link {
+  color: var(--lz-forest);
+}
+
+body.luzori-center .page-link:hover {
+  color: var(--lz-forest-soft);
+}
+
+body.luzori-center .progress-bar {
+  background-color: var(--lz-forest) !important;
+}
+
+body.luzori-center .spinner-border.text-primary,
+body.luzori-center .spinner-grow.text-primary {
+  color: var(--lz-forest) !important;
+  border-color: currentColor transparent currentColor currentColor !important;
+}
+
+body.luzori-center .form-range::-webkit-slider-thumb {
+  background: var(--lz-forest) !important;
+}
+
+body.luzori-center .form-range::-moz-range-thumb {
+  background: var(--lz-forest) !important;
+}
+
+/* Vuexy default primary (#696cff) leftovers */
+body.luzori-center .bg-label-primary {
+  background-color: rgba(0, 43, 38, 0.1) !important;
+  color: var(--lz-forest) !important;
+}
+
+body.luzori-center .dropdown-item.active,
+body.luzori-center .dropdown-item:active {
+  background-color: var(--lz-forest) !important;
+  color: #fff !important;
+}
+
+body.luzori-center .list-group-item.active {
+  background-color: var(--lz-forest) !important;
+  border-color: var(--lz-forest) !important;
+}
+
+body.luzori-center .custom-option.checked,
+body.luzori-center .form-check-input[type='checkbox']:checked {
+  border-color: var(--lz-forest) !important;
+}
+
+body.luzori-center .switch-input:checked ~ .switch-toggle-slider {
+  background: var(--lz-mint-text) !important;
+}
+
+/* Floating customizer / leftover purple accents on center */
+body.luzori-center .buy-now .btn-buy-now,
+body.luzori-center .template-customizer-open-btn {
+  background: var(--lz-forest) !important;
+  border-color: var(--lz-forest) !important;
 }

@@ -341,7 +341,7 @@
                         <div class="avatar avatar-online">
                             <img src="{{ auth($guard)->user()->image }}" alt class="rounded-circle">
                         </div>
-                        <div class="luzori-user-meta d-none d-lg-block">
+                        <div class="luzori-user-meta d-none d-lg-flex flex-column">
                             <span class="luzori-user-hi">{{ __('field.hi') }}, {{ auth($guard)->user()->name }}</span>
                             <span class="luzori-user-role">{{ ucfirst(auth($guard)->user()->getRoleNames()->first() ?? 'Admin') }}</span>
                         </div>

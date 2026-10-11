@@ -4,6 +4,25 @@
 
 @section('vendor-style')
     @include('CenterUser.Components.datatable-css')
+    <style>
+        .lz-branches-table tbody tr td.dtr-control {
+            cursor: pointer;
+        }
+        .lz-branches-table tbody tr.child,
+        .lz-branches-table tbody tr.child:hover {
+            cursor: default;
+            background: #faf7f2 !important;
+        }
+        .lz-branches-table tbody tr.dtr-expanded {
+            background: #f3ebe0 !important;
+        }
+        table.dataTable.dtr-column > tbody > tr > td.dtr-control:before,
+        table.dataTable.dtr-column.collapsed > tbody > tr > td.dtr-control:before {
+            border-radius: 50%;
+            border-color: #c5a070 !important;
+            box-shadow: none !important;
+        }
+    </style>
 @endsection
 
 @section('content')
@@ -46,11 +65,10 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const target = document.getElementById('lz-branches-actions');
-            if (!target) return;
 
             const moveButtons = () => {
                 const source = document.querySelector('.dt-action-buttons');
-                if (!source || !source.children.length) return false;
+                if (!target || !source || !source.children.length) return false;
                 while (source.firstChild) {
                     target.appendChild(source.firstChild);
                 }
@@ -65,6 +83,19 @@
                 }, 120);
                 setTimeout(() => clearInterval(timer), 4000);
             }
+
+            // Double-click row to toggle details; arrow still works on single click
+            $(document).on('dblclick', '#branches-table tbody tr', function (e) {
+                const $tr = $(this);
+                if ($tr.hasClass('child')) return;
+                if ($(e.target).closest('.lz-action-icons, a, button, input, label, .switch, .dropdown, .dropdown-menu').length) {
+                    return;
+                }
+                const $control = $tr.children('td.dtr-control').first();
+                if ($control.length) {
+                    $control.trigger('click');
+                }
+            });
         });
     </script>
 @endsection

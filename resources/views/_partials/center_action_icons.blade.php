@@ -1,4 +1,10 @@
 <div class="lz-action-icons" onclick="event.stopPropagation()">
+    @isset($options['vacation'])
+        <a class="lz-action-btn" href="{{ route('center_user.vacations.create', ['id' => $id]) }}"
+            title="{{ __('field.vacations') }}">
+            <i class="ti ti-beach"></i>
+        </a>
+    @endisset
     @isset($options['edit'])
         <a class="lz-action-btn" href="{{ route($route . '.create', ['id' => $id]) }}"
             title="{{ __('general.edit') }}">
@@ -72,6 +78,47 @@
                                 }
                             }
                         });
+                    }
+                });
+            }
+        }
+
+        if (typeof changeStatus !== 'function') {
+            function changeStatus(model, id, operation) {
+                var url = route('center_user.delete', {
+                    model: model,
+                    id: id,
+                    operation: operation,
+                    withTrashed: 1
+                });
+                $.ajax({
+                    url: url,
+                    type: 'DELETE',
+                    dataType: 'json',
+                    data: { _token: '{{ csrf_token() }}' },
+                    success: function() {
+                        Swal.fire({
+                            title: "{{ __('general.success') }}",
+                            icon: 'success',
+                            timer: 3000
+                        });
+                        if ($('.table').DataTable().ajax.json())
+                            $('.table').DataTable().ajax.reload();
+                        else
+                            window.location.reload();
+                    },
+                    error: function(response) {
+                        if (response.status == 401) {
+                            fireMessage("{{ __('admin.ok') }}",
+                                "{{ __('admin.not_allowed') }}",
+                                "{{ __('admin.fire_message') }}",
+                                'error');
+                        } else {
+                            fireMessage("{{ __('admin.ok') }}",
+                                "{{ __('admin.an_error_occurred') }}",
+                                "",
+                                'error');
+                        }
                     }
                 });
             }

@@ -18,20 +18,13 @@ class WeekDayDataTable extends DataTable
     public function dataTable(QueryBuilder $query): EloquentDataTable
     {
         return (new EloquentDataTable($query))
-            ->editColumn('action', function ($item) {
-                $route = 'center_user.' . $this->plural;
-                $id = $item->id;
-                $model = $this->model;
-                $options = [];
-                $html = view()->make('_partials.center_actions', compact('id', 'route', 'options', 'model'))->render();
-                return $html;
-            })
             ->editColumn('day', function ($row) {
-                return \App\Helpers\MyHelper::truncateWithReadMore($row->day->name ?? '');
+                $display = e($row->day->name ?? '');
+                return '<span class="lz-day-chip"><span class="lz-day-dot"></span>' . $display . '</span>';
             })
             ->editColumn('status', function ($row) {
                 $checked = $row->status->name == 'OPEN' ? 'checked' : '';
-                return '<label class="switch switch-square">
+                return '<label class="switch switch-square" onclick="event.stopPropagation()">
                             <input onChange="changeWeekDayStatus(\'' . $row->id . '\')"
                                 type="checkbox" class="switch-input"' . $checked . '>
                             <span class="switch-toggle-slider">
@@ -51,7 +44,7 @@ class WeekDayDataTable extends DataTable
 
     public function html(): HtmlBuilder
     {
-        $buttonClass = 'btn mx-1 mx-md-2 px-2 px-md-4 py-1 py-md-2 btn-sm';
+        $buttonClass = 'btn mx-1 px-3 py-2 btn-sm';
 
         return $this->builder()
             ->setTableId($this->plural . '-table')
@@ -59,26 +52,31 @@ class WeekDayDataTable extends DataTable
             ->columns($this->getColumns())
             ->minifiedAjax()
             ->orderBy(1)
-            ->responsive(true)
+            ->responsive([
+                'details' => [
+                    'type' => 'column',
+                    'target' => 0,
+                ],
+            ])
             ->dom('
                 <"card-header border-bottom p-3 d-flex justify-content-between align-items-center"
                     <"head-label"><"dt-action-buttons"B>
                 >
-                <"d-flex justify-content-between align-items-center mx-0 row"
+                <"d-flex justify-content-between align-items-center mx-0 row px-1 pt-2"
                     <"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"fr>
                 >
                 <"table-responsive"t>
-                <"d-flex justify-content-between mx-0 row"
+                <"d-flex justify-content-between mx-0 row px-1 pt-2"
                     <"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>
                 >
             ')
             ->selectStyleSingle()
-            ->addAction(['printable' => false, 'exportable' => false, 'className' => 'dt-center', 'title' => __('general.actions')])
             ->buttons([
-                Button::make('colvis')->addClass($buttonClass . ' btn-warning')->text(__('general.column_visibility')),
+                Button::make('colvis')->addClass($buttonClass . ' btn-luzori-beige')->text(__('general.column_visibility')),
                 [
                     'extend' => 'collection',
-                    'text' => __('general.export'),  'className' => $buttonClass,
+                    'text' => __('general.export'),
+                    'className' => $buttonClass . ' btn-luzori-muted',
                     'buttons' => [
                         'excel',
                         'csv',
@@ -89,7 +87,7 @@ class WeekDayDataTable extends DataTable
                 ],
             ])
             ->language($this->getDataTableLanguageUrl())
-            ->addTableClass('table table-bordered table-hover')
+            ->addTableClass('table table-hover')
             ->parameters([]);
     }
 
@@ -103,9 +101,11 @@ class WeekDayDataTable extends DataTable
     public function getColumns(): array
     {
         return [
-            Column::make('id')->searchable(true)->title('#'),
-            Column::computed('day')->searchable(true)->title(__('field.day')),
-            Column::computed('status')->searchable(false)->title(__('field.is_open')),
+            Column::make('id')->searchable(true)->title('#')->responsivePriority(1)->addClass('dtr-control all'),
+            Column::computed('day')->searchable(true)->title(__('field.day'))->responsivePriority(1)->addClass('all'),
+            Column::computed('status')->searchable(false)->title(__('field.is_open'))->responsivePriority(1)->addClass('all'),
+            Column::make('created_at')->searchable(true)->title(__('field.created_at'))->addClass('none'),
+            Column::make('updated_at')->searchable(true)->title(__('field.updated_at'))->addClass('none'),
         ];
     }
 

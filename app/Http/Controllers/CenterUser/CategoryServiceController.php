@@ -41,7 +41,7 @@ class CategoryServiceController extends Controller
         }
 
         $title = __('locale.' . $this->plural);
-        return $dataTable->render("CenterUser.SubViews.core-table", compact('title'));
+        return $dataTable->render('CenterUser.SubViews.CategoryService.list', compact('title'));
     }
 
     public function create(Request $request)

@@ -20,24 +20,30 @@
         @foreach ($menu as $submenu)
             @php
                 $activeClass = null;
-                $active = $configData['layout'] === 'vertical' ? 'active open' : 'active';
+                // Keep parent groups open only; gold highlight is for the selected leaf.
+                $openClass = $configData['layout'] === 'vertical' ? 'open' : 'active';
                 $currentRouteName = Route::currentRouteName();
+                $currentSegment = request()->segment(2);
 
-                if ($currentRouteName === $submenu->slug) {
+                if (is_array($submenu->slug ?? null) && in_array($currentSegment, $submenu->slug, true) && !isset($submenu->submenu)) {
+                    $activeClass = 'active';
+                } elseif ($currentRouteName === ($submenu->slug ?? null)) {
                     $activeClass = 'active';
                 } elseif (isset($submenu->submenu)) {
                     if (gettype($submenu->slug) === 'array') {
                         foreach ($submenu->slug as $slug) {
-                            if (str_contains($currentRouteName, $slug) and strpos($currentRouteName, $slug) === 0) {
-                                $activeClass = $active;
+                            if ($currentSegment === $slug || (is_string($currentRouteName) && str_contains($currentRouteName, $slug) && strpos($currentRouteName, $slug) === 0)) {
+                                $activeClass = $openClass;
                             }
                         }
                     } else {
                         if (
-                            str_contains($currentRouteName, $submenu->slug) and
-                            strpos($currentRouteName, $submenu->slug) === 0
+                            $currentSegment === $submenu->slug ||
+                            (is_string($currentRouteName) &&
+                                str_contains($currentRouteName, $submenu->slug) &&
+                                strpos($currentRouteName, $submenu->slug) === 0)
                         ) {
-                            $activeClass = $active;
+                            $activeClass = $openClass;
                         }
                     }
                 }
@@ -54,8 +60,11 @@
                         @isset($submenu->external_icon)
                             @php
                                 $isDark = $configData['style'] !== 'light';
+                                $isCenterTheme = !str_contains(url()->current(), 'admin');
                                 $subIconName = $submenu->external_icon;
-                                if ($isDark) {
+                                if ($isCenterTheme) {
+                                    $subIconName = $submenu->external_icon;
+                                } elseif ($isDark) {
                                     if (isset($submenu->external_icon_dark)) {
                                         $subIconName = $submenu->external_icon_dark;
                                     } elseif (!\Illuminate\Support\Str::contains($subIconName, '-dark')) {
@@ -64,8 +73,9 @@
                                 }
                                 $subIconFile = \Illuminate\Support\Str::endsWith($subIconName, '.svg') ? $subIconName : $subIconName . '.svg';
                             @endphp
-                            <img src="{{ asset('assets/icons/' . $subIconFile) }}"
-                                style="width: 1.375rem;margin: 0 8px 0 0;" alt="">
+                            <div class="lz-menu-icon-wrap">
+                                <img src="{{ asset('assets/icons/' . $subIconFile) }}" alt="">
+                            </div>
                         @endisset
                         <div>{{ isset($submenu->name) ? __('locale.' . $submenu->name) : '' }}</div>
                         @isset($submenu->badge)
@@ -89,8 +99,12 @@
                             @endif
                             @isset($submenu->external_icon)
                                 @php
+                                    $isDark2 = $configData['style'] !== 'light';
+                                    $isCenterTheme2 = !str_contains(url()->current(), 'admin');
                                     $subIconName2 = $submenu->external_icon;
-                                    if ($isDark) {
+                                    if ($isCenterTheme2) {
+                                        $subIconName2 = $submenu->external_icon;
+                                    } elseif ($isDark2) {
                                         if (isset($submenu->external_icon_dark)) {
                                             $subIconName2 = $submenu->external_icon_dark;
                                         } elseif (!\Illuminate\Support\Str::contains($subIconName2, '-dark')) {
@@ -99,8 +113,9 @@
                                     }
                                     $subIconFile2 = \Illuminate\Support\Str::endsWith($subIconName2, '.svg') ? $subIconName2 : $subIconName2 . '.svg';
                                 @endphp
-                                <img src="{{ asset('assets/icons/' . $subIconFile2) }}"
-                                    style="width: 1.375rem;margin: 0 8px 0 0;" alt="">
+                                <div class="lz-menu-icon-wrap">
+                                    <img src="{{ asset('assets/icons/' . $subIconFile2) }}" alt="">
+                                </div>
                             @endisset
                             <div>{{ isset($submenu->name) ? __('locale.' . $submenu->name) : '' }}</div>
                             @isset($submenu->badge)

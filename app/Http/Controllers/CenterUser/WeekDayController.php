@@ -23,7 +23,7 @@ class WeekDayController extends Controller
         }
 
         $title = __('locale.' . $this->plural);
-        return $dataTable->render("CenterUser.SubViews.core-table", compact('title'));
+        return $dataTable->render('CenterUser.SubViews.WeekDay.list', compact('title'));
     }
 
     public function changeStatus(Request $request)

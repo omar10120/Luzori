@@ -25,9 +25,13 @@
             @else
                 <a href="{{ route('center_user.cp') }}" class="app-brand-link luzori-brand-link">
                     <span class="app-brand-logo demo luzori-brand-logo">
-                        <img src="{{ asset('assets/img/branding/luzori-logo-beige.png') }}"
+                        <img src="{{ asset('assets/img/branding/luzori-logo-sidebar.png') }}?v=1"
                              alt="LUZORI"
-                             class="luzori-sidebar-logo">
+                             class="luzori-sidebar-logo"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                        <span class="luzori-logo-fallback" style="display:none;">
+                            @include('_partials.macros_light', ['height' => 20])
+                        </span>
                     </span>
                 </a>
             @endif
@@ -50,15 +54,18 @@
                 </li>
             @else
                 @php
+                    // Parents with submenu stay open (not gold-active); only the leaf child is marked active.
                     $activeClass = '';
-                    if (in_array($currentSegment, $menu->slug ?? [])) {
-                        $activeClass = 'active';
+                    $hasSubmenu = isset($menu->submenu);
+                    $slugMatches = in_array($currentSegment, $menu->slug ?? [], true);
+                    if ($slugMatches) {
+                        $activeClass = $hasSubmenu ? 'open' : 'active';
                     }
                 @endphp
 
                 <li class="menu-item {{ $activeClass }}">
                     <a href="{{ isset($menu->url) ? url('/' . ltrim($menu->url, '/')) : 'javascript:void(0);' }}"
-                       class="{{ isset($menu->submenu) ? 'menu-link menu-toggle' : 'menu-link' }}"
+                       class="{{ $hasSubmenu ? 'menu-link menu-toggle' : 'menu-link' }}"
 
                        style="font-size:12px;"
                        @if(isset($menu->target) && !empty($menu->target)) target="_blank" @endif>
@@ -83,9 +90,8 @@
                                 }
                                 $iconFile = \Illuminate\Support\Str::endsWith($iconName, '.svg') ? $iconName : $iconName . '.svg';
                             @endphp
-                            <div style="padding-left:10px; padding-right:10px">
-                                <img src="{{ asset('assets/icons/' . $iconFile) }}"
-                                style="width: 1.375rem;margin: 0 8px 0 0; " alt="">
+                            <div class="lz-menu-icon-wrap">
+                                <img src="{{ asset('assets/icons/' . $iconFile) }}" alt="">
                             </div>
                         @endisset
 
