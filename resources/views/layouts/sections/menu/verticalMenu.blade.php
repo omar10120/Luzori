@@ -25,7 +25,7 @@
             @else
                 <a href="{{ route('center_user.cp') }}" class="app-brand-link luzori-brand-link">
                     <span class="app-brand-logo demo luzori-brand-logo">
-                        <img src="{{ asset('assets/img/branding/luzori-logo-sidebar.png') }}?v=1"
+                        <img src="{{ asset('assets/img/branding/luzori-logo-sidebar.png') }}?v=2"
                              alt="LUZORI"
                              class="luzori-sidebar-logo"
                              onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
