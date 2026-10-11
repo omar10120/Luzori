@@ -126,3 +126,30 @@
         }
     });
 </script>
+
+@if (!str_contains(url()->current(), 'admin') && (str_contains(url()->current(), 'center_user') || auth('center_user')->check()))
+<script>
+    (function () {
+        function applyLuzoriLoaderDefaults() {
+            if (!window.jQuery || !jQuery.blockUI || !jQuery.blockUI.defaults) return;
+            jQuery.blockUI.defaults.message = '<div class="lz-loader" aria-hidden="true"></div>';
+            jQuery.blockUI.defaults.css = {
+                border: '0',
+                backgroundColor: 'transparent',
+                cursor: 'wait'
+            };
+            jQuery.blockUI.defaults.overlayCSS = {
+                backgroundColor: '#f9f6f1',
+                opacity: 0.72,
+                cursor: 'wait'
+            };
+        }
+
+        if (window.jQuery) {
+            applyLuzoriLoaderDefaults();
+        } else {
+            document.addEventListener('DOMContentLoaded', applyLuzoriLoaderDefaults);
+        }
+    })();
+</script>
+@endif
