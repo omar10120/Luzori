@@ -432,15 +432,58 @@ body.luzori-center .layout-menu .menu-item.active > .menu-link:not(.menu-toggle)
   opacity: 0.85;
 }
 
-/* Submenu panel */
+/* Submenu panel — vertical tree line linking children to parent */
+body.luzori-center .layout-menu .menu-item.open > .menu-sub,
 body.luzori-center .layout-menu .menu-sub {
+  position: relative !important;
   background: transparent !important;
-  padding: 0.15rem 0 0.25rem 0.35rem !important;
-  margin: 0 !important;
+  margin: 0.15rem 0 0.35rem 1.15rem !important;
+  padding: 0.2rem 0 0.25rem 0.95rem !important;
   box-shadow: none !important;
+  border-inline-start: 2px solid rgba(197, 160, 112, 0.4) !important;
+}
+
+html[dir='rtl'] body.luzori-center .layout-menu .menu-sub {
+  margin: 0.15rem 1.15rem 0.35rem 0 !important;
+}
+
+body.luzori-center .layout-menu .menu-sub > .menu-item {
+  position: relative;
+}
+
+/* Horizontal connector from vertical line into each sub-tab */
+body.luzori-center .bg-menu-theme.menu-vertical .menu-sub > .menu-item > .menu-link::before,
+body.luzori-center .layout-menu .menu-sub > .menu-item > .menu-link::before {
+  content: '' !important;
+  display: block !important;
+  position: absolute !important;
+  top: 50% !important;
+  inset-inline-start: -0.95rem !important;
+  width: 0.75rem !important;
+  height: 2px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  background: rgba(197, 160, 112, 0.45) !important;
+  font-size: 0 !important;
+  transform: translateY(-50%) !important;
+  left: auto !important;
+  right: auto !important;
+}
+
+html[dir='ltr'] body.luzori-center .layout-menu .menu-sub > .menu-item > .menu-link::before {
+  left: -0.95rem !important;
+  right: auto !important;
+}
+
+html[dir='rtl'] body.luzori-center .layout-menu .menu-sub > .menu-item > .menu-link::before {
+  right: -0.95rem !important;
+  left: auto !important;
 }
 
 body.luzori-center .layout-menu .menu-sub .menu-link {
+  position: relative !important;
   color: rgba(255, 245, 230, 0.65) !important;
   background: transparent !important;
   padding: 0.45rem 0.85rem !important;
@@ -448,16 +491,15 @@ body.luzori-center .layout-menu .menu-sub .menu-link {
   box-shadow: none !important;
 }
 
-body.luzori-center .bg-menu-theme.menu-vertical .menu-sub > .menu-item > .menu-link::before {
-  display: none !important;
-  content: none !important;
-}
-
 body.luzori-center .layout-menu .menu-sub .menu-item.active > .menu-link {
   background: linear-gradient(90deg, #d4b483 0%, #e8d5b5 55%, #f3e6cf 100%) !important;
   color: var(--lz-forest) !important;
   font-weight: 600;
   box-shadow: 0 4px 14px rgba(197, 160, 112, 0.3);
+}
+
+body.luzori-center .layout-menu .menu-sub .menu-item.active > .menu-link::before {
+  background: #c5a070 !important;
 }
 
 body.luzori-center .layout-menu .menu-sub .menu-item.active > .menu-link .menu-icon,
