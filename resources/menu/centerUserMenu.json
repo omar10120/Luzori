@@ -3,7 +3,7 @@
     {
       "url": "center_user/cp",
       "name": "statistics",
-      "icon": "home",
+      "icon": "chart-pie",
       "slug": [
         "cp"
       ],
@@ -46,7 +46,6 @@
     },
     {
       "name": "branches",
-      "external_icon": "branches",
       "slug": [
         "branches"
       ],
@@ -57,19 +56,19 @@
         {
           "url": "center_user/branches/index",
           "name": "branches",
-          "external_icon": "branches",
           "slug": [
             "branches"
           ],
           "permissions": [
             "VIEW_BRANCHES"
-          ]
+          ],
+          "icon": "building-community"
         }
-      ]
+      ],
+      "icon": "building-community"
     },
     {
       "name": "services_management",
-      "external_icon": "weekdays",
       "slug": [
         "weeksdays",
         "shifts",
@@ -88,63 +87,63 @@
         {
           "url": "center_user/weeksdays/index",
           "name": "weeksdays",
-          "external_icon": "weekdays",
           "slug": [
             "weeksdays"
           ],
           "permissions": [
             "VIEW_WEEKSDAYS"
-          ]
+          ],
+          "icon": "calendar-event"
         },
         {
           "url": "center_user/shifts/index",
           "name": "shifts",
-          "external_icon": "shifts",
           "slug": [
             "shifts"
           ],
           "permissions": [
             "VIEW_SHIFTS"
-          ]
+          ],
+          "icon": "clock"
         },
         {
           "url": "center_user/services/index",
           "name": "services",
-          "external_icon": "services",
           "slug": [
             "services"
           ],
           "permissions": [
             "VIEW_SERVICES"
-          ]
+          ],
+          "icon": "wand"
         },
         {
           "url": "center_user/workers/index",
           "name": "workers",
-          "external_icon": "workers",
           "slug": [
             "workers"
           ],
           "permissions": [
             "VIEW_WORKERS"
-          ]
+          ],
+          "icon": "id-badge-2"
         },
         {
           "url": "center_user/categories/index",
           "name": "categories",
-          "external_icon": "categories",
           "slug": [
             "categories"
           ],
           "permissions": [
             "VIEW_CATEGORIES"
-          ]
+          ],
+          "icon": "tags"
         }
-      ]
+      ],
+      "icon": "cut"
     },
     {
       "name": "payment_methods",
-      "external_icon": "payment",
       "slug": [
         "payment_methods"
       ],
@@ -163,11 +162,11 @@
             "VIEW_PAYMENT_METHODS"
           ]
         }
-      ]
+      ],
+      "icon": "credit-card"
     },
     {
       "name": "global_categories",
-      "external_icon": "categories",
       "slug": [
         "global_categories"
       ],
@@ -178,7 +177,7 @@
         {
           "url": "center_user/global_categories/index",
           "name": "global_categories",
-          "icon": "categories",
+          "icon": "category-2",
           "slug": [
             "global-categories"
           ],
@@ -186,11 +185,11 @@
             "VIEW_CATEGORIES"
           ]
         }
-      ]
+      ],
+      "icon": "category-2"
     },
     {
       "name": "products",
-      "external_icon": "products",
       "slug": [
         "products",
         "buyproducts",
@@ -211,54 +210,52 @@
         {
           "url": "center_user/products/index",
           "name": "products",
-          "external_icon": "products",
           "slug": [
             "products"
           ],
           "permissions": [
             "VIEW_PRODUCTS"
-          ]
+          ],
+          "icon": "shopping-bag"
         },
-   
         {
           "url": "center_user/mainstocks/index",
           "name": "mainstocks",
-          "external_icon": "stock",
           "slug": [
             "mainstocks"
           ],
           "permissions": [
             "VIEW_MAINSTOCKS"
-          ]
+          ],
+          "icon": "building-warehouse"
         },
         {
           "url": "center_user/stockorders/index",
           "name": "stockorders",
-          "external_icon": "stock",
           "slug": [
             "stockorders"
           ],
           "permissions": [
             "VIEW_STOCKORDERS"
-          ]
+          ],
+          "icon": "truck-delivery"
         },
         {
           "url": "center_user/inventorymovements/index",
           "name": "inventorymovements",
-          "external_icon": "stock",
           "slug": [
             "inventorymovements"
           ],
           "permissions": [
             "VIEW_INVENTORYMOVEMENTS"
-          ]
+          ],
+          "icon": "arrows-exchange"
         }
-     
-      ]
+      ],
+      "icon": "shopping-bag"
     },
     {
       "name": "sales",
-      "external_icon": "sales",
       "slug": [
         "sales",
         "withdrawal_requests"
@@ -270,18 +267,18 @@
         {
           "url": "center_user/sales/index",
           "name": "sales",
-          "external_icon": "sales",
           "slug": [
             "sales"
           ],
           "permissions": [
             "VIEW_SALES"
-          ]
+          ],
+          "icon": "report-money"
         },
         {
           "url": "center_user/withdrawal_requests/index",
           "name": "withdrawal_requests",
-          "icon": "cash",
+          "icon": "cash-banknote",
           "slug": [
             "withdrawal_requests"
           ],
@@ -289,12 +286,12 @@
             "VIEW_SETTINGS"
           ]
         }
-      ]
+      ],
+      "icon": "report-money"
     },
     {
       "url": "center_user/expenses/index",
       "name": "expenses",
-      "external_icon": "expenses",
       "slug": [
         "expenses"
       ],
@@ -305,7 +302,7 @@
         {
           "url": "center_user/expenses/providers",
           "name": "expenses_providers",
-          "icon": "users",
+          "icon": "users-group",
           "slug": [
             "providers"
           ]
@@ -318,11 +315,11 @@
             "suppliers"
           ]
         }
-      ]
+      ],
+      "icon": "receipt-2"
     },
     {
       "name": "users",
-      "external_icon": "customer-service",
       "slug": [
         "users"
       ],
@@ -333,7 +330,7 @@
         {
           "url": "center_user/users/index",
           "name": "users",
-          "icon": "users",
+          "icon": "heart-handshake",
           "slug": [
             "users"
           ],
@@ -341,11 +338,11 @@
             "VIEW_USERS"
           ]
         }
-      ]
+      ],
+      "icon": "heart-handshake"
     },
     {
       "name": "roles_center_users",
-      "external_icon": "roles",
       "slug": [
         "centeruserroles",
         "centerusers"
@@ -358,13 +355,13 @@
         {
           "url": "center_user/centeruserroles/index",
           "name": "centeruserroles",
-          "external_icon": "roles",
           "slug": [
             "centeruserroles"
           ],
           "permissions": [
             "VIEW_CENTERUSERROLES"
-          ]
+          ],
+          "icon": "badge"
         },
         {
           "url": "center_user/centerusers/index",
@@ -377,11 +374,11 @@
             "VIEW_CENTERUSERS"
           ]
         }
-      ]
+      ],
+      "icon": "lock-access"
     },
     {
       "name": "discount_customers",
-      "external_icon": "memberships",
       "slug": [
         "memberships",
         "discounts",
@@ -398,52 +395,52 @@
         {
           "url": "center_user/memberships/index",
           "name": "memberships",
-          "external_icon": "memberships",
           "slug": [
             "memberships"
           ],
           "permissions": [
             "VIEW_MEMBERSHIPS"
-          ]
+          ],
+          "icon": "award"
         },
         {
           "url": "center_user/discounts/index",
           "name": "discounts",
-          "external_icon": "discounts",
           "slug": [
             "discounts"
           ],
           "permissions": [
             "VIEW_DISCOUNTS"
-          ]
+          ],
+          "icon": "percentage"
         },
         {
           "url": "center_user/wallets/index",
           "name": "coupons",
-          "external_icon": "coupons",
           "slug": [
             "wallets"
           ],
           "permissions": [
             "VIEW_WALLETS"
-          ]
+          ],
+          "icon": "wallet"
         },
         {
           "url": "center_user/packages/index",
           "name": "packages",
-          "external_icon": "packages",
           "slug": [
             "packages"
           ],
           "permissions": [
             "VIEW_PACKAGES"
-          ]
+          ],
+          "icon": "packages"
         }
-      ]
+      ],
+      "icon": "gift"
     },
     {
       "name": "notifications",
-      "external_icon": "notifications",
       "slug": [
         "notifications"
       ],
@@ -454,30 +451,30 @@
         {
           "url": "center_user/notifications/index",
           "name": "notifications",
-          "external_icon": "notifications",
           "slug": [
             "notifications"
           ],
           "permissions": [
             "VIEW_NOTIFICATIONS"
-          ]
+          ],
+          "icon": "bell-ringing"
         },
         {
           "url": "center_user/notifications/inbox",
           "name": "received_notifications",
-          "external_icon": "notifications",
           "slug": [
             "notifications"
           ],
           "permissions": [
             "VIEW_NOTIFICATIONS"
-          ]
+          ],
+          "icon": "mail-opened"
         }
-      ]
+      ],
+      "icon": "bell-ringing"
     },
     {
       "name": "reports",
-      "external_icon": "daily-report",
       "slug": [
         "daily-report",
         "sales-report",
@@ -498,74 +495,74 @@
         {
           "url": "center_user/reports/daily-report",
           "name": "daily_report",
-          "external_icon": "daily-report",
           "slug": [
             "daily-report"
           ],
           "permissions": [
             "VIEW_DAILY_REPORTS"
-          ]
+          ],
+          "icon": "calendar-stats"
         },
         {
           "url": "center_user/reports/sales-report",
           "name": "sales_report",
-          "external_icon": "sales-report",
           "slug": [
             "sales-report"
           ],
           "permissions": [
             "VIEW_SALES_REPORTS"
-          ]
+          ],
+          "icon": "chart-area-line"
         },
         {
           "url": "center_user/reports/staff-report",
           "name": "staff_report",
-          "external_icon": "staff-report",
           "slug": [
             "staff-report"
           ],
           "permissions": [
             "VIEW_STAFF_REPORTS"
-          ]
+          ],
+          "icon": "user-star"
         },
         {
           "url": "center_user/reports/commission-report",
           "name": "commission_report",
-          "external_icon": "commission-report",
           "slug": [
             "commission-report"
           ],
           "permissions": [
             "VIEW_COMMISSION_REPORTS"
-          ]
+          ],
+          "icon": "coin"
         },
         {
           "url": "center_user/reports/tips-report",
           "name": "tips_report",
-          "external_icon": "tips-report",
           "slug": [
             "tips-report"
           ],
           "permissions": [
             "VIEW_TIPS_REPORTS"
-          ]
+          ],
+          "icon": "mood-dollar"
         },
         {
           "url": "center_user/reports/expense-report",
           "name": "expense_report",
-          "external_icon": "expense-report",
           "slug": [
             "expense-report"
           ],
           "permissions": [
             "VIEW_EXPENSE_REPORTS"
-          ]
+          ],
+          "icon": "file-analytics"
         }
-      ]
+      ],
+      "icon": "chart-infographic"
     },
     {
       "name": "settings",
-      "external_icon": "infos",
       "slug": [
         "mainsettings",
         "infos",
@@ -580,7 +577,8 @@
         "VIEW_SETTINGS",
         "VIEW_INVOICE_SETTINGS"
       ],
-      "url": "center_user/mainsettings/index"
+      "url": "center_user/mainsettings/index",
+      "icon": "settings-2"
     }
   ]
 }

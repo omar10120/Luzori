@@ -241,18 +241,41 @@ html.layout-menu-collapsed:not(.layout-menu-hover) body.luzori-center .layout-me
   display: none !important;
 }
 
-html.layout-menu-collapsed:not(.layout-menu-hover) body.luzori-center .layout-menu .menu-inner > .menu-item > .menu-link > .lz-menu-icon-wrap,
+/* Theme sets opacity:0 on all divs when collapsed — keep icon wraps visible */
+html.layout-menu-collapsed:not(.layout-menu-hover) body.luzori-center .layout-menu .menu-inner > .menu-item div.lz-menu-icon-wrap,
+html.layout-menu-collapsed:not(.layout-menu-hover) body.luzori-center .layout-menu .menu-inner > .menu-item > .menu-link > .lz-menu-icon-wrap {
+  opacity: 1 !important;
+  overflow: visible !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 1.35rem !important;
+  min-width: 1.35rem !important;
+  height: 1.35rem !important;
+  margin: 0 !important;
+  visibility: visible !important;
+}
+
 html.layout-menu-collapsed:not(.layout-menu-hover) body.luzori-center .layout-menu .menu-inner > .menu-item > .menu-link > .menu-icon,
 html.layout-menu-collapsed:not(.layout-menu-hover) body.luzori-center .layout-menu .menu-inner > .menu-item > .menu-link > i.menu-icon {
-  width: 1.25rem !important;
-  min-width: 1.25rem !important;
-  height: 1.25rem !important;
+  width: 1.35rem !important;
+  min-width: 1.35rem !important;
+  height: 1.35rem !important;
   margin: 0 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: inline-flex !important;
+  font-size: 1.25rem !important;
+  color: rgba(255, 214, 168, 0.95) !important;
 }
 
 html.layout-menu-collapsed:not(.layout-menu-hover) body.luzori-center .layout-menu .menu-inner > .menu-item > .menu-link img:not(.luzori-sidebar-logo) {
-  width: 1.15rem !important;
-  height: 1.15rem !important;
+  width: 1.2rem !important;
+  height: 1.2rem !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: block !important;
+  filter: brightness(0) saturate(100%) invert(88%) sepia(18%) saturate(450%) hue-rotate(345deg) !important;
 }
 
 html.layout-menu-collapsed:not(.layout-menu-hover) body.luzori-center .layout-menu .menu-sub,
@@ -302,16 +325,18 @@ body.luzori-center .layout-menu .menu-link:hover {
 /* Icon column fixed width for straight alignment */
 body.luzori-center .layout-menu .menu-icon,
 body.luzori-center .layout-menu .menu-link > i.menu-icon {
-  width: 1.4rem !important;
-  min-width: 1.4rem !important;
-  height: 1.4rem !important;
+  width: 1.45rem !important;
+  min-width: 1.45rem !important;
+  height: 1.45rem !important;
   margin: 0 !important;
   flex-shrink: 0 !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  font-size: 1.15rem !important;
-  color: rgba(255, 214, 168, 0.8) !important;
+  font-size: 1.28rem !important;
+  line-height: 1 !important;
+  color: rgba(255, 214, 168, 0.92) !important;
+  stroke-width: 1.5;
 }
 
 body.luzori-center .layout-menu .menu-link > .lz-menu-icon-wrap,
@@ -451,35 +476,11 @@ body.luzori-center .layout-menu .menu-sub > .menu-item {
   position: relative;
 }
 
-/* Horizontal connector from vertical line into each sub-tab */
+/* No horizontal connectors — vertical line only */
 body.luzori-center .bg-menu-theme.menu-vertical .menu-sub > .menu-item > .menu-link::before,
 body.luzori-center .layout-menu .menu-sub > .menu-item > .menu-link::before {
-  content: '' !important;
-  display: block !important;
-  position: absolute !important;
-  top: 50% !important;
-  inset-inline-start: -0.95rem !important;
-  width: 0.75rem !important;
-  height: 2px !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  border: none !important;
-  border-radius: 0 !important;
-  background: rgba(197, 160, 112, 0.45) !important;
-  font-size: 0 !important;
-  transform: translateY(-50%) !important;
-  left: auto !important;
-  right: auto !important;
-}
-
-html[dir='ltr'] body.luzori-center .layout-menu .menu-sub > .menu-item > .menu-link::before {
-  left: -0.95rem !important;
-  right: auto !important;
-}
-
-html[dir='rtl'] body.luzori-center .layout-menu .menu-sub > .menu-item > .menu-link::before {
-  right: -0.95rem !important;
-  left: auto !important;
+  content: none !important;
+  display: none !important;
 }
 
 body.luzori-center .layout-menu .menu-sub .menu-link {
@@ -496,10 +497,6 @@ body.luzori-center .layout-menu .menu-sub .menu-item.active > .menu-link {
   color: var(--lz-forest) !important;
   font-weight: 600;
   box-shadow: 0 4px 14px rgba(197, 160, 112, 0.3);
-}
-
-body.luzori-center .layout-menu .menu-sub .menu-item.active > .menu-link::before {
-  background: #c5a070 !important;
 }
 
 body.luzori-center .layout-menu .menu-sub .menu-item.active > .menu-link .menu-icon,
