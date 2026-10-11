@@ -648,13 +648,14 @@ body.luzori-center .luzori-dashboard {
 
 body.luzori-center .lz-page-toolbar {
   position: relative;
-  z-index: 1;
+  z-index: 40;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
   margin-bottom: 1.25rem;
+  overflow: visible;
 }
 
 body.luzori-center .lz-page-title-wrap {
@@ -691,7 +692,38 @@ body.luzori-center .lz-page-actions {
   align-items: center;
   gap: 0.55rem;
   position: relative;
-  z-index: 5;
+  z-index: 45;
+  overflow: visible;
+}
+
+/* DataTables Column/Export dropdowns must float above the table card */
+body.luzori-center .lz-page-actions .dt-buttons,
+body.luzori-center .lz-page-actions .btn-group,
+body.luzori-center .lz-page-actions .dt-button-collection,
+body.luzori-center div.dt-button-collection,
+body.luzori-center .dt-button-collection {
+  z-index: 1080 !important;
+}
+
+body.luzori-center div.dt-button-collection {
+  position: absolute !important;
+  background: #fff !important;
+  border: 1px solid #efe6d8 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 12px 32px rgba(0, 43, 38, 0.16) !important;
+  padding: 0.35rem !important;
+  min-width: 10rem;
+}
+
+body.luzori-center div.dt-button-collection .dt-button {
+  border-radius: 8px !important;
+  color: var(--lz-forest) !important;
+  background: transparent !important;
+  border: none !important;
+}
+
+body.luzori-center div.dt-button-collection .dt-button:hover {
+  background: #f7f2ea !important;
 }
 
 /* Hide leftover DataTables header (causes white box behind Column/Export) */
@@ -755,7 +787,13 @@ body.luzori-center .lz-table-card {
   border-radius: 18px !important;
   box-shadow: var(--lz-shadow) !important;
   background: #fff !important;
-  overflow: hidden;
+  overflow: visible;
+}
+
+body.luzori-center .luzori-page {
+  position: relative;
+  z-index: auto;
+  overflow: visible;
 }
 
 body.luzori-center .lz-table-card .card-header {
