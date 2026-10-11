@@ -156,6 +156,127 @@ body.luzori-center .layout-menu .menu-item {
   margin-bottom: 0.12rem;
 }
 
+/* ---------- Collapsed sidebar: square icon tiles ---------- */
+html.layout-menu-collapsed:not(.layout-menu-hover) body.luzori-center .layout-menu .app-brand.demo {
+  min-height: 72px;
+  padding: 0.85rem 0.4rem 0.55rem !important;
+}
+
+html.layout-menu-collapsed:not(.layout-menu-hover) body.luzori-center .layout-menu .luzori-brand-logo,
+html.layout-menu-collapsed:not(.layout-menu-hover) body.luzori-center .layout-menu .app-brand-logo.demo {
+  width: 44px !important;
+}
+
+html.layout-menu-collapsed:not(.layout-menu-hover) body.luzori-center .layout-menu .luzori-sidebar-logo {
+  width: 44px !important;
+}
+
+html.layout-menu-collapsed:not(.layout-menu-hover) body.luzori-center .layout-menu .app-brand .layout-menu-toggle {
+  display: none !important;
+}
+
+html.layout-menu-collapsed:not(.layout-menu-hover) body.luzori-center .layout-menu .menu-inner {
+  padding: 0.35rem 0.45rem 4.5rem !important;
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+}
+
+html.layout-menu-collapsed:not(.layout-menu-hover) body.luzori-center .layout-menu .menu-inner > .menu-item {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 0.35rem;
+}
+
+html.layout-menu-collapsed:not(.layout-menu-hover) body.luzori-center .layout-menu .menu-inner > .menu-item > .menu-link {
+  width: 2.6rem !important;
+  min-width: 2.6rem !important;
+  max-width: 2.6rem !important;
+  height: 2.6rem !important;
+  min-height: 2.6rem !important;
+  padding: 0 !important;
+  margin: 0 auto !important;
+  border-radius: 12px !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 0 !important;
+  overflow: hidden !important;
+  background: rgba(255, 214, 168, 0.08) !important;
+  box-shadow: none !important;
+}
+
+html.layout-menu-collapsed:not(.layout-menu-hover) body.luzori-center .layout-menu .menu-inner > .menu-item > .menu-link:hover {
+  background: rgba(255, 214, 168, 0.18) !important;
+}
+
+html.layout-menu-collapsed:not(.layout-menu-hover) body.luzori-center .layout-menu .menu-inner > .menu-item.active > .menu-link,
+html.layout-menu-collapsed:not(.layout-menu-hover) body.luzori-center .layout-menu .menu-inner > .menu-item.open > .menu-link,
+html.layout-menu-collapsed:not(.layout-menu-hover) body.luzori-center .layout-menu .menu-inner > .menu-item.active > .menu-link.menu-toggle,
+html.layout-menu-collapsed:not(.layout-menu-hover) body.luzori-center .layout-menu .menu-inner > .menu-item.open > .menu-link.menu-toggle,
+html.layout-menu-collapsed:not(.layout-menu-hover) body.luzori-center .bg-menu-theme .menu-inner .menu-item.active > .menu-link.menu-toggle,
+html.layout-menu-collapsed:not(.layout-menu-hover) body.luzori-center .bg-menu-theme .menu-inner .menu-item.open > .menu-link.menu-toggle {
+  background: linear-gradient(160deg, #d4b483 0%, #e8d5b5 100%) !important;
+  background-image: linear-gradient(160deg, #d4b483 0%, #e8d5b5 100%) !important;
+  color: var(--lz-forest) !important;
+  box-shadow: 0 4px 12px rgba(197, 160, 112, 0.35) !important;
+}
+
+html.layout-menu-collapsed:not(.layout-menu-hover) body.luzori-center .layout-menu .menu-inner > .menu-item.active > .menu-link .menu-icon,
+html.layout-menu-collapsed:not(.layout-menu-hover) body.luzori-center .layout-menu .menu-inner > .menu-item.active > .menu-link i,
+html.layout-menu-collapsed:not(.layout-menu-hover) body.luzori-center .layout-menu .menu-inner > .menu-item.open > .menu-link .menu-icon,
+html.layout-menu-collapsed:not(.layout-menu-hover) body.luzori-center .layout-menu .menu-inner > .menu-item.open > .menu-link i {
+  color: var(--lz-forest) !important;
+}
+
+html.layout-menu-collapsed:not(.layout-menu-hover) body.luzori-center .layout-menu .menu-inner > .menu-item.active > .menu-link img:not(.luzori-sidebar-logo),
+html.layout-menu-collapsed:not(.layout-menu-hover) body.luzori-center .layout-menu .menu-inner > .menu-item.open > .menu-link img:not(.luzori-sidebar-logo) {
+  filter: brightness(0) saturate(100%) !important;
+  opacity: 0.85;
+}
+
+html.layout-menu-collapsed:not(.layout-menu-hover) body.luzori-center .layout-menu .menu-inner > .menu-item > .menu-link > div:not(.lz-menu-icon-wrap):not(.badge),
+html.layout-menu-collapsed:not(.layout-menu-hover) body.luzori-center .layout-menu .menu-inner > .menu-item > .menu-link .badge,
+html.layout-menu-collapsed:not(.layout-menu-hover) body.luzori-center .layout-menu .menu-inner > .menu-item > .menu-toggle::after {
+  display: none !important;
+}
+
+html.layout-menu-collapsed:not(.layout-menu-hover) body.luzori-center .layout-menu .menu-inner > .menu-item > .menu-link > .lz-menu-icon-wrap,
+html.layout-menu-collapsed:not(.layout-menu-hover) body.luzori-center .layout-menu .menu-inner > .menu-item > .menu-link > .menu-icon,
+html.layout-menu-collapsed:not(.layout-menu-hover) body.luzori-center .layout-menu .menu-inner > .menu-item > .menu-link > i.menu-icon {
+  width: 1.25rem !important;
+  min-width: 1.25rem !important;
+  height: 1.25rem !important;
+  margin: 0 !important;
+}
+
+html.layout-menu-collapsed:not(.layout-menu-hover) body.luzori-center .layout-menu .menu-inner > .menu-item > .menu-link img:not(.luzori-sidebar-logo) {
+  width: 1.15rem !important;
+  height: 1.15rem !important;
+}
+
+html.layout-menu-collapsed:not(.layout-menu-hover) body.luzori-center .layout-menu .menu-sub,
+html.layout-menu-collapsed:not(.layout-menu-hover) body.luzori-center .layout-menu .menu-header {
+  display: none !important;
+}
+
+html.layout-menu-collapsed:not(.layout-menu-hover) body.luzori-center .luzori-menu-footer-text {
+  display: none !important;
+}
+
+html.layout-menu-collapsed:not(.layout-menu-hover) body.luzori-center .luzori-menu-footer {
+  padding: 0.5rem;
+  background: transparent;
+}
+
+html.layout-menu-collapsed:not(.layout-menu-hover) body.luzori-center .luzori-menu-footer::before {
+  left: 50%;
+  transform: translateX(-50%);
+  width: 48px;
+  height: 40px;
+  opacity: 0.45;
+}
+
 /* One horizontal alignment: icon | label | chevron */
 body.luzori-center .layout-menu .menu-link {
   display: flex !important;
@@ -569,6 +690,29 @@ body.luzori-center .lz-page-actions {
   flex-wrap: wrap;
   align-items: center;
   gap: 0.55rem;
+  position: relative;
+  z-index: 5;
+}
+
+/* Hide leftover DataTables header (causes white box behind Column/Export) */
+body.luzori-center .lz-table-card .dataTables_wrapper > .card-header,
+body.luzori-center .lz-table-card .dataTables_wrapper .card-header {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  max-height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  overflow: hidden !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+body.luzori-center .lz-table-card .dataTables_wrapper > .card-header .dt-action-buttons,
+body.luzori-center .lz-table-card .dt-action-buttons:empty {
+  display: none !important;
 }
 
 body.luzori-center .btn-luzori-beige {

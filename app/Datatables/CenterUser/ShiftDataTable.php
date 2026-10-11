@@ -76,7 +76,7 @@ class ShiftDataTable extends DataTable
 
         $initCompleteJs = 'function () {';
         if ($canCreate) {
-            $initCompleteJs .= '$(".dt-action-buttons").append("<a href=\'' . $addRoute . '\' class=\"btn btn-luzori-primary btn-sm mx-1 px-3 py-2\">' . __('general.add_new') . ' <i class=\"ti ti-plus\"></i></a>");';
+            $initCompleteJs .= 'var $lzAct=$(".lz-page-actions").first();if(!$lzAct.length)$lzAct=$(".dt-action-buttons");$lzAct.append("<a href=\'' . $addRoute . '\' class=\"btn btn-luzori-primary btn-sm mx-1 px-3 py-2\">' . __('general.add_new') . ' <i class=\"ti ti-plus\"></i></a>");';
         }
         $initCompleteJs .= '}';
 
