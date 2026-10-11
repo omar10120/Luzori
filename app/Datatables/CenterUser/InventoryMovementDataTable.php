@@ -3,7 +3,6 @@
 namespace App\Datatables\CenterUser;
 
 use App\Models\InventoryMovement;
-use App\Models\Branch;
 use App\Models\Product;
 use Illuminate\Database\Eloquent\Builder as QueryBuilder;
 use Yajra\DataTables\EloquentDataTable;
@@ -22,29 +21,31 @@ class InventoryMovementDataTable extends DataTable
         return (new EloquentDataTable($query))
             ->editColumn('action', function ($item) {
                 $url = route('center_user.inventorymovements.show', ['productId' => $item->id]);
-                return '<a href="' . $url . '" class="btn btn-sm btn-success" title="' . e(__('general.show')) . '"><i class="ti ti-eye"></i></a>';
+                return '<div class="lz-action-icons" onclick="event.stopPropagation()">'
+                    . '<a class="lz-action-btn" href="' . $url . '" title="' . e(__('general.show')) . '">'
+                    . '<i class="ti ti-eye"></i></a></div>';
             })
             ->editColumn('select', function ($row) {
-                return '<input type="checkbox" class="form-check-input product-select" value="' . $row->id . '" aria-label="Select product">';
+                return '<input type="checkbox" class="form-check-input product-select" value="' . $row->id . '" aria-label="Select product" onclick="event.stopPropagation()">';
             })
             ->editColumn('translation.name', function ($row) {
-                return e($row->translation->name ?? $row->name ?? '-');
+                return e($row->translation->name ?? $row->name ?? '—');
             })
             ->editColumn('barcode', function ($row) {
-                return e($row->barcode ?: '-');
+                return e($row->barcode ?: '—');
             })
             ->editColumn('current_stock', function ($row) {
-                return (int) ($row->current_stock ?? 0);
+                return '<span class="lz-stock-num">' . (int) ($row->current_stock ?? 0) . '</span>';
             })
             ->editColumn('net_sold', function ($row) {
                 $soldOut = abs((int) ($row->sold_out ?? 0));
                 $restored = (int) ($row->sold_restored ?? 0);
-                return max(0, $soldOut - $restored);
+                return '<span class="lz-stock-muted">' . max(0, $soldOut - $restored) . '</span>';
             })
             ->editColumn('total_ordered', function ($row) {
-                return (int) ($row->total_ordered ?? 0);
+                return '<span class="lz-stock-muted">' . (int) ($row->total_ordered ?? 0) . '</span>';
             })
-            ->rawColumns(['action', 'select'])
+            ->rawColumns(['action', 'select', 'current_stock', 'net_sold', 'total_ordered'])
             ->setRowId('id');
     }
 
@@ -52,7 +53,7 @@ class InventoryMovementDataTable extends DataTable
     {
         $branchId = request()->integer('branch_id') ?: null;
 
-        $query = $model->query()
+        return $model->query()
             ->with(['translation'])
             ->withSum([
                 'productBranches as current_stock' => function ($q) use ($branchId) {
@@ -90,15 +91,12 @@ class InventoryMovementDataTable extends DataTable
                 },
             ], 'quantity')
             ->orderBy('products.id', 'DESC');
-
-        return $query;
     }
 
     public function html(): HtmlBuilder
     {
-        $buttonClass = 'btn mx-1 mx-md-2 px-2 px-md-4 py-1 py-md-2 btn-sm';
+        $buttonClass = 'btn mx-1 px-3 py-2 btn-sm';
         $exportRoute = route('center_user.inventorymovements.export', ['format' => 'csv']);
-        $branches = Branch::with('translation')->orderBy('id')->get();
 
         return $this->builder()
             ->setTableId($this->plural . '-table')
@@ -108,27 +106,38 @@ class InventoryMovementDataTable extends DataTable
                 'branch_id' => 'function () { return $("#inventoryBranchFilter").val(); }',
             ])
             ->orderBy(1)
-            ->responsive(true)
+            ->responsive([
+                'details' => [
+                    'type' => 'column',
+                    'target' => 1,
+                ],
+            ])
             ->dom('
                 <"card-header border-bottom p-3 d-flex justify-content-between align-items-center"
                     <"head-label"><"dt-action-buttons"B>
                 >
-                <"d-flex justify-content-between align-items-center mx-0 row"
+                <"d-flex justify-content-between align-items-center mx-0 row px-1 pt-2"
                     <"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"fr>
                 >
                 <"table-responsive"t>
-                <"d-flex justify-content-between mx-0 row"
+                <"d-flex justify-content-between mx-0 row px-1 pt-2"
                     <"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>
                 >
             ')
             ->selectStyleSingle()
-            ->addAction(['printable' => false, 'exportable' => false, 'className' => 'dt-center', 'title' => __('general.actions')])
+            ->addAction([
+                'printable' => false,
+                'exportable' => false,
+                'responsivePriority' => 1,
+                'className' => 'dt-center lz-actions-col',
+                'title' => __('general.actions'),
+            ])
             ->buttons([
-                Button::make('colvis')->addClass($buttonClass . ' btn-warning')->text(__('general.column_visibility')),
+                Button::make('colvis')->addClass($buttonClass . ' btn-luzori-beige')->text(__('general.column_visibility')),
                 [
                     'extend' => 'collection',
                     'text' => __('general.export'),
-                    'className' => $buttonClass,
+                    'className' => $buttonClass . ' btn-luzori-muted',
                     'buttons' => [
                         [
                             'text' => __('general.export') . ' Excel',
@@ -142,58 +151,49 @@ class InventoryMovementDataTable extends DataTable
                 ],
             ])
             ->initComplete('function () {
-                            var table = $("#inventorymovements-table").DataTable();
-                            $(".dt-action-buttons").prepend(`
-                                <select id="inventoryBranchFilter" class="form-select form-select-sm mx-2 mb-4" style="width: auto; min-width: 180px;">
-                                    <option value="">' . e(__('general.all')) . ' ' . e(__('field.branch')) . '</option>
-                                    ' . $branches->map(function ($branch) {
-                                        return '<option value="' . $branch->id . '">' . e($branch->name) . '</option>';
-                                    })->implode('') . '
-                                </select>
-                            `);
-
-                            $("#inventorymovements-table thead tr th:first").html("<input type=\"checkbox\" id=\"selectAllProducts\" class=\"form-check-input\" aria-label=\"Select all products\">");
-                            $("#inventoryBranchFilter").on("change", function () {
-                                table.ajax.reload();
-                            });
-                            $(document).on("change", "#selectAllProducts", function () {
-                                $("#inventorymovements-table .product-select").prop("checked", this.checked);
-                            });
-                            window.exportMovementDetails = function (format) {
-                            var selectedProducts = $("#inventorymovements-table .product-select:checked").map(function () {
-                                return this.value;
-                            }).get();
-                            var params = new URLSearchParams();
-                            var branchId = $("#inventoryBranchFilter").val();
-                            if (branchId) params.append("branch_id", branchId);
-                            selectedProducts.forEach(function (productId) {
-                                params.append("product_ids[]", productId);
-                            });
-                            window.location.href = "' . $exportRoute . '".replace("/csv", "/" + format) + "?" + params.toString();
-                            };
+                var table = $("#inventorymovements-table").DataTable();
+                $("#inventorymovements-table thead tr th:first").html("<input type=\"checkbox\" id=\"selectAllProducts\" class=\"form-check-input\" aria-label=\"Select all products\">");
+                $("#inventoryBranchFilter").on("change", function () {
+                    table.ajax.reload();
+                });
+                $(document).on("change", "#selectAllProducts", function () {
+                    $("#inventorymovements-table .product-select").prop("checked", this.checked);
+                });
+                window.exportMovementDetails = function (format) {
+                    var selectedProducts = $("#inventorymovements-table .product-select:checked").map(function () {
+                        return this.value;
+                    }).get();
+                    var params = new URLSearchParams();
+                    var branchId = $("#inventoryBranchFilter").val();
+                    if (branchId) params.append("branch_id", branchId);
+                    selectedProducts.forEach(function (productId) {
+                        params.append("product_ids[]", productId);
+                    });
+                    window.location.href = "' . $exportRoute . '".replace("/csv", "/" + format) + "?" + params.toString();
+                };
             }')
             ->language($this->getDataTableLanguageUrl())
-            ->addTableClass('table table-bordered table-hover')
+            ->addTableClass('table table-hover')
             ->parameters([]);
     }
 
     public function getDataTableLanguageUrl()
     {
         return app()->getLocale() == 'ar'
-            ? 'https://cdn.datatables.net/plug-ins/2.0.7/i18n/ar.json'
+            ? asset('js/lang/ar_custom.json')
             : 'https://cdn.datatables.net/plug-ins/2.0.7/i18n/en-GB.json';
     }
 
     public function getColumns(): array
     {
         return [
-            Column::computed('select')->searchable(false)->orderable(false)->title(''),
-            Column::make('id')->searchable(true)->title('#'),
-            Column::computed('translation.name')->searchable(true)->title(__('field.product_name')),
-            Column::make('barcode')->searchable(true)->title(__('field.barcode')),
-            Column::computed('current_stock')->searchable(false)->title(__('field.current_stock')),
-            Column::computed('net_sold')->searchable(false)->title(__('field.net_sold')),
-            Column::computed('total_ordered')->searchable(false)->title(__('field.total_ordered')),
+            Column::computed('select')->searchable(false)->orderable(false)->title('')->responsivePriority(1)->addClass('all'),
+            Column::make('id')->searchable(true)->title('#')->responsivePriority(1)->addClass('dtr-control all'),
+            Column::computed('translation.name')->searchable(true)->title(__('field.product_name'))->responsivePriority(1)->addClass('all'),
+            Column::make('barcode')->searchable(true)->title(__('field.barcode'))->responsivePriority(2)->addClass('all'),
+            Column::computed('current_stock')->searchable(false)->title(__('field.current_stock'))->responsivePriority(1)->addClass('all'),
+            Column::computed('net_sold')->searchable(false)->title(__('field.net_sold'))->responsivePriority(2)->addClass('all'),
+            Column::computed('total_ordered')->searchable(false)->title(__('field.total_ordered'))->responsivePriority(2)->addClass('all'),
         ];
     }
 

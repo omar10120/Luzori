@@ -31,7 +31,9 @@ class InventoryMovementController extends Controller
         }
 
         $title = __('locale.' . $this->plural);
-        return $dataTable->render('CenterUser.SubViews.core-table', compact('title'));
+        $branches = Branch::with('translation')->orderBy('id')->get();
+
+        return $dataTable->render('CenterUser.SubViews.InventoryMovement.list', compact('title', 'branches'));
     }
 
     public function snapshot(Request $request)
