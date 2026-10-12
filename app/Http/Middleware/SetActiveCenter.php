@@ -33,6 +33,9 @@ class SetActiveCenter
         if ($request->is('app_api/booking/store')) {
             return $next($request);
         }
+        if ($request->is('app_api/buyproducts') || $request->is('app_api/buyproducts/*')) {
+            return $next($request);
+        }
         if ($request->is('app_api/info')) {
             return $next($request);
         }
@@ -48,6 +51,7 @@ class SetActiveCenter
           if ($request->is('center_api/banners')) {
             return $next($request);
         }
+      
 
         $domain = $request->header('domain');
         if ($domain) {
