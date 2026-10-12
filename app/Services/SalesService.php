@@ -257,7 +257,7 @@ class SalesService
                     }
                     
                     $bookingTip = $tip; // Take current tip to pass by reference
-                    $booking = $this->createBookingFromCartItem($item, $sale->id, $branchId, $paymentType, $bookingSubtotal, $is_free, $bookingTip, $cartData['worker_id'] ?? null, $cartData['client_id'] ?? null, $overrides['created_by'] ?? null);
+                    $booking = $this->createBookingFromCartItem($item, $sale->id, $branchId, $paymentType, $bookingSubtotal, $is_free, $bookingTip, $cartData['worker_id'] ?? null, $cartData['client_id'] ?? null, $overrides['created_by'] ?? null, $bookingTip);
                     $tip = $bookingTip; // Update tip after processing
                     
                     SaleItem::create([
@@ -482,7 +482,7 @@ class SalesService
      * Create Booking from cart item (one booking with one or more services)
      */
     
-    private function createBookingFromCartItem($item, $saleId, $branchId, $paymentType = null, $bookingTotal = 0, $is_free, &$tip, $tipWorkerId = null, $clientId = null, $createdBy = null)
+    private function createBookingFromCartItem($item, $saleId, $branchId, $paymentType = null, $bookingTotal = 0, $is_free, &$tip, $tipWorkerId = null, $clientId = null, $createdBy = null, $bookingTip = null)
     {
         $services = $item['services'] ?? null;
         if (!empty($services) && is_array($services)) {
@@ -586,7 +586,7 @@ class SalesService
                     '_date' => $svc['date'] ?? $bookingDate,
                     'worker_id' => $svc['worker_id'],
                     'is_free' => ($is_free || $coveredByPackage),
-                    'tip' =>  $current_tip,
+                    'tip' =>  $bookingTip,
                     'from_time' => $svc['from_time'],
                     'to_time' => $svc['to_time'],
                     'commission' => $commissionValue,
