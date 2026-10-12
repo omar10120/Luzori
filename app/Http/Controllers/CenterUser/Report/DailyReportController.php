@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Booking;
 use App\Models\Branch;
 use App\Models\Worker;
+use App\Models\Sale;
 use App\Models\Vacation;
 use App\Models\UserUsedCard;
 use App\Models\UserUsedDiscount;
@@ -240,10 +241,6 @@ class DailyReportController extends Controller
                                     array_push($users_with_commission[$detail->worker_id], $commission_amount);
                                 }
 
-                                if (!empty($detail->tip)) {
-                                    array_push($users_with_tips[$detail->worker_id], $detail->tip);
-                                }
-
                                 $free_price = 0;
                                 if (isset($booking_with_discount[$value->id][$detail->worker_id][$detail->service_id])) {
                                     $free_price = $booking_with_discount[$value->id][$detail->worker_id][$detail->service_id];
@@ -317,6 +314,22 @@ class DailyReportController extends Controller
                             }
                         }
                     }
+                }
+            }
+
+            // Tips from sales.tip + sales.worker_id (not booking_details)
+            $temp_sales_tips = Sale::query()
+                ->whereRaw('DATE(created_at)="' . $date . '"')
+                ->whereNotNull('worker_id')
+                ->where('tip', '>', 0);
+
+            if ($branch_id_filter) {
+                $temp_sales_tips->where('branch_id', $branch_id_filter);
+            }
+
+            foreach ($temp_sales_tips->get(['worker_id', 'tip']) as $sale) {
+                if (isset($users_with_tips[$sale->worker_id])) {
+                    $users_with_tips[$sale->worker_id][] = (float) $sale->tip;
                 }
             }
 
