@@ -12,6 +12,7 @@ use App\Http\Controllers\AppAPI\NotificationController;
 use App\Http\Controllers\AppAPI\FavoriteCenterController;
 use App\Http\Controllers\AppAPI\CenterReviewController;
 use App\Http\Controllers\AppAPI\GlobalProductController;
+use App\Http\Controllers\AppAPI\BuyProductController;
 /*
 |--------------------------------------------------------------------------
 | App API Routes (Main Database)
@@ -73,6 +74,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('{center_id}/mine', [CenterReviewController::class, 'mine']);
         Route::put('{center_id}', [CenterReviewController::class, 'update']);
         Route::delete('{center_id}', [CenterReviewController::class, 'destroy']);
+    });
+
+    Route::prefix('buyproducts')->controller(BuyProductController::class)->group(function () {
+        Route::get('all', 'all');
+        Route::post('add', 'add');
+        Route::delete('delete', 'delete');
+        Route::get('print-invoice', 'printInvoice');
     });
 
     Route::get('getnotification', [NotificationController::class, 'get']);
