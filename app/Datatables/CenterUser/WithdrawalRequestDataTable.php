@@ -17,28 +17,29 @@ class WithdrawalRequestDataTable extends DataTable
     public function dataTable(QueryBuilder $query): EloquentDataTable
     {
         return (new EloquentDataTable($query))
+            ->editColumn('amount', function ($row) {
+                return '<span class="lz-amount">' . number_format((float) $row->amount, 2) . '</span>';
+            })
             ->editColumn('status', function ($row) {
-                $map = [
-                    'pending'   => 'bg-label-warning',
-                    'confirmed' => 'bg-label-success',
-                    'rejected'  => 'bg-label-danger',
-                ];
-                $class = $map[$row->status] ?? 'bg-label-secondary';
-                return '<span class="badge ' . $class . '">' . ucfirst($row->status) . '</span>';
+                $class = match ($row->status) {
+                    'confirmed' => 'is-confirmed',
+                    'rejected' => 'is-rejected',
+                    default => 'is-pending',
+                };
+                return '<span class="lz-status-badge ' . $class . '">' . e(ucfirst($row->status)) . '</span>';
             })
             ->editColumn('created_at', function ($row) {
-                return $row->created_at ? $row->created_at->format('Y-m-d H:i') : '---';
+                return $row->created_at ? $row->created_at->format('Y-m-d H:i') : '—';
             })
             ->editColumn('admin_notes', function ($row) {
-                return $row->admin_notes ? \App\Helpers\MyHelper::truncateWithReadMore($row->admin_notes) : '---';
+                return $row->admin_notes ? \App\Helpers\MyHelper::truncateWithReadMore($row->admin_notes) : '—';
             })
-            ->rawColumns(['status', 'admin_notes'])
+            ->rawColumns(['amount', 'status', 'admin_notes'])
             ->setRowId('id');
     }
 
     public function query(CenterWithdrawalRequest $model): QueryBuilder
     {
-        // Get current center using current tenant database
         $currentDb = config('database.connections.mysql.database');
         $center = \App\Models\Center::where('database', $currentDb)->first();
 
@@ -46,40 +47,43 @@ class WithdrawalRequestDataTable extends DataTable
             return $model->newQuery()->where('center_id', $center->id)->orderBy('id', 'desc');
         }
 
-        return $model->newQuery()->where('id', -1); // Return empty if center not found
+        return $model->newQuery()->where('id', -1);
     }
 
     public function html(): HtmlBuilder
     {
-        $buttonClass = 'btn mx-1 mx-md-2 px-2 px-md-4 py-1 py-md-2 btn-sm';
+        $buttonClass = 'btn mx-1 px-3 py-2 btn-sm';
 
         return $this->builder()
             ->setTableId($this->plural . '-table')
             ->addTableClass('dt-responsive')
             ->columns($this->getColumns())
             ->minifiedAjax()
-            ->orderBy(1)
-            ->responsive(true)
+            ->orderBy(0)
+            ->responsive([
+                'details' => [
+                    'type' => 'column',
+                    'target' => 0,
+                ],
+            ])
             ->dom('
                 <"card-header border-bottom p-3 d-flex justify-content-between align-items-center"
                     <"head-label"><"dt-action-buttons"B>
                 >
-                <"d-flex justify-content-between align-items-center mx-0 row"
+                <"d-flex justify-content-between align-items-center mx-0 row px-1 pt-2"
                     <"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"fr>
                 >
                 <"table-responsive"t>
-                <"d-flex justify-content-between mx-0 row"
+                <"d-flex justify-content-between mx-0 row px-1 pt-2"
                     <"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>
                 >
             ')
-            ->selectStyleSingle()
-            ->addAction(['printable' => false, 'exportable' => false, 'className' => 'dt-center'])
             ->buttons([
-                Button::make('colvis')->addClass($buttonClass . ' btn-warning')->text(__('general.column_visibility')),
+                Button::make('colvis')->addClass($buttonClass . ' btn-luzori-beige')->text(__('general.column_visibility')),
                 [
                     'extend' => 'collection',
                     'text' => __('general.export'),
-                    'className' => $buttonClass,
+                    'className' => $buttonClass . ' btn-luzori-muted',
                     'buttons' => [
                         'excel',
                         'csv',
@@ -90,25 +94,25 @@ class WithdrawalRequestDataTable extends DataTable
                 ],
             ])
             ->language($this->getDataTableLanguageUrl())
-            ->addTableClass('table table-bordered table-hover')
+            ->addTableClass('table table-hover')
             ->parameters([]);
     }
 
     public function getDataTableLanguageUrl()
     {
-        return app()->getLocale() == "ar" ?
-            asset('js/lang/ar_custom.json') :
-            "https://cdn.datatables.net/plug-ins/2.0.7/i18n/en-GB.json";
+        return app()->getLocale() == 'ar'
+            ? asset('js/lang/ar_custom.json')
+            : 'https://cdn.datatables.net/plug-ins/2.0.7/i18n/en-GB.json';
     }
 
     public function getColumns(): array
     {
         return [
-            Column::make('id')->searchable(true)->title('#'),
-            Column::make('amount')->searchable(true)->title(__('field.amount') ?? 'Amount'),
-            Column::make('status')->searchable(true)->title(__('field.status') ?? 'Status'),
-            Column::make('created_at')->searchable(true)->title(__('field.date') ?? 'Date'),
-            Column::make('admin_notes')->searchable(true)->title(__('field.admin_notes') ?? 'Admin Notes'),
+            Column::make('id')->searchable(true)->title('#')->responsivePriority(1)->addClass('dtr-control all'),
+            Column::make('amount')->searchable(true)->title(__('field.amount') ?? 'Amount')->responsivePriority(1)->addClass('all'),
+            Column::make('status')->searchable(true)->title(__('field.status') ?? 'Status')->responsivePriority(1)->addClass('all'),
+            Column::make('created_at')->searchable(true)->title(__('field.date') ?? 'Date')->responsivePriority(2)->addClass('all'),
+            Column::make('admin_notes')->searchable(true)->title(__('field.admin_notes') ?? 'Admin Notes')->responsivePriority(3)->addClass('all'),
         ];
     }
 

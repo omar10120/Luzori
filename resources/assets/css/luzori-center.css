@@ -70,7 +70,25 @@ html.layout-menu-fixed-offcanvas body.luzori-center .layout-menu {
   top: 0 !important;
   bottom: 0 !important;
   inset-inline-start: 0 !important;
-  z-index: 11;
+  z-index: 1080;
+}
+
+/* Mobile: menu must sit above layout-overlay or taps hit the overlay */
+@media (max-width: 1199.98px) {
+  body.luzori-center .layout-menu,
+  html.layout-menu-fixed body.luzori-center .layout-menu,
+  html.layout-menu-fixed-offcanvas body.luzori-center .layout-menu {
+    z-index: 1100 !important;
+  }
+
+  body.luzori-center .layout-overlay {
+    z-index: 1099 !important;
+  }
+
+  html.layout-menu-expanded body.luzori-center .drag-target {
+    z-index: 1098 !important;
+    pointer-events: none !important;
+  }
 }
 
 body.luzori-center .layout-menu .app-brand.demo,

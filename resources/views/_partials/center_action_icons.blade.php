@@ -5,6 +5,12 @@
             <i class="ti ti-beach"></i>
         </a>
     @endisset
+    @isset($options['print'])
+        <a class="lz-action-btn" href="{{ route($route . '.print', ['id' => $id]) }}" target="_blank"
+            title="{{ __('general.print') }}">
+            <i class="ti ti-printer"></i>
+        </a>
+    @endisset
     @isset($options['edit'])
         <a class="lz-action-btn" href="{{ route($route . '.create', ['id' => $id]) }}"
             title="{{ __('general.edit') }}">
@@ -21,6 +27,19 @@
         <a class="lz-action-btn" href="{{ route($route . '.show', ['id' => $id]) }}"
             title="{{ __('general.show') }}">
             <i class="ti ti-eye"></i>
+        </a>
+    @endisset
+    @isset($options['add_tip'])
+        <a class="lz-action-btn" href="{{ route($route . '.tip', ['id' => $id]) }}"
+            title="{{ __('field.add_tip') }}">
+            <i class="ti ti-coin"></i>
+        </a>
+    @endisset
+    @isset($options['sale_otp_delete'])
+        <a class="lz-action-btn lz-action-danger" href="javascript:void(0)"
+            title="{{ __('general.delete') }}"
+            onclick="event.preventDefault(); event.stopPropagation(); saleOtpStart('delete', {{ $id }})">
+            <i class="ti ti-trash"></i>
         </a>
     @endisset
     @isset($options['delete'])

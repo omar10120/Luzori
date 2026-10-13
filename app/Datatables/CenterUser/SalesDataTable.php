@@ -100,8 +100,7 @@ class SalesDataTable extends DataTable
                     $options['add_tip'] = true;
                 }
 
-                $html = view()->make('_partials.center_actions', compact('id', 'route', 'options', 'model'))->render();
-                return $html;
+                return view()->make('_partials.center_action_icons', compact('id', 'route', 'options', 'model'))->render();
             })
             ->editColumn('branch.translation.name', function ($row) {
                 return $row->branch?->translation?->name ?? '-';
@@ -136,8 +135,8 @@ class SalesDataTable extends DataTable
                     return '-';
                 }
 
-                $html = '<span class="badge bg-label-danger">' . $count . ' ' . __('locale.bookings') . '</span>';
-                $html .= ' <button type="button" class="btn btn-sm btn-outline-danger ms-2 view-booking-details" data-sale-id="' . $row->id . '" data-modal-title="' . e(__('field.booking_details')) . '" data-details="' . e(json_encode($serviceDetails)) . '">';
+                $html = '<span class="lz-sale-badge is-booking">' . $count . ' ' . __('locale.bookings') . '</span>';
+                $html .= ' <button type="button" class="btn btn-sm lz-sale-detail-btn ms-1 view-booking-details" data-sale-id="' . $row->id . '" data-modal-title="' . e(__('field.booking_details')) . '" data-details="' . e(json_encode($serviceDetails)) . '">';
                 $html .= '<i class="ti ti-eye me-1"></i>' . __('general.view_details');
                 $html .= '</button>';
 
@@ -167,8 +166,8 @@ class SalesDataTable extends DataTable
                     return '-';
                 }
 
-                $html = '<span class="badge bg-label-success">' . $count . ' ' . __('locale.products') . '</span>';
-                $html .= ' <button type="button" class="btn btn-sm btn-outline-success ms-2 view-product-details" data-sale-id="' . $row->id . '" data-modal-title="' . e(__('locale.products')) . ' ' . e(__('general.show')) . '" data-details="' . e(json_encode($productDetails)) . '">';
+                $html = '<span class="lz-sale-badge is-product">' . $count . ' ' . __('locale.products') . '</span>';
+                $html .= ' <button type="button" class="btn btn-sm lz-sale-detail-btn ms-1 view-product-details" data-sale-id="' . $row->id . '" data-modal-title="' . e(__('locale.products')) . ' ' . e(__('general.show')) . '" data-details="' . e(json_encode($productDetails)) . '">';
                 $html .= '<i class="ti ti-eye me-1"></i>' . __('general.view_details');
                 $html .= '</button>';
 
@@ -197,8 +196,8 @@ class SalesDataTable extends DataTable
                 }
 
                 $packageLabel = $count === 1 ? __('locale.package') : __('locale.packages');
-                $html = '<span class="badge bg-label-info">' . $count . ' ' . $packageLabel . '</span>';
-                $html .= ' <button type="button" class="btn btn-sm btn-outline-info ms-2 view-package-details" data-sale-id="' . $row->id . '" data-modal-title="' . e(__('field.packages')) . ' ' . e(__('general.show')) . '" data-details="' . e(json_encode($packageDetails)) . '">';
+                $html = '<span class="lz-sale-badge is-package">' . $count . ' ' . $packageLabel . '</span>';
+                $html .= ' <button type="button" class="btn btn-sm lz-sale-detail-btn ms-1 view-package-details" data-sale-id="' . $row->id . '" data-modal-title="' . e(__('field.packages')) . ' ' . e(__('general.show')) . '" data-details="' . e(json_encode($packageDetails)) . '">';
                 $html .= '<i class="ti ti-eye me-1"></i>' . __('general.view_details');
                 $html .= '</button>';
 
@@ -230,8 +229,8 @@ class SalesDataTable extends DataTable
                     return '-';
                 }
 
-                $html = '<span class="badge bg-label-warning">' . $count . ' ' . __('field.coupons') . '</span>';
-                $html .= ' <button type="button" class="btn btn-sm btn-outline-warning ms-2 view-coupon-details" data-sale-id="' . $row->id . '" data-modal-title="' . e(__('field.coupons')) . ' ' . e(__('general.show')) . '" data-details="' . e(json_encode($couponDetails)) . '">';
+                $html = '<span class="lz-sale-badge is-coupon">' . $count . ' ' . __('field.coupons') . '</span>';
+                $html .= ' <button type="button" class="btn btn-sm lz-sale-detail-btn ms-1 view-coupon-details" data-sale-id="' . $row->id . '" data-modal-title="' . e(__('field.coupons')) . ' ' . e(__('general.show')) . '" data-details="' . e(json_encode($couponDetails)) . '">';
                 $html .= '<i class="ti ti-eye me-1"></i>' . __('general.view_details');
                 $html .= '</button>';
 
@@ -541,8 +540,17 @@ class SalesDataTable extends DataTable
 
     public function html(): HtmlBuilder
     {
-        $buttonClass = 'btn mx-1 mx-md-2 px-2 px-md-4 py-1 py-md-2 btn-sm';
+        $buttonClass = 'btn mx-1 px-3 py-2 btn-sm';
         $addRoute = route('center_user.' . $this->plural . '.cart');
+        $canCreate = auth('center_user')->check() && auth('center_user')->user()->can('CREATE_SALES', 'center_api');
+
+        $initCompleteJs = 'function () {';
+        $initCompleteJs .= '$("#booking_source_filter").on("change", function() { window.LaravelDataTables["sales-table"].draw(); });';
+        $initCompleteJs .= 'var $lzAct=$(".lz-page-actions").first();if(!$lzAct.length)$lzAct=$(".dt-action-buttons");';
+        if ($canCreate) {
+            $initCompleteJs .= '$lzAct.append("<a href=\'' . $addRoute . '\' class=\"btn btn-luzori-primary btn-sm mx-1 px-3 py-2\">' . __('general.add_new') . ' <i class=\"ti ti-plus\"></i></a>");';
+        }
+        $initCompleteJs .= '}';
 
         return $this->builder()
             ->setTableId($this->plural . '-table')
@@ -554,26 +562,38 @@ class SalesDataTable extends DataTable
                 }',
             ])
             ->orderBy(1)
-            ->responsive(true)
+            ->responsive([
+                'details' => [
+                    'type' => 'column',
+                    'target' => 0,
+                ],
+            ])
             ->dom('
                 <"card-header border-bottom p-3 d-flex justify-content-between align-items-center"
                     <"head-label"><"dt-action-buttons"B>
                 >
-                <"d-flex justify-content-between align-items-center mx-0 row"
+                <"d-flex justify-content-between align-items-center mx-0 row px-1 pt-2"
                     <"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"fr>
                 >
                 <"table-responsive"t>
-                <"d-flex justify-content-between mx-0 row"
+                <"d-flex justify-content-between mx-0 row px-1 pt-2"
                     <"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>
                 >
             ')
             ->selectStyleSingle()
-            ->addAction(['printable' => false, 'exportable' => false, 'className' => 'dt-center', 'title' => __('general.actions')])
+            ->addAction([
+                'printable' => false,
+                'exportable' => false,
+                'responsivePriority' => 1,
+                'className' => 'dt-center lz-actions-col',
+                'title' => __('general.actions'),
+            ])
             ->buttons([
-                Button::make('colvis')->addClass($buttonClass . ' btn-warning')->text(__('general.column_visibility')),
+                Button::make('colvis')->addClass($buttonClass . ' btn-luzori-beige')->text(__('general.column_visibility')),
                 [
                     'extend' => 'collection',
-                    'text' => __('general.export'),  'className' => $buttonClass,
+                    'text' => __('general.export'),
+                    'className' => $buttonClass . ' btn-luzori-muted',
                     'buttons' => [
                         'excel',
                         'csv',
@@ -584,22 +604,8 @@ class SalesDataTable extends DataTable
                 ],
             ])
             ->language($this->getDataTableLanguageUrl())
-            ->addTableClass('table table-bordered table-hover')
-            ->initComplete('function () {
-                var filterHtml = \'<select id="booking_source_filter" class="form-select form-select-sm d-inline-block ms-2" style="width: auto;">\' +
-                    \'<option value="">' . __('general.all') . '</option>\' +
-                    \'<option value="inside_booking">' . (__('api.inside_booking') ?? 'Inside Booking') . '</option>\' +
-                    \'<option value="outside_booking">' . (__('api.outside_booking') ?? 'Outside Booking') . '</option>\' +
-                \'</select>\';
-                
-                $(".dt-action-buttons").append(filterHtml);
-                
-                $("#booking_source_filter").on("change", function() {
-                    window.LaravelDataTables["sales-table"].draw();
-                });
-
-                $(".dt-action-buttons").append("<a href=\'' . $addRoute . '\' class=\'btn btn-primary btn-sm mx-1 mx-md-2 px-2 px-md-3 py-1 py-md-2\'>' . __('general.add_new') . '<i class=\'ti ti-plus\'></i></a>");
-            }')
+            ->addTableClass('table table-hover')
+            ->initComplete($initCompleteJs)
             ->parameters([]);
     }
 
@@ -616,27 +622,26 @@ class SalesDataTable extends DataTable
         $canDelete = $user && $user->can('DELETE_SALES', 'center_api');
         
         $columns = [
-            Column::make('id')->searchable(true)->title('#'),
-            Column::computed('branch.translation.name')->searchable(true)->title(__('field.branch')),
-            Column::computed('services')->searchable(false)->title(__('field.services') . ' (' . __('locale.bookings') . ')'),
-            Column::computed('packages')->searchable(false)->title(__('field.packages') . ' (' . __('locale.packages') . ')'),
-            Column::computed('products')->searchable(false)->title(__('locale.products')),
-            Column::computed('coupons')->searchable(false)->title(__('field.coupons')),
-            Column::computed('client.name')->searchable(true)->title(__('field.client')),
-            Column::make('client_mobile')->searchable(true)->title(__('field.phone')),
-            Column::computed('payment_methods')->searchable(false)->title(__('field.payment_methods') ?? 'Payment Methods'),
-            Column::computed('booking_payment')->searchable(true)->title(__('field.payment_method') . ' (' . __('locale.bookings') . ')'),
-            Column::computed('product_payment')->searchable(true)->title(__('field.payment_method') . ' (' . __('locale.products') . ')'),
-            Column::computed('coupon_payment')->searchable(true)->title(__('field.payment_method') . ' (' . __('field.coupons') . ')'),
-            Column::make('created_at')->searchable(true)->title(__('field.created_at')),
-            Column::computed('booking_source')->searchable(false)->title(__('api.booking_source') ?? 'Source'),
-            Column::computed('status')->searchable(false)->title(__('field.status')),
-            Column::computed('booking_employees')->searchable(false)->title(__('field.employee') . ' (' . __('locale.bookings') . ')'),
-            Column::computed('product_employees')->searchable(false)->title(__('field.employee') . ' (' . __('locale.products') . ')'),
-            Column::computed('worker.name')->searchable(true)->title(__('field.worker')),
-            Column::computed('tip')->searchable(false)->title(__('field.tip')),
-            Column::computed('total')->searchable(false)->title(__('field.total')),
-
+            Column::make('id')->searchable(true)->title('#')->responsivePriority(1)->addClass('dtr-control all'),
+            Column::computed('branch.translation.name')->searchable(true)->title(__('field.branch'))->responsivePriority(2)->addClass('all'),
+            Column::computed('services')->searchable(false)->title(__('field.services') . ' (' . __('locale.bookings') . ')')->responsivePriority(2)->addClass('all'),
+            Column::computed('packages')->searchable(false)->title(__('field.packages') . ' (' . __('locale.packages') . ')')->responsivePriority(3)->addClass('all'),
+            Column::computed('products')->searchable(false)->title(__('locale.products'))->responsivePriority(3)->addClass('all'),
+            Column::computed('coupons')->searchable(false)->title(__('field.coupons'))->responsivePriority(3)->addClass('all'),
+            Column::computed('client.name')->searchable(true)->title(__('field.client'))->responsivePriority(1)->addClass('all'),
+            Column::make('client_mobile')->searchable(true)->title(__('field.phone'))->responsivePriority(2)->addClass('all'),
+            Column::computed('payment_methods')->searchable(false)->title(__('field.payment_methods') ?? 'Payment Methods')->addClass('none'),
+            Column::computed('booking_payment')->searchable(true)->title(__('field.payment_method') . ' (' . __('locale.bookings') . ')')->addClass('none'),
+            Column::computed('product_payment')->searchable(true)->title(__('field.payment_method') . ' (' . __('locale.products') . ')')->addClass('none'),
+            Column::computed('coupon_payment')->searchable(true)->title(__('field.payment_method') . ' (' . __('field.coupons') . ')')->addClass('none'),
+            Column::make('created_at')->searchable(true)->title(__('field.created_at'))->addClass('none'),
+            Column::computed('booking_source')->searchable(false)->title(__('api.booking_source') ?? 'Source')->addClass('none'),
+            Column::computed('status')->searchable(false)->title(__('field.status'))->addClass('none'),
+            Column::computed('booking_employees')->searchable(false)->title(__('field.employee') . ' (' . __('locale.bookings') . ')')->addClass('none'),
+            Column::computed('product_employees')->searchable(false)->title(__('field.employee') . ' (' . __('locale.products') . ')')->addClass('none'),
+            Column::computed('worker.name')->searchable(true)->title(__('field.worker'))->addClass('none'),
+            Column::computed('tip')->searchable(false)->title(__('field.tip'))->addClass('none'),
+            Column::computed('total')->searchable(false)->title(__('field.total'))->responsivePriority(2)->addClass('all'),
         ];
         
         if ($canDelete) {
