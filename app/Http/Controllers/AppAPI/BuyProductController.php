@@ -80,12 +80,14 @@ class BuyProductController extends Controller
             return $switched;
         }
 
+        $allowedPayments = array_unique(array_merge(get_payment_method_names(), ['wallet']));
+
         $validated = $request->validate([
             'branch_id' => 'required|integer|exists:branches,id,deleted_at,NULL',
             'products' => 'required|array|min:1',
             'products.*.id' => 'required|integer|exists:products,id,deleted_at,NULL',
             'products.*.qty' => 'required|integer|min:1',
-            'payment_type' => 'required|string|in:' . implode(',', get_payment_method_names()),
+            'payment_type' => 'required|string|in:' . implode(',', $allowedPayments),
             'commission' => 'nullable|numeric',
             'discount' => 'nullable|numeric',
             'sales_worker_id' => 'required|exists:workers,id,deleted_at,NULL',
@@ -93,16 +95,56 @@ class BuyProductController extends Controller
         ]);
 
         $branchId = (int) $validated['branch_id'];
+        $isPaidFromWallet = ($validated['payment_type'] === 'wallet');
+        $totalPrice = 0.0;
+        $walletDeducted = false;
 
         try {
-            // Validate stock before creating anything
+            // Validate stock + build priced lines before creating anything
+            $pricedLines = [];
             foreach ($validated['products'] as $line) {
-                $this->validateProductStock((int) $line['id'], (int) $line['qty'], $branchId);
+                $productId = (int) $line['id'];
+                $qty = (int) $line['qty'];
+                $this->validateProductStock($productId, $qty, $branchId);
+
+                $product = Product::select(['id', 'retail_price', 'supply_price'])
+                    ->with('primarySku')
+                    ->findOrFail($productId);
+
+                $unitPrice = ($product->retail_price && $product->retail_price > 0)
+                    ? (float) $product->retail_price
+                    : (float) ($product->supply_price ?? 0);
+
+                if (!empty($validated['discount'])) {
+                    $unitPrice -= ($unitPrice * (float) $validated['discount']) / 100;
+                }
+
+                $totalPrice += $unitPrice * $qty;
+                $pricedLines[] = [
+                    'product' => $product,
+                    'qty' => $qty,
+                    'unit_price' => $unitPrice,
+                ];
+            }
+
+            // Deduct from main DB users.wallet (central) — same as Booking/Package AppAPI
+            if ($isPaidFromWallet) {
+                $centralUser = DB::connection('central')->table('users')->where('id', $appUser->id)->first();
+
+                if (!$centralUser || (float) $centralUser->wallet < $totalPrice) {
+                    return MyHelper::responseJSON(
+                        __('api.insufficient_balance') ?? 'Insufficient wallet balance',
+                        Response::HTTP_BAD_REQUEST
+                    );
+                }
+
+                DB::connection('central')->table('users')->where('id', $appUser->id)->decrement('wallet', $totalPrice);
+                $walletDeducted = true;
             }
 
             $tenantUser = $this->resolveTenantUser($appUser);
 
-            $item = DB::transaction(function () use ($validated, $tenantUser, $branchId) {
+            $item = DB::transaction(function () use ($validated, $tenantUser, $branchId, $pricedLines) {
                 $buyProduct = BuyProduct::create([
                     'payment_type' => $validated['payment_type'],
                     'commission' => $validated['commission'] ?? null,
@@ -112,24 +154,20 @@ class BuyProductController extends Controller
                     'created_by' => $tenantUser->id,
                 ]);
 
-                foreach ($validated['products'] as $line) {
-                    $productId = (int) $line['id'];
-                    $qty = (int) $line['qty'];
-
-                    $product = Product::select(['id', 'retail_price', 'supply_price'])
-                        ->with('primarySku')
-                        ->findOrFail($productId);
-
-                    $price = ($product->retail_price && $product->retail_price > 0)
+                foreach ($pricedLines as $line) {
+                    $product = $line['product'];
+                    $qty = $line['qty'];
+                    // Store pre-discount retail/supply unit on details (same as CRUDService);
+                    // bill amount for wallet already applied discount above.
+                    $detailPrice = ($product->retail_price && $product->retail_price > 0)
                         ? $product->retail_price
                         : ($product->supply_price ?? 0);
 
-                    // One detail row per unit (same as SalesService)
                     for ($i = 0; $i < $qty; $i++) {
                         BuyProductDetail::create([
                             'buy_product_id' => $buyProduct->id,
                             'product_id' => $product->id,
-                            'price' => $price,
+                            'price' => $detailPrice,
                         ]);
                     }
 
@@ -147,9 +185,16 @@ class BuyProductController extends Controller
                 BuyProductResource::make($item)
             );
         } catch (\Exception $e) {
+            if ($walletDeducted) {
+                DB::connection('central')->table('users')->where('id', $appUser->id)->increment('wallet', $totalPrice);
+            }
+
             Log::error('AppAPI BuyProduct add: ' . $e->getMessage());
-            $status = str_contains(strtolower($e->getMessage()), 'stock')
-                || str_contains(strtolower($e->getMessage()), 'available')
+            $message = strtolower($e->getMessage());
+            $status = str_contains($message, 'stock')
+                || str_contains($message, 'available')
+                || str_contains($message, 'wallet')
+                || str_contains($message, 'balance')
                 ? Response::HTTP_UNPROCESSABLE_ENTITY
                 : Response::HTTP_INTERNAL_SERVER_ERROR;
 

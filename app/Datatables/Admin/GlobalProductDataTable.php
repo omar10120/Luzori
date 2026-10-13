@@ -140,8 +140,8 @@ class GlobalProductDataTable extends DataTable
             Column::computed('primary_sku')->title(__('field.sku'))->searchable(false)->orderable(false),
             Column::computed('category')->title(__('field.category'))->searchable(false)->orderable(false),
             Column::computed('brand')->title(__('field.brand'))->searchable(false)->orderable(false),
-            Column::computed('retail_price')->title(__('field.retail_price'))->searchable(false)->orderable(false),
             Column::computed('supply_price')->title(__('field.supply_price'))->searchable(false)->orderable(false),
+            Column::computed('retail_price')->title(__('field.retail_price'))->searchable(false)->orderable(false),
             Column::make('sort_order')->title(__('field.sort_order')),
             // 4. Add the status column definition here
             Column::computed('status')->title(__('field.status'))->searchable(false)->orderable(false),
