@@ -312,14 +312,7 @@ Route::group(['middleware' => 'auth:center_api'], function () {
         });
     });
 
-    Route::group(['prefix' => 'buyproducts'], function () {
-        Route::controller(BuyProductController::class)->group(function () {
-            Route::get('all', 'all')->can('VIEW_BUYPRODUCTS');
-            Route::post('add', 'add')->can('CREATE_BUYPRODUCTS');
-            Route::delete('delete', 'delete')->can('DELETE_BUYPRODUCTS');
-            Route::get('print-invoice', 'printInvoice')->can('VIEW_BUYPRODUCTS');
-        });
-    });
+  
 
     Route::group(['prefix' => 'reports'], function () {
         Route::controller(DailyReportController::class)->group(function () {
@@ -350,4 +343,19 @@ Route::group(['middleware' => 'auth:center_api'], function () {
         });
     });
 
+});
+
+
+Route::group(['middleware' => 'auth:sanctum'], function () {
+    
+    
+    Route::group(['prefix' => 'buyproducts'], function () {
+        Route::controller(BuyProductController::class)->group(function () {
+            Route::get('all', 'all');
+            Route::post('add', 'add');
+            Route::delete('delete', 'delete');
+            Route::get('print-invoice', 'printInvoice');
+        });
+    });
+            
 });

@@ -7,11 +7,13 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Booking;
 use App\Models\Branch;
+use App\Models\Sale;
 use App\Models\Setting;
 use App\Models\Worker;
 use App\Models\Vacation;
 use Illuminate\Support\Facades\DB;
 use niklasravnsborg\LaravelPdf\Facades\Pdf;
+use Carbon\Carbon;
 
 class TipsReportController extends Controller
 {
@@ -128,20 +130,42 @@ class TipsReportController extends Controller
                 if (!$report->isEmpty()) {
                     foreach ($report as $value) {
                         $booking_date_str = $value->booking_date->format('Y-m-d');
-                        if (isset($result['price'][$booking_date_str]) && isset($result['tips'][$booking_date_str])) {
+                        if (isset($result['price'][$booking_date_str])) {
                             if (!$value->details->isEmpty()) {
                                 foreach ($value->details as $detail) {
-                                    if (!isset($result['price'][$booking_date_str][$detail->worker_id]) && !isset($result['tips'][$booking_date_str][$detail->worker_id])) {
+                                    if (!isset($result['price'][$booking_date_str][$detail->worker_id])) {
                                         continue;
                                     }
-                                    $price = $detail->price;
-                                    $tip = $detail->tip;
-                                    $result['price'][$booking_date_str][$detail->worker_id] += $price;
-                                    $result['tips'][$booking_date_str][$detail->worker_id] += $tip;
+                                    $result['price'][$booking_date_str][$detail->worker_id] += $detail->price;
                                 }
                             }
                         }
                     }
+                }
+
+                // Tips from sales.tip + sales.worker_id (not booking_details)
+                $temp_sales_tips = Sale::query()
+                    ->whereYear('created_at', $request->get('year'))
+                    ->whereMonth('created_at', $request->get('month'))
+                    ->whereNotNull('worker_id')
+                    ->where('tip', '>', 0);
+
+                if (!empty($selected_branch)) {
+                    $temp_sales_tips->where('branch_id', $selected_branch);
+                } elseif (get_user_role() != 1 && auth('center_user')->user()->branch_id) {
+                    $temp_sales_tips->where('branch_id', auth('center_user')->user()->branch_id);
+                }
+
+                if (!empty($selected_worker)) {
+                    $temp_sales_tips->where('worker_id', $selected_worker);
+                }
+
+                foreach ($temp_sales_tips->get(['worker_id', 'tip', 'created_at']) as $sale) {
+                    $sale_date_str = Carbon::parse($sale->created_at)->format('Y-m-d');
+                    if (!isset($result['tips'][$sale_date_str][$sale->worker_id])) {
+                        continue;
+                    }
+                    $result['tips'][$sale_date_str][$sale->worker_id] += (float) $sale->tip;
                 }
             }
 
