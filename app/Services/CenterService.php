@@ -532,10 +532,10 @@ class CenterService
         $originalDb = Config::get('database.connections.mysql.database');
 
         foreach ($centers as $center) {
-            try {
+                try {
                 $safeDb = str_replace('`', '``', $center->database);
                 DB::connection('mysql')->getPdo()->exec("USE `{$safeDb}`");
-                Config::set('database.connections.mysql.database', $center->database);
+                    Config::set('database.connections.mysql.database', $center->database);
 
                 $query = Service::with(['translations', 'media'])
                     ->when($isTop !== null, fn ($q) => $q->where('is_top', $isTop))
@@ -620,8 +620,8 @@ class CenterService
         try {
             DB::connection('mysql')->getPdo()->exec("USE `{$safeDb}`");
         } catch (\Exception $e) {
-            DB::purge('mysql');
-            DB::reconnect('mysql');
+                    DB::purge('mysql');
+                    DB::reconnect('mysql');
         }
         Config::set('database.connections.mysql.database', $originalDb);
     }
@@ -1068,7 +1068,7 @@ class CenterService
                     '--path'     => 'database/migrations/centers',
                     '--database' => 'tenant',
                 ]);
-
+                
                 $seeders = [
                     'WeekDaySeeder',
                     'CenterUserPermissionSeeder',
@@ -1178,7 +1178,7 @@ class CenterService
             }
 
             $center->update($request);
-
+            
             if (isset($request['role'])) {
                 $center->roles()->detach();
                 $center->assignRole($request['role']);

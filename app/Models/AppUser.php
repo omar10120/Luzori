@@ -99,4 +99,9 @@ class AppUser extends Authenticatable implements HasMedia
     {
         return $this->hasMany(CenterReview::class, 'user_id');
     }
+
+    public function cartItems()
+    {
+        return $this->hasMany(CartItem::class, 'user_id');
+    }
 }
