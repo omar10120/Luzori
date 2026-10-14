@@ -14,6 +14,7 @@ use App\Models\InventoryMovement;
 use App\Models\Product;
 use App\Models\ProductBranch;
 use App\Models\User as TenantUser;
+use App\Services\CartService;
 use App\Services\CRUDService;
 use App\Services\InventoryMovementService;
 use Illuminate\Http\Request;
@@ -92,9 +93,13 @@ class BuyProductController extends Controller
             'discount' => 'nullable|numeric',
             'sales_worker_id' => 'required|exists:workers,id,deleted_at,NULL',
             'worker_id' => 'nullable|exists:workers,id,deleted_at,NULL',
+            'clear_cart' => 'nullable|boolean',
+            'cart_item_ids' => 'nullable|array',
+            'cart_item_ids.*' => 'integer',
         ]);
 
         $branchId = (int) $validated['branch_id'];
+        $centerId = (int) $request->center_id;
         $isPaidFromWallet = ($validated['payment_type'] === 'wallet');
         $totalPrice = 0.0;
         $walletDeducted = false;
@@ -178,6 +183,24 @@ class BuyProductController extends Controller
             });
 
             $item->load(['worker', 'sales_worker', 'details.product.translation']);
+
+            // Clear matching central cart product lines after successful purchase
+            if (!empty($validated['clear_cart'])) {
+                if (!empty($validated['cart_item_ids'])) {
+                    \App\Models\CartItem::query()
+                        ->where('user_id', $appUser->id)
+                        ->where('item_type', \App\Models\CartItem::TYPE_PRODUCT)
+                        ->whereIn('id', $validated['cart_item_ids'])
+                        ->delete();
+                } else {
+                    app(CartService::class)->clear(
+                        $appUser,
+                        $centerId,
+                        $branchId,
+                        \App\Models\CartItem::TYPE_PRODUCT
+                    );
+                }
+            }
 
             return MyHelper::responseJSON(
                 __('api.addSuccessfully'),
