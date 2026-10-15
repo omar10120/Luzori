@@ -951,29 +951,81 @@ body.luzori-center .lz-form-card .card-footer {
 }
 
 body.luzori-center .lz-lang-tabs {
-  display: flex;
-  gap: 0.35rem;
-  border-bottom: 1px solid #efe6d8;
-  margin-bottom: 1.35rem;
-  padding-bottom: 0;
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  border-bottom: none !important;
+  margin-bottom: 1.25rem;
+  padding: 0.3rem;
+  background: #f3ebe0;
+  border-radius: 12px;
+  width: auto;
+  max-width: 100%;
 }
 
-body.luzori-center .lz-lang-tabs .nav-link {
-  border: none !important;
-  border-bottom: 2px solid transparent !important;
-  border-radius: 0 !important;
+body.luzori-center .lz-lang-tabs .nav-item {
+  margin: 0 !important;
+}
+
+body.luzori-center .lz-lang-tabs .nav-link,
+body.luzori-center .nav-tabs.lz-lang-tabs .nav-link {
+  border: 1px solid transparent !important;
+  border-radius: 10px !important;
   color: var(--lz-muted) !important;
-  font-weight: 600;
-  padding: 0.65rem 1rem !important;
+  font-weight: 700;
+  padding: 0.55rem 1rem !important;
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
   background: transparent !important;
+  box-shadow: none !important;
+  position: relative;
 }
 
-body.luzori-center .lz-lang-tabs .nav-link.active {
+body.luzori-center .lz-lang-tabs .nav-link::after,
+body.luzori-center .lz-lang-tabs .nav-link::before,
+body.luzori-center .nav-tabs.lz-lang-tabs .nav-link::after,
+body.luzori-center .nav-tabs.lz-lang-tabs .nav-link::before {
+  display: none !important;
+  content: none !important;
+  border: none !important;
+}
+
+body.luzori-center .lz-lang-tabs .nav-link:hover {
   color: var(--lz-forest) !important;
-  border-bottom-color: var(--lz-forest) !important;
+  background: rgba(255, 255, 255, 0.65) !important;
+}
+
+body.luzori-center .lz-lang-tabs .nav-link.active,
+body.luzori-center .nav-tabs.lz-lang-tabs .nav-link.active,
+body.luzori-center .nav-tabs.lz-lang-tabs .nav-item.show .nav-link {
+  color: #fff !important;
+  background: var(--lz-forest) !important;
+  border-color: var(--lz-forest) !important;
+  box-shadow: 0 4px 12px rgba(0, 43, 38, 0.18) !important;
+}
+
+body.luzori-center .lz-lang-flag {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: inline-block;
+  background-size: cover;
+  background-position: center;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+body.luzori-center .lz-lang-flag-en {
+  background-image: url("https://flagcdn.com/w40/gb.png");
+}
+
+body.luzori-center .lz-lang-flag-ar {
+  background-image: url("https://flagcdn.com/w40/ae.png");
+}
+
+body.luzori-center .lz-lang-flag-fr {
+  background-image: url("https://flagcdn.com/w40/fr.png");
 }
 
 body.luzori-center .lz-field-label {
@@ -1005,6 +1057,65 @@ body.luzori-center .lz-form-card .form-control:focus,
 body.luzori-center .lz-form-card .form-select:focus {
   border-color: var(--lz-gold) !important;
   box-shadow: 0 0 0 3px rgba(197, 160, 112, 0.18) !important;
+}
+
+/* Joined input-group: flat radius where icon meets the field */
+body.luzori-center .input-group > .input-group-text {
+  background: #f7f3ec !important;
+  border: 1px solid #e5ddd2 !important;
+  color: var(--lz-forest);
+}
+
+body.luzori-center .input-group > .input-group-text:first-child,
+body.luzori-center .input-group > .form-control:first-child,
+body.luzori-center .input-group > .form-select:first-child,
+body.luzori-center .lz-form-card .input-group > .form-control:first-child,
+body.luzori-center .lz-form-card .input-group > .form-select:first-child {
+  border-top-right-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+  border-top-left-radius: 12px !important;
+  border-bottom-left-radius: 12px !important;
+}
+
+body.luzori-center .input-group > .input-group-text:last-child,
+body.luzori-center .input-group > .form-control:last-child,
+body.luzori-center .input-group > .form-select:last-child,
+body.luzori-center .lz-form-card .input-group > .form-control:last-child,
+body.luzori-center .lz-form-card .input-group > .form-select:last-child {
+  border-top-left-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
+  border-top-right-radius: 12px !important;
+  border-bottom-right-radius: 12px !important;
+}
+
+body.luzori-center .input-group > .input-group-text:not(:first-child):not(:last-child),
+body.luzori-center .input-group > .form-control:not(:first-child):not(:last-child),
+body.luzori-center .input-group > .form-select:not(:first-child):not(:last-child),
+body.luzori-center .lz-form-card .input-group > .form-control:not(:first-child):not(:last-child),
+body.luzori-center .lz-form-card .input-group > .form-select:not(:first-child):not(:last-child) {
+  border-radius: 0 !important;
+}
+
+html[dir='rtl'] body.luzori-center .input-group > .input-group-text:first-child,
+html[dir='rtl'] body.luzori-center .input-group > .form-control:first-child,
+html[dir='rtl'] body.luzori-center .input-group > .form-select:first-child,
+html[dir='rtl'] body.luzori-center .lz-form-card .input-group > .form-control:first-child,
+html[dir='rtl'] body.luzori-center .lz-form-card .input-group > .form-select:first-child {
+  border-top-left-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
+  border-top-right-radius: 12px !important;
+  border-bottom-right-radius: 12px !important;
+}
+
+html[dir='rtl'] body.luzori-center .input-group > .input-group-text:last-child,
+html[dir='rtl'] body.luzori-center .input-group > .form-control:last-child,
+html[dir='rtl'] body.luzori-center .input-group > .form-select:last-child,
+html[dir='rtl'] body.luzori-center .lz-form-card .input-group > .form-control:last-child,
+html[dir='rtl'] body.luzori-center .lz-form-card .input-group > .form-select:last-child {
+  border-top-right-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+  border-top-left-radius: 12px !important;
+  border-bottom-left-radius: 12px !important;
 }
 
 body.luzori-center .lz-map-search .btn {

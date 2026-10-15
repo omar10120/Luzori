@@ -4,29 +4,104 @@
 
 @section('vendor-style')
     @vite('resources/assets/vendor/libs/select2/select2.scss')
+    @include('CenterUser.Components.settings-form-styles')
+    <style>
+        .lz-product-form-page .lz-section-title {
+            color: #002b26;
+            font-weight: 700;
+            font-size: 1.05rem;
+            margin: 0 0 0.85rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #efe6d8;
+        }
+        .lz-product-form-page .product-branch-row {
+            background: #fbfaf7;
+            border: 1px solid #efe6d8 !important;
+            border-radius: 14px !important;
+        }
+        .lz-product-form-page .btn-outline-primary {
+            color: #002b26 !important;
+            border-color: #002b26 !important;
+            border-radius: 10px;
+            font-weight: 600;
+            background: #fff !important;
+        }
+        .lz-product-form-page .btn-outline-primary:hover {
+            background: #002b26 !important;
+            color: #fff !important;
+        }
+        .lz-product-form-page .select2-container--default .select2-selection--single {
+            border-radius: 12px !important;
+            border-color: #e5ddd2 !important;
+            min-height: 44px;
+            padding-top: 0.35rem;
+        }
+        .lz-product-form-page .modal-content {
+            border: none;
+            border-radius: 16px;
+            overflow: hidden;
+        }
+        .lz-product-form-page .modal-header {
+            background: #f7f3ec;
+            border-bottom: 1px solid #efe6d8;
+        }
+        .lz-product-form-page .modal-title {
+            color: #002b26;
+            font-weight: 700;
+        }
+        .lz-product-form-page a.text-primary {
+            color: #1a6b5a !important;
+            font-weight: 600;
+        }
+        .lz-product-form-page .form-check-input:checked {
+            background-color: #002b26;
+            border-color: #002b26;
+        }
+        .lz-product-form-page .form-switch .form-check-input:focus {
+            box-shadow: 0 0 0 0.2rem rgba(0, 43, 38, 0.15);
+        }
+        .lz-product-form-page .input-group-text {
+            background: #f7f3ec;
+            border-color: #e5ddd2;
+            color: #002b26;
+            font-weight: 600;
+            border-radius: 12px 0 0 12px;
+        }
+    </style>
 @endsection
 
 @section('content')
-    <div class="container">
+    <div class="luzori-page lz-settings-page lz-product-form-page">
         @include('CenterUser.Components.breadcrumbs')
 
-        <div class="row">
-            <form class="pt-0" id="frmSubmit" enctype="multipart/form-data">
-                @csrf
-                @if($item)
-                    <input type="hidden" name="id" value="{{ $item->id }}">
-                @endif
-                <div class="card">
-                    <div class="card-header">
-                        <h2>{{ $title }}</h2>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <!-- Left Column: Basic Info -->
-                            <div class="col-md-8">
-                                <!-- Basic Info Section -->
-                                <h5 class="mb-3">Basic info</h5>
-                        @include('CenterUser.Components.languages-tabs')
+        <div class="lz-page-toolbar">
+            <div class="lz-page-title-wrap">
+                <div class="lz-page-icon">
+                    <i class="ti ti-shopping-bag"></i>
+                </div>
+                <h1 class="lz-page-title">
+                    @if (is_null($item))
+                        {{ __('general.add_new') }} {{ __('locale.products') }}
+                    @else
+                        {{ __('general.edit') }} {{ __('locale.products') }}
+                    @endif
+                </h1>
+            </div>
+        </div>
+
+        <form class="pt-0" id="frmSubmit" enctype="multipart/form-data">
+            @csrf
+            @if($item)
+                <input type="hidden" name="id" value="{{ $item->id }}">
+            @endif
+            <div class="card lz-form-card">
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Left Column: Basic Info -->
+                        <div class="col-md-8">
+                            <!-- Basic Info Section -->
+                            <h5 class="lz-section-title">Basic info</h5>
+                            @include('CenterUser.Components.languages-tabs')
                         
                                 <div class="tab-content mb-4">
                             @foreach (Config::get('translatable.locales') as $locale)
@@ -35,7 +110,7 @@
                                     <div class="row">
                                                 <div class="col-md-12 mb-3">
                                             <div class="mb-1">
-                                                        <label for="name_{{ $locale }}" class="form-label">{{ __('field.name') }}  <span class="text-danger">*</span></label>
+                                                        <label for="name_{{ $locale }}" class="lz-field-label">{{ __('field.name') }}  <span class="text-danger">*</span></label>
                                                         <small class="text-muted">{{__('general.enter_the_name_of_the_product')}}</small>
                                                 <input type="text" id="name_{{ $locale }}" class="form-control"
                                                     name="{{ $locale }}[name]"
@@ -45,7 +120,7 @@
                                                 </div>
                                                 <div class="col-md-12 mb-3">
                                                     <div class="mb-1">
-                                                        <label for="text_{{ $locale }}" class="form-label">Product description  <span class="text-danger">*</span></label>
+                                                        <label for="text_{{ $locale }}" class="lz-field-label">Product description  <span class="text-danger">*</span></label>
                                                         <small class="text-muted">{{__('general.enter_the_description_of_the_product')}}</small>
                                                         <textarea id="text_{{ $locale }}" class="form-control" rows="4"
                                                             name="{{ $locale }}[text]"
@@ -62,7 +137,7 @@
                                 <div class="row mb-3">
                                     <div class="col-md-12">
                                         <div class="mb-1">
-                                            <label for="barcode" class="form-label">{{ __('field.barcode') }} (Optional)  <span class="text-danger">*</span></label>
+                                            <label for="barcode" class="lz-field-label">{{ __('field.barcode') }} (Optional)  <span class="text-danger">*</span></label>
                                             <small class="text-muted">{{__('general.enter_the_barcode_of_the_product')}}</small>
                                             <input type="text" id="barcode" class="form-control" name="barcode"
                                                 placeholder="UPC, EAN, GTIN"
@@ -74,7 +149,7 @@
                                 <div class="row mb-3">
                                         <div class="col-md-12">
                                             <div class="mb-1">
-                                            <label for="brand_id" class="form-label">{{ __('field.brand') }}  <span class="text-danger">*</span></label>
+                                            <label for="brand_id" class="lz-field-label">{{ __('field.brand') }}  <span class="text-danger">*</span></label>
                                             <small class="text-muted">{{__('general.select_a_brand_from_the_list')}}</small>
                                             <select class="form-control select2" name="brand_id" id="brand_id" data-select="true">
                                                 <option value="">{{ __('general.choose') }} {{ __('field.brand') }}</option>
@@ -94,7 +169,7 @@
                                 <div class="row mb-3">
                                     <div class="col-md-6">
                                         <div class="mb-1">
-                                            <label for="measure_unit" class="form-label">Measure  <span class="text-danger">*</span></label>
+                                            <label for="measure_unit" class="lz-field-label">Measure  <span class="text-danger">*</span></label>
                                             <small class="text-muted">{{__('general.select_a_measure_unit_from_the_list')}}</small>
                                             <select class="form-control select2" name="measure_unit" id="measure_unit" data-select="true">
                                                 <option value="">{{ __('general.choose') }} measure unit</option>
@@ -115,7 +190,7 @@
                                     </div>
                                     <div class="col-md-6">
                                         <div class="mb-1">
-                                            <label for="measure_amount" class="form-label">Amount  <span class="text-danger">*</span></label>
+                                            <label for="measure_amount" class="lz-field-label">Amount  <span class="text-danger">*</span></label>
                                             <small class="text-muted">{{__('general.enter_the_amount_of_the_product')}}</small>
                                             <input type="number" min="0.1" type="number"id="measure_amount" class="form-control" name="measure_amount"
                                                 placeholder="{{ $item && $item->measure_unit ? $item->measure_unit . ' 0.00' : '0.00' }}" step="0.01"
@@ -127,7 +202,7 @@
                                 <div class="row mb-3">
                                     <div class="col-md-12">
                                         <div class="mb-1">
-                                            <label for="short_description" class="form-label">Short description  <span class="text-danger">*</span></label>
+                                            <label for="short_description" class="lz-field-label">Short description  <span class="text-danger">*</span></label>
                                             <small class="text-muted">{{__('general.enter_the_short_description_of_the_product')}}</small>
                                             <textarea id="short_description" class="form-control" rows="2"
                                                 name="short_description"
@@ -141,7 +216,7 @@
                                 <div class="row mb-3">
                                     <div class="col-md-12">
                                         <div class="mb-1">
-                                            <label for="category_id" class="form-label">{{ __('field.category') }}  <span class="text-danger">*</span></label>
+                                            <label for="category_id" class="lz-field-label">{{ __('field.category') }}  <span class="text-danger">*</span></label>
                                             <small class="text-muted">{{__('general.select_a_category_from_the_list')}}</small>
                                             <select class="form-control select2" name="category_id" id="category_id" data-select="true">
                                                 <option value="">{{ __('general.choose') }} {{ __('field.category') }}</option>
@@ -162,8 +237,8 @@
                             <!-- Right Column: Product Photos -->
                             <div class="col-md-4">
                                 <!-- Product Photos Section -->
-                                <h5 class="mb-3">Product photos</h5>
-                                <p class="text-muted mb-3">Drag and drop a photo to change the order.</p>
+                                <h5 class="lz-section-title">Product photos</h5>
+                                <p class="lz-field-help mb-3">Drag and drop a photo to change the order.</p>
                                 <div class="mb-4">
                                     @include('CenterUser.Components.multi-image', [
                                         'item' => $item,
@@ -175,11 +250,11 @@
                         </div>
 
                         <!-- Pricing Section -->
-                        <h5 class="mb-3 mt-4">Pricing</h5>
+                        <h5 class="lz-section-title mt-4">Pricing</h5>
                         <div class="row mb-3">
                             <div class="col-md-12">
                                 <div class="mb-1">
-                                    <label for="supply_price" class="form-label">{{ __('field.supply_price') }}  <span class="text-danger">*</span></label>
+                                    <label for="supply_price" class="lz-field-label">{{ __('field.supply_price') }}  <span class="text-danger">*</span></label>
                                     <small class="text-muted">{{__('general.enter_the_supply_price_of_the_product')}}</small>
                                     <div class="input-group">
                                         <span class="input-group-text">{{ trim(get_currency()) }}</span>
@@ -223,7 +298,7 @@
                             <div class="row mb-3">
                                 <div class="col-md-12">
                                     <div class="mb-1">
-                                        <label for="retail_price" class="form-label">{{ __('field.retail_price') }}  <span class="text-danger">*</span></label>
+                                        <label for="retail_price" class="lz-field-label">{{ __('field.retail_price') }}  <span class="text-danger">*</span></label>
                                         <small class="text-muted">{{__('general.enter_the_retail_price_of_the_product')}}</small>
                                         <div class="input-group">
                                             <span class="input-group-text">{{ trim(get_currency()) }}</span>
@@ -238,7 +313,7 @@
                             <div class="row mb-3">
                                 <div class="col-md-12">
                                     <div class="mb-1">
-                                        <label for="markup" class="form-label">Markup  <span class="text-danger">*</span></label>
+                                        <label for="markup" class="lz-field-label">Markup  <span class="text-danger">*</span></label>
                                         <small class="text-muted">{{__('general.enter_the_markup_of_the_product')}}</small>
                                         <div class="input-group">
                                             <span class="input-group-text">%</span>
@@ -252,13 +327,13 @@
                         </div>
 
                         <!-- Inventory Section -->
-                        <h5 class="mb-3 mt-4">Inventory</h5>
-                        <p class="text-muted mb-3">Manage stock levels of this product </p>
+                        <h5 class="lz-section-title mt-4">Inventory</h5>
+                        <p class="lz-field-help mb-3">Manage stock levels of this product </p>
                         
                         <div class="row mb-3">
                             <div class="col-md-12">
                                 <div class="mb-1">
-                                    <label class="form-label">{{ __('field.sku') }} (Stock Keeping Unit) (Optional)</label>
+                                    <label class="lz-field-label">{{ __('field.sku') }} (Stock Keeping Unit) (Optional)</label>
                                     <div id="sku-container">
                                         @if($item && $item->skus && $item->skus->count() > 0)
                                             @foreach($item->skus as $index => $sku)
@@ -295,7 +370,7 @@
                         <div class="row mb-3">
                             <div class="col-md-12">
                                 <div class="mb-1">
-                                    <label for="product_supplier_id" class="form-label">Supplier  <span class="text-danger">*</span></label>
+                                    <label for="product_supplier_id" class="lz-field-label">Supplier  <span class="text-danger">*</span></label>
                                     <small class="text-muted">{{__('general.select_a_supplier_from_the_list')}}</small>
                                     <select class="form-control select2" name="product_supplier_ids[]" id="product_supplier_id" data-select="true">
                                         <option value="">{{ __('general.choose') }} supplier</option>
@@ -314,8 +389,8 @@
                         </div>
 
                         <!-- Product Branches Section -->
-                        <h5 class="mb-3 mt-4">Product Branches & Stock</h5>
-                        <p class="text-muted mb-3">Select branches and set stock quantity for each selected branch.</p>
+                        <h5 class="lz-section-title mt-4">Product Branches & Stock</h5>
+                        <p class="lz-field-help mb-3">Select branches and set stock quantity for each selected branch.</p>
                         
                         <div id="product-branches-container">
                             @if($item && $item->productBranches && $item->productBranches->count() > 0)
@@ -323,7 +398,7 @@
                                     <div class="product-branch-row mb-3 border rounded p-3" data-branch-index="{{ $index }}">
                                         <div class="row">
                                             <div class="col-md-6 mb-3">
-                                                <label class="form-label">Branch  <span class="text-danger">*</span></label>
+                                                <label class="lz-field-label">Branch  <span class="text-danger">*</span></label>
                                                 <small class="text-muted">{{__('general.select_a_branch_from_the_list')}}</small>
                                                 <select class="form-control select2 branch-select" 
                                                     name="product_branches[{{ $index }}][branch_id]" 
@@ -338,7 +413,7 @@
                                                 </select>
                                             </div>
                                             <div class="col-md-5 mb-3 stock-quantity-wrapper" style="{{ $productBranch->branch_id ? '' : 'display:none;' }}">
-                                                <label class="form-label">Stock Quantity  <span class="text-danger">*</span></label>
+                                                <label class="lz-field-label">Stock Quantity  <span class="text-danger">*</span></label>
                                                 <small class="text-muted">{{__('general.enter_the_stock_quantity_of_the_product')}}</small>
                                                 <input type="number" class="form-control stock-quantity-input" 
                                                     name="product_branches[{{ $index }}][stock_quantity]" 
@@ -346,7 +421,7 @@
                                                     value="{{ $productBranch->stock_quantity ?? 0 }}" />
                                             </div>
                                             <div class="col-md-1 mb-3">
-                                                <label class="form-label">&nbsp;</label>
+                                                <label class="lz-field-label">&nbsp;</label>
                                                 @if($index > 0)
                                                     <button type="button" class="btn btn-sm btn-danger w-100 remove-branch-btn">
                                                         <i class="ti ti-trash"></i>
@@ -360,7 +435,7 @@
                                 <div class="product-branch-row mb-3 border rounded p-3" data-branch-index="0">
                                     <div class="row">
                                         <div class="col-md-6 mb-3">
-                                            <label class="form-label">Branch  <span class="text-danger">*</span></label>
+                                            <label class="lz-field-label">Branch  <span class="text-danger">*</span></label>
                                             <small class="text-muted">{{__('general.select_a_branch_from_the_list')}}</small>
                                             <select class="form-control select2 branch-select" 
                                                 name="product_branches[0][branch_id]" 
@@ -374,14 +449,14 @@
                                             </select>
                                         </div>
                                         <div class="col-md-5 mb-3 stock-quantity-wrapper" style="display:none;">
-                                            <label class="form-label">Stock Quantity</label>
+                                            <label class="lz-field-label">Stock Quantity</label>
                                             <input type="number" class="form-control stock-quantity-input" 
                                                 name="product_branches[0][stock_quantity]" 
                                                 placeholder="0" min="0" 
                                                 value="1" />
                                         </div>
                                         <div class="col-md-1 mb-3">
-                                            <label class="form-label">&nbsp;</label>
+                                            <label class="lz-field-label">&nbsp;</label>
                                         </div>
                                     </div>
                                 </div>
@@ -392,87 +467,89 @@
                             <i class="ti ti-plus"></i> Add another branch
                         </button>
                     </div>
-                    <div class="card-footer">
-                        <button type="submit" class="btn btn-primary submitFrom">
-                            <i class="menu-icon tf-icons ti ti-check"></i>
+                    <div class="card-footer d-flex justify-content-end gap-2">
+                        <a href="{{ route('center_user.products.index') }}" class="btn btn-luzori-beige">
+                            {{ __('general.cancel') }}
+                        </a>
+                        <button type="submit" class="btn btn-luzori-primary submitFrom">
+                            <i class="ti ti-check me-1"></i>
                             <span>{{ __('general.save') }}</span>
                         </button>
                     </div>
                 </div>
             </form>
-        </div>
-    </div>
 
-    <!-- Add Brand Modal -->
-    <div class="modal fade" id="addBrandModal" tabindex="-1" aria-labelledby="addBrandModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="addBrandModalLabel">Add new brand</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="add-brand-form">
-                        <div class="mb-3">
-                            <label for="brand_name" class="form-label">Brand name</label>
-                            <input type="text" class="form-control" id="brand_name" name="name" placeholder="Enter brand name" required>
-                            <div class="invalid-feedback"></div>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="save-brand-btn">Save</button>
+        <!-- Add Brand Modal -->
+        <div class="modal fade" id="addBrandModal" tabindex="-1" aria-labelledby="addBrandModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addBrandModalLabel">Add new brand</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="add-brand-form">
+                            <div class="mb-3">
+                                <label for="brand_name" class="lz-field-label">Brand name</label>
+                                <input type="text" class="form-control" id="brand_name" name="name" placeholder="Enter brand name" required>
+                                <div class="invalid-feedback"></div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-luzori-beige" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-luzori-primary" id="save-brand-btn">Save</button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Add Category Modal -->
-    <div class="modal fade" id="addCategoryModal" tabindex="-1" aria-labelledby="addCategoryModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="addCategoryModalLabel">Add new category</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="add-category-form">
-                        <div class="mb-3">
-                            <label for="category_name" class="form-label">Category name</label>
-                            <input type="text" class="form-control" id="category_name" name="name" placeholder="Enter category name" required>
-                            <div class="invalid-feedback"></div>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="save-category-btn">Save</button>
+        <!-- Add Category Modal -->
+        <div class="modal fade" id="addCategoryModal" tabindex="-1" aria-labelledby="addCategoryModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addCategoryModalLabel">Add new category</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="add-category-form">
+                            <div class="mb-3">
+                                <label for="category_name" class="lz-field-label">Category name</label>
+                                <input type="text" class="form-control" id="category_name" name="name" placeholder="Enter category name" required>
+                                <div class="invalid-feedback"></div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-luzori-beige" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-luzori-primary" id="save-category-btn">Save</button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Add Supplier Modal -->
-    <div class="modal fade" id="addSupplierModal" tabindex="-1" aria-labelledby="addSupplierModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="addSupplierModalLabel">Add new supplier</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="add-supplier-form">
-                        <div class="mb-3">
-                            <label for="supplier_name" class="form-label">Supplier name</label>
-                            <input type="text" class="form-control" id="supplier_name" name="name" placeholder="Enter supplier name" required>
-                            <div class="invalid-feedback"></div>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="save-supplier-btn">Save</button>
+        <!-- Add Supplier Modal -->
+        <div class="modal fade" id="addSupplierModal" tabindex="-1" aria-labelledby="addSupplierModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addSupplierModalLabel">Add new supplier</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="add-supplier-form">
+                            <div class="mb-3">
+                                <label for="supplier_name" class="lz-field-label">Supplier name</label>
+                                <input type="text" class="form-control" id="supplier_name" name="name" placeholder="Enter supplier name" required>
+                                <div class="invalid-feedback"></div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-luzori-beige" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-luzori-primary" id="save-supplier-btn">Save</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -555,7 +632,7 @@
                     <div class="product-branch-row mb-3 border rounded p-3" data-branch-index="${branchIndex}">
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Branch</label>
+                                <label class="lz-field-label">Branch</label>
                                 <select class="form-control select2 branch-select" 
                                     name="product_branches[${branchIndex}][branch_id]" 
                                     data-select="true">
@@ -568,7 +645,7 @@
                                 </select>
                             </div>
                             <div class="col-md-5 mb-3 stock-quantity-wrapper" style="display:none;">
-                                <label class="form-label">Stock Quantity  <span class="text-danger">*</span></label>
+                                <label class="lz-field-label">Stock Quantity  <span class="text-danger">*</span></label>
                                 <small class="text-muted">{{__('general.enter_the_stock_quantity_of_the_product')}}</small>
                                 <input type="number" class="form-control stock-quantity-input" 
                                     name="product_branches[${branchIndex}][stock_quantity]" 
@@ -576,7 +653,7 @@
                                     value="0" />
                             </div>
                             <div class="col-md-1 mb-3">
-                                <label class="form-label">&nbsp;</label>
+                                <label class="lz-field-label">&nbsp;</label>
                                 <button type="button" class="btn btn-sm btn-danger w-100 remove-branch-btn">
                                     <i class="ti ti-trash"></i>
                                 </button>

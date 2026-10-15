@@ -4,14 +4,8 @@
 
 @section('vendor-style')
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flag-icons/css/flag-icons.min.css">
+    @include('CenterUser.Components.settings-form-styles')
     <style>
-        .luzori-page .breadcrumb-wrapper .breadcrumb {
-            margin-bottom: 0.75rem;
-            background: transparent;
-        }
-        .luzori-page .breadcrumb-item a { color: #7a8582; }
-        .luzori-page .breadcrumb-item.active { color: #002b26; font-weight: 600; }
-
         .lz-back-link {
             width: 40px;
             height: 40px;
@@ -94,7 +88,7 @@
 @endsection
 
 @section('content')
-    <div class="luzori-page lz-service-form-page">
+    <div class="luzori-page lz-settings-page lz-service-form-page">
         @include('CenterUser.Components.breadcrumbs')
 
         <div class="lz-page-toolbar">
@@ -121,25 +115,7 @@
             @csrf
             <div class="card lz-form-card">
                 <div class="card-body">
-                    <ul class="nav nav-tabs lz-lang-tabs" role="tablist">
-                        @foreach (Config::get('translatable.locales') as $locale)
-                            <li class="nav-item" role="presentation">
-                                <a class="nav-link {{ $loop->first ? 'active' : null }}"
-                                    id="{{ $locale }}-tab-add" data-bs-toggle="tab"
-                                    href="#{{ $locale }}-add" aria-controls="{{ $locale }}-add"
-                                    role="tab" aria-selected="{{ $loop->first ? 'true' : 'false' }}">
-                                    @if ($locale === 'en')
-                                        <span class="fi fi-gb fis rounded-circle" style="width:1rem;height:1rem;"></span>
-                                    @elseif ($locale === 'ar')
-                                        <span class="fi fi-ae fis rounded-circle" style="width:1rem;height:1rem;"></span>
-                                    @else
-                                        <i class="ti ti-flag"></i>
-                                    @endif
-                                    {{ Str::upper($locale) }}
-                                </a>
-                            </li>
-                        @endforeach
-                    </ul>
+                    @include('CenterUser.Components.languages-tabs')
 
                     <div class="tab-content">
                         @foreach (Config::get('translatable.locales') as $locale)
@@ -181,7 +157,7 @@
                             ])
                         </div>
 
-                        <div class="col-md-12 mb-3">
+                        <div class="col-md-4 mb-3">
                             <label class="lz-field-label" for="rooms_no">
                                 {{ __('field.rooms_no') }} <span class="text-danger">*</span>
                             </label>
@@ -191,7 +167,7 @@
                                 value="{{ $item ? $item->rooms_no : null }}" />
                         </div>
 
-                        <div class="col-md-12 mb-3">
+                        <div class="col-md-4 mb-3">
                             <label class="lz-field-label" for="free_book">
                                 {{ __('field.free_book') }} <span class="text-danger">*</span>
                             </label>
@@ -201,7 +177,7 @@
                                 value="{{ $item ? $item->free_book : null }}" />
                         </div>
 
-                        <div class="col-md-12 mb-3">
+                        <div class="col-md-4 mb-3">
                             <label class="lz-field-label" for="price">
                                 {{ __('field.price') }} <span class="text-danger">*</span>
                             </label>

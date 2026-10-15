@@ -54,19 +54,34 @@
         border-color: #c5a070 !important;
         box-shadow: 0 0 0 3px rgba(197, 160, 112, 0.18) !important;
     }
-    .lz-settings-page .input-group-text {
+    .lz-settings-page .input-group > .input-group-text {
         background: #f7f3ec !important;
         border: 1px solid #e5ddd2 !important;
-        border-radius: 12px 0 0 12px !important;
         color: #002b26;
     }
-    html[dir='rtl'] .lz-settings-page .input-group-text {
+    .lz-settings-page .input-group > .input-group-text:first-child,
+    .lz-settings-page .input-group > .form-control:first-child,
+    .lz-settings-page .input-group > .form-select:first-child {
+        border-radius: 12px 0 0 12px !important;
+    }
+    .lz-settings-page .input-group > .input-group-text:last-child,
+    .lz-settings-page .input-group > .form-control:last-child,
+    .lz-settings-page .input-group > .form-select:last-child {
         border-radius: 0 12px 12px 0 !important;
     }
-    .lz-settings-page .input-group .form-control {
+    .lz-settings-page .input-group > .input-group-text:not(:first-child):not(:last-child),
+    .lz-settings-page .input-group > .form-control:not(:first-child):not(:last-child),
+    .lz-settings-page .input-group > .form-select:not(:first-child):not(:last-child) {
+        border-radius: 0 !important;
+    }
+    html[dir='rtl'] .lz-settings-page .input-group > .input-group-text:first-child,
+    html[dir='rtl'] .lz-settings-page .input-group > .form-control:first-child,
+    html[dir='rtl'] .lz-settings-page .input-group > .form-select:first-child {
         border-radius: 0 12px 12px 0 !important;
     }
-    html[dir='rtl'] .lz-settings-page .input-group .form-control {
+    html[dir='rtl'] .lz-settings-page .input-group > .input-group-text:last-child,
+    html[dir='rtl'] .lz-settings-page .input-group > .form-control:last-child,
+    html[dir='rtl'] .lz-settings-page .input-group > .form-select:last-child {
         border-radius: 12px 0 0 12px !important;
     }
     .lz-settings-page .btn-luzori-primary {
@@ -105,25 +120,6 @@
         width: 22px;
         height: 22px;
         object-fit: contain;
-    }
-    .lz-settings-page .nav-tabs {
-        display: flex;
-        gap: 0.35rem;
-        border-bottom: 1px solid #efe6d8;
-        margin-bottom: 1.15rem;
-    }
-    .lz-settings-page .nav-tabs .nav-link {
-        border: none !important;
-        border-bottom: 2px solid transparent !important;
-        border-radius: 0 !important;
-        color: #7a8582 !important;
-        font-weight: 600;
-        padding: 0.65rem 1rem !important;
-        background: transparent !important;
-    }
-    .lz-settings-page .nav-tabs .nav-link.active {
-        color: #002b26 !important;
-        border-bottom-color: #002b26 !important;
     }
     .lz-settings-page .form-check-input:checked {
         background-color: #002b26 !important;

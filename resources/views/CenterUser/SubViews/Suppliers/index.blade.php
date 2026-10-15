@@ -19,26 +19,6 @@
             height: 72px;
             object-fit: cover;
         }
-        .lz-supplier-form-page .nav-tabs {
-            display: flex;
-            gap: 0.35rem;
-            border-bottom: 1px solid #efe6d8;
-            margin-bottom: 1.15rem;
-        }
-        .lz-supplier-form-page .nav-tabs .nav-link {
-            border: none !important;
-            border-bottom: 2px solid transparent !important;
-            border-radius: 0 !important;
-            color: #7a8582 !important;
-            font-weight: 600;
-            padding: 0.65rem 1rem !important;
-            background: transparent !important;
-        }
-        .lz-supplier-form-page .nav-tabs .nav-link.active {
-            color: #002b26 !important;
-            border-bottom-color: #002b26 !important;
-            background: transparent !important;
-        }
         @media (max-width: 576px) {
             .lz-supplier-form-page .row.g-2 > div {
                 margin-bottom: 0.75rem;

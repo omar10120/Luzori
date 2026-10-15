@@ -1164,15 +1164,16 @@
                 <div class="modal-body">
                     <form id="quick-add-service-form">
                         @csrf
-                        <ul class="nav nav-tabs" role="tablist">
+                        <ul class="nav nav-tabs lz-lang-tabs" role="tablist">
                             @foreach (Config::get('translatable.locales') as $locale)
-                                <li class="nav-item">
+                                <li class="nav-item" role="presentation">
                                     <a class="nav-link {{ $loop->first ? 'active' : null }}"
                                         id="quick-service-{{ $locale }}-tab-link" data-bs-toggle="tab"
                                         href="#quick-service-{{ $locale }}-add" aria-controls="quick-service-{{ $locale }}-add"
                                         role="tab" aria-selected="{{ $loop->first ? 'true' : 'false' }}">
-                                        <i class="menu-icon tf-icons ti ti-flag"></i>
-                                        {{ Str::upper($locale) }}</a>
+                                        <span class="lz-lang-flag lz-lang-flag-{{ $locale }}" aria-hidden="true"></span>
+                                        {{ Str::upper($locale) }}
+                                    </a>
                                 </li>
                             @endforeach
                         </ul>

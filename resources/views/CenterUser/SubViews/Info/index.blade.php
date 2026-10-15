@@ -5,23 +5,41 @@
 @section('vendor-style')
     @include('CenterUser.Components.settings-form-styles')
     <style>
+        .lz-settings-page .lz-contact-phone-row > [class*="col"] {
+            display: flex;
+            flex-direction: column;
+        }
+        .lz-settings-page .lz-contact-phone-row #country_code_container > .mb-1 {
+            margin-bottom: 0 !important;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+        .lz-settings-page .lz-contact-phone-row .lz-field-label,
+        .lz-settings-page .lz-contact-phone-row .form-label {
+            font-weight: 700;
+            color: #002b26;
+            font-size: 0.92rem;
+            margin-bottom: 0.45rem;
+            line-height: 1.35;
+            min-height: 1.35rem;
+        }
+        .lz-settings-page .lz-contact-phone-row .lz-field-help {
+            display: none;
+        }
+        .lz-settings-page .lz-contact-phone-row .input-group {
+            margin-top: auto;
+            flex-wrap: nowrap;
+        }
         .lz-settings-page .lz-contact-phone-row select[name="country_code"] {
             min-width: 0;
             text-overflow: ellipsis;
-        }
-        .lz-settings-page #country_code_container .input-group {
-            flex-wrap: nowrap;
         }
         .lz-settings-page #country_code_container .form-control,
         .lz-settings-page #country_code_container select {
             overflow: hidden;
             white-space: nowrap;
             text-overflow: ellipsis;
-        }
-        .lz-settings-page .lz-contact-phone-row .form-label {
-            font-weight: 700;
-            color: #002b26;
-            font-size: 0.92rem;
         }
     </style>
 @endsection
@@ -94,13 +112,12 @@
                         </div>
                         <div class="col-12 col-md-{{ ($item && $item->country_code == '+971') ? '6' : '8' }}" id="phone_input_container">
                             <label class="lz-field-label">{{ __('field.phone') }} <span class="text-danger">*</span></label>
-                            <small class="lz-field-help">{{ __('general.enter_the_phone_number') }}</small>
                             <div class="input-group">
                                 <span class="input-group-text">
                                     <i class="ti ti-phone"></i>
                                 </span>
                                 <input type="tel" class="form-control" name="phone" id="phone" value="{{ $phoneWithoutPrefix }}"
-                                    placeholder="5XXXXXXX"
+                                    placeholder="{{ __('field.phone') }}"
                                     required
                                     maxlength="8"
                                     pattern="5[0-9]{7}"
