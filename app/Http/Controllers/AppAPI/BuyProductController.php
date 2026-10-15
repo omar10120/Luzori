@@ -22,6 +22,7 @@ use App\Services\CRUDService;
 use App\Services\InventoryMovementService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -37,37 +38,179 @@ class BuyProductController extends Controller
         $this->crudService = $crudService;
     }
 
-    public function all(Request $request)
-    {
-        $request->validate([
-            'center_id' => 'required|integer|exists:central.centers,id',
-        ]);
-
-        $switched = $this->switchToCenter((int) $request->center_id);
-        if ($switched instanceof \Illuminate\Http\JsonResponse) {
-            return $switched;
-        }
-
-        try {
-            $relations = ['worker', 'sales_worker', 'details' => function ($q) {
-                $q->with(['product' => function ($q1) {
-                    $q1->with(['translation']);
-                }]);
-            }];
-
-            $items = $this->crudService->paginate($this->model, $relations, 0);
-            if ($items) {
-                $paginationData = PaginateDateResource::make($items);
-                $items = BuyProductResource::collection($items);
-                return MyHelper::responseJSON(__('api.doneSuccessfully'), Response::HTTP_OK, $items, $paginationData);
-            }
-
-            return MyHelper::responseJSON(__('api.unknownError'), Response::HTTP_INTERNAL_SERVER_ERROR);
-        } catch (\Exception $e) {
-            Log::error('AppAPI BuyProduct all: ' . $e->getMessage());
-            return MyHelper::responseJSON(__('api.unknownError'), Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
-    }
+    
+  public function all(Request $request)
+  {
+      $request->validate([
+          'center_id' => 'nullable|integer|exists:central.centers,id',
+          'per_page'  => 'nullable|integer|min:1|max:100',
+          'page'      => 'nullable|integer|min:1',
+      ]);
+  
+      $appUser = auth('sanctum')->user();
+      if (!$appUser) {
+          return MyHelper::responseJSON('Unauthorized', Response::HTTP_UNAUTHORIZED);
+      }
+  
+      $relations = [
+          'worker',
+          'sales_worker',
+          'details' => function ($q) {
+              $q->with(['product' => function ($q1) {
+                  $q1->with(['translation', 'media']);
+              }]);
+          },
+      ];
+  
+      
+  
+      $originalDb = Config::get('database.connections.mysql.database');
+  
+      try {
+          // ═══════════════════════════════════════════════════════════
+          // Case A — center_id provided
+          // ═══════════════════════════════════════════════════════════
+          if ($request->filled('center_id')) {
+              $requestedCenterId = (int) $request->center_id;
+ 
+  
+              $center = $this->switchToCenter($requestedCenterId);
+              if ($center instanceof \Illuminate\Http\JsonResponse) {
+                  return $center;
+              }
+  
+              $items = BuyProduct::with($relations)
+                  ->where('global_user_id', $appUser->id)
+                  ->latest('id')
+                  ->paginate((int) $request->input('per_page', 10));
+  
+              $collection = $items->getCollection()->map(function (BuyProduct $item) use ($center) {
+                  $item->setAttribute('center', [
+                      'id'     => $center->id,
+                      'name'   => $center->name,
+                      'domain' => $center->domain,
+                    
+                  ]);
+                  return $item;
+              });
+              $items->setCollection($collection);
+  
+              return MyHelper::responseJSON(
+                  __('api.doneSuccessfully'),
+                  Response::HTTP_OK,
+                  BuyProductResource::collection($items),
+                  PaginateDateResource::make($items)
+              );
+          }
+  
+          // ═══════════════════════════════════════════════════════════
+          // Case B — no center_id → aggregate across allowed centers
+          // ═══════════════════════════════════════════════════════════
+          $allItems = []; 
+  
+    
+          $centers = Center::whereNotNull('database')
+              ->whereNotNull('database')
+              ->get(['id', 'name', 'domain', 'database', 'expire_date', 'status']);
+  
+          Log::info('[BuyProduct all] Case B centers', [
+              'ids' => $centers->pluck('id')->all(),
+          ]);
+  
+          foreach ($centers as $center) {
+              if ($center->expire_date && now()->gt($center->expire_date)) {
+                  continue;
+              }
+  
+              try {
+                  Config::set('database.connections.mysql.database', $center->database);
+                  DB::purge('mysql');
+                  DB::reconnect('mysql');
+  
+                  $rows = BuyProduct::with($relations)
+                      ->where('global_user_id', $appUser->id)
+                      ->latest('id')
+                      ->get();
+  
+                  Log::info('[BuyProduct all] center fetched', [
+                      'center_id' => $center->id,
+                      'rows'      => $rows->count(),
+                  ]);
+  
+                  foreach ($rows as $row) {
+                      $row->setAttribute('center', [
+                          'id'     => $center->id,
+                          'name'   => $center->name,
+                          'domain' => $center->domain,
+                          'logo'   => $center->logo ? url('storage/' . $center->logo) : null,
+                      ]);
+  
+                      
+                      $allItems[] = json_decode(json_encode(new BuyProductResource($row)), true);
+                  }
+              } catch (\Throwable $e) {
+                  Log::error('[BuyProduct all] center query failed', [
+                      'center_id' => $center->id,
+                      'database'  => $center->database,
+                      'message'   => $e->getMessage(),
+                      'file'      => $e->getFile(),
+                      'line'      => $e->getLine(),
+                  ]);
+                  continue;
+              }
+          }
+  
+          // Restore central
+          Config::set('database.connections.mysql.database', $originalDb);
+          DB::purge('mysql');
+          DB::reconnect('mysql');
+  
+          // Sort arrays (created_at is now a string in the array)
+          usort($allItems, function ($a, $b) {
+              return strcmp((string) ($b['created_at'] ?? ''), (string) ($a['created_at'] ?? ''));
+          });
+  
+          $perPage = (int) $request->input('per_page', 15);
+          $page    = (int) $request->input('page', 1);
+          $total   = count($allItems);
+          $slice   = array_slice($allItems, ($page - 1) * $perPage, $perPage);
+  
+          $paginator = new LengthAwarePaginator(
+              $slice,
+              $total,
+              $perPage,
+              $page,
+              ['path' => $request->url(), 'query' => $request->query()]
+          );
+  
+          return MyHelper::responseJSON(
+              __('api.doneSuccessfully'),
+              Response::HTTP_OK,
+              $slice, // already plain arrays → no lazy loads left
+              PaginateDateResource::make($paginator)
+          );
+  
+      } catch (\Throwable $e) {
+          try {
+              Config::set('database.connections.mysql.database', $originalDb);
+              DB::purge('mysql');
+              DB::reconnect('mysql');
+          } catch (\Throwable $ignore) {}
+  
+          Log::error('AppAPI BuyProduct all FAILED', [
+              'message' => $e->getMessage(),
+              'file'    => $e->getFile(),
+              'line'    => $e->getLine(),
+              'trace'   => $e->getTraceAsString(),
+          ]);
+  
+          // ⚠️ TEMP: show real error while debugging
+          return MyHelper::responseJSON(
+              $e->getMessage() . ' @ ' . basename($e->getFile()) . ':' . $e->getLine(),
+              Response::HTTP_INTERNAL_SERVER_ERROR
+          );
+      }
+  }
 
     public function add(Request $request)
     {   
