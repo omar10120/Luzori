@@ -54,35 +54,33 @@
         border-color: #c5a070 !important;
         box-shadow: 0 0 0 3px rgba(197, 160, 112, 0.18) !important;
     }
+    .lz-settings-page .input-group {
+        border: 1px solid #e5ddd2 !important;
+        border-radius: 12px !important;
+        overflow: hidden;
+        background: #fff;
+    }
     .lz-settings-page .input-group > .input-group-text {
         background: #f7f3ec !important;
-        border: 1px solid #e5ddd2 !important;
+        border: none !important;
+        border-radius: 0 !important;
         color: #002b26;
     }
-    .lz-settings-page .input-group > .input-group-text:first-child,
-    .lz-settings-page .input-group > .form-control:first-child,
-    .lz-settings-page .input-group > .form-select:first-child {
-        border-radius: 12px 0 0 12px !important;
-    }
-    .lz-settings-page .input-group > .input-group-text:last-child,
-    .lz-settings-page .input-group > .form-control:last-child,
-    .lz-settings-page .input-group > .form-select:last-child {
-        border-radius: 0 12px 12px 0 !important;
-    }
-    .lz-settings-page .input-group > .input-group-text:not(:first-child):not(:last-child),
-    .lz-settings-page .input-group > .form-control:not(:first-child):not(:last-child),
-    .lz-settings-page .input-group > .form-select:not(:first-child):not(:last-child) {
+    .lz-settings-page .input-group > .form-control,
+    .lz-settings-page .input-group > .form-select {
+        border: none !important;
         border-radius: 0 !important;
+        box-shadow: none !important;
     }
-    html[dir='rtl'] .lz-settings-page .input-group > .input-group-text:first-child,
-    html[dir='rtl'] .lz-settings-page .input-group > .form-control:first-child,
-    html[dir='rtl'] .lz-settings-page .input-group > .form-select:first-child {
-        border-radius: 0 12px 12px 0 !important;
+    .lz-settings-page .input-group > .input-group-text:not(:last-child) {
+        border-inline-end: 1px solid #e5ddd2 !important;
     }
-    html[dir='rtl'] .lz-settings-page .input-group > .input-group-text:last-child,
-    html[dir='rtl'] .lz-settings-page .input-group > .form-control:last-child,
-    html[dir='rtl'] .lz-settings-page .input-group > .form-select:last-child {
-        border-radius: 12px 0 0 12px !important;
+    .lz-settings-page .input-group > .input-group-text:not(:first-child) {
+        border-inline-start: 1px solid #e5ddd2 !important;
+    }
+    .lz-settings-page .input-group:focus-within {
+        border-color: #c5a070 !important;
+        box-shadow: 0 0 0 3px rgba(197, 160, 112, 0.18);
     }
     .lz-settings-page .btn-luzori-primary {
         background: #002b26 !important;

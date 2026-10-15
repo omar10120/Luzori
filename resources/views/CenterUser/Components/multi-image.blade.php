@@ -115,11 +115,12 @@
         gap: 0.5rem;
         font-size: 0.875rem;
         font-weight: 600;
-        color: #696cff;
+        color: #002b26;
         margin-bottom: 0.75rem;
         padding: 0.5rem 1rem;
-        background: linear-gradient(135deg, #f3f0ff 0%, #ede9ff 100%);
-        border-radius: 8px;
+        background: linear-gradient(135deg, #f7f3ec 0%, #efe6d8 100%);
+        border: 1px solid #e8dccb;
+        border-radius: 10px;
     }
 
     .main-photo-label i {
@@ -131,17 +132,17 @@
         width: 100%;
         height:45%;
         min-height: 180px;
-        border: 2px dashed #e0e0e0;
-        border-radius: 12px;
-        background: #fafafa;
+        border: 2px dashed #b7c9c4;
+        border-radius: 14px;
+        background: #eef5f3;
         overflow: hidden;
         transition: all 0.3s ease;
         z-index: 5;
     }
 
     .main-photo-container:hover {
-        border-color: #696cff;
-        background: #f8f7ff;
+        border-color: #002b26;
+        background: #e5f0ed;
     }
 
     .main-photo-preview {
@@ -201,21 +202,22 @@
 
     .placeholder-content {
         text-align: center;
-        color: #696cff;
+        color: #0a3a34;
     }
 
     .placeholder-content i {
         font-size: 2.5rem;
         margin-bottom: 0.5rem;
         display: block;
-        opacity: 0.7;
+        opacity: 0.85;
+        color: #0a3a34;
     }
 
     .placeholder-content p {
         font-size: 0.875rem;
-        font-weight: 500;
+        font-weight: 600;
         margin: 0.25rem 0;
-        color: #566a7f;
+        color: #002b26;
     }
 
     .placeholder-content small {
@@ -321,7 +323,7 @@
     }
 
     .btn-set-main:hover {
-        background: #696cff;
+        background: #002b26;
         color: white;
     }
 
@@ -335,8 +337,8 @@
     }
 
     .photo-item-add .photo-item-inner {
-        border: 2px dashed #d0d0d0;
-        background: #fafafa;
+        border: 2px dashed #b7c9c4;
+        background: #eef5f3;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -344,14 +346,14 @@
     }
 
     .photo-item-add:hover .photo-item-inner {
-        border-color: #696cff;
-        background: #f8f7ff;
+        border-color: #002b26;
+        background: #e5f0ed;
     }
 
     .btn-add-photo {
         border: none;
         background: transparent;
-        color: #696cff;
+        color: #0a3a34;
         display: flex;
         flex-direction: column;
         align-items: center;

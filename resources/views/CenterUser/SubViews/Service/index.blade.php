@@ -6,21 +6,6 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flag-icons/css/flag-icons.min.css">
     @include('CenterUser.Components.settings-form-styles')
     <style>
-        .lz-back-link {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: #0a3a34;
-            color: #fff !important;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none !important;
-            flex-shrink: 0;
-            box-shadow: 0 6px 16px rgba(0, 43, 38, 0.18);
-        }
-        .lz-back-link:hover { filter: brightness(1.08); color: #fff !important; }
-
         .lz-form-card .form-check-input {
             border-color: #c5a070;
             width: 1.1em;
@@ -93,21 +78,16 @@
 
         <div class="lz-page-toolbar">
             <div class="lz-page-title-wrap">
-                <a href="{{ route('center_user.services.index') }}" class="lz-back-link" title="{{ __('general.back') ?? 'Back' }}">
-                    <i class="ti ti-arrow-left"></i>
-                </a>
-                <div>
-                    <div class="text-muted" style="font-size:.85rem;font-weight:600;">
-                        {{ is_null($item) ? __('general.add') : __('general.edit') }}
-                    </div>
-                    <h1 class="lz-page-title">
-                        @if (is_null($item))
-                            {{ __('general.add') }} {{ __('locale.service') }}
-                        @else
-                            {{ __('general.edit') }} {{ __('locale.service') }}
-                        @endif
-                    </h1>
+                <div class="lz-page-icon">
+                    <i class="ti ti-scissors"></i>
                 </div>
+                <h1 class="lz-page-title">
+                    @if (is_null($item))
+                        {{ __('general.add_new') }} {{ __('locale.service') }}
+                    @else
+                        {{ __('general.edit') }} {{ __('locale.service') }}
+                    @endif
+                </h1>
             </div>
         </div>
 

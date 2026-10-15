@@ -13,7 +13,8 @@
             color: #002b26 !important;
             font-weight: 600;
             font-size: 0.8rem;
-            padding: 0.35rem 0.85rem !important;
+            padding: 0.4rem 0.9rem !important;
+            transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
         }
         .lz-payment-form-page .lz-suggest-chip:hover,
         .lz-payment-form-page .lz-suggest-chip.is-active {
@@ -23,9 +24,21 @@
         }
         .lz-payment-form-page .select2-container--default .select2-selection--multiple {
             border-radius: 12px !important;
-            border-color: #e5ddd2 !important;
+            border: 1px solid #e5ddd2 !important;
             min-height: 44px;
-            padding: 0.25rem 0.4rem;
+            padding: 0.3rem 0.45rem;
+            background: #fff !important;
+        }
+        .lz-payment-form-page .select2-container--default.select2-container--focus .select2-selection--multiple {
+            border-color: #c5a070 !important;
+            box-shadow: 0 0 0 3px rgba(197, 160, 112, 0.18);
+        }
+        .lz-payment-form-page .lz-suggest-wrap {
+            margin-top: 0.75rem;
+            padding: 0.85rem 1rem;
+            background: #fbfaf7;
+            border: 1px solid #efe6d8;
+            border-radius: 14px;
         }
     </style>
 @endsection
@@ -55,14 +68,19 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="lz-field-label">{{ __('field.name') }} <span class="text-danger">*</span></label>
+                            <label class="lz-field-label" for="name">{{ __('field.name') }} <span class="text-danger">*</span></label>
                             <small class="lz-field-help">{{ __('general.enter_the_name_of_the_payment_method') }}</small>
-                            <input type="text" id="name" class="form-control"
-                                name="name" placeholder="{{ __('field.name') }}"
-                                value="{{ $item ? $item->name : '' }}" />
-                            <div class="mt-2">
-                                <small class="lz-field-help">{{ __('field.suggestions') }}</small>
-                                <div class="d-flex flex-wrap gap-2 mt-1">
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="ti ti-writing"></i>
+                                </span>
+                                <input type="text" id="name" class="form-control"
+                                    name="name" placeholder="{{ __('field.name') }}"
+                                    value="{{ $item ? $item->name : '' }}" />
+                            </div>
+                            <div class="lz-suggest-wrap">
+                                <small class="lz-field-help d-block mb-2">{{ __('field.suggestions') }}</small>
+                                <div class="d-flex flex-wrap gap-2">
                                     <button type="button" class="btn btn-sm lz-suggest-chip payment-name-suggestion"
                                         data-name="service_cash">Service Cash</button>
                                     <button type="button" class="btn btn-sm lz-suggest-chip payment-name-suggestion"
@@ -79,7 +97,7 @@
                             </div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="lz-field-label">{{ __('field.types') }} <span class="text-danger">*</span></label>
+                            <label class="lz-field-label" for="types">{{ __('field.types') }} <span class="text-danger">*</span></label>
                             <small class="lz-field-help">{{ __('general.select_a_types_of_the_payment_method') }}</small>
                             <select class="select2 form-control" name="types[]" id="types" multiple>
                                 @foreach(\App\Models\PaymentMethod::getTypes() as $key => $value)

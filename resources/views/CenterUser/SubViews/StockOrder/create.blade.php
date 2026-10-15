@@ -4,23 +4,115 @@
 
 @section('vendor-style')
     @vite('resources/assets/vendor/libs/select2/select2.scss')
+    @include('CenterUser.Components.settings-form-styles')
+    <style>
+        .lz-stock-order-page .lz-section-title {
+            color: #002b26;
+            font-weight: 700;
+            font-size: 1.05rem;
+            margin: 0;
+        }
+        .lz-stock-order-page .lz-flow-hint {
+            color: #7a8582;
+            font-size: 0.88rem;
+            font-weight: 500;
+            margin: 0.2rem 0 0;
+        }
+        .lz-stock-order-page #branches-checkbox-list {
+            background: #fbfaf7;
+            border: 1px solid #efe6d8 !important;
+            border-radius: 14px !important;
+        }
+        .lz-stock-order-page .table {
+            border-color: #efe6d8;
+        }
+        .lz-stock-order-page .table thead th {
+            background: #f7f3ec;
+            color: #002b26;
+            font-weight: 700;
+            font-size: 0.78rem;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+            border-color: #efe6d8;
+            white-space: nowrap;
+        }
+        .lz-stock-order-page .table tbody td,
+        .lz-stock-order-page .table tfoot td {
+            border-color: #efe6d8;
+            vertical-align: middle;
+        }
+        .lz-stock-order-page .table tfoot td {
+            background: #fbfaf7;
+            color: #002b26;
+        }
+        .lz-stock-order-page .btn-outline-primary {
+            color: #002b26 !important;
+            border-color: #002b26 !important;
+            border-radius: 10px;
+            font-weight: 600;
+            background: #fff !important;
+        }
+        .lz-stock-order-page .btn-outline-primary:hover:not(:disabled) {
+            background: #002b26 !important;
+            color: #fff !important;
+        }
+        .lz-stock-order-page .btn-outline-primary:disabled {
+            opacity: 0.45;
+        }
+        .lz-stock-order-page .select2-container--default .select2-selection--single {
+            border-radius: 12px !important;
+            border-color: #e5ddd2 !important;
+            min-height: 44px;
+            padding-top: 0.35rem;
+        }
+        .lz-stock-order-page .modal-content {
+            border: none;
+            border-radius: 16px;
+            overflow: hidden;
+        }
+        .lz-stock-order-page .modal-header {
+            background: #f7f3ec;
+            border-bottom: 1px solid #efe6d8;
+        }
+        .lz-stock-order-page .modal-title {
+            color: #002b26;
+            font-weight: 700;
+        }
+        .lz-stock-order-page .form-check-input:checked {
+            background-color: #002b26;
+            border-color: #002b26;
+        }
+        .lz-stock-order-page .alert-danger {
+            border-radius: 12px;
+            border-color: #f0c7c0;
+            background: #fff5f3;
+        }
+    </style>
 @endsection
 
 @section('content')
-    <div class="container">
+    <div class="luzori-page lz-settings-page lz-stock-order-page">
         @include('CenterUser.Components.breadcrumbs')
 
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-                <div>
-                    <h2 class="mb-1">{{ $title }}</h2>
-                    <p class="text-muted mb-0" id="source-flow-hint">{{ __('field.stock_order_supplier_flow_hint') }}</p>
+        <div class="lz-page-toolbar">
+            <div class="lz-page-title-wrap">
+                <div class="lz-page-icon">
+                    <i class="ti ti-package-import"></i>
                 </div>
-                <div class="d-flex gap-2">
-                    <a href="{{ route('center_user.stockorders.index') }}" class="btn btn-outline-secondary">{{ __('general.close') }}</a>
-                    <button type="button" class="btn btn-primary" id="btnSaveOrder">{{ __('general.save') }}</button>
+                <div>
+                    <h1 class="lz-page-title">{{ $title }}</h1>
+                    <p class="lz-flow-hint" id="source-flow-hint">{{ __('field.stock_order_supplier_flow_hint') }}</p>
                 </div>
             </div>
+            <div class="lz-page-actions">
+                <a href="{{ route('center_user.stockorders.index') }}" class="btn btn-luzori-beige">{{ __('general.close') }}</a>
+                <button type="button" class="btn btn-luzori-primary" id="btnSaveOrder">
+                    <i class="ti ti-check me-1"></i>{{ __('general.save') }}
+                </button>
+            </div>
+        </div>
+
+        <div class="card lz-form-card">
             <div class="card-body">
                 <div id="alertError" class="alert alert-danger d-none" role="alert">
                     <ul id="listError" class="mb-0"></ul>
@@ -28,14 +120,14 @@
 
                 <div class="row g-3 mb-4">
                     <div class="col-md-4">
-                        <label for="source_type" class="form-label">{{ __('field.stock_order_source') }} <span class="text-danger">*</span></label>
+                        <label for="source_type" class="lz-field-label">{{ __('field.stock_order_source') }} <span class="text-danger">*</span></label>
                         <select id="source_type" class="form-control select2" required>
                             <option value="supplier">{{ __('locale.suppliers') }}</option>
                             <option value="main_stock">{{ __('field.main_stock') }}</option>
                         </select>
                     </div>
                     <div class="col-md-4" id="supplier-field">
-                        <label class="form-label">{{ __('locale.suppliers') }} <span class="text-danger">*</span></label>
+                        <label class="lz-field-label">{{ __('locale.suppliers') }} <span class="text-danger">*</span></label>
                         <select id="product_supplier_id" class="form-control select2" required>
                             <option value="">{{ __('field.select_supplier') }}</option>
                             @foreach ($suppliers as $supplier)
@@ -44,13 +136,13 @@
                         </select>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label">{{ __('field.expected') }}</label>
+                        <label class="lz-field-label">{{ __('field.expected') }}</label>
                         <input type="date" id="expected_at" class="form-control">
                     </div>
                 </div>
 
                 <div class="mb-4 d-none" id="branches-selection">
-                    <label class="form-label d-block">{{ __('locale.branches') }} <span class="text-danger">*</span></label>
+                    <label class="lz-field-label d-block">{{ __('locale.branches') }} <span class="text-danger">*</span></label>
                     <div class="border rounded p-3" id="branches-checkbox-list">
                         <div class="form-check mb-2">
                             <input class="form-check-input" type="checkbox" id="check-all-branches">
@@ -71,12 +163,12 @@
                             @endforelse
                         </div>
                     </div>
-                    <small class="text-muted">{{ __('field.select_one_or_more_branches') }}</small>
-                                    <small class="text-muted d-block d-none" id="transfer-branch-hint">{{ __('field.order_qty_per_selected_branch') }}</small>
+                    <small class="lz-field-help">{{ __('field.select_one_or_more_branches') }}</small>
+                    <small class="lz-field-help d-block d-none" id="transfer-branch-hint">{{ __('field.order_qty_per_selected_branch') }}</small>
                 </div>
 
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="mb-0">{{ __('locale.products') }}</h5>
+                    <h5 class="lz-section-title">{{ __('locale.products') }}</h5>
                     <button type="button" class="btn btn-sm btn-outline-primary" id="btnOpenProducts" disabled>
                         <i class="ti ti-plus me-1"></i>{{ __('general.add') }} {{ __('locale.products') }}
                     </button>
@@ -109,43 +201,43 @@
                 </div>
             </div>
         </div>
-    </div>
 
-    {{-- Product picker modal --}}
-    <div class="modal fade" id="addProductsModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-xl modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <div>
-                        <h5 class="modal-title">{{ __('general.add') }} {{ __('locale.products') }}</h5>
-                        <small class="text-muted">{{ __('general.select_products_to_add_to_order') }}</small>
+        {{-- Product picker modal --}}
+        <div class="modal fade" id="addProductsModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-xl modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <div>
+                            <h5 class="modal-title">{{ __('general.add') }} {{ __('locale.products') }}</h5>
+                            <small class="lz-field-help">{{ __('general.select_products_to_add_to_order') }}</small>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <input type="text" id="product-search" class="form-control" placeholder="{{ __('field.search_by_product_name_or_barcode') }}">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <input type="text" id="product-search" class="form-control" placeholder="{{ __('field.search_by_product_name_or_barcode') }}">
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead>
+                                    <tr>
+                                        <th style="width:40px;"><input type="checkbox" id="check-all-products"></th>
+                                        <th>{{ __('field.product_name') }}</th>
+                                        <th>{{ __('field.category') }}</th>
+                                        <th>{{ __('field.available_quantity') }}</th>
+                                        <th class="supplier-cost-column">{{ __('field.product_cost') }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="picker-products-body">
+                                    <tr><td colspan="5" class="text-center text-muted py-3">{{ __('general.loading') ?? '...' }}</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle">
-                            <thead>
-                                <tr>
-                                    <th style="width:40px;"><input type="checkbox" id="check-all-products"></th>
-                                    <th>{{ __('field.product_name') }}</th>
-                                    <th>{{ __('field.category') }}</th>
-                                    <th>{{ __('field.available_quantity') }}</th>
-                                    <th class="supplier-cost-column">{{ __('field.product_cost') }}</th>
-                                </tr>
-                            </thead>
-                            <tbody id="picker-products-body">
-                                <tr><td colspan="5" class="text-center text-muted py-3">{{ __('general.loading') ?? '...' }}</td></tr>
-                            </tbody>
-                        </table>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-luzori-beige" data-bs-dismiss="modal">{{ __('general.close') }}</button>
+                        <button type="button" class="btn btn-luzori-primary" id="btnAddSelectedProducts">{{ __('general.add') }} {{ __('locale.products') }}</button>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ __('general.close') }}</button>
-                    <button type="button" class="btn btn-primary" id="btnAddSelectedProducts">{{ __('general.add') }} {{ __('locale.products') }}</button>
                 </div>
             </div>
         </div>

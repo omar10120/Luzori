@@ -65,7 +65,9 @@
             border-color: #e5ddd2;
             color: #002b26;
             font-weight: 600;
-            border-radius: 12px 0 0 12px;
+        }
+        .lz-product-form-page .lz-lang-tabs {
+            margin-bottom: 1.1rem;
         }
     </style>
 @endsection
