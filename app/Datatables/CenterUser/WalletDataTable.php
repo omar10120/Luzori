@@ -31,30 +31,34 @@ class WalletDataTable extends DataTable
                     'operation' => DeleteActionEnum::FORCE_DELETE->value,
                     'with_trashed' => 1,
                 ];
-                $html = view()->make('_partials.center_actions', compact('id', 'route', 'options', 'model'))->render();
-                return $html;
+                return view()->make('_partials.center_action_icons', compact('id', 'route', 'options', 'model'))->render();
             })
             ->editColumn('users.user.first_name', function ($row) {
                 $users = '';
                 foreach ($row->users as $user) {
-                    $users .= '<span class="badge"
-                        style="border-radius:10px;background-color:blue;margin:5px;padding:7px;">' . $user?->user?->name . '</span>';
+                    $name = $user?->user?->name;
+                    if (!$name) {
+                        continue;
+                    }
+                    $users .= '<span class="lz-user-badge">' . e($name) . '</span>';
                 }
-                return $users;
+                return $users !== '' ? $users : '—';
             })
             ->editColumn('amount', function ($row) {
-                return $row->amount . ' ' . trim(get_currency());
+                return '<span class="lz-amount">' . e(number_format((float) $row->amount, 2)) . ' ' . e(trim(get_currency())) . '</span>';
             })
             ->editColumn('invoiced_amount', function ($row) {
-                return $row->invoiced_amount . ' ' . trim(get_currency());
+                return e(number_format((float) $row->invoiced_amount, 2)) . ' ' . e(trim(get_currency()));
             })
             ->editColumn('used', function ($row) {
-                return $row->used ? __('general.yes') : __('general.no');
+                $class = $row->used ? 'lz-used-yes' : 'lz-used-no';
+                $label = $row->used ? __('general.yes') : __('general.no');
+                return '<span class="lz-used-badge ' . $class . '">' . e($label) . '</span>';
             })
             ->editColumn('status', function ($row) {
                 $checked = $row->deleted_at ? '' : 'checked';
                 $operation = $row->deleted_at ? DeleteActionEnum::RESTORE_DELETED->value : DeleteActionEnum::SOFT_DELETE->value;
-                return '<label class="switch switch-square">
+                return '<label class="switch switch-square" onclick="event.stopPropagation()">
                             <input onChange="changeStatus(\'' . $this->model . '\',\'' . $row->id . '\',\'' . $operation . '\')"
                                 type="checkbox" class="switch-input"' . $checked . '>
                             <span class="switch-toggle-slider">
@@ -64,16 +68,28 @@ class WalletDataTable extends DataTable
                         </label>';
             })
             ->editColumn('code', function ($row) {
-                return \App\Helpers\MyHelper::truncateWithReadMore($row->code ?? '');
+                return '<span class="lz-wallet-code">' . e($row->code ?? '—') . '</span>';
             })
-            ->rawColumns(['users.user.first_name', 'status', 'code'], true)
+            ->editColumn('serial_number', function ($row) {
+                return e($row->serial_number ?: '—');
+            })
+            ->editColumn('start_at', function ($row) {
+                return e($row->start_at ?: '—');
+            })
+            ->editColumn('end_at', function ($row) {
+                return e($row->end_at ?: '—');
+            })
+            ->editColumn('created_at', function ($row) {
+                return $row->created_at ? $row->created_at->diffForHumans() : '—';
+            })
+            ->rawColumns(['action', 'users.user.first_name', 'status', 'code', 'amount', 'used'], true)
             ->setRowId('id');
     }
 
     public function query(Wallet $model): QueryBuilder
     {
         $isAdmin = ((int) get_user_role() === 1);
-    
+
         $query = $model->query()
             ->withTrashed()
             ->with([
@@ -82,19 +98,23 @@ class WalletDataTable extends DataTable
                     return $q->with(['user']);
                 },
             ]);
-    
-        // Super admin (role = 1) sees all wallets; others are scoped to their branch
+
         if (!$isAdmin) {
             $query->forCenterUserBranch();
         }
-    
+
         return $query->orderBy($this->plural . '.id', 'DESC');
     }
 
     public function html(): HtmlBuilder
     {
-        $buttonClass = 'btn mx-1 mx-md-2 px-2 px-md-4 py-1 py-md-2 btn-sm';
+        $buttonClass = 'btn mx-1 px-3 py-2 btn-sm';
         $addRoute = route('center_user.' . $this->plural . '.create');
+
+        $initCompleteJs = 'function () {';
+        $initCompleteJs .= 'var $lzAct=$(".dt-action-buttons").first();';
+        $initCompleteJs .= '$lzAct.append("<a href=\'' . $addRoute . '\' class=\"btn btn-luzori-primary btn-sm mx-1 px-3 py-2\">' . __('general.add_new') . ' <i class=\"ti ti-plus\"></i></a>");';
+        $initCompleteJs .= '}';
 
         return $this->builder()
             ->setTableId($this->plural . '-table')
@@ -102,26 +122,38 @@ class WalletDataTable extends DataTable
             ->columns($this->getColumns())
             ->minifiedAjax()
             ->orderBy(1)
-            ->responsive(true)
+            ->responsive([
+                'details' => [
+                    'type' => 'column',
+                    'target' => 0,
+                ],
+            ])
             ->dom('
                 <"card-header border-bottom p-3 d-flex justify-content-between align-items-center"
                     <"head-label"><"dt-action-buttons"B>
                 >
-                <"d-flex justify-content-between align-items-center mx-0 row"
+                <"d-flex justify-content-between align-items-center mx-0 row px-1 pt-2"
                     <"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"fr>
                 >
                 <"table-responsive"t>
-                <"d-flex justify-content-between mx-0 row"
+                <"d-flex justify-content-between mx-0 row px-1 pt-2"
                     <"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>
                 >
             ')
             ->selectStyleSingle()
-            ->addAction(['printable' => false, 'exportable' => false, 'className' => 'dt-center', 'title' => __('general.actions')])
+            ->addAction([
+                'printable' => false,
+                'exportable' => false,
+                'responsivePriority' => 1,
+                'className' => 'dt-center lz-actions-col',
+                'title' => __('general.actions'),
+            ])
             ->buttons([
-                Button::make('colvis')->addClass($buttonClass . ' btn-warning')->text(__('general.column_visibility')),
+                Button::make('colvis')->addClass($buttonClass . ' btn-luzori-beige')->text(__('general.column_visibility')),
                 [
                     'extend' => 'collection',
-                    'text' => __('general.export'),  'className' => $buttonClass,
+                    'text' => __('general.export'),
+                    'className' => $buttonClass . ' btn-luzori-muted',
                     'buttons' => [
                         'excel',
                         'csv',
@@ -132,34 +164,32 @@ class WalletDataTable extends DataTable
                 ],
             ])
             ->language($this->getDataTableLanguageUrl())
-            ->addTableClass('table table-bordered table-hover')
-            ->initComplete('function () {
-             $(".dt-action-buttons").append("<a href=' . $addRoute . ' class=\"btn btn-primary btn-sm mx-1 mx-md-2 px-2 px-md-3 py-1 py-md-2\">' . __('general.add_new') . '<i class=\"ti ti-plus\"></i></a>");
-            }')
+            ->addTableClass('table table-hover')
+            ->initComplete($initCompleteJs)
             ->parameters([]);
     }
 
     public function getDataTableLanguageUrl()
     {
-        return app()->getLocale() == "ar" ?
-            asset('js/lang/ar_custom.json') :
-            "https://cdn.datatables.net/plug-ins/2.0.7/i18n/en-GB.json";
+        return app()->getLocale() == 'ar'
+            ? asset('js/lang/ar_custom.json')
+            : 'https://cdn.datatables.net/plug-ins/2.0.7/i18n/en-GB.json';
     }
 
     public function getColumns(): array
     {
         return [
-            Column::make('id')->searchable(true)->title('#'),
-            Column::make('serial_number')->searchable(true)->title(__('field.serial_number')),
-            Column::make('code')->searchable(true)->title(__('field.code')),
-            Column::computed('users.user.first_name')->searchable(true)->title(__('field.users')),
-            Column::computed('amount')->searchable(true)->title(__('field.amount')),
-            Column::computed('invoiced_amount')->searchable(true)->title(__('field.invoiced_amount')),
-            Column::computed('used')->searchable(true)->title(__('field.used')),
-            Column::make('start_at')->searchable(true)->title(__('field.start_at')),
-            Column::make('end_at')->searchable(true)->title(__('field.end_at')),
-            Column::computed('status')->searchable(false)->title(__('field.status')),
-            Column::make('created_at')->searchable(true)->title(__('field.created_at')),
+            Column::make('id')->searchable(true)->title('#')->responsivePriority(1)->addClass('all'),
+            Column::make('code')->searchable(true)->title(__('field.code'))->responsivePriority(1)->addClass('all'),
+            Column::computed('amount')->searchable(false)->title(__('field.amount'))->responsivePriority(2)->addClass('all'),
+            Column::computed('used')->searchable(false)->title(__('field.used'))->responsivePriority(2)->addClass('all'),
+            Column::computed('status')->searchable(false)->title(__('field.status'))->responsivePriority(2)->addClass('all'),
+            Column::make('serial_number')->searchable(true)->title(__('field.serial_number'))->addClass('none'),
+            Column::computed('users.user.first_name')->searchable(false)->title(__('field.users'))->addClass('none'),
+            Column::computed('invoiced_amount')->searchable(false)->title(__('field.invoiced_amount'))->addClass('none'),
+            Column::make('start_at')->searchable(true)->title(__('field.start_at'))->addClass('none'),
+            Column::make('end_at')->searchable(true)->title(__('field.end_at'))->addClass('none'),
+            Column::make('created_at')->searchable(true)->title(__('field.created_at'))->addClass('none'),
         ];
     }
 

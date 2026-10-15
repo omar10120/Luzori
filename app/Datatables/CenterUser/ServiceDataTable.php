@@ -75,13 +75,10 @@ class ServiceDataTable extends DataTable
         $addRoute = route('center_user.' . $this->plural . '.create');
 
         // Check if user has permission to create services
-        $canCreate = auth('center_user')->check() && auth('center_user')->user()->can('CREATE_SERVICES', 'center_api');
         
         // Build initComplete JavaScript - conditionally include add button
         $initCompleteJs = 'function () {';
-        if ($canCreate) {
-            $initCompleteJs .= 'var $lzAct=$(".lz-page-actions").first();if(!$lzAct.length)$lzAct=$(".dt-action-buttons");$lzAct.append("<a href=\'' . $addRoute . '\' class=\"btn btn-luzori-primary btn-sm mx-1 px-3 py-2\">' . __('general.add_new') . ' <i class=\"ti ti-plus\"></i></a>");';
-        }
+            $initCompleteJs .= 'var $lzAct=$(".dt-action-buttons").first();if($lzAct.length)$lzAct.append("<a href=\'' . $addRoute . '\' class=\"btn btn-luzori-primary btn-sm mx-1 px-3 py-2\">' . __('general.add_new') . ' <i class=\"ti ti-plus\"></i></a>");';
         $initCompleteJs .= '}';
 
         return $this->builder()

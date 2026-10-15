@@ -31,6 +31,9 @@
             font-weight: 600;
             margin: 0.15rem;
         }
+        .lz-row-details-table td .lz-perm-badge {
+            white-space: normal;
+        }
     </style>
 @endsection
 

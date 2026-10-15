@@ -35,7 +35,7 @@ class CenterUserRoleDataTable extends DataTable
                 $count = $row->permissions->count();
                 return '<span class="lz-perm-count">' . (int) $count . ' ' . e(__('field.permission')) . '</span>';
             })
-            ->editColumn('permission', function ($row) {
+            ->addColumn('permission', function ($row) {
                 $locale = app()->getLocale();
                 $permissions = '';
                 foreach ($row->permissions as $permission) {
@@ -68,7 +68,7 @@ class CenterUserRoleDataTable extends DataTable
         $addRoute = route('center_user.' . $this->plural . '.create');
 
         $initCompleteJs = 'function () {';
-        $initCompleteJs .= 'var $lzAct=$(".lz-page-actions").first();if(!$lzAct.length)$lzAct=$(".dt-action-buttons");';
+        $initCompleteJs .= 'var $lzAct=$(".dt-action-buttons").first();';
         $initCompleteJs .= '$lzAct.append("<a href=\'' . $addRoute . '\' class=\"btn btn-luzori-primary btn-sm mx-1 px-3 py-2\">' . __('general.add_new') . ' <i class=\"ti ti-plus\"></i></a>");';
         $initCompleteJs .= '}';
 
@@ -137,7 +137,7 @@ class CenterUserRoleDataTable extends DataTable
         return [
             Column::make('id')->searchable(true)->title('#')->responsivePriority(1)->addClass('all'),
             Column::make('name')->searchable(true)->title(__('field.name'))->responsivePriority(1)->addClass('all'),
-            Column::computed('permission_count')->searchable(false)->title(__('field.permission'))->responsivePriority(2)->addClass('all'),
+            Column::computed('permission_count')->searchable(false)->title(__('field.permission'))->responsivePriority(2)->addClass('all lz-details-skip'),
             Column::computed('permission')->searchable(false)->title(__('field.permission'))->addClass('none'),
             Column::computed('created_at')->searchable(false)->title(__('field.created_at'))->addClass('none'),
         ];

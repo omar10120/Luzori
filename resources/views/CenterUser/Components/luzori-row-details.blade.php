@@ -69,53 +69,78 @@
         return emptyLabel;
     }
 
+    function isDetailsSkip($header, $cell) {
+        if ($header && $header.hasClass('lz-details-skip')) return true;
+        if ($cell && $cell.hasClass('lz-details-skip')) return true;
+        return false;
+    }
+
+    function isNoneColumn($header, $cell, colApi) {
+        if ($header && ($header.hasClass('none') || $header.hasClass('never') || $header.hasClass('dtr-hidden'))) {
+            return true;
+        }
+        if ($cell && ($cell.hasClass('none') || $cell.hasClass('never') || $cell.hasClass('dtr-hidden'))) {
+            return true;
+        }
+        try {
+            if (colApi && typeof colApi.responsiveHidden === 'function' && colApi.responsiveHidden()) {
+                return true;
+            }
+        } catch (e) {}
+        return false;
+    }
+
+    function upsertDetail(rows, indexByTitle, title, value, prefer) {
+        if (Object.prototype.hasOwnProperty.call(indexByTitle, title)) {
+            if (!prefer) return;
+            rows[indexByTitle[title]].value = value;
+            rows[indexByTitle[title]].prefer = true;
+            return;
+        }
+        indexByTitle[title] = rows.length;
+        rows.push({ title: title, value: value, prefer: !!prefer });
+    }
+
     function collectHiddenDetails($, api, rowIdx) {
         const rows = [];
-        const seen = {};
+        const indexByTitle = {};
 
         api.columns().every(function (colIdx) {
             const $header = $(this.header());
+            const $cell = $(api.cell(rowIdx, colIdx).node());
+            if (isDetailsSkip($header, $cell)) return;
+
             const title = ($header.text() || '').replace(/\s+/g, ' ').trim();
             if (!title || isActionsHeader(title, $header)) return;
 
-            let hidden = false;
-            if ($header.hasClass('none') || $header.hasClass('never') || $header.hasClass('dtr-hidden')) {
-                hidden = true;
-            }
-            try {
-                if (typeof this.responsiveHidden === 'function' && this.responsiveHidden()) {
-                    hidden = true;
-                }
-            } catch (e) {}
+            const prefer = isNoneColumn($header, $cell, this);
+            let hidden = prefer;
 
-            const $cell = $(api.cell(rowIdx, colIdx).node());
-            if ($cell.length) {
-                if ($cell.hasClass('none') || $cell.hasClass('never') || $cell.hasClass('dtr-hidden')) {
-                    hidden = true;
-                }
-                if (!$cell.is(':visible') && (!$header.is(':visible') || $header.hasClass('none') || $header.hasClass('never'))) {
-                    hidden = true;
-                }
+            if ($cell.length && !$cell.is(':visible') && (!$header.is(':visible') || prefer)) {
+                hidden = true;
             }
 
             if (!hidden) return;
-            if (seen[title]) return;
-            seen[title] = true;
-            rows.push({ title: title, value: cellDisplay(api, rowIdx, colIdx) });
+            upsertDetail(rows, indexByTitle, title, cellDisplay(api, rowIdx, colIdx), prefer);
         });
 
         if (!rows.length) {
             api.columns().every(function (colIdx) {
                 const $header = $(this.header());
+                const $cell = $(api.cell(rowIdx, colIdx).node());
+                if (isDetailsSkip($header, $cell)) return;
+
                 const title = ($header.text() || '').replace(/\s+/g, ' ').trim();
                 if (!title || isActionsHeader(title, $header)) return;
-                if (seen[title]) return;
-                seen[title] = true;
-                rows.push({ title: title, value: cellDisplay(api, rowIdx, colIdx) });
+
+                const prefer = isNoneColumn($header, $cell, this);
+                upsertDetail(rows, indexByTitle, title, cellDisplay(api, rowIdx, colIdx), prefer);
             });
         }
 
-        return rows;
+        return rows.map(function (row) {
+            return { title: row.title, value: row.value };
+        });
     }
 
     function ensureBackdrop() {

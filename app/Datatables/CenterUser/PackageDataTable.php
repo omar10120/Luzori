@@ -30,30 +30,37 @@ class PackageDataTable extends DataTable
                     'operation' => DeleteActionEnum::FORCE_DELETE->value,
                     'with_trashed' => 1,
                 ];
-                
-                $html = view()->make('_partials.center_actions', compact('id', 'route', 'options', 'model'))->render();
-                return $html;
+                return view()->make('_partials.center_action_icons', compact('id', 'route', 'options', 'model'))->render();
+            })
+            ->editColumn('translation.name', function ($row) {
+                return '<span class="lz-package-name">' . e($row->name ?? '—') . '</span>';
             })
             ->editColumn('packageServicePaid.service.translation.name', function ($row) {
                 $services = '';
                 foreach ($row->packageServicePaid as $service) {
-                    $services .= '<span class="badge"
-                        style="border-radius:10px;background-color:blue;margin:5px;padding:7px;">' . $service->service->name . '</span>';
+                    $name = $service->service->name ?? null;
+                    if (!$name) {
+                        continue;
+                    }
+                    $services .= '<span class="lz-service-badge lz-service-paid">' . e($name) . '</span>';
                 }
-                return $services;
+                return $services !== '' ? $services : '—';
             })
             ->editColumn('packageServiceFree.service.translation.name', function ($row) {
                 $services = '';
                 foreach ($row->packageServiceFree as $service) {
-                    $services .= '<span class="badge"
-                        style="border-radius:10px;background-color:green;margin:5px;padding:7px;">' . $service->service->name . '</span>';
+                    $name = $service->service->name ?? null;
+                    if (!$name) {
+                        continue;
+                    }
+                    $services .= '<span class="lz-service-badge lz-service-free">' . e($name) . '</span>';
                 }
-                return $services;
+                return $services !== '' ? $services : '—';
             })
             ->editColumn('status', function ($row) {
                 $checked = $row->deleted_at ? '' : 'checked';
                 $operation = $row->deleted_at ? DeleteActionEnum::RESTORE_DELETED->value : DeleteActionEnum::SOFT_DELETE->value;
-                return '<label class="switch switch-square">
+                return '<label class="switch switch-square" onclick="event.stopPropagation()">
                             <input onChange="changeStatus(\'' . $this->model . '\',\'' . $row->id . '\',\'' . $operation . '\')"
                                 type="checkbox" class="switch-input"' . $checked . '>
                             <span class="switch-toggle-slider">
@@ -63,22 +70,33 @@ class PackageDataTable extends DataTable
                         </label>';
             })
             ->editColumn('price', function ($row) {
-                return number_format($row->price, 2) . ' ' . trim(get_currency());
+                return '<span class="lz-amount">' . e(number_format((float) $row->price, 2)) . ' ' . e(trim(get_currency())) . '</span>';
             })
             ->addColumn('total_value', function ($row) {
-                return '<span class="fw-bold text-primary">' . number_format($row->total_value, 2) . ' ' . trim(get_currency()) . '</span>';
+                return '<span class="lz-total-value">' . e(number_format((float) $row->total_value, 2)) . ' ' . e(trim(get_currency())) . '</span>';
             })
             ->editColumn('users', function ($row) {
                 $users = '';
                 foreach ($row->usersPackages as $userPackage) {
                     if ($userPackage->user) {
-                        $users .= '<span class="badge"
-                            style="border-radius:10px;background-color:#7367f0;margin:5px;padding:7px;">' . $userPackage->user->name . '</span>';
+                        $users .= '<span class="lz-user-badge">' . e($userPackage->user->name) . '</span>';
                     }
                 }
-                return $users ?: '<span class="text-muted">' . __('general.no_users') . '</span>';
+                return $users !== '' ? $users : '<span class="text-muted">' . e(__('general.no_users')) . '</span>';
             })
-            ->rawColumns(['packageServicePaid.service.translation.name', 'packageServiceFree.service.translation.name', 'status', 'translation.name', 'total_value', 'users'], true)
+            ->editColumn('created_at', function ($row) {
+                return $row->created_at ? $row->created_at->diffForHumans() : '—';
+            })
+            ->rawColumns([
+                'action',
+                'packageServicePaid.service.translation.name',
+                'packageServiceFree.service.translation.name',
+                'status',
+                'translation.name',
+                'total_value',
+                'users',
+                'price',
+            ], true)
             ->setRowId('id');
     }
 
@@ -92,14 +110,18 @@ class PackageDataTable extends DataTable
             $q->with(['service' => function ($q) {
                 $q->with(['translation']);
             }]);
-            
         }])->orderBy($this->plural . '.id', 'DESC');
     }
 
     public function html(): HtmlBuilder
     {
-        $buttonClass = 'btn mx-1 mx-md-2 px-2 px-md-4 py-1 py-md-2 btn-sm';
+        $buttonClass = 'btn mx-1 px-3 py-2 btn-sm';
         $addRoute = route('center_user.' . $this->plural . '.create');
+
+        $initCompleteJs = 'function () {';
+        $initCompleteJs .= 'var $lzAct=$(".dt-action-buttons").first();';
+        $initCompleteJs .= '$lzAct.append("<a href=\'' . $addRoute . '\' class=\"btn btn-luzori-primary btn-sm mx-1 px-3 py-2\">' . __('general.add_new') . ' <i class=\"ti ti-plus\"></i></a>");';
+        $initCompleteJs .= '}';
 
         return $this->builder()
             ->setTableId($this->plural . '-table')
@@ -107,26 +129,38 @@ class PackageDataTable extends DataTable
             ->columns($this->getColumns())
             ->minifiedAjax()
             ->orderBy(1)
-            ->responsive(true)
+            ->responsive([
+                'details' => [
+                    'type' => 'column',
+                    'target' => 0,
+                ],
+            ])
             ->dom('
                 <"card-header border-bottom p-3 d-flex justify-content-between align-items-center"
                     <"head-label"><"dt-action-buttons"B>
                 >
-                <"d-flex justify-content-between align-items-center mx-0 row"
+                <"d-flex justify-content-between align-items-center mx-0 row px-1 pt-2"
                     <"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"fr>
                 >
                 <"table-responsive"t>
-                <"d-flex justify-content-between mx-0 row"
+                <"d-flex justify-content-between mx-0 row px-1 pt-2"
                     <"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>
                 >
             ')
             ->selectStyleSingle()
-            ->addAction(['printable' => false, 'exportable' => false, 'className' => 'dt-center', 'title' => __('general.actions')])
+            ->addAction([
+                'printable' => false,
+                'exportable' => false,
+                'responsivePriority' => 1,
+                'className' => 'dt-center lz-actions-col',
+                'title' => __('general.actions'),
+            ])
             ->buttons([
-                Button::make('colvis')->addClass($buttonClass . ' btn-warning')->text(__('general.column_visibility')),
+                Button::make('colvis')->addClass($buttonClass . ' btn-luzori-beige')->text(__('general.column_visibility')),
                 [
                     'extend' => 'collection',
-                    'text' => __('general.export'),  'className' => $buttonClass,
+                    'text' => __('general.export'),
+                    'className' => $buttonClass . ' btn-luzori-muted',
                     'buttons' => [
                         'excel',
                         'csv',
@@ -137,32 +171,30 @@ class PackageDataTable extends DataTable
                 ],
             ])
             ->language($this->getDataTableLanguageUrl())
-            ->addTableClass('table table-bordered table-hover')
-            ->initComplete('function () {
-             $(".dt-action-buttons").append("<a href=' . $addRoute . ' class=\"btn btn-primary btn-sm mx-1 mx-md-2 px-2 px-md-3 py-1 py-md-2\">' . __('general.add_new') . '<i class=\"ti ti-plus\"></i></a>");
-            }')
+            ->addTableClass('table table-hover')
+            ->initComplete($initCompleteJs)
             ->parameters([]);
     }
 
     public function getDataTableLanguageUrl()
     {
-        return app()->getLocale() == "ar" ?
-            asset('js/lang/ar_custom.json') :
-            "https://cdn.datatables.net/plug-ins/2.0.7/i18n/en-GB.json";
+        return app()->getLocale() == 'ar'
+            ? asset('js/lang/ar_custom.json')
+            : 'https://cdn.datatables.net/plug-ins/2.0.7/i18n/en-GB.json';
     }
 
     public function getColumns(): array
     {
         return [
-            Column::make('id')->searchable(true)->title('#'),
-            Column::computed('translation.name')->searchable(true)->title(__('field.name')),
-            Column::make('price')->searchable(true)->title(__('field.price')),
-            Column::computed('total_value')->searchable(false)->title(__('field.total_services_price')),
-            Column::computed('packageServicePaid.service.translation.name')->searchable(true)->title(__('field.paid_services')),
-            Column::computed('packageServiceFree.service.translation.name')->searchable(true)->title(__('field.free_services')),
-            Column::computed('status')->searchable(false)->title(__('field.status')),
-            Column::computed('users')->searchable(false)->title(__('field.users')),
-            Column::make('created_at')->searchable(true)->title(__('field.created_at')),
+            Column::make('id')->searchable(true)->title('#')->responsivePriority(1)->addClass('all'),
+            Column::computed('translation.name')->searchable(true)->title(__('field.name'))->responsivePriority(1)->addClass('all'),
+            Column::make('price')->searchable(true)->title(__('field.price'))->responsivePriority(2)->addClass('all'),
+            Column::computed('status')->searchable(false)->title(__('field.status'))->responsivePriority(2)->addClass('all'),
+            Column::computed('total_value')->searchable(false)->title(__('field.total_services_price'))->addClass('none'),
+            Column::computed('packageServicePaid.service.translation.name')->searchable(false)->title(__('field.paid_services'))->addClass('none'),
+            Column::computed('packageServiceFree.service.translation.name')->searchable(false)->title(__('field.free_services'))->addClass('none'),
+            Column::computed('users')->searchable(false)->title(__('field.users'))->addClass('none'),
+            Column::make('created_at')->searchable(true)->title(__('field.created_at'))->addClass('none'),
         ];
     }
 

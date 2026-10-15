@@ -79,12 +79,8 @@ class CategoryServiceDataTable extends DataTable
         $buttonClass = 'btn mx-1 px-3 py-2 btn-sm';
         $addRoute = route('center_user.' . $this->plural . '.create');
 
-        $canCreate = auth('center_user')->check() && auth('center_user')->user()->can('CREATE_CATEGORIES', 'center_api');
-
         $initCompleteJs = 'function () {';
-        if ($canCreate) {
-            $initCompleteJs .= 'var $lzAct=$(".lz-page-actions").first();if(!$lzAct.length)$lzAct=$(".dt-action-buttons");$lzAct.append("<a href=\'' . $addRoute . '\' class=\"btn btn-luzori-primary btn-sm mx-1 px-3 py-2\">' . __('general.add_new') . ' <i class=\"ti ti-plus\"></i></a>");';
-        }
+            $initCompleteJs .= 'var $lzAct=$(".dt-action-buttons").first();if($lzAct.length)$lzAct.append("<a href=\'' . $addRoute . '\' class=\"btn btn-luzori-primary btn-sm mx-1 px-3 py-2\">' . __('general.add_new') . ' <i class=\"ti ti-plus\"></i></a>");';
         $initCompleteJs .= '}';
 
         return $this->builder()

@@ -18,6 +18,30 @@
             <i class="ti ti-printer"></i>
         </a>
     @endisset
+    @isset($options['wallet-sales-history'])
+        <a class="lz-action-btn" href="{{ route('center_user.users_wallets.sales', ['wallet_id' => $id]) }}"
+            title="{{ __('general.all_users_sales_history') }}">
+            <i class="ti ti-receipt"></i>
+        </a>
+    @endisset
+    @isset($options['show-user-to-wallet'])
+        <a class="lz-action-btn" href="{{ route('center_user.users_wallets.showUsers', ['id' => $id]) }}"
+            title="{{ __('field.show_users') }}">
+            <i class="ti ti-users"></i>
+        </a>
+    @endisset
+    @isset($options['add-user-to-wallet'])
+        <a class="lz-action-btn" href="{{ route('center_user.users_wallets.create', ['id' => $id]) }}"
+            title="{{ __('field.add_user') }}">
+            <i class="ti ti-user-plus"></i>
+        </a>
+    @endisset
+    @isset($options['add-user-to-package'])
+        <a class="lz-action-btn" href="{{ route('center_user.users_packages.create', ['id' => $id]) }}"
+            title="{{ __('field.add_user') }}">
+            <i class="ti ti-user-plus"></i>
+        </a>
+    @endisset
     @isset($options['edit'])
         <a class="lz-action-btn" href="{{ route($route . '.create', ['id' => $id]) }}"
             title="{{ __('general.edit') }}">

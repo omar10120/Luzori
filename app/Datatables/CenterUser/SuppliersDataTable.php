@@ -61,7 +61,7 @@ class SuppliersDataTable extends DataTable
         $addRoute = route('center_user.suppliers.create');
 
         $initCompleteJs = 'function () {';
-        $initCompleteJs .= 'var $lzAct=$(".lz-page-actions").first();if(!$lzAct.length)$lzAct=$(".dt-action-buttons");';
+        $initCompleteJs .= 'var $lzAct=$(".dt-action-buttons").first();';
         $initCompleteJs .= '$lzAct.append("<a href=\'' . $addRoute . '\' class=\"btn btn-luzori-primary btn-sm mx-1 px-3 py-2\">' . __('general.add_new') . ' <i class=\"ti ti-plus\"></i></a>");';
         $initCompleteJs .= '}';
 
