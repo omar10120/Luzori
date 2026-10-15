@@ -10,7 +10,7 @@
     <div class="luzori-page lz-report-page">
         @include('CenterUser.Components.breadcrumbs', [
             'menu' => __('locale.reports'),
-            'menu_link' => route('center_user.reports.sales-report'),
+            'menu_link' => null,
             'title' => __('locale.sales_report'),
         ])
 

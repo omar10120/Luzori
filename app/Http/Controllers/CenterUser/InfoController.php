@@ -36,11 +36,11 @@ class InfoController extends Controller
             return abort(403);
         }
 
-        $menu = __('locale.' . $this->plural);
-        $menu_link = route($this->indexRoute);
+        $menu = __('locale.settings');
+        $menu_link = route('center_user.mainsettings.index');
 
         $item = $this->crudService->find($this->model, 1, [], 0);
-        $title = __('general.edit');
+        $title = __('locale.' . $this->plural);
         $requestUrl = route($this->updateOrCreateRoute, ['id' => 1]);
 
         $view = 'CenterUser.SubViews.' . $this->model . '.index';

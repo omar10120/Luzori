@@ -43,7 +43,7 @@ class CenterController extends Controller
 
         $title = __('locale.center_info');
         $menu = __('locale.settings');
-        $menu_link = route('center_user.settings.index');
+        $menu_link = route('center_user.mainsettings.index');
         $requestUrl = route('center_user.center.update');
 
         return view('CenterUser.SubViews.Center.index', compact('center', 'title', 'menu', 'menu_link', 'requestUrl'));

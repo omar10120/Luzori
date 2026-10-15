@@ -33,10 +33,10 @@ class InvoiceSettingController extends Controller
             return abort(403);
         }
 
-        $menu = __('locale.' . $this->plural);
-        $menu_link = route($this->indexRoute);
+        $menu = __('locale.settings');
+        $menu_link = route('center_user.mainsettings.index');
         $item = $this->invoiceSettingsService->first();
-        $title = __('general.edit');
+        $title = __('locale.InvoiceSettings');
         $requestUrl = route($this->updateOrCreateRoute);
         $center = $this->resolveActiveCenter();
         $smsPackageAmount = (int) ($center?->sms_request_package ?? 0);

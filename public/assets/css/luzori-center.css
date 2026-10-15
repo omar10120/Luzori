@@ -1540,3 +1540,31 @@ body.luzori-center .template-customizer-open-btn {
   background: var(--lz-forest) !important;
   border-color: var(--lz-forest) !important;
 }
+
+/* ---------- Breadcrumbs ---------- */
+body.luzori-center .lz-breadcrumbs,
+body.luzori-center .breadcrumbs-top {
+  position: relative;
+  z-index: 50;
+}
+
+body.luzori-center .breadcrumb-item a {
+  color: var(--lz-forest) !important;
+  font-weight: 600;
+  text-decoration: none !important;
+  pointer-events: auto !important;
+}
+
+body.luzori-center .breadcrumb-item a:hover {
+  color: var(--lz-gold-deep) !important;
+}
+
+body.luzori-center .breadcrumb-item.active,
+body.luzori-center .breadcrumb-item .lz-crumb-plain {
+  color: var(--lz-muted) !important;
+  font-weight: 600;
+}
+
+body.luzori-center .breadcrumb-item + .breadcrumb-item::before {
+  color: var(--lz-gold) !important;
+}

@@ -35,12 +35,12 @@ class PageController extends Controller
             return abort(403);
         }
 
-        $menu = __('locale.' . $this->plural);
-        $menu_link = route($this->indexRoute);
+        $menu = __('locale.settings');
+        $menu_link = route('center_user.mainsettings.index');
 
         $relations = ['translation'];
         $item = $this->pageService->all();
-        $title = __('general.edit');
+        $title = __('locale.' . $this->plural);
         $requestUrl = route($this->updateOrCreateRoute, ['id' => 1]);
 
         $view = 'CenterUser.SubViews.' . $this->model . '.index';

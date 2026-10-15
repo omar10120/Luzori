@@ -4,6 +4,26 @@
 
 @section('vendor-style')
     @include('CenterUser.Components.settings-form-styles')
+    <style>
+        .lz-settings-page .lz-contact-phone-row select[name="country_code"] {
+            min-width: 0;
+            text-overflow: ellipsis;
+        }
+        .lz-settings-page #country_code_container .input-group {
+            flex-wrap: nowrap;
+        }
+        .lz-settings-page #country_code_container .form-control,
+        .lz-settings-page #country_code_container select {
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+        .lz-settings-page .lz-contact-phone-row .form-label {
+            font-weight: 700;
+            color: #002b26;
+            font-size: 0.92rem;
+        }
+    </style>
 @endsection
 
 @section('content')
@@ -38,11 +58,11 @@
                         <span>{{ __('general.contact_info') }}</span>
                     </div>
 
-                    <div class="row">
-                        <div class="col-md-2 mb-3">
+                    <div class="row g-3 lz-contact-phone-row">
+                        <div class="col-12 col-md-4" id="country_code_container">
                             @include('Admin.Components.country_code', ['item' => $item])
                         </div>
-                        <div class="col-md-2 mb-3" id="phone_prefix_container" style="display: {{ ($item && $item->country_code == '+971') ? 'block' : 'none' }};">
+                        <div class="col-6 col-md-2" id="phone_prefix_container" style="display: {{ ($item && $item->country_code == '+971') ? 'block' : 'none' }};">
                             <label class="lz-field-label">Prefix</label>
                             <div class="input-group">
                                 <span class="input-group-text">
@@ -72,7 +92,7 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="col-md-{{ ($item && $item->country_code == '+971') ? '2' : '4' }} mb-3" id="phone_input_container">
+                        <div class="col-12 col-md-{{ ($item && $item->country_code == '+971') ? '6' : '8' }}" id="phone_input_container">
                             <label class="lz-field-label">{{ __('field.phone') }} <span class="text-danger">*</span></label>
                             <small class="lz-field-help">{{ __('general.enter_the_phone_number') }}</small>
                             <div class="input-group">
@@ -87,12 +107,12 @@
                                     title="Phone number must start with 5 and be exactly 8 digits" />
                             </div>
                         </div>
-                        <div class="col-md-{{ ($item && $item->country_code == '+971') ? '4' : '6' }} mb-3" id="email_input_container">
+                        <div class="col-12 col-md-6" id="email_input_container">
                             <label class="lz-field-label">{{ __('field.email') }} <span class="text-danger">*</span></label>
                             <small class="lz-field-help">{{ __('general.enter_the_email_address') }}</small>
                             <div class="input-group">
                                 <span class="input-group-text">
-                                    <i class="fa fa-envelope"></i>
+                                    <i class="ti ti-mail"></i>
                                 </span>
                                 <input type="text" class="form-control" name="email" value="{{ $item->email }}"
                                     placeholder="{{ __('field.email') }}" />
@@ -158,7 +178,7 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="lz-field-label">{{ __('field.youtube') }} <span class="text-danger">*</span></label>
-                            <small class="lz-field-help">{{ __('general.enter_the_twitter_url') }}</small>
+                            <small class="lz-field-help">{{ __('general.enter_the_youtube_url') ?? 'Enter the YouTube URL' }}</small>
                             <div class="input-group">
                                 <span class="input-group-text">
                                     <img src="{{ asset('assets/icons/youtube.svg') }}" alt="" style="width:20px;height:20px;">
@@ -198,25 +218,15 @@
             const phoneInput = document.getElementById('phone');
             const phonePrefixSelect = document.getElementById('phone_prefix');
 
-            const emailInputContainer = document.getElementById('email_input_container');
-
             function togglePhonePrefix() {
                 if (countryCodeSelect && countryCodeSelect.value === '+971') {
                     phonePrefixContainer.style.display = 'block';
-                    phoneInputContainer.classList.remove('col-md-4');
-                    phoneInputContainer.classList.add('col-md-2');
-                    if (emailInputContainer) {
-                        emailInputContainer.classList.remove('col-md-6');
-                        emailInputContainer.classList.add('col-md-4');
-                    }
+                    phoneInputContainer.classList.remove('col-md-8');
+                    phoneInputContainer.classList.add('col-md-6');
                 } else {
                     phonePrefixContainer.style.display = 'none';
-                    phoneInputContainer.classList.remove('col-md-2');
-                    phoneInputContainer.classList.add('col-md-4');
-                    if (emailInputContainer) {
-                        emailInputContainer.classList.remove('col-md-4');
-                        emailInputContainer.classList.add('col-md-6');
-                    }
+                    phoneInputContainer.classList.remove('col-md-6');
+                    phoneInputContainer.classList.add('col-md-8');
                 }
             }
 
