@@ -19,6 +19,7 @@ class BuyProduct extends Model
         'commission',
         'discount',
         'sales_worker_id',
+        'global_user_id',
         'worker_id',
         'created_by',
         'sale_id',

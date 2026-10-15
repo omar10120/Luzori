@@ -37,23 +37,36 @@ class BuyProductController extends Controller
         $this->crudService = $crudService;
     }
 
-    public function all(Request $request)
-    {
-        $request->validate([
-            'center_id' => 'required|integer|exists:central.centers,id',
-        ]);
+    use Illuminate\Pagination\LengthAwarePaginator;
 
-        $switched = $this->switchToCenter((int) $request->center_id);
-        if ($switched instanceof \Illuminate\Http\JsonResponse) {
-            return $switched;
-        }
+public function all(Request $request)
+{
+    $request->validate([
+        'center_id' => 'nullable|integer|exists:central.centers,id',
+        'per_page'  => 'nullable|integer|min:1|max:100',
+        'page'      => 'nullable|integer|min:1',
+    ]);
 
-        try {
-            $relations = ['worker', 'sales_worker', 'details' => function ($q) {
-                $q->with(['product' => function ($q1) {
-                    $q1->with(['translation']);
-                }]);
-            }];
+    $appUser = auth('sanctum')->user();
+    if (!$appUser) {
+        return MyHelper::responseJSON('Unauthorized', Response::HTTP_UNAUTHORIZED);
+    }
+
+    $relations = ['worker', 'sales_worker', 'details' => function ($q) {
+        $q->with(['product' => function ($q1) {
+            $q1->with(['translation']);
+        }]);
+    }];
+
+    try {
+        // ─────────────────────────────────────────────────────────────
+        // Case A: center_id provided → single-center, admin-style list
+        // ─────────────────────────────────────────────────────────────
+        if ($request->filled('center_id')) {
+            $switched = $this->switchToCenter((int) $request->center_id);
+            if ($switched instanceof \Illuminate\Http\JsonResponse) {
+                return $switched;
+            }
 
             $items = $this->crudService->paginate($this->model, $relations, 0);
             if ($items) {
@@ -63,14 +76,89 @@ class BuyProductController extends Controller
             }
 
             return MyHelper::responseJSON(__('api.unknownError'), Response::HTTP_INTERNAL_SERVER_ERROR);
-        } catch (\Exception $e) {
-            Log::error('AppAPI BuyProduct all: ' . $e->getMessage());
-            return MyHelper::responseJSON(__('api.unknownError'), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
+
+        // ─────────────────────────────────────────────────────────────
+        // Case B: no center_id → aggregate the user's orders across all centers
+        // ─────────────────────────────────────────────────────────────
+        $perPage = (int) $request->input('per_page', 15);
+        $page    = (int) $request->input('page', 1);
+
+        // Remember the original database so we can restore at the end
+        $originalDatabase = Config::get('database.connections.mysql.database');
+
+        $centers = Center::query()
+            ->where('status', 'approve')
+            ->whereNotNull('database')
+            ->get(['id', 'database', 'expire_date']);
+
+        $allItems = collect();
+
+        foreach ($centers as $center) {
+            if ($center->expire_date && now()->gt($center->expire_date)) {
+                continue;
+            }
+
+            try {
+                Config::set('database.connections.mysql.database', $center->database);
+                DB::purge('mysql');
+                DB::reconnect('mysql');
+
+                $rows = BuyProduct::with($relations)
+                    ->where('global_user_id', $appUser->id)
+                    ->orderByDesc('created_at')
+                    ->get()
+                    ->map(function (BuyProduct $row) use ($center) {
+                        // Attach the source center so the resource can render it
+                        $row->setAttribute('center_id', $center->id);
+                        return $row;
+                    });
+
+                $allItems = $allItems->merge($rows);
+            } catch (\Throwable $e) {
+                // One bad center shouldn't break the whole list
+                Log::warning('BuyProduct all: failed to query center', [
+                    'center_id' => $center->id,
+                    'error'     => $e->getMessage(),
+                ]);
+                continue;
+            }
+        }
+
+        // ── In-memory sort + pagination across all centers ──
+        $sorted   = $allItems->sortByDesc('created_at')->values();
+        $total    = $sorted->count();
+        $lastPage = max(1, (int) ceil($total / $perPage));
+        $page     = min($page, $lastPage);
+        $items    = $sorted->slice(($page - 1) * $perPage, $perPage)->values();
+
+        $paginator = new LengthAwarePaginator(
+            $items,
+            $total,
+            $perPage,
+            $page,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+
+        // Restore the connection so downstream code doesn't see the last center's DB
+        Config::set('database.connections.mysql.database', $originalDatabase);
+        DB::purge('mysql');
+        DB::reconnect('mysql');
+
+        return MyHelper::responseJSON(
+            __('api.doneSuccessfully'),
+            Response::HTTP_OK,
+            BuyProductResource::collection($paginator),
+            PaginateDateResource::make($paginator)
+        );
+    } catch (\Throwable $e) {
+        Log::error('AppAPI BuyProduct all: ' . $e->getMessage());
+        return MyHelper::responseJSON(__('api.unknownError'), Response::HTTP_INTERNAL_SERVER_ERROR);
     }
+}
 
     public function add(Request $request)
-    {
+    {   
         $request->validate([
             'center_id' => 'required|integer|exists:central.centers,id',
         ]);
@@ -162,12 +250,14 @@ class BuyProductController extends Controller
     
             // ── 3. Sale + BuyProduct + BuyProductDetail + SaleItem, all atomic ──
             $item = DB::transaction(function () use (
+                $appUser,
                 $validated,
                 $tenantUser,
                 $branchId,
                 $pricedLines,
                 $totalPrice,
-                $totalQty
+                $totalQty,
+                
             ) {
                 // 3a. Sale record (mirrors SalesService::processSale)
                 $sale = Sale::create([
@@ -189,6 +279,7 @@ class BuyProductController extends Controller
                     'sales_worker_id' => $validated['sales_worker_id'],
                     // 'worker_id'       => $validated['worker_id'] ?? null,
                     'worker_id'       => 1,
+                    'global_user_id'  => $appUser->id,
                     'created_by'      => $tenantUser->id,
                     'sale_id'         => $sale->id, // ← link it back
                 ]);
