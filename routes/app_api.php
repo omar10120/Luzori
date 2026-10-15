@@ -13,6 +13,7 @@ use App\Http\Controllers\AppAPI\FavoriteCenterController;
 use App\Http\Controllers\AppAPI\CenterReviewController;
 use App\Http\Controllers\AppAPI\GlobalProductController;
 use App\Http\Controllers\AppAPI\BuyProductController;
+use App\Http\Controllers\AppAPI\CartController;
 /*
 |--------------------------------------------------------------------------
 | App API Routes (Main Database)
@@ -74,6 +75,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('{center_id}/mine', [CenterReviewController::class, 'mine']);
         Route::put('{center_id}', [CenterReviewController::class, 'update']);
         Route::delete('{center_id}', [CenterReviewController::class, 'destroy']);
+    });
+
+    Route::prefix('cart')->controller(CartController::class)->group(function () {
+        Route::get('/', 'index');
+        Route::get('checkout-payload', 'checkoutPayload');
+        Route::post('products', 'addProduct');
+        Route::delete('clear', 'clear');
+        Route::put('{id}', 'updateQty');
+        Route::delete('{id}', 'destroy');
     });
 
     Route::prefix('buyproducts')->controller(BuyProductController::class)->group(function () {
