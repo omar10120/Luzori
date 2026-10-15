@@ -83,38 +83,46 @@ html.layout-navbar-fixed.layout-menu-collapsed body.luzori-center .layout-conten
   max-width: none !important;
 }
 
-/* Mobile navbar: flush to top — kill theme margin-top ($spacer) + fixed offset */
+/*
+ * Mobile navbar fix:
+ * - Theme uses position:fixed + margin-top:$spacer → gap above bar
+ * - Helpers.js injects .layout-page{padding-top:navbarHeight} → extra empty band
+ * Keep navbar FIXED (does not scroll), flush to top, solid white.
+ * Move the reserved space to .content-wrapper only.
+ */
 @media (max-width: 1199.98px) {
-  html.layout-navbar-fixed body.luzori-center .layout-wrapper,
-  html.layout-navbar-fixed body.luzori-center .layout-container,
+  /* Kill Helpers.js injected padding on layout-page (causes empty band above navbar) */
   html.layout-navbar-fixed body.luzori-center .layout-page,
-  body.luzori-center .layout-wrapper,
-  body.luzori-center .layout-container,
-  body.luzori-center .layout-page {
+  html body.luzori-center .layout-page {
     padding-top: 0 !important;
     margin-top: 0 !important;
   }
 
-  html.layout-navbar-fixed body.luzori-center .layout-content-navbar .layout-navbar.navbar-detached,
+  /* Reserve space under the fixed bar so content is not hidden */
+  html.layout-navbar-fixed body.luzori-center .layout-page > .content-wrapper,
+  html body.luzori-center .layout-page > .content-wrapper {
+    padding-top: 3.875rem !important;
+  }
+
+  html.layout-navbar-fixed body.luzori-center .layout-navbar,
   html.layout-navbar-fixed body.luzori-center .layout-navbar.navbar-detached,
-  html body.luzori-center .layout-navbar.navbar-detached.container-xxl,
-  html body.luzori-center .layout-navbar.navbar-detached.container-fluid,
+  html.layout-navbar-fixed body.luzori-center .layout-content-navbar .layout-navbar.navbar-detached,
   html body.luzori-center #layout-navbar.layout-navbar.navbar-detached,
-  html body.luzori-center .layout-page > nav#layout-navbar {
-    position: relative !important;
+  html body.luzori-center .layout-navbar.navbar-detached.container-xxl,
+  html body.luzori-center .layout-navbar.navbar-detached.container-fluid {
+    position: fixed !important;
     top: 0 !important;
-    left: auto !important;
-    right: auto !important;
-    inset: auto !important;
+    left: 0 !important;
+    right: 0 !important;
+    inset-inline: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
-    height: auto !important;
-    min-height: 3.5rem;
+    height: 3.875rem !important;
+    min-height: 3.875rem !important;
     margin: 0 !important;
     margin-top: 0 !important;
-    margin-block: 0 !important;
     margin-block-start: 0 !important;
-    padding: 0.35rem 0.75rem !important;
+    padding: 0 0.75rem !important;
     border-radius: 0 !important;
     border: 0 !important;
     border-bottom: 1px solid #e8dccb !important;
@@ -122,7 +130,7 @@ html.layout-navbar-fixed.layout-menu-collapsed body.luzori-center .layout-conten
     background-color: #fff !important;
     background-image: none !important;
     opacity: 1 !important;
-    z-index: 1030 !important;
+    z-index: 1085 !important;
     box-shadow: 0 2px 8px rgba(0, 43, 38, 0.06) !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
@@ -132,6 +140,7 @@ html.layout-navbar-fixed.layout-menu-collapsed body.luzori-center .layout-conten
   body.luzori-center .layout-navbar.navbar-detached .navbar-nav-right {
     flex-wrap: nowrap;
     min-width: 0;
+    height: 100%;
   }
 }
 

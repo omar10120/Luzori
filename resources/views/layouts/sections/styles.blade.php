@@ -26,32 +26,40 @@
 @stack('styles')
 
 @if (!str_contains(url()->current(), 'admin') && (str_contains(url()->current(), 'center_user') || auth('center_user')->check()))
-<link rel="stylesheet" href="{{ asset('assets/css/luzori-center.css') }}?v=35">
+<link rel="stylesheet" href="{{ asset('assets/css/luzori-center.css') }}?v=36">
 <style>
   body.luzori-center .luzori-page::before,
   body.luzori-center .luzori-dashboard::before {
     background-image: url('{{ asset('assets/img/branding/corner-leaf-beige.png') }}') !important;
   }
 
-  /* Mobile: force navbar flush to top (beats theme margin: $spacer auto 0) */
+  /*
+   * Mobile navbar — must beat Helpers.js inline:
+   *   .layout-page { padding-top: {navbarHeight}px !important; }
+   * and theme: .navbar-detached { margin: $spacer auto 0; }
+   */
   @media (max-width: 1199.98px) {
-    body.luzori-center .layout-page,
-    body.luzori-center .layout-container,
-    body.luzori-center .layout-wrapper {
+    html.layout-navbar-fixed body.luzori-center .layout-page {
       padding-top: 0 !important;
-      margin-top: 0 !important;
     }
-    body.luzori-center #layout-navbar,
-    body.luzori-center .layout-navbar.navbar-detached {
-      position: relative !important;
+    html.layout-navbar-fixed body.luzori-center .layout-page > .content-wrapper {
+      padding-top: 3.875rem !important;
+    }
+    html.layout-navbar-fixed body.luzori-center #layout-navbar,
+    html.layout-navbar-fixed body.luzori-center .layout-navbar.navbar-detached {
+      position: fixed !important;
       top: 0 !important;
-      margin: 0 !important;
-      margin-top: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
       width: 100% !important;
       max-width: 100% !important;
+      height: 3.875rem !important;
+      margin: 0 !important;
+      margin-top: 0 !important;
       border-radius: 0 !important;
       background: #fff !important;
       background-color: #fff !important;
+      z-index: 1085 !important;
     }
   }
 </style>
