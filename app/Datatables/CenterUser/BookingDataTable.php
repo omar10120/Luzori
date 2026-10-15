@@ -133,7 +133,7 @@ class BookingDataTable extends DataTable
                 >
             ')
             ->selectStyleSingle()
-            ->addAction(['printable' => false, 'exportable' => false, 'className' => 'dt-center'])
+            ->addAction(['printable' => false, 'exportable' => false, 'className' => 'dt-center lz-actions-col all'])
             ->buttons([
                 Button::make('colvis')->addClass($buttonClass . ' btn-warning')->text(__('general.column_visibility')),
                 [

@@ -76,7 +76,13 @@ class VacationDataTable extends DataTable
                 >
             ')
             ->selectStyleSingle()
-            ->addAction()
+            ->addAction([
+                'printable' => false,
+                'exportable' => false,
+                'responsivePriority' => 1,
+                'className' => 'dt-center lz-actions-col all',
+                'title' => __('general.actions'),
+            ])
             ->buttons([])
             ->language($this->getDataTableLanguageUrl())
             ->addTableClass('table table-bordered table-hover')

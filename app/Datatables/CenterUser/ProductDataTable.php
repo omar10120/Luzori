@@ -129,7 +129,7 @@ class ProductDataTable extends DataTable
                 'printable' => false,
                 'exportable' => false,
                 'responsivePriority' => 1,
-                'className' => 'dt-center lz-actions-col',
+                'className' => 'dt-center lz-actions-col all',
                 'title' => __('general.actions'),
             ])
             ->buttons([

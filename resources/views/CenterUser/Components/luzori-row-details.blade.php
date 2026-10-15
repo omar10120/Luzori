@@ -313,9 +313,36 @@
             }
         });
 
+        function forceActionsColumnVisible(api) {
+            api.columns().every(function (idx) {
+                const $header = $(this.header());
+                const title = ($header.text() || '').replace(/\s+/g, ' ').trim();
+                if (!isActionsHeader(title, $header)) return;
+
+                $header.addClass('all lz-actions-col');
+                $(api.cells(null, idx).nodes()).addClass('all lz-actions-col');
+
+                try {
+                    // DataTables Responsive: class "all" => never hide this column
+                    if (this.responsivePriority) {
+                        // no-op; priority set via column defs
+                    }
+                } catch (e) {}
+            });
+
+            try {
+                if (api.responsive && typeof api.responsive.recalc === 'function') {
+                    api.responsive.recalc();
+                }
+            } catch (e) {}
+        }
+
         $(document).on('init.dt draw.dt xhr.dt', function (e, settings) {
             try {
                 const api = new $.fn.dataTable.Api(settings);
+                if (e.type === 'init' || e.type === 'draw') {
+                    forceActionsColumnVisible(api);
+                }
                 injectDetailsButtons($, api);
                 wireExistingEyes();
                 if (e.type === 'draw' || e.type === 'xhr') hideProcessing(api);
