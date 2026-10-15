@@ -313,7 +313,8 @@ class BuyProductController extends Controller
                     'tax'        => 0,
                     'tip'        => 0,
                     'total'      => $totalPrice,
-                    'worker_id'  => $validated['worker_id'] ?? $validated['sales_worker_id'],
+                    // 'worker_id'  => $validated['worker_id'] ?? $validated['sales_worker_id'],
+                    'worker_id'  => $this->resolveDefaultWorkerId($validated['worker_id'] ?? null),
                     'client_id'  => $tenantUser->id,
                     'branch_id'  => $branchId,
                     'created_by' => $tenantUser->id,
@@ -324,9 +325,11 @@ class BuyProductController extends Controller
                     'payment_type'    => $validated['payment_type'],
                     'commission'      => $validated['commission'] ?? null,
                     'discount'        => $validated['discount'] ?? null,
-                    'sales_worker_id' => $validated['sales_worker_id'],
+                    // 'sales_worker_id' => $validated['sales_worker_id'],
                     // 'worker_id'       => $validated['worker_id'] ?? null,
-                    'worker_id'       => 1,
+                    // 'worker_id'       => 1,
+                    'sales_worker_id' => $this->resolveDefaultWorkerId($validated['sales_worker_id'] ?? null),
+                    'worker_id'       => $this->resolveDefaultWorkerId($validated['worker_id'] ?? null),
                     'global_user_id'  => $appUser->id,
                     'created_by'      => $tenantUser->id,
                     'sale_id'         => $sale->id, // ← link it back
@@ -573,5 +576,15 @@ class BuyProductController extends Controller
             'country_code' => $appUser->country_code ?? '+',
             'wallet' => 0,
         ]);
+    }
+    
+
+    private function resolveDefaultWorkerId(?int $fallback = null): ?int
+    {
+        $firstId = \App\Models\Worker::query()
+            ->orderBy('id')
+            ->value('id');
+
+        return $firstId ?? $fallback;
     }
 }
