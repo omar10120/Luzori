@@ -1,83 +1,103 @@
 @extends('layouts/layoutMaster')
 
+@section('title', __('locale.commission_report'))
+
+@section('vendor-style')
+    @include('CenterUser.Components.report-page-styles')
+@endsection
+
 @section('content')
-    <div class="portlet box blue-hoki">
-        <div class="portlet-title">
-            <div class="caption">
-                <i class="fa fa-plus"></i>{{ __('locale.commission_report') }}
+    <div class="luzori-page lz-report-page">
+        @include('CenterUser.Components.breadcrumbs', [
+            'menu' => __('locale.reports'),
+            'menu_link' => route('center_user.reports.commission-report'),
+            'title' => __('locale.commission_report'),
+        ])
+
+        <div class="lz-page-toolbar">
+            <div class="lz-page-title-wrap">
+                <div class="lz-page-icon">
+                    <i class="ti ti-percentage"></i>
+                </div>
+                <h1 class="lz-page-title">{{ __('locale.commission_report') }}</h1>
             </div>
         </div>
-        <div class="portlet-body">
-            <form method="get" action="{{ route('center_user.reports.commission-report') }}">
-                <div class="row">
-                    <div class="col-md-3">
-                        <label>{{ __('field.year') }}</label>
-                        <select class="form-control select" name="year" required>
-                            @if (!empty($years))
-                                @foreach ($years as $year)
-                                    @php
-                                        $selected = '';
-                                        if ($year == $selected_year) {
-                                            $selected = 'selected=""';
-                                        }
-                                    @endphp
-                                    <option {{ $selected }} value="{{ $year->year }}">{{ $year->year }}</option>
-                                @endforeach
-                            @endif
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <label>{{ __('field.month') }}</label>
-                        <select class="form-control select" name="month" required>
-                            @for ($i = 1; $i <= 12; $i++)
-                                @php
-                                    $selected = '';
-                                    if ($i == $selected_month) {
-                                        $selected = 'selected=""';
-                                    }
-                                @endphp
-                                <option {{ $selected }} value="{{ $i }}">
-                                    {{ date('F', mktime(0, 0, 0, $i, 10)) }}</option>
-                            @endfor
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="form-group">
-                            <label>{{ __('field.branch') }}</label>
-                            <select class="form-control" name="branch_id">
-                                @if (get_user_role() == 1 || get_user_role() == 3)
-                                    <option value="">{{ __('field.all_branches') }}</option>
-                                @endif
-                                @if (!empty($branches))
-                                    @foreach ($branches as $branch)
+
+        <div class="card lz-form-card">
+            <div class="card-body">
+                <div class="lz-report-filters">
+                    <form method="get" action="{{ route('center_user.reports.commission-report') }}">
+                        <div class="row g-3 align-items-end">
+                            <div class="col-md-3">
+                                <label class="lz-field-label">{{ __('field.year') }}</label>
+                                <select class="form-control select" name="year" required>
+                                    @if (!empty($years))
+                                        @foreach ($years as $year)
+                                            @php
+                                                $selected = '';
+                                                if ($year == $selected_year) {
+                                                    $selected = 'selected=""';
+                                                }
+                                            @endphp
+                                            <option {{ $selected }} value="{{ $year->year }}">{{ $year->year }}</option>
+                                        @endforeach
+                                    @endif
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="lz-field-label">{{ __('field.month') }}</label>
+                                <select class="form-control select" name="month" required>
+                                    @for ($i = 1; $i <= 12; $i++)
                                         @php
                                             $selected = '';
-                                            if ($branch->id == $selected_branch) {
+                                            if ($i == $selected_month) {
                                                 $selected = 'selected=""';
                                             }
                                         @endphp
-                                        <option {{ $selected }} value="{{ $branch->id }}">{{ $branch->name }}
-                                        </option>
-                                    @endforeach
-                                @endif
-                            </select>
+                                        <option {{ $selected }} value="{{ $i }}">
+                                            {{ date('F', mktime(0, 0, 0, $i, 10)) }}</option>
+                                    @endfor
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="lz-field-label">{{ __('field.branch') }}</label>
+                                <select class="form-control" name="branch_id">
+                                    @if (get_user_role() == 1 || get_user_role() == 3)
+                                        <option value="">{{ __('field.all_branches') }}</option>
+                                    @endif
+                                    @if (!empty($branches))
+                                        @foreach ($branches as $branch)
+                                            @php
+                                                $selected = '';
+                                                if ($branch->id == $selected_branch) {
+                                                    $selected = 'selected=""';
+                                                }
+                                            @endphp
+                                            <option {{ $selected }} value="{{ $branch->id }}">{{ $branch->name }}
+                                            </option>
+                                        @endforeach
+                                    @endif
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="lz-report-actions">
+                                    <button class="btn btn-luzori-primary">
+                                        <i class="ti ti-eye me-1"></i>{{ __('field.view') }}
+                                    </button>
+                                    @if (isset($request) && !empty($request->has('year')))
+                                        <a target="_blank"
+                                            href="{{ route('center_user.reports.commission-report') }}?year={{ $request->get('year') }}&month={{ $request->get('month') }}&branch_id={{ $request->get('branch_id') }}&is_pdf=true"
+                                            class="btn btn-luzori-gold">
+                                            <i class="ti ti-file-type-pdf me-1"></i>PDF
+                                        </a>
+                                    @endif
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="form-group">
-                            <label>&nbsp;</label><br>
-                            <button class="btn btn-success">{{ __('field.view') }}</button>
-                            @if (isset($request) && !empty($request->has('year')))
-                                <a target="_blank"
-                                    href="{{ route('center_user.reports.commission-report') }}?year={{ $request->get('year') }}&month={{ $request->get('month') }}&branch_id={{ $request->get('branch_id') }}&is_pdf=true"
-                                    class="btn btn-primary">PDF</a>
-                            @endif
-                        </div>
-                    </div>
+                    </form>
                 </div>
-            </form>
-            <div class="row">
-                <div class="col-md-12">
+
+                <div class="lz-report-result">
                     {!! $template !!}
                 </div>
             </div>
