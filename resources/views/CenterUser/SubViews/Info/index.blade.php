@@ -3,205 +3,185 @@
 @section('title', $title)
 
 @section('vendor-style')
+    @include('CenterUser.Components.settings-form-styles')
 @endsection
 
 @section('content')
-    <div class="container">
-        @include('Admin.Components.breadcrumbs')
+    <div class="luzori-page lz-settings-page">
+        @include('CenterUser.Components.breadcrumbs')
 
-        <div class="row">
-            <form class="pt-0" id="frmSubmit">
-                @csrf
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-header d-flex justify-content-between align-items-center">
-                        <div>
-                            <h2 class="mb-0">{{ $title }}</h2>
-                            <small class="text-muted">{{ __('general.manage_your_contact_info_settings') ?? 'Manage your invoice contact details.' }}</small>
-                        </div>
-                        <button type="submit" class="btn btn-primary submitFrom d-flex align-items-center gap-1">
-                            <i class="ti ti-check"></i>
-                            <span>{{ __('general.save') }}</span>
-                        </button>
-                    </div>
-                    </div>
-                    <div class="card-body">
-                        <div class="container">
-                            <div class="input-group justify-center d-flex my-4  ">
-                                <img src="{{ asset('assets/icons/contact-info.svg') }}" alt="icon" style="width: 25px; height: 25px; object-fit: contain; display: block;">    
-                                <div class="mx-2">
-                                    <label  for="">{{__('general.contact_info')}}</label>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-2">
-                                    @include('Admin.Components.country_code', ['item' => $item])
-                                </div>
-                                <div class="col-md-2" id="phone_prefix_container" style="display: {{ ($item && $item->country_code == '+971') ? 'block' : 'none' }};">
-                                    <div class="mb-4">
-                                        <label class="form-label">Prefix</label>
-                                            <div class="input-group">
-                                                <span class="input-group-text">
-                                                    <i class="ti ti-phone"></i>
-                                                </span> 
-
-                                                <select class="form-control" name="phone_prefix" id="phone_prefix">
-                                                    @php
-                                                        $prefixes = ['50', '52', '54', '55', '56', '58'];
-                                                        $currentPrefix = '';
-                                                        $phoneWithoutPrefix = $item ? (string)$item->phone : '';
-                                                        if ($item && $item->country_code == '+971' && $item->phone) {
-                                                            $phoneStr = (string)$item->phone;
-                                                            foreach ($prefixes as $prefix) {
-                                                                if (str_starts_with($phoneStr, $prefix)) {
-                                                                    $currentPrefix = $prefix;
-                                                                    $phoneWithoutPrefix = substr($phoneStr, strlen($prefix));
-                                                                    break;
-                                                                }
-                                                            }
-                                                        }
-                                                    @endphp
-                                                    @foreach ($prefixes as $prefix)
-                                                        <option value="{{ $prefix }}" {{ $currentPrefix == $prefix ? 'selected' : '' }}>
-                                                            {{ $prefix }}
-                                                        </option>
-                                                    @endforeach
-                                                </select>
-                                            </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-{{ ($item && $item->country_code == '+971') ? '2' : '4' }}" id="phone_input_container">
-                                    <div class="mb-4">
-                                        <label class="form-label">{{__('field.phone')}} <small class="text-muted">{{__('general.enter_the_phone_number')}}</small> <span class="text-danger">*</span></label>
-                                          <div class="input-group">
-                                            <span class="input-group-text">
-                                                    <i class="ti ti-phone"></i>
-                                         </span> 
-                                        <input type="tel" class="form-control" name="phone" id="phone" value="{{ $phoneWithoutPrefix }}"
-                                            placeholder="5XXXXXXX" 
-                                            required
-                                            maxlength="8"
-                                            pattern="5[0-9]{7}"
-                                            title="Phone number must start with 5 and be exactly 8 digits" />
-                                          </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-{{ ($item && $item->country_code == '+971') ? '4' : '6' }}" id="email_input_container">
-                                    <div class="mb-4">
-                                        <label class="form-label">{{__('field.email')}} <small class="text-muted">{{__('general.enter_the_email_address')}}</small> <span class="text-danger">*</span></label>
-                                        <div class="input-group">
-                                            <span class="input-group-text">
-                                                <i class="fa fa-envelope"></i>
-                                            </span> 
-
-                                            <input type="text" class="form-control" name="email" value="{{ $item->email }}"
-                                                placeholder="{{__('field.email')}}" />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="input-group justify-center d-flex my-4 mx-0  ">
-                                <img src="{{ asset('assets/icons/social-media.svg') }}" alt="icon" style="width: 25px; height: 25px; object-fit: contain; display: block;">    
-                                <div class="mx-2">
-                                    <label  for="">{{__('general.social_media_links')}}</label>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-4">
-                                        <label class="form-label">{{__('field.facebook')}} <small class="text-muted">{{__('general.enter_the_facebook_url')}}</small> <span class="text-danger">*</span></label>
-                                           <div class="input-group">
-                                            <span class="input-group-text">
-                                                
-                                                <img src="{{ asset('assets/icons/facebook.svg') }}" alt="icon" style="width: 25px; height: 25px; object-fit: contain;">    
-                                            </span> 
-
-                                        <input type="text" class="form-control" name="facebook" value="{{ $item->facebook }}"
-                                            placeholder="{{__('field.facebook')}}" />
-                                        </div>
-                                        
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-4">
-                                        <label class="form-label">{{__('field.instagram')}} <small class="text-muted">{{__('general.enter_the_instagram_url')}}</small> <span class="text-danger">*</span></label>
-                                        <div class="input-group">
-                                             <span class="input-group-text">
-                                                <img src="{{ asset('assets/icons/instagram.svg') }}" alt="icon" style="width: 25px; height: 25px; object-fit: contain;">    
-                                            </span> 
-                                            <input type="text" class="form-control" name="instagram" value="{{ $item->instagram }}"
-                                            placeholder="{{__('field.instagram')}}" />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-4">
-                                        <label class="form-label">{{__('field.twitter')}} <small class="text-muted">{{__('general.enter_the_twitter_url')}}</small> <span class="text-danger">*</span></label>
-                                           <div class="input-group">
-                                            <span class="input-group-text">
-                                                <img src="{{ asset('assets/icons/twitter.svg') }}" alt="icon" style="width: 25px; height: 25px; object-fit: contain;">    
-                                            </span> 
-                                            <input type="text" class="form-control" name="twitter" value="{{ $item->twitter }}"
-                                            placeholder="{{__('field.twitter')}}" />
-                                        </div>
-                                        
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-4">
-                                        <label class="form-label">{{__('field.whatsapp')}} <small class="text-muted">{{__('general.enter_the_whatsapp_url')}}</small> <span class="text-danger">*</span></label>
-                                           <div class="input-group">
-                                            <span class="input-group-text">
-                                                <img src="{{ asset('assets/icons/whatsapp.svg') }}" alt="icon" style="width: 25px; height: 25px; object-fit: contain;">    
-                                            </span> 
-                                            <input type="text" class="form-control" name="whatsapp" value="{{ $item->whatsapp }}"
-                                                placeholder="{{__('field.whatsapp')}}" />
-                                        </div>
-                                        
-                                    </div>
-                                </div>
-                                
-                            </div>
-
-                                  <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-4">
-                                        <label class="form-label">{{__('field.youtube')}} <small class="text-muted">{{__('general.enter_the_twitter_url')}}</small> <span class="text-danger">*</span></label>
-                                           <div class="input-group">
-                                            <span class="input-group-text">
-                                                <img src="{{ asset('assets/icons/youtube.svg') }}" alt="icon" style="width: 25px; height: 25px; object-fit: contain;">    
-                                            </span> 
-                                            <input type="text" class="form-control" name="youtube" value="{{ $item->youtube }}"
-                                            placeholder="{{__('field.youtube')}}" />
-                                        </div>
-                                        
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-4">
-                                        <label class="form-label">{{__('field.linkedin')}} <small class="text-muted">{{__('general.linkedin')}}</small> <span class="text-danger">*</span></label>
-                                           <div class="input-group">
-                                            <span class="input-group-text">
-                                                <img src="{{ asset('assets/icons/linkedin.svg') }}" alt="icon" style="width: 25px; height: 25px; object-fit: contain;">    
-                                            </span> 
-                                            <input type="text" class="form-control" name="linkedin" value="{{ $item->linkedin }}"
-                                                placeholder="{{__('field.linkedin')}}" />
-                                        </div>
-                                        
-                                    </div>
-                                </div>
-                                
-                            </div>
-                       
-                        </div>
-                    </div>
-                  
+        <div class="lz-page-toolbar">
+            <div class="lz-page-title-wrap">
+                <div class="lz-page-icon">
+                    <i class="ti ti-address-book"></i>
                 </div>
-            </form>
+                <h1 class="lz-page-title">{{ $title }}</h1>
+            </div>
         </div>
+
+        <form class="pt-0" id="frmSubmit">
+            @csrf
+            <div class="card lz-form-card">
+                <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div>
+                        <h2 class="mb-0">{{ __('locale.infos') ?? $title }}</h2>
+                        <small class="text-muted">{{ __('general.manage_your_contact_info_settings') ?? 'Manage your invoice contact details.' }}</small>
+                    </div>
+                    <button type="submit" class="btn btn-luzori-primary submitFrom d-flex align-items-center gap-1">
+                        <i class="ti ti-check"></i>
+                        <span>{{ __('general.save') }}</span>
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="lz-section-label">
+                        <img src="{{ asset('assets/icons/contact-info.svg') }}" alt="">
+                        <span>{{ __('general.contact_info') }}</span>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-2 mb-3">
+                            @include('Admin.Components.country_code', ['item' => $item])
+                        </div>
+                        <div class="col-md-2 mb-3" id="phone_prefix_container" style="display: {{ ($item && $item->country_code == '+971') ? 'block' : 'none' }};">
+                            <label class="lz-field-label">Prefix</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="ti ti-phone"></i>
+                                </span>
+                                <select class="form-control" name="phone_prefix" id="phone_prefix">
+                                    @php
+                                        $prefixes = ['50', '52', '54', '55', '56', '58'];
+                                        $currentPrefix = '';
+                                        $phoneWithoutPrefix = $item ? (string)$item->phone : '';
+                                        if ($item && $item->country_code == '+971' && $item->phone) {
+                                            $phoneStr = (string)$item->phone;
+                                            foreach ($prefixes as $prefix) {
+                                                if (str_starts_with($phoneStr, $prefix)) {
+                                                    $currentPrefix = $prefix;
+                                                    $phoneWithoutPrefix = substr($phoneStr, strlen($prefix));
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                    @endphp
+                                    @foreach ($prefixes as $prefix)
+                                        <option value="{{ $prefix }}" {{ $currentPrefix == $prefix ? 'selected' : '' }}>
+                                            {{ $prefix }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-{{ ($item && $item->country_code == '+971') ? '2' : '4' }} mb-3" id="phone_input_container">
+                            <label class="lz-field-label">{{ __('field.phone') }} <span class="text-danger">*</span></label>
+                            <small class="lz-field-help">{{ __('general.enter_the_phone_number') }}</small>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="ti ti-phone"></i>
+                                </span>
+                                <input type="tel" class="form-control" name="phone" id="phone" value="{{ $phoneWithoutPrefix }}"
+                                    placeholder="5XXXXXXX"
+                                    required
+                                    maxlength="8"
+                                    pattern="5[0-9]{7}"
+                                    title="Phone number must start with 5 and be exactly 8 digits" />
+                            </div>
+                        </div>
+                        <div class="col-md-{{ ($item && $item->country_code == '+971') ? '4' : '6' }} mb-3" id="email_input_container">
+                            <label class="lz-field-label">{{ __('field.email') }} <span class="text-danger">*</span></label>
+                            <small class="lz-field-help">{{ __('general.enter_the_email_address') }}</small>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fa fa-envelope"></i>
+                                </span>
+                                <input type="text" class="form-control" name="email" value="{{ $item->email }}"
+                                    placeholder="{{ __('field.email') }}" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="lz-section-label mt-3">
+                        <img src="{{ asset('assets/icons/social-media.svg') }}" alt="">
+                        <span>{{ __('general.social_media_links') }}</span>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="lz-field-label">{{ __('field.facebook') }} <span class="text-danger">*</span></label>
+                            <small class="lz-field-help">{{ __('general.enter_the_facebook_url') }}</small>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <img src="{{ asset('assets/icons/facebook.svg') }}" alt="" style="width:20px;height:20px;">
+                                </span>
+                                <input type="text" class="form-control" name="facebook" value="{{ $item->facebook }}"
+                                    placeholder="{{ __('field.facebook') }}" />
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="lz-field-label">{{ __('field.instagram') }} <span class="text-danger">*</span></label>
+                            <small class="lz-field-help">{{ __('general.enter_the_instagram_url') }}</small>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <img src="{{ asset('assets/icons/instagram.svg') }}" alt="" style="width:20px;height:20px;">
+                                </span>
+                                <input type="text" class="form-control" name="instagram" value="{{ $item->instagram }}"
+                                    placeholder="{{ __('field.instagram') }}" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="lz-field-label">{{ __('field.twitter') }} <span class="text-danger">*</span></label>
+                            <small class="lz-field-help">{{ __('general.enter_the_twitter_url') }}</small>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <img src="{{ asset('assets/icons/twitter.svg') }}" alt="" style="width:20px;height:20px;">
+                                </span>
+                                <input type="text" class="form-control" name="twitter" value="{{ $item->twitter }}"
+                                    placeholder="{{ __('field.twitter') }}" />
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="lz-field-label">{{ __('field.whatsapp') }} <span class="text-danger">*</span></label>
+                            <small class="lz-field-help">{{ __('general.enter_the_whatsapp_url') }}</small>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <img src="{{ asset('assets/icons/whatsapp.svg') }}" alt="" style="width:20px;height:20px;">
+                                </span>
+                                <input type="text" class="form-control" name="whatsapp" value="{{ $item->whatsapp }}"
+                                    placeholder="{{ __('field.whatsapp') }}" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="lz-field-label">{{ __('field.youtube') }} <span class="text-danger">*</span></label>
+                            <small class="lz-field-help">{{ __('general.enter_the_twitter_url') }}</small>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <img src="{{ asset('assets/icons/youtube.svg') }}" alt="" style="width:20px;height:20px;">
+                                </span>
+                                <input type="text" class="form-control" name="youtube" value="{{ $item->youtube }}"
+                                    placeholder="{{ __('field.youtube') }}" />
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="lz-field-label">{{ __('field.linkedin') }} <span class="text-danger">*</span></label>
+                            <small class="lz-field-help">{{ __('general.linkedin') }}</small>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <img src="{{ asset('assets/icons/linkedin.svg') }}" alt="" style="width:20px;height:20px;">
+                                </span>
+                                <input type="text" class="form-control" name="linkedin" value="{{ $item->linkedin }}"
+                                    placeholder="{{ __('field.linkedin') }}" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
     </div>
 @endsection
 
@@ -219,7 +199,7 @@
             const phonePrefixSelect = document.getElementById('phone_prefix');
 
             const emailInputContainer = document.getElementById('email_input_container');
-            
+
             function togglePhonePrefix() {
                 if (countryCodeSelect && countryCodeSelect.value === '+971') {
                     phonePrefixContainer.style.display = 'block';

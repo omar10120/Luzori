@@ -200,6 +200,123 @@
             font-weight: 700;
             border-bottom-color: #efe6d8 !important;
         }
+
+        /* Pickable scroll lists (coupons / packages) */
+        .lz-sales-cart-page .lz-pick-panel {
+            border: 1px solid #efe6d8;
+            border-radius: 16px;
+            background: #fbfaf7;
+            overflow: hidden;
+        }
+        .lz-sales-cart-page .lz-pick-panel-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            padding: 0.95rem 1.1rem;
+            background: #fff;
+            border-bottom: 1px solid #efe6d8;
+        }
+        .lz-sales-cart-page .lz-pick-panel-head h5 {
+            margin: 0;
+            color: #002b26;
+            font-weight: 700;
+            font-size: 1rem;
+        }
+        .lz-sales-cart-page .lz-pick-scroll {
+            max-height: 340px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 0.75rem;
+            scroll-behavior: smooth;
+        }
+        .lz-sales-cart-page .lz-pick-scroll::-webkit-scrollbar {
+            width: 8px;
+        }
+        .lz-sales-cart-page .lz-pick-scroll::-webkit-scrollbar-track {
+            background: #f3ebe0;
+            border-radius: 8px;
+        }
+        .lz-sales-cart-page .lz-pick-scroll::-webkit-scrollbar-thumb {
+            background: #c5a070;
+            border-radius: 8px;
+        }
+        .lz-sales-cart-page .lz-pick-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.85rem;
+            background: #fff;
+            border: 1px solid #ebe3d7;
+            border-radius: 12px;
+            padding: 0.8rem 0.95rem;
+            margin-bottom: 0.55rem;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+        .lz-sales-cart-page .lz-pick-item:last-child {
+            margin-bottom: 0;
+        }
+        .lz-sales-cart-page .lz-pick-item:hover {
+            border-color: #c5a070;
+            box-shadow: 0 4px 14px rgba(197, 160, 112, 0.14);
+        }
+        .lz-sales-cart-page .lz-pick-item-main {
+            min-width: 0;
+            flex: 1;
+        }
+        .lz-sales-cart-page .lz-pick-code {
+            font-weight: 700;
+            color: #002b26;
+            font-size: 0.92rem;
+            letter-spacing: 0.02em;
+            margin-bottom: 0.2rem;
+            word-break: break-all;
+        }
+        .lz-sales-cart-page .lz-pick-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem 0.65rem;
+            align-items: center;
+            color: #7a8582;
+            font-size: 0.78rem;
+        }
+        .lz-sales-cart-page .lz-pick-amount {
+            font-weight: 700;
+            color: #1a6b5a;
+            white-space: nowrap;
+        }
+        .lz-sales-cart-page .lz-pick-empty,
+        .lz-sales-cart-page .lz-pick-loading {
+            text-align: center;
+            color: #7a8582;
+            padding: 2rem 1rem;
+            font-size: 0.9rem;
+        }
+        .lz-sales-cart-page .lz-pick-item .btn-sm {
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .lz-sales-cart-page #cart-items-service,
+        .lz-sales-cart-page #cart-items-product,
+        .lz-sales-cart-page #cart-items-user-wallet {
+            max-height: 260px;
+            overflow-y: auto;
+            padding-right: 0.25rem;
+        }
+        .lz-sales-cart-page .nav-tabs.nav-fill .nav-link {
+            font-size: 0.8rem;
+            padding: 0.55rem 0.35rem !important;
+        }
+        @media (max-width: 576px) {
+            .lz-sales-cart-page .lz-pick-item {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .lz-sales-cart-page .lz-pick-scroll {
+                max-height: 280px;
+            }
+        }
     </style>
 @endsection
 
@@ -683,78 +800,38 @@
 
                             <!-- Wallet Tab - Show Coupons Table, Add User Wallet, and Add New Coupon -->
                             <div class="tab-pane fade" id="wallet" role="tabpanel">
-                                <!-- Available Coupons Table -->
-                                <div class="card mb-4">
-                                    <div class="card-header d-flex justify-content-between align-items-center">
-                                        <h5 class="mb-0">{{ __('locale.wallets') }} ({{ __('field.available_coupons') }})</h5>
-                                        <button type="button" class="btn btn-primary btn-sm" id="addCouponBtn" data-bs-toggle="modal" data-bs-target="#addCouponModal">
+                                <!-- Available Coupons — scrollable pick list -->
+                                <div class="lz-pick-panel mb-2" id="wallets-table">
+                                    <div class="lz-pick-panel-head">
+                                        <h5>{{ __('locale.wallets') }} ({{ __('field.available_coupons') }})</h5>
+                                        <button type="button" class="btn btn-luzori-primary btn-sm" id="addCouponBtn" data-bs-toggle="modal" data-bs-target="#addCouponModal">
                                             <i class="ti ti-plus me-1"></i>
                                             {{ __('general.add') }} {{ __('field.new_coupon') }}
                                         </button>
                                     </div>
-                                    <div class="card-body">
-                                        <div class="table-responsive">
-                                            <table class="table table-bordered table-hover " id="wallets-table">
-                                                <thead>
-                                                    <tr >
-                                                        <th style="font-size: 10px;">{{ __('field.code') }}</th>
-                                                        <th style="font-size: 10px;">{{ __('field.client') }}</th>
-                                                        <th style="font-size: 10px;">{{ __('field.amount') }}</th>
-                                                        <th style="font-size: 10px;">{{ __('field.invoiced_amount') }}</th>
-                                                        <th style="font-size: 10px;">{{ __('field.start_at') }}</th>
-                                                        <th style="font-size: 10px;">{{ __('field.end_at') }}</th>
-                                                        <th style="font-size: 10px;">{{ __('field.created_by') }}</th>
-                                                        <th style="font-size: 10px;">{{ __('field.status') }}</th>
-                                                        <th style="font-size: 10px;">{{ __('general.actions') }}</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody id="wallets-table-body">
-                                                    <tr class="wallets-loading-row">
-                                                        <td colspan="9" class="text-center text-muted py-4">
-                                                            <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
-                                                            {{ __('general.loading') ?? 'Loading...' }}
-                                                        </td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
+                                    <div class="lz-pick-scroll" id="wallets-table-body">
+                                        <div class="lz-pick-loading wallets-loading-row">
+                                            <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                                            {{ __('general.loading') ?? 'Loading...' }}
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Packages Tab - Show Packages Table and Add User Package -->
+                            <!-- Packages Tab — scrollable pick list -->
                             <div class="tab-pane fade" id="package" role="tabpanel">
-                                <div class="card mb-4">
-                                    <div class="card-header d-flex justify-content-between align-items-center">
-                                        <h5 class="mb-0">{{ __('locale.packages') }} ({{ __('field.available') ?? 'Available' }})</h5>
-                                        <button type="button" class="btn btn-primary btn-sm" id="addPackageBtn" data-bs-toggle="modal" data-bs-target="#addPackageModal">
+                                <div class="lz-pick-panel mb-2" id="packages-table">
+                                    <div class="lz-pick-panel-head">
+                                        <h5>{{ __('locale.packages') }} ({{ __('field.available') ?? 'Available' }})</h5>
+                                        <button type="button" class="btn btn-luzori-primary btn-sm" id="addPackageBtn" data-bs-toggle="modal" data-bs-target="#addPackageModal">
                                             <i class="ti ti-plus me-1"></i>
                                             {{ __('general.add') }} {{ __('locale.packages') }}
                                         </button>
                                     </div>
-                                    <div class="card-body">
-                                        <div class="table-responsive">
-                                            <table class="table table-bordered table-hover" id="packages-table">
-                                                <thead>
-                                                    <tr>
-                                                        <th style="font-size: 10px;">#</th>
-                                                        <th style="font-size: 10px;">{{ __('field.name') }}</th>
-                                                        <th style="font-size: 10px;">{{ __('field.price') }}</th>
-                                                        <th style="font-size: 10px;">{{ __('field.paid_services') }}</th>
-                                                        <th style="font-size: 10px;">{{ __('field.free_services') }}</th>
-                                                        <th style="font-size: 10px;">{{ __('field.users') }}</th>
-                                                        <th style="font-size: 10px;">{{ __('general.actions') }}</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody id="packages-table-body">
-                                                    <tr class="packages-loading-row">
-                                                        <td colspan="7" class="text-center text-muted py-4">
-                                                            <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
-                                                            {{ __('general.loading') ?? 'Loading...' }}
-                                                        </td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
+                                    <div class="lz-pick-scroll" id="packages-table-body">
+                                        <div class="lz-pick-loading packages-loading-row">
+                                            <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                                            {{ __('general.loading') ?? 'Loading...' }}
                                         </div>
                                     </div>
                                 </div>
@@ -1495,59 +1572,61 @@
                 if (walletsTabLoaded && !force) return;
                 const $body = $('#wallets-table-body');
                 $body.html(`
-                    <tr class="wallets-loading-row">
-                        <td colspan="9" class="text-center text-muted py-4">
-                            <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
-                            {{ __('general.loading') ?? 'Loading...' }}
-                        </td>
-                    </tr>
+                    <div class="lz-pick-loading wallets-loading-row">
+                        <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                        {{ __('general.loading') ?? 'Loading...' }}
+                    </div>
                 `);
 
                 $.getJSON('{{ route('center_user.sales.cart.wallets') }}')
                     .done(function (res) {
                         const rows = res.data || [];
                         if (!rows.length) {
-                            $body.html(`<tr><td colspan="9" class="text-center text-muted">{{ __('field.no_coupons_available') }}</td></tr>`);
+                            $body.html(`<div class="lz-pick-empty">{{ __('field.no_coupons_available') }}</div>`);
                             walletsTabLoaded = true;
                             return;
                         }
 
                         const html = rows.map((wallet) => `
-                            <tr style="font-size: 10px;">
-                                <td>${escapeHtml(wallet.code)}</td>
-                                <td>${badgesHtml(wallet.clients, 'bg-label-info')}</td>
-                                <td>${escapeHtml(wallet.amount)}</td>
-                                <td>${escapeHtml(wallet.invoiced_amount)}</td>
-                                <td>${escapeHtml(wallet.start_at)}</td>
-                                <td>${escapeHtml(wallet.end_at)}</td>
-                                <td>${escapeHtml(wallet.created_by)}</td>
-                                <td>${wallet.used
-                                    ? '<span class="badge bg-label-danger">{{ __('field.used') }}</span>'
-                                    : '<span class="badge bg-label-success">{{ __('field.active') }}</span>'
-                                }</td>
-                                <td>
-                                    <button type="button"
-                                        class="btn btn-sm btn-primary add-wallet-user-btn"
-                                        style="font-size: 10px;"
-                                        data-wallet-id="${wallet.id}"
-                                        data-wallet-code="${escapeHtml(wallet.code)}"
-                                        data-wallet-amount="${wallet.raw?.amount ?? ''}"
-                                        data-wallet-invoiced="${wallet.raw?.invoiced_amount ?? ''}"
-                                        data-wallet-start="${wallet.raw?.start_at ?? ''}"
-                                        data-wallet-end="${wallet.raw?.end_at ?? ''}"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#addWalletUserModal">
-                                        <i class="ti ti-user-plus me-1"></i>
-                                        {{ __('field.add_user') }}
-                                    </button>
-                                </td>
-                            </tr>
+                            <div class="lz-pick-item">
+                                <div class="lz-pick-item-main">
+                                    <div class="lz-pick-code">${escapeHtml(wallet.code)}</div>
+                                    <div class="lz-pick-meta">
+                                        <span class="lz-pick-amount">${escapeHtml(wallet.amount)}</span>
+                                        <span>${escapeHtml(wallet.invoiced_amount)}</span>
+                                        ${wallet.used
+                                            ? '<span class="badge bg-label-danger">{{ __('field.used') }}</span>'
+                                            : '<span class="badge bg-label-success">{{ __('field.active') }}</span>'
+                                        }
+                                    </div>
+                                    <div class="lz-pick-meta mt-1">
+                                        ${badgesHtml(wallet.clients, 'bg-label-info')}
+                                    </div>
+                                    <div class="lz-pick-meta mt-1">
+                                        <span><i class="ti ti-calendar me-1"></i>${escapeHtml(wallet.start_at)} → ${escapeHtml(wallet.end_at)}</span>
+                                        <span><i class="ti ti-user me-1"></i>${escapeHtml(wallet.created_by)}</span>
+                                    </div>
+                                </div>
+                                <button type="button"
+                                    class="btn btn-sm btn-luzori-primary add-wallet-user-btn"
+                                    data-wallet-id="${wallet.id}"
+                                    data-wallet-code="${escapeHtml(wallet.code)}"
+                                    data-wallet-amount="${wallet.raw?.amount ?? ''}"
+                                    data-wallet-invoiced="${wallet.raw?.invoiced_amount ?? ''}"
+                                    data-wallet-start="${wallet.raw?.start_at ?? ''}"
+                                    data-wallet-end="${wallet.raw?.end_at ?? ''}"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#addWalletUserModal">
+                                    <i class="ti ti-user-plus me-1"></i>
+                                    {{ __('field.add_user') }}
+                                </button>
+                            </div>
                         `).join('');
                         $body.html(html);
                         walletsTabLoaded = true;
                     })
                     .fail(function () {
-                        $body.html(`<tr><td colspan="9" class="text-center text-danger">{{ __('api.unknownError') ?? 'Failed to load' }}</td></tr>`);
+                        $body.html(`<div class="lz-pick-empty text-danger">{{ __('api.unknownError') ?? 'Failed to load' }}</div>`);
                     });
             }
 
@@ -1555,50 +1634,50 @@
                 if (packagesTabLoaded && !force) return;
                 const $body = $('#packages-table-body');
                 $body.html(`
-                    <tr class="packages-loading-row">
-                        <td colspan="7" class="text-center text-muted py-4">
-                            <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
-                            {{ __('general.loading') ?? 'Loading...' }}
-                        </td>
-                    </tr>
+                    <div class="lz-pick-loading packages-loading-row">
+                        <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                        {{ __('general.loading') ?? 'Loading...' }}
+                    </div>
                 `);
 
                 $.getJSON('{{ route('center_user.sales.cart.packages') }}')
                     .done(function (res) {
                         const rows = res.data || [];
                         if (!rows.length) {
-                            $body.html(`<tr><td colspan="7" class="text-center text-muted">{{ __('field.no_data_found') }}</td></tr>`);
+                            $body.html(`<div class="lz-pick-empty">{{ __('field.no_data_found') }}</div>`);
                             packagesTabLoaded = true;
                             return;
                         }
 
                         const html = rows.map((pkg) => `
-                            <tr style="font-size: 10px;">
-                                <td>${pkg.id}</td>
-                                <td>${escapeHtml(pkg.name)}</td>
-                                <td>${escapeHtml(pkg.price)}</td>
-                                <td>${badgesHtml(pkg.paid_services, 'bg-label-primary')}</td>
-                                <td>${badgesHtml(pkg.free_services, 'bg-label-success')}</td>
-                                <td><span class="badge bg-label-info">${pkg.users_count || 0}</span></td>
-                                <td>
-                                    <button type="button"
-                                        class="btn btn-sm btn-primary add-package-user-btn"
-                                        style="font-size: 10px;"
-                                        data-package-id="${pkg.id}"
-                                        data-package-name="${escapeHtml(pkg.name)}"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#addPackageUserModal">
-                                        <i class="ti ti-user-plus me-1"></i>
-                                        {{ __('field.add_user') }}
-                                    </button>
-                                </td>
-                            </tr>
+                            <div class="lz-pick-item">
+                                <div class="lz-pick-item-main">
+                                    <div class="lz-pick-code">${escapeHtml(pkg.name)}</div>
+                                    <div class="lz-pick-meta">
+                                        <span class="lz-pick-amount">${escapeHtml(pkg.price)}</span>
+                                        <span class="badge bg-label-info">${pkg.users_count || 0} {{ __('field.users') }}</span>
+                                    </div>
+                                    <div class="lz-pick-meta mt-1">
+                                        ${badgesHtml(pkg.paid_services, 'bg-label-primary')}
+                                        ${badgesHtml(pkg.free_services, 'bg-label-success')}
+                                    </div>
+                                </div>
+                                <button type="button"
+                                    class="btn btn-sm btn-luzori-primary add-package-user-btn"
+                                    data-package-id="${pkg.id}"
+                                    data-package-name="${escapeHtml(pkg.name)}"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#addPackageUserModal">
+                                    <i class="ti ti-user-plus me-1"></i>
+                                    {{ __('field.add_user') }}
+                                </button>
+                            </div>
                         `).join('');
                         $body.html(html);
                         packagesTabLoaded = true;
                     })
                     .fail(function () {
-                        $body.html(`<tr><td colspan="7" class="text-center text-danger">{{ __('api.unknownError') ?? 'Failed to load' }}</td></tr>`);
+                        $body.html(`<div class="lz-pick-empty text-danger">{{ __('api.unknownError') ?? 'Failed to load' }}</div>`);
                     });
             }
 
