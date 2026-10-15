@@ -1,9 +1,9 @@
-{{-- Luzori: row details dialog (replaces DataTables expand arrow) --}}
+{{-- Luzori: eye in Actions opens dialog with hidden/remaining row fields (replaces expand arrow) --}}
 <div class="modal fade" id="lzRowDetailsModal" tabindex="-1" aria-labelledby="lzRowDetailsModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
         <div class="modal-content lz-row-details-modal">
             <div class="modal-header">
-                <h5 class="modal-title" id="lzRowDetailsModalLabel">{{ __('general.show') }}</h5>
+                <h5 class="modal-title" id="lzRowDetailsModalLabel">{{ __('general.view_details') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body" id="lzRowDetailsModalBody"></div>
@@ -18,11 +18,12 @@
 (function () {
     if (!document.body.classList.contains('luzori-center')) return;
 
-    const detailsTitle = @json(__('general.show'));
-    const detailsBtnTitle = @json(__('general.view_details') ?: __('general.show'));
+    const detailsTitle = @json(__('general.view_details'));
+    const detailsBtnTitle = @json(__('general.view_details'));
     const emptyLabel = '—';
+    const actionsLabels = ['actions', 'action', 'الإجراءات', 'اجراءات'];
 
-    function ensureJqueryReady(cb) {
+    function ensureReady(cb) {
         if (window.jQuery && jQuery.fn && jQuery.fn.dataTable) {
             cb(jQuery);
             return;
@@ -32,30 +33,19 @@
                 clearInterval(timer);
                 cb(jQuery);
             }
-        }, 50);
-        setTimeout(function () { clearInterval(timer); }, 8000);
-    }
-
-    function disableInlineExpand($) {
-        $.extend(true, $.fn.dataTable.defaults, {
-            responsive: {
-                details: false
-            }
-        });
-
-        $(document).on('preInit.dt', function (e, settings) {
-            if (!document.body.classList.contains('luzori-center')) return;
-            const current = settings.oInit.responsive;
-            if (current === true || current === undefined || current === null) {
-                settings.oInit.responsive = { details: false };
-            } else if (typeof current === 'object') {
-                current.details = false;
-            }
-        });
+        }, 40);
+        setTimeout(function () { clearInterval(timer); }, 12000);
     }
 
     function detailsButtonHtml() {
-        return '<a href="javascript:void(0)" class="lz-action-btn lz-open-row-details" title="' + detailsBtnTitle.replace(/"/g, '&quot;') + '" aria-label="' + detailsBtnTitle.replace(/"/g, '&quot;') + '"><i class="ti ti-eye"></i></a>';
+        return '<a href="javascript:void(0)" class="lz-action-btn lz-open-row-details" title="' +
+            detailsBtnTitle.replace(/"/g, '&quot;') + '"><i class="ti ti-eye"></i></a>';
+    }
+
+    function isActionsHeader(title, $header) {
+        if ($header && ($header.hasClass('lz-actions-col') || $header.hasClass('lz-dtr-control'))) return true;
+        const t = (title || '').toLowerCase().trim();
+        return actionsLabels.indexOf(t) !== -1;
     }
 
     function injectDetailsButtons($, api) {
@@ -73,16 +63,27 @@
 
             const $actionsTd = $tr.find('td.lz-actions-col').first();
             if ($actionsTd.length) {
-                const existing = $actionsTd.html();
-                $actionsTd.html('<div class="lz-action-icons" onclick="event.stopPropagation()">' + btn + existing + '</div>');
+                $actionsTd.html(
+                    '<div class="lz-action-icons" onclick="event.stopPropagation()">' +
+                    btn + $actionsTd.html() + '</div>'
+                );
                 return;
             }
 
-            // Tables without an actions column: add eye into the last visible cell
-            const $target = $tr.children('td:visible').last();
-            if ($target.length) {
-                $target.append('<span class="lz-inline-row-details">' + btn + '</span>');
+            // No actions column: append a dedicated last-cell eye
+            const $last = $tr.children('td').last();
+            if ($last.length) {
+                $last.append('<span class="lz-inline-row-details">' + btn + '</span>');
             }
+        });
+    }
+
+    function injectAllTables($) {
+        $('table.dataTable').each(function () {
+            if (!$.fn.dataTable.isDataTable(this)) return;
+            try {
+                injectDetailsButtons($, $(this).DataTable());
+            } catch (e) {}
         });
     }
 
@@ -104,33 +105,43 @@
 
     function collectHiddenDetails($, api, rowIdx) {
         const rows = [];
+        const seen = {};
+
         api.columns().every(function (colIdx) {
             const $header = $(this.header());
             const title = ($header.text() || '').replace(/\s+/g, ' ').trim();
-            if (!title) return;
-            if ($header.hasClass('lz-actions-col') || $header.hasClass('lz-dtr-control')) return;
-
-            const headerLower = title.toLowerCase();
-            if (headerLower === 'actions' || headerLower === 'action') return;
+            if (!title || isActionsHeader(title, $header)) return;
 
             let hidden = false;
+
+            // Columns marked for child/details row (old expand content)
+            if ($header.hasClass('none') || $header.hasClass('never') || $header.hasClass('dtr-hidden')) {
+                hidden = true;
+            }
+
             try {
                 if (typeof this.responsiveHidden === 'function' && this.responsiveHidden()) {
                     hidden = true;
                 }
             } catch (e) {}
 
-            if ($header.hasClass('none') || $header.hasClass('never')) {
-                hidden = true;
-            }
-
             const $cell = $(api.cell(rowIdx, colIdx).node());
-            if ($cell.hasClass('dtr-hidden') || $cell.css('display') === 'none') {
-                hidden = true;
+            if ($cell.length) {
+                if ($cell.hasClass('none') || $cell.hasClass('never') || $cell.hasClass('dtr-hidden')) {
+                    hidden = true;
+                }
+                // Responsive often hides with display:none
+                if ($cell.css('display') === 'none' || !$cell.is(':visible')) {
+                    // Only treat as hidden detail if header also not visible / none-class
+                    if (!$header.is(':visible') || $header.hasClass('none') || $header.hasClass('never')) {
+                        hidden = true;
+                    }
+                }
             }
 
-            // Prefer columns that were meant for expand / currently collapsed
             if (!hidden) return;
+            if (seen[title]) return;
+            seen[title] = true;
 
             rows.push({
                 title: title,
@@ -138,16 +149,14 @@
             });
         });
 
-        // Fallback: if nothing is collapsed, show all non-action columns
+        // Fallback: show every non-action field so the eye always has content
         if (!rows.length) {
             api.columns().every(function (colIdx) {
                 const $header = $(this.header());
                 const title = ($header.text() || '').replace(/\s+/g, ' ').trim();
-                if (!title) return;
-                if ($header.hasClass('lz-actions-col') || $header.hasClass('lz-dtr-control')) return;
-                const headerLower = title.toLowerCase();
-                if (headerLower === 'actions' || headerLower === 'action') return;
-
+                if (!title || isActionsHeader(title, $header)) return;
+                if (seen[title]) return;
+                seen[title] = true;
                 rows.push({
                     title: title,
                     value: cellDisplay(api, rowIdx, colIdx)
@@ -184,16 +193,33 @@
         }
     }
 
-    ensureJqueryReady(function ($) {
-        disableInlineExpand($);
+    ensureReady(function ($) {
+        // Disable inline expand child rows (arrow) — keep Responsive column hiding
+        $.extend(true, $.fn.dataTable.defaults, {
+            responsive: { details: false }
+        });
+
+        $(document).on('preInit.dt', function (e, settings) {
+            if (!document.body.classList.contains('luzori-center')) return;
+            const current = settings.oInit.responsive;
+            if (current === true || current === undefined || current === null) {
+                settings.oInit.responsive = { details: false };
+            } else if (typeof current === 'object') {
+                current.details = false;
+            }
+        });
 
         $(document).on('init.dt draw.dt', function (e, settings) {
             if (!document.body.classList.contains('luzori-center')) return;
             try {
-                const api = new $.fn.dataTable.Api(settings);
-                injectDetailsButtons($, api);
+                injectDetailsButtons($, new $.fn.dataTable.Api(settings));
             } catch (err) {}
         });
+
+        // Catch tables already initialized before our listeners bound
+        injectAllTables($);
+        setTimeout(function () { injectAllTables($); }, 300);
+        setTimeout(function () { injectAllTables($); }, 1000);
 
         $(document).on('click', '.lz-open-row-details', function (e) {
             e.preventDefault();
@@ -205,18 +231,15 @@
 
             const api = $table.DataTable();
             let $tr = $btn.closest('tr');
-            if ($tr.hasClass('child')) {
-                $tr = $tr.prev();
-            }
+            if ($tr.hasClass('child')) $tr = $tr.prev();
 
             const row = api.row($tr);
             if (!row.node()) return;
 
-            const items = collectHiddenDetails($, api, row.index());
-            openDetailsModal(items);
+            openDetailsModal(collectHiddenDetails($, api, row.index()));
         });
 
-        // Block leftover dtr-control expand clicks
+        // Kill leftover expand-arrow clicks
         $(document).on('click', 'table.dataTable tbody td.dtr-control', function (e) {
             if (!document.body.classList.contains('luzori-center')) return;
             if ($(e.target).closest('.lz-open-row-details, .lz-action-icons a, button, input, label').length) {

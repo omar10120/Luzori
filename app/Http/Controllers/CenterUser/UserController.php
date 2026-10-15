@@ -48,7 +48,7 @@ class UserController extends Controller
             return abort(403);
         }
 
-        $title = 'معلومات المستخدم';
+        $title = __('general.user_information');
         $menu = __('locale.' . $this->plural);
         $menu_link = route($this->indexRoute);
 
