@@ -13,7 +13,10 @@ use App\Models\Center;
 use App\Models\InventoryMovement;
 use App\Models\Product;
 use App\Models\ProductBranch;
+use App\Models\Sale;
+use App\Models\SaleItem;
 use App\Models\User as TenantUser;
+use App\Models\CartItem;
 use App\Services\CartService;
 use App\Services\CRUDService;
 use App\Services\InventoryMovementService;
@@ -22,6 +25,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+
 
 class BuyProductController extends Controller
 {
@@ -70,19 +74,19 @@ class BuyProductController extends Controller
         $request->validate([
             'center_id' => 'required|integer|exists:central.centers,id',
         ]);
-
+    
         $appUser = auth('sanctum')->user();
         if (!$appUser) {
             return MyHelper::responseJSON('Unauthorized', Response::HTTP_UNAUTHORIZED);
         }
-
+    
         $switched = $this->switchToCenter((int) $request->center_id);
         if ($switched instanceof \Illuminate\Http\JsonResponse) {
             return $switched;
         }
-
+    
         $allowedPayments = array_unique(array_merge(get_payment_method_names(), ['wallet']));
-
+    
         $validated = $request->validate([
             'branch_id' => 'required|integer|exists:branches,id,deleted_at,NULL',
             'products' => 'required|array|min:1',
@@ -97,94 +101,135 @@ class BuyProductController extends Controller
             'cart_item_ids' => 'nullable|array',
             'cart_item_ids.*' => 'integer',
         ]);
-
-        $branchId = (int) $validated['branch_id'];
-        $centerId = (int) $request->center_id;
+    
+        $branchId         = (int) $validated['branch_id'];
+        $centerId         = (int) $request->center_id;
         $isPaidFromWallet = ($validated['payment_type'] === 'wallet');
-        $totalPrice = 0.0;
-        $walletDeducted = false;
-
+        $totalPrice       = 0.0;
+        $totalQty         = 0;
+        $walletDeducted   = false;
+    
         try {
-            // Validate stock + build priced lines before creating anything
+            // ── 1. Validate stock + build priced lines before creating anything ──
             $pricedLines = [];
             foreach ($validated['products'] as $line) {
                 $productId = (int) $line['id'];
-                $qty = (int) $line['qty'];
+                $qty       = (int) $line['qty'];
+    
                 $this->validateProductStock($productId, $qty, $branchId);
-
+    
                 $product = Product::select(['id', 'retail_price', 'supply_price'])
                     ->with('primarySku')
                     ->findOrFail($productId);
-
+    
                 $unitPrice = ($product->retail_price && $product->retail_price > 0)
                     ? (float) $product->retail_price
                     : (float) ($product->supply_price ?? 0);
-
+    
                 if (!empty($validated['discount'])) {
                     $unitPrice -= ($unitPrice * (float) $validated['discount']) / 100;
                 }
-
+    
                 $totalPrice += $unitPrice * $qty;
+                $totalQty   += $qty;
+    
                 $pricedLines[] = [
-                    'product' => $product,
-                    'qty' => $qty,
+                    'product'    => $product,
+                    'qty'        => $qty,
                     'unit_price' => $unitPrice,
                 ];
             }
-
-            // Deduct from main DB users.wallet (central) — same as Booking/Package AppAPI
+    
+            // ── 2. Deduct wallet (central DB) before the tenant transaction ──
             if ($isPaidFromWallet) {
                 $centralUser = DB::connection('central')->table('users')->where('id', $appUser->id)->first();
-
+    
                 if (!$centralUser || (float) $centralUser->wallet < $totalPrice) {
                     return MyHelper::responseJSON(
                         __('api.insufficient_balance') ?? 'Insufficient wallet balance',
                         Response::HTTP_BAD_REQUEST
                     );
                 }
-
-                DB::connection('central')->table('users')->where('id', $appUser->id)->decrement('wallet', $totalPrice);
+    
+                DB::connection('central')->table('users')
+                    ->where('id', $appUser->id)
+                    ->decrement('wallet', $totalPrice);
+    
                 $walletDeducted = true;
             }
-
+    
             $tenantUser = $this->resolveTenantUser($appUser);
-
-            $item = DB::transaction(function () use ($validated, $tenantUser, $branchId, $pricedLines) {
-                $buyProduct = BuyProduct::create([
-                    'payment_type' => $validated['payment_type'],
-                    'commission' => $validated['commission'] ?? null,
-                    'discount' => $validated['discount'] ?? null,
-                    'sales_worker_id' => $validated['sales_worker_id'],
-                    'worker_id' => $validated['worker_id'] ?? null,
+    
+            // ── 3. Sale + BuyProduct + BuyProductDetail + SaleItem, all atomic ──
+            $item = DB::transaction(function () use (
+                $validated,
+                $tenantUser,
+                $branchId,
+                $pricedLines,
+                $totalPrice,
+                $totalQty
+            ) {
+                // 3a. Sale record (mirrors SalesService::processSale)
+                $sale = Sale::create([
+                    'subtotal'   => $totalPrice,
+                    'tax'        => 0,
+                    'tip'        => 0,
+                    'total'      => $totalPrice,
+                    'worker_id'  => $validated['worker_id'] ?? $validated['sales_worker_id'],
+                    'client_id'  => $tenantUser->id,
+                    'branch_id'  => $branchId,
                     'created_by' => $tenantUser->id,
                 ]);
-
+    
+                // 3b. BuyProduct linked to the sale
+                $buyProduct = BuyProduct::create([
+                    'payment_type'    => $validated['payment_type'],
+                    'commission'      => $validated['commission'] ?? null,
+                    'discount'        => $validated['discount'] ?? null,
+                    'sales_worker_id' => $validated['sales_worker_id'],
+                    // 'worker_id'       => $validated['worker_id'] ?? null,
+                    'worker_id'       => 1,
+                    'created_by'      => $tenantUser->id,
+                    'sale_id'         => $sale->id, // ← link it back
+                ]);
+    
+                // 3c. BuyProductDetail rows + stock decrement
                 foreach ($pricedLines as $line) {
                     $product = $line['product'];
-                    $qty = $line['qty'];
-                    // Store pre-discount retail/supply unit on details (same as CRUDService);
-                    // bill amount for wallet already applied discount above.
+                    $qty     = $line['qty'];
+    
                     $detailPrice = ($product->retail_price && $product->retail_price > 0)
                         ? $product->retail_price
                         : ($product->supply_price ?? 0);
-
+    
                     for ($i = 0; $i < $qty; $i++) {
                         BuyProductDetail::create([
                             'buy_product_id' => $buyProduct->id,
-                            'product_id' => $product->id,
-                            'price' => $detailPrice,
+                            'product_id'     => $product->id,
+                            'price'          => $detailPrice,
                         ]);
                     }
-
+    
                     $this->decrementProductStock($product, $qty, $branchId, $buyProduct);
                 }
-
+    
+                // 3d. SaleItem (mirrors SalesService::processSale)
+                SaleItem::create([
+                    'sale_id'       => $sale->id,
+                    'item_type'     => 'buy_product',
+                    'itemable_id'   => $buyProduct->id,
+                    'itemable_type' => 'App\Models\BuyProduct',
+                    'quantity'      => $totalQty,
+                    'price'         => $totalQty > 0 ? $totalPrice / $totalQty : 0,
+                    'subtotal'      => $totalPrice,
+                ]);
+    
                 return $buyProduct;
             });
-
+    
             $item->load(['worker', 'sales_worker', 'details.product.translation']);
-
-            // Clear matching central cart product lines after successful purchase
+    
+            // ── 4. Clear matching central cart product lines after success ──
             if (!empty($validated['clear_cart'])) {
                 if (!empty($validated['cart_item_ids'])) {
                     \App\Models\CartItem::query()
@@ -201,17 +246,20 @@ class BuyProductController extends Controller
                     );
                 }
             }
-
+    
             return MyHelper::responseJSON(
                 __('api.addSuccessfully'),
                 Response::HTTP_CREATED,
                 BuyProductResource::make($item)
             );
         } catch (\Exception $e) {
+            // Roll back the wallet charge if anything blew up after we took the money
             if ($walletDeducted) {
-                DB::connection('central')->table('users')->where('id', $appUser->id)->increment('wallet', $totalPrice);
+                DB::connection('central')->table('users')
+                    ->where('id', $appUser->id)
+                    ->increment('wallet', $totalPrice);
             }
-
+    
             Log::error('AppAPI BuyProduct add: ' . $e->getMessage());
             $message = strtolower($e->getMessage());
             $status = str_contains($message, 'stock')
@@ -220,7 +268,7 @@ class BuyProductController extends Controller
                 || str_contains($message, 'balance')
                 ? Response::HTTP_UNPROCESSABLE_ENTITY
                 : Response::HTTP_INTERNAL_SERVER_ERROR;
-
+    
             return MyHelper::responseJSON($e->getMessage(), $status);
         }
     }
