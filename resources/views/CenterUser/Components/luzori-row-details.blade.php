@@ -209,10 +209,32 @@
             }
         });
 
-        $(document).on('init.dt draw.dt', function (e, settings) {
+        function hideProcessing(api) {
+            try {
+                const $wrap = $(api.table().container());
+                $wrap.find('.dataTables_processing, .dt-processing')
+                    .css({ display: 'none', visibility: 'hidden', opacity: 0 })
+                    .attr('aria-hidden', 'true');
+            } catch (err) {}
+        }
+
+        $(document).on('init.dt draw.dt xhr.dt', function (e, settings) {
             if (!document.body.classList.contains('luzori-center')) return;
             try {
-                injectDetailsButtons($, new $.fn.dataTable.Api(settings));
+                const api = new $.fn.dataTable.Api(settings);
+                injectDetailsButtons($, api);
+                // Ensure loader never sticks after data/draw
+                if (e.type === 'draw' || e.type === 'xhr') {
+                    hideProcessing(api);
+                }
+            } catch (err) {}
+        });
+
+        $(document).on('processing.dt', function (e, settings, processing) {
+            if (!document.body.classList.contains('luzori-center')) return;
+            if (processing) return;
+            try {
+                hideProcessing(new $.fn.dataTable.Api(settings));
             } catch (err) {}
         });
 

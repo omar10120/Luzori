@@ -1316,7 +1316,7 @@ body.luzori-center .lz-loader {
   height: 44px;
   margin: 0 auto;
   position: relative;
-  border-radius: 50%;
+  border-radius: 8px;
   border: 3px solid rgba(0, 43, 38, 0.1);
   border-top-color: var(--lz-forest);
   border-right-color: var(--lz-gold);
@@ -1328,7 +1328,7 @@ body.luzori-center .lz-loader::after {
   content: '';
   position: absolute;
   inset: 7px;
-  border-radius: 50%;
+  border-radius: 4px;
   border: 2.5px solid transparent;
   border-bottom-color: var(--lz-gold-deep);
   border-left-color: rgba(197, 160, 112, 0.45);
@@ -1376,36 +1376,75 @@ body.luzori-center .spinner-grow.text-primary {
   border-radius: 50% !important;
 }
 
-/* DataTables processing */
-body.luzori-center div.dataTables_processing {
+/* DataTables processing — square loader; must hide when DT finishes */
+body.luzori-center div.dataTables_processing,
+body.luzori-center div.dt-processing {
   top: 50% !important;
-  margin-top: 0 !important;
-  transform: translateY(-50%);
-  background: rgba(253, 250, 246, 0.94) !important;
+  left: 50% !important;
+  right: auto !important;
+  margin: 0 !important;
+  transform: translate(-50%, -50%) !important;
+  width: 52px !important;
+  height: 52px !important;
+  min-width: 52px !important;
+  min-height: 52px !important;
+  padding: 0 !important;
+  background: rgba(253, 250, 246, 0.96) !important;
   border: 1px solid var(--lz-gold-soft) !important;
-  border-radius: 18px !important;
-  box-shadow: 0 10px 30px rgba(0, 43, 38, 0.1) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 8px 22px rgba(0, 43, 38, 0.12) !important;
   color: transparent !important;
   font-size: 0 !important;
-  padding: 1.35rem 1.75rem !important;
+  line-height: 0 !important;
   z-index: 30 !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
-body.luzori-center div.dataTables_processing::before {
+/* Default hidden — only show when DataTables sets display:block inline */
+body.luzori-center div.dataTables_processing:not([style*='display: block']):not([style*='display:block']),
+body.luzori-center div.dt-processing:not([style*='display: block']):not([style*='display:block']) {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+}
+
+body.luzori-center div.dataTables_processing[style*='display: block'],
+body.luzori-center div.dataTables_processing[style*='display:block'],
+body.luzori-center div.dt-processing[style*='display: block'],
+body.luzori-center div.dt-processing[style*='display:block'] {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+body.luzori-center div.dataTables_processing[style*='display: none'],
+body.luzori-center div.dataTables_processing[style*='display:none'],
+body.luzori-center div.dt-processing[style*='display: none'],
+body.luzori-center div.dt-processing[style*='display:none'] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+body.luzori-center div.dataTables_processing::before,
+body.luzori-center div.dt-processing::before {
   content: '';
   display: block;
-  width: 40px;
-  height: 40px;
-  margin: 0 auto;
-  border-radius: 50%;
-  border: 3px solid rgba(0, 43, 38, 0.1);
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  border: 2.5px solid rgba(0, 43, 38, 0.12);
   border-top-color: var(--lz-forest);
   border-right-color: var(--lz-gold);
   animation: lz-spin 0.75s linear infinite;
   box-sizing: border-box;
 }
 
-body.luzori-center div.dataTables_processing > div {
+body.luzori-center div.dataTables_processing > div,
+body.luzori-center div.dt-processing > div {
   display: none !important;
 }
 
