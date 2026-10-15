@@ -4,6 +4,203 @@
 
 @section('vendor-style')
     @vite(['resources/assets/vendor/libs/select2/select2.scss', 'resources/assets/vendor/libs/bootstrap-select/bootstrap-select.scss', 'resources/assets/vendor/libs/tagify/tagify.scss', 'resources/assets/vendor/libs/bs-stepper/bs-stepper.scss'])
+    <style>
+        .lz-sales-cart-page .lz-form-card {
+            border: none !important;
+            border-radius: 18px !important;
+            box-shadow: 0 10px 28px rgba(0, 43, 38, 0.07) !important;
+            background: #fff !important;
+        }
+        .lz-sales-cart-page .lz-form-card > .card-header {
+            background: transparent !important;
+            border-bottom: 1px solid #f1ebe3 !important;
+            padding: 1.1rem 1.5rem 0.9rem !important;
+        }
+        .lz-sales-cart-page .lz-form-card > .card-header h2,
+        .lz-sales-cart-page .lz-form-card > .card-header h5 {
+            color: #002b26;
+            font-weight: 700;
+            margin: 0;
+        }
+        .lz-sales-cart-page .lz-form-card > .card-body {
+            padding: 1.25rem 1.5rem 1.5rem !important;
+        }
+        .lz-sales-cart-page .lz-customer-chip {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            background: #fbfaf7;
+            border: 1px solid #efe6d8;
+            border-radius: 14px;
+            padding: 0.85rem 1rem;
+            margin-bottom: 1rem;
+        }
+        .lz-sales-cart-page .lz-customer-chip h5 {
+            color: #002b26;
+            font-weight: 700;
+        }
+        .lz-sales-cart-page .btn-luzori-primary {
+            background: #002b26 !important;
+            border-color: #002b26 !important;
+            color: #fff !important;
+            font-weight: 600;
+            border-radius: 10px;
+        }
+        .lz-sales-cart-page .btn-luzori-primary:hover,
+        .lz-sales-cart-page .btn-luzori-primary:focus {
+            background: #0a3a34 !important;
+            border-color: #0a3a34 !important;
+            color: #fff !important;
+        }
+        .lz-sales-cart-page .btn-luzori-beige {
+            background: #f3ebe0 !important;
+            border-color: #e5ddd2 !important;
+            color: #002b26 !important;
+            font-weight: 600;
+            border-radius: 10px;
+        }
+        .lz-sales-cart-page .btn-luzori-gold {
+            background: #c5a070 !important;
+            border-color: #c5a070 !important;
+            color: #fff !important;
+            font-weight: 600;
+            border-radius: 10px;
+        }
+        .lz-sales-cart-page .btn-luzori-gold:hover {
+            filter: brightness(0.95);
+            color: #fff !important;
+        }
+        .lz-sales-cart-page .btn-outline-danger {
+            border-radius: 10px;
+            font-weight: 600;
+        }
+        .lz-sales-cart-page .btn-primary,
+        .lz-sales-cart-page .btn-success {
+            background: #002b26 !important;
+            border-color: #002b26 !important;
+            color: #fff !important;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+        .lz-sales-cart-page .btn-primary:hover,
+        .lz-sales-cart-page .btn-success:hover,
+        .lz-sales-cart-page .btn-primary:disabled,
+        .lz-sales-cart-page .btn-success:disabled {
+            background: #0a3a34 !important;
+            border-color: #0a3a34 !important;
+        }
+        .lz-sales-cart-page .btn-info {
+            background: #c5a070 !important;
+            border-color: #c5a070 !important;
+            color: #fff !important;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+        .lz-sales-cart-page .btn-outline-primary {
+            color: #002b26 !important;
+            border-color: #002b26 !important;
+            border-radius: 10px;
+            font-weight: 600;
+            background: #fff !important;
+        }
+        .lz-sales-cart-page .btn-outline-primary:hover {
+            background: #002b26 !important;
+            color: #fff !important;
+        }
+        .lz-sales-cart-page .nav-tabs {
+            border-bottom: 1px solid #efe6d8 !important;
+            gap: 0.25rem;
+        }
+        .lz-sales-cart-page .nav-tabs .nav-link {
+            border: none !important;
+            border-radius: 10px 10px 0 0 !important;
+            color: #7a8582 !important;
+            font-weight: 600;
+            padding: 0.7rem 1rem !important;
+            background: transparent !important;
+        }
+        .lz-sales-cart-page .nav-tabs .nav-link:hover {
+            color: #002b26 !important;
+        }
+        .lz-sales-cart-page .nav-tabs .nav-link.active {
+            color: #fff !important;
+            background: #002b26 !important;
+            border: none !important;
+        }
+        .lz-sales-cart-page .nav-tabs .badge.bg-label-primary {
+            background: rgba(197, 160, 112, 0.25) !important;
+            color: #8a6a3d !important;
+        }
+        .lz-sales-cart-page .nav-tabs .nav-link.active .badge.bg-label-primary {
+            background: rgba(255, 255, 255, 0.2) !important;
+            color: #fff !important;
+        }
+        .lz-sales-cart-page .bs-stepper .step.active .step-trigger .bs-stepper-label,
+        .lz-sales-cart-page .bs-stepper .step.crossed .step-trigger .bs-stepper-label {
+            color: #002b26 !important;
+            font-weight: 700;
+        }
+        .lz-sales-cart-page .bs-stepper .step .step-trigger .bs-stepper-label {
+            color: #7a8582 !important;
+        }
+        .lz-sales-cart-page .bs-stepper .step.active .bs-stepper-circle,
+        .lz-sales-cart-page .bs-stepper .step.crossed .bs-stepper-circle {
+            background: #002b26 !important;
+            color: #fff !important;
+        }
+        .lz-sales-cart-page .bs-stepper .line i {
+            color: #c5a070 !important;
+        }
+        .lz-sales-cart-page .form-label,
+        .lz-sales-cart-page .lz-field-label {
+            font-weight: 700;
+            color: #002b26;
+            font-size: 0.92rem;
+        }
+        .lz-sales-cart-page .form-control,
+        .lz-sales-cart-page .form-select {
+            border-radius: 12px !important;
+            border-color: #e5ddd2 !important;
+        }
+        .lz-sales-cart-page .form-control:focus,
+        .lz-sales-cart-page .form-select:focus {
+            border-color: #c5a070 !important;
+            box-shadow: 0 0 0 3px rgba(197, 160, 112, 0.18) !important;
+        }
+        .lz-sales-cart-page #cart-total {
+            color: #002b26 !important;
+        }
+        .lz-sales-cart-page .modal-content {
+            border: none;
+            border-radius: 16px;
+            overflow: hidden;
+        }
+        .lz-sales-cart-page .modal-header {
+            background: #f7f3ec;
+            border-bottom: 1px solid #efe6d8;
+        }
+        .lz-sales-cart-page .modal-title {
+            color: #002b26;
+            font-weight: 700;
+        }
+        .lz-sales-cart-page .badge.bg-label-primary {
+            background: rgba(0, 43, 38, 0.1) !important;
+            color: #002b26 !important;
+        }
+        .lz-sales-cart-page .badge.bg-label-info {
+            background: rgba(197, 160, 112, 0.2) !important;
+            color: #8a6a3d !important;
+        }
+        .lz-sales-cart-page .badge.bg-label-success {
+            background: rgba(26, 107, 90, 0.15) !important;
+            color: #1a6b5a !important;
+        }
+        .lz-sales-cart-page .table thead th {
+            color: #002b26;
+            font-weight: 700;
+            border-bottom-color: #efe6d8 !important;
+        }
+    </style>
 @endsection
 
 @section('content')
@@ -22,7 +219,7 @@
         }
     @endphp
 
-    <div class="container-fluid">
+    <div class="luzori-page lz-sales-cart-page container-fluid">
         @include('CenterUser.Components.breadcrumbs')
         @php
             $arrowClass = app()->getLocale() === 'ar' ? 'ti-arrow-left' : 'ti-arrow-right';
@@ -33,18 +230,18 @@
         <!-- Customer Selection Card -->
         <div class="row mb-3">
             <div class="col-12">
-                <div class="card">
+                <div class="card lz-form-card">
                     <div class="card-header">
                         <h5 class="mb-0">{{ __('field.customer') }} <span class="text-danger">*</span></h5>
                     </div>
                     <div class="card-body">
                         <div id="selected-customer-display" style="{{ empty($cart['client_id']) || empty($selectedUser) ? 'display: none;' : '' }}">
                             @if(!empty($cart['client_id']) && !empty($selectedUser))
-                                    <div class="d-flex align-items-center mb-3">
-                                        <div class="avatar avatar-lg me-3">
-                                            <img src="{{ $selectedUser->image ?? asset('assets/img/avatars/1.png') }}" 
-                                                 alt="{{ $selectedUser->name }}" 
-                                                 class="rounded-circle" 
+                                    <div class="lz-customer-chip">
+                                        <div class="avatar avatar-lg">
+                                            <img src="{{ $selectedUser->image ?? asset('assets/img/avatars/1.png') }}"
+                                                 alt="{{ $selectedUser->name }}"
+                                                 class="rounded-circle"
                                                  style="width: 50px; height: 50px; object-fit: cover;">
                                         </div>
                                         <div>
@@ -54,18 +251,18 @@
                                     </div>
                             @endif
                             <div class="d-flex flex-column flex-sm-row gap-2">
-                                <button type="button" class="btn btn-outline-primary w-100 w-sm-auto" id="selectCustomerBtn" data-bs-toggle="modal" data-bs-target="#selectCustomerModal">
+                                <button type="button" class="btn btn-luzori-beige w-100 w-sm-auto" id="selectCustomerBtn" data-bs-toggle="modal" data-bs-target="#selectCustomerModal">
                                     <i class="ti ti-user me-1"></i>
                                     <span class="d-none d-sm-inline">{{ empty($cart['client_id']) ? __('field.select_customer') : __('field.change_customer') }}</span>
                                     <span class="d-inline d-sm-none">{{ empty($cart['client_id']) ? __('field.select') : __('field.change') }}</span>
                                 </button>
-                                <button type="button" class="btn btn-primary w-100 w-sm-auto" id="addCustomerBtn" data-bs-toggle="modal" data-bs-target="#addCustomerModal">
+                                <button type="button" class="btn btn-luzori-primary w-100 w-sm-auto" id="addCustomerBtn" data-bs-toggle="modal" data-bs-target="#addCustomerModal">
                                     <i class="ti ti-plus me-1"></i>
                                     <span class="d-none d-sm-inline">{{ __('general.add') }} {{ __('field.customer') }}</span>
                                     <span class="d-inline d-sm-none">{{ __('general.add') }}</span>
                                 </button>
                                 @if(!empty($cart['client_id']))
-                                    <button type="button" class="btn btn-info w-100 w-sm-auto" id="editCustomerBtn" data-bs-toggle="modal" data-bs-target="#editCustomerModal">
+                                    <button type="button" class="btn btn-luzori-gold w-100 w-sm-auto" id="editCustomerBtn" data-bs-toggle="modal" data-bs-target="#editCustomerModal">
                                         <i class="ti ti-edit me-1"></i>
                                         <span class="d-none d-sm-inline">{{ __('general.edit') }}</span>
                                         <span class="d-inline d-sm-none">{{ __('general.edit') }}</span>
@@ -79,15 +276,15 @@
                             </div>
                         </div>
                         <div id="no-customer-display" class="text-center py-3" style="{{ !empty($cart['client_id']) ? 'display: none;' : '' }}">
-                            <i class="ti ti-user-off" style="font-size: 3rem; color: #ff6b6b;"></i>
+                            <i class="ti ti-user-off" style="font-size: 3rem; color: #c5a070;"></i>
                             <p class="text-danger mb-0 mt-2"><strong>{{ __('field.customer_required') }}</strong></p>
                             <p class="text-muted mb-0">{{ __('field.please_select_or_add_customer') }}</p>
                             <div class="d-flex flex-column flex-sm-row gap-2 mt-3 justify-content-center">
-                                <button type="button" class="btn btn-outline-primary w-100 w-sm-auto" data-bs-toggle="modal" data-bs-target="#selectCustomerModal">
+                                <button type="button" class="btn btn-luzori-beige w-100 w-sm-auto" data-bs-toggle="modal" data-bs-target="#selectCustomerModal">
                                     <i class="ti ti-user me-1"></i>
                                     {{ __('field.select_customer') }}
                                 </button>
-                                <button type="button" class="btn btn-primary w-100 w-sm-auto" data-bs-toggle="modal" data-bs-target="#addCustomerModal">
+                                <button type="button" class="btn btn-luzori-primary w-100 w-sm-auto" data-bs-toggle="modal" data-bs-target="#addCustomerModal">
                                     <i class="ti ti-plus me-1"></i>
                                     {{ __('general.add') }} {{ __('field.customer') }}
                                 </button>
@@ -98,12 +295,12 @@
             </div>
         </div>
 
-    
+
 
         <div class="row">
             <!-- Left Panel: Add Items -->
             <div class="col-12 col-xl-8 mb-4">
-                <div class="card">
+                <div class="card lz-form-card">
                     <div class="card-header">
                         <h2>{{ $title }}</h2>
                     </div>
@@ -570,7 +767,7 @@
 
             <!-- Right Panel: Cart Summary -->
             <div class="col-12 col-xl-4">
-                <div class="card">
+                <div class="card lz-form-card">
                     <div class="card-header">
                         <h5>{{ __('field.cart') }}</h5>
                     </div>
@@ -4348,11 +4545,11 @@
                     $('#selected-customer-display').show();
                     $('#no-customer-display').hide();
                     $('#selected-customer-display').html(`
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="avatar avatar-lg me-3">
-                                <img src="${image || '{{ asset('assets/img/avatars/1.png') }}'}" 
-                                     alt="${name}" 
-                                     class="rounded-circle" 
+                        <div class="lz-customer-chip">
+                            <div class="avatar avatar-lg">
+                                <img src="${image || '{{ asset('assets/img/avatars/1.png') }}'}"
+                                     alt="${name}"
+                                     class="rounded-circle"
                                      style="width: 50px; height: 50px; object-fit: cover;">
                             </div>
                             <div>
@@ -4362,17 +4559,17 @@
                             </div>
                         </div>
                         <div class="d-flex flex-column flex-sm-row gap-2">
-                            <button type="button" class="btn btn-outline-primary w-100 w-sm-auto" id="selectCustomerBtn" data-bs-toggle="modal" data-bs-target="#selectCustomerModal">
+                            <button type="button" class="btn btn-luzori-beige w-100 w-sm-auto" id="selectCustomerBtn" data-bs-toggle="modal" data-bs-target="#selectCustomerModal">
                                 <i class="ti ti-user me-1"></i>
                                 <span class="d-none d-sm-inline">{{ __('field.change_customer') }}</span>
                                 <span class="d-inline d-sm-none">{{ __('field.change') }}</span>
                             </button>
-                            <button type="button" class="btn btn-primary w-100 w-sm-auto" id="addCustomerBtn" data-bs-toggle="modal" data-bs-target="#addCustomerModal">
+                            <button type="button" class="btn btn-luzori-primary w-100 w-sm-auto" id="addCustomerBtn" data-bs-toggle="modal" data-bs-target="#addCustomerModal">
                                 <i class="ti ti-plus me-1"></i>
                                 <span class="d-none d-sm-inline">{{ __('general.add') }} {{ __('field.customer') }}</span>
                                 <span class="d-inline d-sm-none">{{ __('general.add') }}</span>
                             </button>
-                            <button type="button" class="btn btn-info w-100 w-sm-auto" id="editCustomerBtn" data-bs-toggle="modal" data-bs-target="#editCustomerModal">
+                            <button type="button" class="btn btn-luzori-gold w-100 w-sm-auto" id="editCustomerBtn" data-bs-toggle="modal" data-bs-target="#editCustomerModal">
                                 <i class="ti ti-edit me-1"></i>
                                 <span class="d-none d-sm-inline">{{ __('general.edit') }}</span>
                                 <span class="d-inline d-sm-none">{{ __('general.edit') }}</span>

@@ -4,192 +4,268 @@
 
 @section('vendor-style')
     @vite('resources/assets/vendor/libs/select2/select2.scss')
+    <style>
+        .lz-staff-form-page .lz-avatar-preview {
+            width: 140px;
+            height: 140px;
+            object-fit: cover;
+            border-radius: 16px;
+            border: 2px solid #efe6d8;
+            margin-top: 0.75rem;
+            background: #f7f3ec;
+        }
+        .lz-staff-form-page .lz-primary-thumbs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.65rem;
+            margin-bottom: 0.75rem;
+        }
+        .lz-staff-form-page .existing-img-thumb {
+            width: 96px;
+            height: 96px;
+            position: relative;
+        }
+        .lz-staff-form-page .existing-img-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 12px;
+            border: 1px solid #ebe3d7;
+        }
+        .lz-staff-form-page .existing-img-thumb .remove-existing-img {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            padding: 2px 6px;
+            font-size: 0.7rem;
+            line-height: 1;
+            border-radius: 8px;
+        }
+        .lz-staff-form-page .primary-image-slot {
+            background: #fbfaf7;
+            border: 1px dashed #e5ddd2;
+            border-radius: 12px;
+            padding: 0.65rem 0.75rem;
+        }
+        .lz-staff-form-page .primary-image-slot .img-preview {
+            width: 48px;
+            height: 48px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid #ebe3d7;
+        }
+        .lz-staff-form-page .input-group.form-password-toggle .input-group-text {
+            border-radius: 0 12px 12px 0 !important;
+            border: 1px solid #e5ddd2 !important;
+            border-left: 0 !important;
+            background: #fff !important;
+            color: #7a8582;
+        }
+        html[dir='rtl'] .lz-staff-form-page .input-group.form-password-toggle .input-group-text {
+            border-radius: 12px 0 0 12px !important;
+            border-left: 1px solid #e5ddd2 !important;
+            border-right: 0 !important;
+        }
+        .lz-staff-form-page .input-group.form-password-toggle .form-control {
+            border-radius: 12px 0 0 12px !important;
+        }
+        html[dir='rtl'] .lz-staff-form-page .input-group.form-password-toggle .form-control {
+            border-radius: 0 12px 12px 0 !important;
+        }
+        .lz-staff-form-page .select2-container--default .select2-selection--single {
+            border-radius: 12px !important;
+            border-color: #e5ddd2 !important;
+            min-height: 44px;
+            padding-top: 0.35rem;
+        }
+        .lz-staff-form-page .form-label {
+            display: block;
+            font-weight: 700;
+            color: #002b26;
+            margin-bottom: 0.2rem;
+            font-size: 0.92rem;
+        }
+    </style>
 @endsection
 
 @section('content')
-    <div class="container">
+    <div class="luzori-page lz-staff-form-page">
         @include('CenterUser.Components.breadcrumbs')
 
-        <div class="row">
-            <form class="pt-0" id="frmSubmit">
-                @csrf
-                @if($item)
-                    <input type="hidden" name="id" value="{{ $item->id }}">
-                @endif
-                <div class="card">
-                    <div class="card-header">
-                        <h2>{{ $title }}</h2>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-1">
-                                    <label class="form-label">{{ __('field.name') }} <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" name="name"
-                                        placeholder="{{ __('field.name') }}" value="{{ $item ? $item->name : '' }}" required />
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-1">
-                                    <label class="form-label">{{ __('field.email') }}@if(!$item) <span class="text-danger">*</span>@endif</label>
-                                    <input type="text" name="email" class="form-control dt-email"
-                                        placeholder="{{ __('field.email') }}" value="{{ $item ? $item->email : '' }}" {{ !$item ? 'required' : '' }} />
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-1">
-                                    <label for="branch_id" class="form-label">{{ __('field.branch') }} <span class="text-danger">*</span></label>
-                                    <select {{ $item ? 'disabled' : '' }} class="select2 form-control" name="branch_id" required>
-                                        @foreach ($branches as $branch)
-                                            <option {{ $item ? ($item->branch_id == $branch->id ? 'selected' : null) : null }}
-                                                value="{{ $branch->id }}">{{ $branch->name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    @if($item)
-                                        <input type="hidden" name="branch_id" value="{{ $item->branch_id }}">
-                                    @endif
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                @include('Admin.Components.country_code', ['item' => $item])
-                            </div>
-                            <div class="col-md-2" id="phone_prefix_container" style="display: {{ ($item && $item->country_code == '+971') ? 'block' : 'none' }};">
-                                <div class="mb-1">
-                                    <label class="form-label">Prefix</label>
-                                    <select class="form-control" name="phone_prefix" id="phone_prefix">
-                                        @php
-                                            $prefixes = ['50', '52', '54', '55', '56', '58'];
-                                            $currentPrefix = '';
-                                            $phoneWithoutPrefix = $item ? (string)$item->phone : '';
-                                            if ($item && $item->country_code == '+971' && $item->phone) {
-                                                $phoneStr = (string)$item->phone;
-                                                foreach ($prefixes as $prefix) {
-                                                    if (str_starts_with($phoneStr, $prefix)) {
-                                                        $currentPrefix = $prefix;
-                                                        $phoneWithoutPrefix = substr($phoneStr, strlen($prefix));
-                                                        break;
-                                                    }
-                                                }
-                                            }
-                                        @endphp
-                                        @foreach ($prefixes as $prefix)
-                                            <option value="{{ $prefix }}" {{ $currentPrefix == $prefix ? 'selected' : '' }}>
-                                                {{ $prefix }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-{{ ($item && $item->country_code == '+971') ? '2' : '4' }}" id="phone_input_container">
-                                <div class="mb-1">
-                                    <label class="form-label">{{ __('field.phone') }} <span class="text-danger">*</span></label>
-                                    <input type="tel" name="phone" id="phone" class="form-control" maxlength="7"
-                                        placeholder="{{ __('field.phone') }}" value="{{ $phoneWithoutPrefix }}" required />
-                                    
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-1">
-                                    <label class="form-label">{{ __('field.password') }}@if(!$item) <span class="text-danger">*</span>@endif</label>
-                                    <div class="input-group input-group-merge form-password-toggle">
-                                        <input type="password" class="form-control" name="password"
-                                            placeholder="{{ __('field.password') }}" {{ !$item ? 'required' : '' }} />
-                                        <span class="input-group-text cursor-pointer"><i class="ti ti-eye-off"></i></span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-1">
-                                    <label class="form-label">{{ __('field.confirm_password') }}@if(!$item) <span class="text-danger">*</span>@endif</label>
-                                    <div class="input-group input-group-merge form-password-toggle">
-                                        <input type="password" class="form-control" name="password_confirmation"
-                                            placeholder="{{ __('field.confirm_password') }}" {{ !$item ? 'required' : '' }} />
-                                        <span class="input-group-text cursor-pointer"><i class="ti ti-eye-off"></i></span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-1">
-                                    <label class="form-label">{{ __('field.role') }} <span class="text-danger">*</span></label>
-                                    <select {{ $item ? 'disabled' : '' }} class="select2 form-control" name="role" required>
-                                        @foreach ($roles as $role)
-                                            <option
-                                                {{ $item ? ($item->roles()?->first()?->name == $role->name ? 'selected' : null) : null }}
-                                                value="{{ $role->id }}">{{ $role->name }}</option>
-                                        @endforeach
-                                    </select>
-                                    @if($item)
-                                        <input type="hidden" name="role" value="{{ $item->roles()?->first()?->id }}">
-                                    @endif
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-1">
-                                    <label class="form-label">{{ __('field.image') }}</label>
-                                    <input type="file" class="form-control" id="image" name="image" />
-                                </div>
-                                @php
-                                    $userImage = $item && $item->getFirstMediaUrl('CenterUser') ? $item->getFirstMediaUrl('CenterUser') : asset('assets/img/avatars/1.png');
-                                @endphp
-                                <img id="show_image" src="{{ $userImage }}"
-                                    style="width:200px;height:200px;margin:20px;"
-                                    alt="center user image" />
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-12">
-                                <div class="mb-1">
-                                    <label class="form-label">Primary Images <small>(up to 4)</small></label>
-                                    
-                                    {{-- Show existing primary images --}}
-                                    @if($item && $item->getMedia('PrimaryImage')->count())
-                                        <div class="d-flex flex-wrap gap-2 mb-2" id="existingPrimaryImages">
-                                            @foreach($item->getMedia('PrimaryImage') as $media)
-                                                <div class="position-relative existing-img-thumb" data-media-id="{{ $media->id }}" style="width:100px;height:100px;">
-                                                    <img src="{{ $media->getUrl() }}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;border:1px solid #ddd;">
-                                                    <button type="button" class="btn btn-sm btn-danger remove-existing-img" data-media-id="{{ $media->id }}" style="position:absolute;top:2px;right:2px;padding:1px 5px;font-size:0.65rem;line-height:1;">
-                                                        <i class="ti ti-x"></i>
-                                                    </button>
-                                                </div>
-                                            @endforeach
-                                        </div>
-                                    @endif
+        <div class="lz-page-toolbar">
+            <div class="lz-page-title-wrap">
+                <div class="lz-page-icon">
+                    <i class="ti ti-user-plus"></i>
+                </div>
+                <h1 class="lz-page-title">
+                    @if (is_null($item))
+                        {{ __('general.add_new') }} {{ __('locale.centerusers') }}
+                    @else
+                        {{ __('general.edit') }} {{ __('locale.centerusers') }}
+                    @endif
+                </h1>
+            </div>
+        </div>
 
-                                    {{-- New primary image uploads --}}
-                                    <div id="primaryImagesContainer">
-                                        <div class="primary-image-slot mb-2">
-                                            <div class="d-flex align-items-center gap-2">
-                                                <input type="file" class="form-control form-control-sm primary-img-input" name="primary_image[]" accept="image/*">
-                                                <img class="img-preview" style="width:50px;height:50px;object-fit:cover;border-radius:4px;display:none;">
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <button type="button" id="addPrimaryImage" class="btn btn-sm btn-outline-primary mt-1">
-                                        <i class="ti ti-plus"></i> Add Image
-                                    </button>
-                                    {{-- Hidden field for images to delete --}}
-                                    <input type="hidden" name="delete_primary_images" id="deletePrimaryImages" value="">
-                                </div>
-                            </div>
+        <form class="pt-0" id="frmSubmit">
+            @csrf
+            @if($item)
+                <input type="hidden" name="id" value="{{ $item->id }}">
+            @endif
+            <div class="card lz-form-card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="lz-field-label">{{ __('field.name') }} <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="name"
+                                placeholder="{{ __('field.name') }}" value="{{ $item ? $item->name : '' }}" required />
                         </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="lz-field-label">{{ __('field.email') }}@if(!$item) <span class="text-danger">*</span>@endif</label>
+                            <input type="text" name="email" class="form-control dt-email"
+                                placeholder="{{ __('field.email') }}" value="{{ $item ? $item->email : '' }}" {{ !$item ? 'required' : '' }} />
                         </div>
                     </div>
-                    <div class="card-footer">
-                        <button type="submit" class="btn btn-primary submitFrom">
-                            <i class="menu-icon tf-icons ti ti-check"></i>
-                            <span>{{ __('general.save') }}</span>
-                        </button>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="branch_id" class="lz-field-label">{{ __('field.branch') }} <span class="text-danger">*</span></label>
+                            <select {{ $item ? 'disabled' : '' }} class="select2 form-control" name="branch_id" required>
+                                @foreach ($branches as $branch)
+                                    <option {{ $item ? ($item->branch_id == $branch->id ? 'selected' : null) : null }}
+                                        value="{{ $branch->id }}">{{ $branch->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @if($item)
+                                <input type="hidden" name="branch_id" value="{{ $item->branch_id }}">
+                            @endif
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            @include('Admin.Components.country_code', ['item' => $item])
+                        </div>
+                        <div class="col-md-2 mb-3" id="phone_prefix_container" style="display: {{ ($item && $item->country_code == '+971') ? 'block' : 'none' }};">
+                            <label class="lz-field-label">Prefix</label>
+                            <select class="form-control" name="phone_prefix" id="phone_prefix">
+                                @php
+                                    $prefixes = ['50', '52', '54', '55', '56', '58'];
+                                    $currentPrefix = '';
+                                    $phoneWithoutPrefix = $item ? (string)$item->phone : '';
+                                    if ($item && $item->country_code == '+971' && $item->phone) {
+                                        $phoneStr = (string)$item->phone;
+                                        foreach ($prefixes as $prefix) {
+                                            if (str_starts_with($phoneStr, $prefix)) {
+                                                $currentPrefix = $prefix;
+                                                $phoneWithoutPrefix = substr($phoneStr, strlen($prefix));
+                                                break;
+                                            }
+                                        }
+                                    }
+                                @endphp
+                                @foreach ($prefixes as $prefix)
+                                    <option value="{{ $prefix }}" {{ $currentPrefix == $prefix ? 'selected' : '' }}>
+                                        {{ $prefix }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-{{ ($item && $item->country_code == '+971') ? '2' : '4' }} mb-3" id="phone_input_container">
+                            <label class="lz-field-label">{{ __('field.phone') }} <span class="text-danger">*</span></label>
+                            <input type="tel" name="phone" id="phone" class="form-control" maxlength="7"
+                                placeholder="{{ __('field.phone') }}" value="{{ $phoneWithoutPrefix }}" required />
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="lz-field-label">{{ __('field.password') }}@if(!$item) <span class="text-danger">*</span>@endif</label>
+                            <div class="input-group input-group-merge form-password-toggle">
+                                <input type="password" class="form-control" name="password"
+                                    placeholder="{{ __('field.password') }}" {{ !$item ? 'required' : '' }} />
+                                <span class="input-group-text cursor-pointer"><i class="ti ti-eye-off"></i></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="lz-field-label">{{ __('field.confirm_password') }}@if(!$item) <span class="text-danger">*</span>@endif</label>
+                            <div class="input-group input-group-merge form-password-toggle">
+                                <input type="password" class="form-control" name="password_confirmation"
+                                    placeholder="{{ __('field.confirm_password') }}" {{ !$item ? 'required' : '' }} />
+                                <span class="input-group-text cursor-pointer"><i class="ti ti-eye-off"></i></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="lz-field-label">{{ __('field.role') }} <span class="text-danger">*</span></label>
+                            <select {{ $item ? 'disabled' : '' }} class="select2 form-control" name="role" required>
+                                @foreach ($roles as $role)
+                                    <option
+                                        {{ $item ? ($item->roles()?->first()?->name == $role->name ? 'selected' : null) : null }}
+                                        value="{{ $role->id }}">{{ $role->name }}</option>
+                                @endforeach
+                            </select>
+                            @if($item)
+                                <input type="hidden" name="role" value="{{ $item->roles()?->first()?->id }}">
+                            @endif
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="lz-field-label">{{ __('field.image') }}</label>
+                            <input type="file" class="form-control" id="image" name="image" />
+                            @php
+                                $userImage = $item && $item->getFirstMediaUrl('CenterUser') ? $item->getFirstMediaUrl('CenterUser') : asset('assets/img/avatars/1.png');
+                            @endphp
+                            <img id="show_image" class="lz-avatar-preview" src="{{ $userImage }}"
+                                alt="center user image" />
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12 mb-1">
+                            <label class="lz-field-label">Primary Images <small class="lz-field-help d-inline">(up to 4)</small></label>
+
+                            {{-- Show existing primary images --}}
+                            @if($item && $item->getMedia('PrimaryImage')->count())
+                                <div class="lz-primary-thumbs" id="existingPrimaryImages">
+                                    @foreach($item->getMedia('PrimaryImage') as $media)
+                                        <div class="existing-img-thumb" data-media-id="{{ $media->id }}">
+                                            <img src="{{ $media->getUrl() }}" alt="">
+                                            <button type="button" class="btn btn-sm btn-danger remove-existing-img" data-media-id="{{ $media->id }}">
+                                                <i class="ti ti-x"></i>
+                                            </button>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endif
+
+                            {{-- New primary image uploads --}}
+                            <div id="primaryImagesContainer">
+                                <div class="primary-image-slot mb-2">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <input type="file" class="form-control form-control-sm primary-img-input" name="primary_image[]" accept="image/*">
+                                        <img class="img-preview" style="display:none;" alt="">
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" id="addPrimaryImage" class="btn btn-luzori-beige btn-sm mt-1">
+                                <i class="ti ti-plus me-1"></i> Add Image
+                            </button>
+                            {{-- Hidden field for images to delete --}}
+                            <input type="hidden" name="delete_primary_images" id="deletePrimaryImages" value="">
+                        </div>
                     </div>
                 </div>
-            </form>
-        </div>
+                <div class="card-footer d-flex justify-content-end gap-2">
+                    <a href="{{ route('center_user.centerusers.index') }}" class="btn btn-luzori-beige">
+                        {{ __('general.cancel') }}
+                    </a>
+                    <button type="submit" class="btn btn-luzori-primary submitFrom">
+                        <i class="ti ti-check me-1"></i>
+                        <span>{{ __('general.save') }}</span>
+                    </button>
+                </div>
+            </div>
+        </form>
     </div>
 @endsection
 
@@ -237,7 +313,7 @@ $(document).ready(function () {
         <div class="primary-image-slot mb-2">
             <div class="d-flex align-items-center gap-2">
                 <input type="file" class="form-control form-control-sm primary-img-input" name="primary_image[]" accept="image/*">
-                <img class="img-preview" style="width:50px;height:50px;object-fit:cover;border-radius:4px;display:none;">
+                <img class="img-preview" style="display:none;" alt="">
                 <button type="button" class="btn btn-sm btn-danger remove-slot" style="padding:2px 6px;font-size:0.7rem;">
                     <i class="ti ti-x"></i>
                 </button>
