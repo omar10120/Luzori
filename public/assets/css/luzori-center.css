@@ -51,16 +51,37 @@ body.luzori-center .bg-navbar-theme {
   -webkit-backdrop-filter: none !important;
 }
 
-body.luzori-center .navbar-detached {
-  background: var(--lz-cream) !important;
-  box-shadow: 0 1px 0 rgba(0, 43, 38, 0.06) !important;
-  border: none !important;
-}
-
+body.luzori-center .navbar-detached,
 body.luzori-center .layout-navbar.navbar-detached,
 body.luzori-center #layout-navbar {
   background: var(--lz-cream) !important;
   opacity: 1 !important;
+  box-shadow: 0 1px 0 rgba(0, 43, 38, 0.06) !important;
+  border: none !important;
+  border-radius: 0 !important;
+  margin-top: 0 !important;
+  margin-inline: 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  width: 100% !important;
+  max-width: none !important;
+}
+
+html.layout-navbar-fixed body.luzori-center .layout-navbar.navbar-detached,
+html.layout-navbar-fixed body.luzori-center .navbar-detached.container-xxl,
+html.layout-menu-collapsed body.luzori-center .layout-navbar.navbar-detached {
+  width: 100% !important;
+  margin-top: 0 !important;
+  margin-inline: 0 !important;
+}
+
+@media (max-width: 1199.98px) {
+  body.luzori-center .layout-navbar.navbar-detached,
+  body.luzori-center .navbar-detached {
+    width: 100% !important;
+    margin-top: 0 !important;
+    margin-inline: 0 !important;
+  }
 }
 
 /* ---------- Sidebar ---------- */
