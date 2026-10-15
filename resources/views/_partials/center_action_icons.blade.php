@@ -1,7 +1,8 @@
 <div class="lz-action-icons" onclick="event.stopPropagation()">
     @if(!isset($options['row_details']) || $options['row_details'])
         <a href="javascript:void(0)" class="lz-action-btn lz-open-row-details"
-            title="{{ __('general.view_details') }}">
+            title="{{ __('general.view_details') }}"
+            onclick="event.preventDefault(); event.stopPropagation(); if (window.lzOpenRowDetails) { window.lzOpenRowDetails(this); } return false;">
             <i class="ti ti-eye"></i>
         </a>
     @endif
