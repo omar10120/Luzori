@@ -102,6 +102,7 @@ html.light-style body.luzori-center .menu .app-brand.demo {
   justify-content: center;
   align-items: center;
   overflow: visible !important;
+  flex-shrink: 0 !important;
 }
 
 body.luzori-center .layout-menu .app-brand .layout-menu-toggle {
@@ -143,22 +144,29 @@ body.luzori-center .layout-menu .menu-inner-shadow {
   display: none;
 }
 
-/* No sidebar scroll */
+/* Sidebar scroll: outer fixed shell, inner list scrolls (esp. mobile) */
 body.luzori-center .layout-menu,
 body.luzori-center .layout-menu.menu-vertical,
-body.luzori-center #layout-menu,
-body.luzori-center .layout-menu .menu-inner,
-body.luzori-center .layout-menu .ps,
-body.luzori-center .layout-menu .ps__rail-y,
-body.luzori-center .layout-menu .ps__rail-x {
+body.luzori-center #layout-menu {
+  display: flex !important;
+  flex-direction: column !important;
   overflow: hidden !important;
+  height: 100vh !important;
+  max-height: 100dvh !important;
 }
 
-body.luzori-center .layout-menu .menu-inner {
-  padding: 0.35rem 0.75rem 5rem !important;
-  overflow: hidden !important;
+body.luzori-center .layout-menu .menu-inner,
+body.luzori-center .layout-menu .ps {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
   height: auto !important;
   max-height: none !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding: 0.35rem 0.75rem 5rem !important;
+  touch-action: pan-y;
 }
 
 body.luzori-center .layout-menu .ps__rail-y,
@@ -168,6 +176,14 @@ body.luzori-center .layout-menu .ps__thumb-x {
   display: none !important;
   opacity: 0 !important;
   pointer-events: none !important;
+}
+
+@media (max-width: 1199.98px) {
+  html.layout-menu-expanded body.luzori-center .layout-menu .menu-inner,
+  html.layout-menu-expanded body.luzori-center .layout-menu .ps {
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 body.luzori-center .layout-menu .menu-item {
