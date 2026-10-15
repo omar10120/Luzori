@@ -26,11 +26,33 @@
 @stack('styles')
 
 @if (!str_contains(url()->current(), 'admin') && (str_contains(url()->current(), 'center_user') || auth('center_user')->check()))
-<link rel="stylesheet" href="{{ asset('assets/css/luzori-center.css') }}?v=34">
+<link rel="stylesheet" href="{{ asset('assets/css/luzori-center.css') }}?v=35">
 <style>
   body.luzori-center .luzori-page::before,
   body.luzori-center .luzori-dashboard::before {
     background-image: url('{{ asset('assets/img/branding/corner-leaf-beige.png') }}') !important;
+  }
+
+  /* Mobile: force navbar flush to top (beats theme margin: $spacer auto 0) */
+  @media (max-width: 1199.98px) {
+    body.luzori-center .layout-page,
+    body.luzori-center .layout-container,
+    body.luzori-center .layout-wrapper {
+      padding-top: 0 !important;
+      margin-top: 0 !important;
+    }
+    body.luzori-center #layout-navbar,
+    body.luzori-center .layout-navbar.navbar-detached {
+      position: relative !important;
+      top: 0 !important;
+      margin: 0 !important;
+      margin-top: 0 !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      border-radius: 0 !important;
+      background: #fff !important;
+      background-color: #fff !important;
+    }
   }
 </style>
 @endif
