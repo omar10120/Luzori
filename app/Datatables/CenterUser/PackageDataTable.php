@@ -32,10 +32,10 @@ class PackageDataTable extends DataTable
                 ];
                 return view()->make('_partials.center_action_icons', compact('id', 'route', 'options', 'model'))->render();
             })
-            ->editColumn('translation.name', function ($row) {
+            ->addColumn('name', function ($row) {
                 return '<span class="lz-package-name">' . e($row->name ?? '—') . '</span>';
             })
-            ->editColumn('packageServicePaid.service.translation.name', function ($row) {
+            ->addColumn('paid_services', function ($row) {
                 $services = '';
                 foreach ($row->packageServicePaid as $service) {
                     $name = $service->service?->name ?? null;
@@ -46,7 +46,7 @@ class PackageDataTable extends DataTable
                 }
                 return $services !== '' ? $services : '—';
             })
-            ->editColumn('packageServiceFree.service.translation.name', function ($row) {
+            ->addColumn('free_services', function ($row) {
                 $services = '';
                 foreach ($row->packageServiceFree as $service) {
                     $name = $service->service?->name ?? null;
@@ -57,7 +57,7 @@ class PackageDataTable extends DataTable
                 }
                 return $services !== '' ? $services : '—';
             })
-            ->editColumn('status', function ($row) {
+            ->addColumn('status', function ($row) {
                 $checked = $row->deleted_at ? '' : 'checked';
                 $operation = $row->deleted_at ? DeleteActionEnum::RESTORE_DELETED->value : DeleteActionEnum::SOFT_DELETE->value;
                 return '<label class="switch switch-square" onclick="event.stopPropagation()">
@@ -73,9 +73,9 @@ class PackageDataTable extends DataTable
                 return '<span class="lz-amount">' . e(number_format((float) $row->price, 2)) . ' ' . e(trim(get_currency())) . '</span>';
             })
             ->addColumn('total_value', function ($row) {
-                return '<span class="lz-total-value">' . e(number_format((float) $row->total_value, 2)) . ' ' . e(trim(get_currency())) . '</span>';
+                return '<span class="lz-total-value">' . e(number_format((float) ($row->total_value ?? 0), 2)) . ' ' . e(trim(get_currency())) . '</span>';
             })
-            ->editColumn('users', function ($row) {
+            ->addColumn('users', function ($row) {
                 $users = '';
                 foreach ($row->usersPackages as $userPackage) {
                     if ($userPackage->user) {
@@ -85,32 +85,30 @@ class PackageDataTable extends DataTable
                 return $users !== '' ? $users : '<span class="text-muted">' . e(__('general.no_users')) . '</span>';
             })
             ->editColumn('created_at', function ($row) {
-                return $row->created_at ? $row->created_at->diffForHumans() : '—';
+                // CreatedAtTrait already returns a formatted string
+                return e((string) ($row->created_at ?: '—'));
             })
             ->rawColumns([
                 'action',
-                'packageServicePaid.service.translation.name',
-                'packageServiceFree.service.translation.name',
+                'paid_services',
+                'free_services',
                 'status',
-                'translation.name',
+                'name',
                 'total_value',
                 'users',
                 'price',
-            ], true)
+            ])
             ->setRowId('id');
     }
 
     public function query(Package $model): QueryBuilder
     {
-        return $model->query()->withTrashed()->with(['translation', 'usersPackages.user', 'packageServicePaid' => function ($q) {
-            $q->with(['service' => function ($q) {
-                $q->with(['translation']);
-            }]);
-        }, 'packageServiceFree' => function ($q) {
-            $q->with(['service' => function ($q) {
-                $q->with(['translation']);
-            }]);
-        }])->orderBy($this->plural . '.id', 'DESC');
+        return $model->query()->withTrashed()->with([
+            'translation',
+            'usersPackages.user',
+            'packageServicePaid.service.translation',
+            'packageServiceFree.service.translation',
+        ])->orderBy($this->plural . '.id', 'DESC');
     }
 
     public function html(): HtmlBuilder
@@ -122,7 +120,7 @@ class PackageDataTable extends DataTable
             ->addTableClass('dt-responsive')
             ->columns($this->getColumns())
             ->minifiedAjax()
-            ->orderBy(1)
+            ->orderBy(0)
             ->responsive([
                 'details' => [
                     'type' => 'column',
@@ -180,13 +178,13 @@ class PackageDataTable extends DataTable
     {
         return [
             Column::make('id')->searchable(true)->title('#')->responsivePriority(1)->addClass('all'),
-            Column::computed('translation.name')->searchable(true)->title(__('field.name'))->responsivePriority(1)->addClass('all'),
+            Column::computed('name')->searchable(true)->orderable(false)->title(__('field.name'))->responsivePriority(1)->addClass('all'),
             Column::make('price')->searchable(true)->title(__('field.price'))->responsivePriority(2)->addClass('all'),
-            Column::computed('status')->searchable(false)->title(__('field.status'))->responsivePriority(2)->addClass('all'),
-            Column::computed('total_value')->searchable(false)->title(__('field.total_services_price'))->addClass('none'),
-            Column::computed('packageServicePaid.service.translation.name')->searchable(false)->title(__('field.paid_services'))->addClass('none'),
-            Column::computed('packageServiceFree.service.translation.name')->searchable(false)->title(__('field.free_services'))->addClass('none'),
-            Column::computed('users')->searchable(false)->title(__('field.users'))->addClass('none'),
+            Column::computed('status')->searchable(false)->orderable(false)->title(__('field.status'))->responsivePriority(2)->addClass('all'),
+            Column::computed('total_value')->searchable(false)->orderable(false)->title(__('field.total_services_price'))->addClass('none'),
+            Column::computed('paid_services')->searchable(false)->orderable(false)->title(__('field.paid_services'))->addClass('none'),
+            Column::computed('free_services')->searchable(false)->orderable(false)->title(__('field.free_services'))->addClass('none'),
+            Column::computed('users')->searchable(false)->orderable(false)->title(__('field.users'))->addClass('none'),
             Column::make('created_at')->searchable(true)->title(__('field.created_at'))->addClass('none'),
         ];
     }

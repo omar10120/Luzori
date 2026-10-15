@@ -2,85 +2,104 @@
 
 @section('title', $title)
 
+@section('vendor-style')
+    <style>
+        .lz-notif-show .lz-detail-label {
+            color: #7a8582;
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 0.35rem;
+        }
+        .lz-notif-show .lz-detail-value {
+            color: #002b26;
+            font-weight: 600;
+            margin-bottom: 1.25rem;
+        }
+        .lz-notif-users-table .lz-user-name {
+            font-weight: 700;
+            color: #002b26;
+        }
+    </style>
+@endsection
+
 @section('content')
-    <div class="container">
+    <div class="luzori-page lz-notif-show">
         @include('CenterUser.Components.breadcrumbs')
 
-        <div class="row">
-            <div class="col-md-12">
-                <div class="card">
-                    <div class="card-body text-center">
-                        <div class="row">
-                            @foreach (Config::get('translatable.locales') as $locale)
-                                <div class="col-md-6">
-                                    <div class="mt-2">
-                                        <h5 class="mb-75" style="font-weight:bold;">{{__('field.address')}}
-                                            {{ Str::upper($locale) }}</h5>
-                                        <p class="card-text">{{ $item->translate($locale)->title }}</p>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                        <div class="row">
-                            @foreach (Config::get('translatable.locales') as $locale)
-                                <div class="col-md-6">
-                                    <div class="mt-2">
-                                        <h5 class="mb-75" style="font-weight:bold;">{{__('field.description')}} {{ Str::upper($locale) }}
-                                        </h5>
-                                        <p class="card-text">{{ $item->translate($locale)->text }}</p>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                    </div>
+        <div class="lz-page-toolbar">
+            <div class="lz-page-title-wrap">
+                <div class="lz-page-icon">
+                    <i class="ti ti-bell"></i>
                 </div>
-                @if (count($item->users) > 0)
-                    <div class="card">
-                        <div class="card-body text-center">
-                            <div class="table-responsive text-center">
-                                <table class="table table-striped table-head-custom table-checkable" id="dtTable">
-                                    <thead>
-                                        <tr>
-                                            <th>#</th>
-                                            <th>{{__('field.name')}}</th>
-                                            <th>{{__('field.email')}}</th>
-                                            <th>{{__('field.phone')}}</th>
-                                            <th>{{__('field.created_at')}}</th>
-                                            <th>{{__('field.action')}}</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach ($item->users as $user)
-                                            <tr>
-                                                <td>{{ $user->id }}</td>
-                                                <td>{{ $user->name }}</td>
-                                                <td>{{ $user->email }}</td>
-                                                <td>{{ $user->phone }}</td>
-                                                <td>{{ $user->created_at }}</td>
-                                                <td>
-                                                    <a href="{{ route('center_user.users.show', ['id' => $user->id]) }}"
-                                                        data-bs-toggle="tooltip" title="" data-bs-animation="false"
-                                                        data-bs-original-title="عرض">
-                                                        <svg style="margin:12px;" xmlns="http://www.w3.org/2000/svg"
-                                                            width="14" height="14" viewBox="0 0 24 24" fill="none"
-                                                            stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                                            stroke-linejoin="round" class="feather feather-eye">
-                                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z">
-                                                            </path>
-                                                            <circle cx="12" cy="12" r="3">
-                                                            </circle>
-                                                        </svg>
-                                                    </a>
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                @endif
+                <h1 class="lz-page-title">{{ $title }}</h1>
+            </div>
+            <div class="lz-page-actions">
+                <a href="{{ route('center_user.notifications.index') }}" class="btn btn-luzori-beige btn-sm">
+                    {{ __('general.back') }}
+                </a>
             </div>
         </div>
+
+        <div class="card lz-form-card mb-3">
+            <div class="card-body">
+                <div class="row">
+                    @foreach (Config::get('translatable.locales') as $locale)
+                        <div class="col-md-6">
+                            <div class="lz-detail-label">{{ __('field.title') }} ({{ Str::upper($locale) }})</div>
+                            <div class="lz-detail-value">{{ $item->translate($locale)->title ?? '—' }}</div>
+                        </div>
+                    @endforeach
+                </div>
+                <div class="row">
+                    @foreach (Config::get('translatable.locales') as $locale)
+                        <div class="col-md-6">
+                            <div class="lz-detail-label">{{ __('field.text') }} ({{ Str::upper($locale) }})</div>
+                            <div class="lz-detail-value">{{ $item->translate($locale)->text ?? '—' }}</div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+
+        @if (count($item->users) > 0)
+            <div class="card lz-table-card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table lz-notif-users-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>{{ __('field.name') }}</th>
+                                    <th>{{ __('field.email') }}</th>
+                                    <th>{{ __('field.phone') }}</th>
+                                    <th>{{ __('field.created_at') }}</th>
+                                    <th class="text-end">{{ __('general.actions') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($item->users as $user)
+                                    <tr>
+                                        <td>{{ $user->id }}</td>
+                                        <td><span class="lz-user-name">{{ $user->name }}</span></td>
+                                        <td>{{ $user->email ?: '—' }}</td>
+                                        <td>{{ $user->phone ?: '—' }}</td>
+                                        <td>{{ $user->created_at }}</td>
+                                        <td class="text-end">
+                                            <a href="{{ route('center_user.users.show', ['id' => $user->id]) }}"
+                                                class="btn btn-luzori-beige btn-sm"
+                                                title="{{ __('general.show') }}">
+                                                <i class="ti ti-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        @endif
     </div>
 @endsection

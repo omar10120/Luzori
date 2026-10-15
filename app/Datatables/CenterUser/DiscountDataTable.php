@@ -31,7 +31,7 @@ class DiscountDataTable extends DataTable
                 ];
                 return view()->make('_partials.center_action_icons', compact('id', 'route', 'options', 'model'))->render();
             })
-            ->editColumn('status', function ($row) {
+            ->addColumn('status', function ($row) {
                 $checked = $row->deleted_at ? '' : 'checked';
                 $operation = $row->deleted_at ? DeleteActionEnum::RESTORE_DELETED->value : DeleteActionEnum::SOFT_DELETE->value;
                 return '<label class="switch switch-square" onclick="event.stopPropagation()">
@@ -55,7 +55,7 @@ class DiscountDataTable extends DataTable
             })
             ->editColumn('amount', function ($row) {
                 if ($row->type === 'percentage') {
-                    return '<span class="lz-amount">' . e($row->amount) . '%</span>';
+                    return '<span class="lz-amount">' . e((string) $row->amount) . '%</span>';
                 }
                 return '<span class="lz-amount">' . e(number_format((float) $row->amount, 2)) . ' ' . e(trim(get_currency())) . '</span>';
             })
@@ -66,7 +66,7 @@ class DiscountDataTable extends DataTable
                 return e($label);
             })
             ->editColumn('benefit_numbers', function ($row) {
-                return $row->using_type === 'multi' ? e($row->benefit_numbers ?? '—') : '—';
+                return $row->using_type === 'multi' ? e((string) ($row->benefit_numbers ?? '—')) : '—';
             })
             ->editColumn('start_at', function ($row) {
                 return e($row->start_at ?: '—');
@@ -75,9 +75,10 @@ class DiscountDataTable extends DataTable
                 return e($row->end_at ?: '—');
             })
             ->editColumn('created_at', function ($row) {
-                return $row->created_at ? $row->created_at->diffForHumans() : '—';
+                // CreatedAtTrait already returns a formatted string
+                return e((string) ($row->created_at ?: '—'));
             })
-            ->rawColumns(['action', 'status', 'code', 'type', 'amount'], true)
+            ->rawColumns(['action', 'status', 'code', 'type', 'amount'])
             ->setRowId('id');
     }
 
@@ -95,7 +96,7 @@ class DiscountDataTable extends DataTable
             ->addTableClass('dt-responsive')
             ->columns($this->getColumns())
             ->minifiedAjax()
-            ->orderBy(1)
+            ->orderBy(0)
             ->responsive([
                 'details' => [
                     'type' => 'column',
@@ -154,13 +155,13 @@ class DiscountDataTable extends DataTable
         return [
             Column::make('id')->searchable(true)->title('#')->responsivePriority(1)->addClass('all'),
             Column::make('code')->searchable(true)->title(__('field.code'))->responsivePriority(1)->addClass('all'),
-            Column::computed('type')->searchable(false)->title(__('field.type'))->responsivePriority(2)->addClass('all'),
+            Column::make('type')->searchable(true)->title(__('field.type'))->responsivePriority(2)->addClass('all'),
             Column::make('amount')->searchable(true)->title(__('field.amount'))->responsivePriority(2)->addClass('all'),
-            Column::computed('status')->searchable(false)->title(__('field.status'))->responsivePriority(2)->addClass('all'),
+            Column::computed('status')->searchable(false)->orderable(false)->title(__('field.status'))->responsivePriority(2)->addClass('all'),
             Column::make('start_at')->searchable(true)->title(__('field.start_at'))->addClass('none'),
             Column::make('end_at')->searchable(true)->title(__('field.end_at'))->addClass('none'),
-            Column::computed('using_type')->searchable(false)->title(__('field.using_type'))->addClass('none'),
-            Column::computed('benefit_numbers')->searchable(false)->title(__('field.benefit_numbers'))->addClass('none'),
+            Column::make('using_type')->searchable(true)->title(__('field.using_type'))->addClass('none'),
+            Column::make('benefit_numbers')->searchable(false)->title(__('field.benefit_numbers'))->addClass('none'),
             Column::make('created_at')->searchable(true)->title(__('field.created_at'))->addClass('none'),
         ];
     }

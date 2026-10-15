@@ -452,7 +452,9 @@
           "url": "center_user/notifications/index",
           "name": "notifications",
           "slug": [
-            "notifications"
+            "center_user.notifications.index",
+            "center_user.notifications.create",
+            "center_user.notifications.show"
           ],
           "permissions": [
             "VIEW_NOTIFICATIONS"
@@ -463,7 +465,8 @@
           "url": "center_user/notifications/inbox",
           "name": "received_notifications",
           "slug": [
-            "notifications"
+            "center_user.notifications.inbox",
+            "center_user.notifications.markSeen"
           ],
           "permissions": [
             "VIEW_NOTIFICATIONS"

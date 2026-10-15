@@ -24,11 +24,29 @@
                 $openClass = $configData['layout'] === 'vertical' ? 'open' : 'active';
                 $currentRouteName = Route::currentRouteName();
                 $currentSegment = request()->segment(2);
+                $currentPath = trim(request()->path(), '/');
 
-                if (is_array($submenu->slug ?? null) && in_array($currentSegment, $submenu->slug, true) && !isset($submenu->submenu)) {
-                    $activeClass = 'active';
-                } elseif ($currentRouteName === ($submenu->slug ?? null)) {
-                    $activeClass = 'active';
+                if (!isset($submenu->submenu)) {
+                    // Leaf: prefer exact URL, then route-name slug list (avoids siblings sharing segment-2).
+                    if (!empty($submenu->url)) {
+                        $itemPath = trim($submenu->url, '/');
+                        if ($currentPath === $itemPath || str_starts_with($currentPath, $itemPath . '/')) {
+                            $activeClass = 'active';
+                        }
+                    }
+                    if (!$activeClass && is_array($submenu->slug ?? null)) {
+                        if (in_array($currentRouteName, $submenu->slug, true)) {
+                            $activeClass = 'active';
+                        } elseif (
+                            // Backward-compatible segment match only when slug has no route-style dots
+                            !str_contains(implode(',', $submenu->slug), '.')
+                            && in_array($currentSegment, $submenu->slug, true)
+                        ) {
+                            $activeClass = 'active';
+                        }
+                    } elseif (!$activeClass && is_string($submenu->slug ?? null) && $currentRouteName === $submenu->slug) {
+                        $activeClass = 'active';
+                    }
                 } elseif (isset($submenu->submenu)) {
                     if (gettype($submenu->slug) === 'array') {
                         foreach ($submenu->slug as $slug) {

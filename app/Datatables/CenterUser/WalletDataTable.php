@@ -33,7 +33,7 @@ class WalletDataTable extends DataTable
                 ];
                 return view()->make('_partials.center_action_icons', compact('id', 'route', 'options', 'model'))->render();
             })
-            ->editColumn('users.user.first_name', function ($row) {
+            ->addColumn('users_list', function ($row) {
                 $users = '';
                 foreach ($row->users as $user) {
                     $name = $user?->user?->name;
@@ -48,14 +48,14 @@ class WalletDataTable extends DataTable
                 return '<span class="lz-amount">' . e(number_format((float) $row->amount, 2)) . ' ' . e(trim(get_currency())) . '</span>';
             })
             ->editColumn('invoiced_amount', function ($row) {
-                return e(number_format((float) $row->invoiced_amount, 2)) . ' ' . e(trim(get_currency()));
+                return e(number_format((float) ($row->invoiced_amount ?? 0), 2)) . ' ' . e(trim(get_currency()));
             })
-            ->editColumn('used', function ($row) {
+            ->addColumn('used_label', function ($row) {
                 $class = $row->used ? 'lz-used-yes' : 'lz-used-no';
                 $label = $row->used ? __('general.yes') : __('general.no');
                 return '<span class="lz-used-badge ' . $class . '">' . e($label) . '</span>';
             })
-            ->editColumn('status', function ($row) {
+            ->addColumn('status', function ($row) {
                 $checked = $row->deleted_at ? '' : 'checked';
                 $operation = $row->deleted_at ? DeleteActionEnum::RESTORE_DELETED->value : DeleteActionEnum::SOFT_DELETE->value;
                 return '<label class="switch switch-square" onclick="event.stopPropagation()">
@@ -80,9 +80,10 @@ class WalletDataTable extends DataTable
                 return e($row->end_at ?: '—');
             })
             ->editColumn('created_at', function ($row) {
-                return $row->created_at ? $row->created_at->diffForHumans() : '—';
+                // CreatedAtTrait already returns a formatted string
+                return e((string) ($row->created_at ?: '—'));
             })
-            ->rawColumns(['action', 'users.user.first_name', 'status', 'code', 'amount', 'used'], true)
+            ->rawColumns(['action', 'users_list', 'status', 'code', 'amount', 'used_label'])
             ->setRowId('id');
     }
 
@@ -115,7 +116,7 @@ class WalletDataTable extends DataTable
             ->addTableClass('dt-responsive')
             ->columns($this->getColumns())
             ->minifiedAjax()
-            ->orderBy(1)
+            ->orderBy(0)
             ->responsive([
                 'details' => [
                     'type' => 'column',
@@ -174,12 +175,12 @@ class WalletDataTable extends DataTable
         return [
             Column::make('id')->searchable(true)->title('#')->responsivePriority(1)->addClass('all'),
             Column::make('code')->searchable(true)->title(__('field.code'))->responsivePriority(1)->addClass('all'),
-            Column::computed('amount')->searchable(false)->title(__('field.amount'))->responsivePriority(2)->addClass('all'),
-            Column::computed('used')->searchable(false)->title(__('field.used'))->responsivePriority(2)->addClass('all'),
-            Column::computed('status')->searchable(false)->title(__('field.status'))->responsivePriority(2)->addClass('all'),
+            Column::make('amount')->searchable(true)->title(__('field.amount'))->responsivePriority(2)->addClass('all'),
+            Column::computed('used_label')->searchable(false)->orderable(false)->title(__('field.used'))->responsivePriority(2)->addClass('all'),
+            Column::computed('status')->searchable(false)->orderable(false)->title(__('field.status'))->responsivePriority(2)->addClass('all'),
             Column::make('serial_number')->searchable(true)->title(__('field.serial_number'))->addClass('none'),
-            Column::computed('users.user.first_name')->searchable(false)->title(__('field.users'))->addClass('none'),
-            Column::computed('invoiced_amount')->searchable(false)->title(__('field.invoiced_amount'))->addClass('none'),
+            Column::computed('users_list')->searchable(false)->orderable(false)->title(__('field.users'))->addClass('none'),
+            Column::make('invoiced_amount')->searchable(true)->title(__('field.invoiced_amount'))->addClass('none'),
             Column::make('start_at')->searchable(true)->title(__('field.start_at'))->addClass('none'),
             Column::make('end_at')->searchable(true)->title(__('field.end_at'))->addClass('none'),
             Column::make('created_at')->searchable(true)->title(__('field.created_at'))->addClass('none'),

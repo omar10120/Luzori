@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Datatables\CenterUser;
 
 use App\Enums\DeleteActionEnum;
@@ -28,19 +29,26 @@ class NotificationDataTable extends DataTable
                     'operation' => DeleteActionEnum::FORCE_DELETE->value,
                     'with_trashed' => 0,
                 ];
-                return view()->make('_partials.center_actions', compact('id', 'route', 'options', 'model'))->render();
+                return view()->make('_partials.center_action_icons', compact('id', 'route', 'options', 'model'))->render();
             })
-            // ✅ Flatten nested translation fields
             ->addColumn('title', function ($row) {
-                return $row->translation->title ?? '—';
+                return '<span class="lz-notif-title">' . e($row->translation->title ?? '—') . '</span>';
             })
             ->addColumn('text', function ($row) {
                 return \App\Helpers\MyHelper::truncateWithReadMore($row->translation->text ?? '');
             })
             ->editColumn('users', function ($row) {
-                return $row->users->count();
+                $count = $row->users->count();
+                return '<span class="lz-user-count">' . (int) $count . '</span>';
             })
-            ->rawColumns(['action', 'text'], true)
+            ->editColumn('created_at', function ($row) {
+                try {
+                    return $row->created_at ? $row->created_at->diffForHumans() : '—';
+                } catch (\Throwable $e) {
+                    return e((string) ($row->created_at ?? '—'));
+                }
+            })
+            ->rawColumns(['action', 'text', 'title', 'users'])
             ->setRowId('id');
     }
 
@@ -51,35 +59,46 @@ class NotificationDataTable extends DataTable
 
     public function html(): HtmlBuilder
     {
-        $buttonClass = 'btn mx-1 mx-md-2 px-2 px-md-4 py-1 py-md-2 btn-sm';
-        $addRoute = route('center_user.' . $this->plural . '.create');
+        $buttonClass = 'btn mx-1 px-3 py-2 btn-sm';
 
         return $this->builder()
             ->setTableId($this->plural . '-table')
             ->addTableClass('dt-responsive')
             ->columns($this->getColumns())
             ->minifiedAjax()
-            ->orderBy(1)
-            ->responsive(true)
+            ->orderBy(0)
+            ->responsive([
+                'details' => [
+                    'type' => 'column',
+                    'target' => 0,
+                ],
+            ])
             ->dom('
                 <"card-header border-bottom p-3 d-flex justify-content-between align-items-center"
                     <"head-label"><"dt-action-buttons"B>
                 >
-                <"d-flex justify-content-between align-items-center mx-0 row"
+                <"d-flex justify-content-between align-items-center mx-0 row px-1 pt-2"
                     <"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"fr>
                 >
                 <"table-responsive"t>
-                <"d-flex justify-content-between mx-0 row"
+                <"d-flex justify-content-between mx-0 row px-1 pt-2"
                     <"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>
                 >
             ')
             ->selectStyleSingle()
-            ->addAction(['printable' => false, 'exportable' => false, 'className' => 'dt-center', 'title' => __('general.actions')])
+            ->addAction([
+                'printable' => false,
+                'exportable' => false,
+                'responsivePriority' => 1,
+                'className' => 'dt-center lz-actions-col',
+                'title' => __('general.actions'),
+            ])
             ->buttons([
-                Button::make('colvis')->addClass($buttonClass . ' btn-warning')->text(__('general.column_visibility')),
+                Button::make('colvis')->addClass($buttonClass . ' btn-luzori-beige')->text(__('general.column_visibility')),
                 [
                     'extend' => 'collection',
-                    'text' => __('general.export'),  'className' => $buttonClass,
+                    'text' => __('general.export'),
+                    'className' => $buttonClass . ' btn-luzori-muted',
                     'buttons' => [
                         'excel',
                         'csv',
@@ -90,28 +109,25 @@ class NotificationDataTable extends DataTable
                 ],
             ])
             ->language($this->getDataTableLanguageUrl())
-            ->addTableClass('table table-bordered table-hover')
-            ->initComplete('function () {
-             $(".dt-action-buttons").append("<a href=' . $addRoute . ' class=\"btn btn-primary btn-sm mx-1 mx-md-2 px-2 px-md-3 py-1 py-md-2\">' . __('general.add_new') . '<i class=\"ti ti-plus\"></i></a>");
-            }')
+            ->addTableClass('table table-hover')
             ->parameters([]);
     }
 
     public function getDataTableLanguageUrl()
     {
-        return app()->getLocale() == "ar" ?
-        asset('js/lang/ar_custom.json') :
-        "https://cdn.datatables.net/plug-ins/2.0.7/i18n/en-GB.json";
+        return app()->getLocale() == 'ar'
+            ? asset('js/lang/ar_custom.json')
+            : 'https://cdn.datatables.net/plug-ins/2.0.7/i18n/en-GB.json';
     }
 
     public function getColumns(): array
     {
         return [
-        Column::make('id')->searchable(true)->title('#'),
-        Column::computed('title')->searchable(true)->title(__('field.title')),
-        Column::computed('text')->searchable(true)->title(__('field.text')),
-        Column::computed('users')->searchable(false)->title(__('field.users')),
-        Column::make('created_at')->searchable(true)->title(__('field.created_at'))
+            Column::make('id')->searchable(true)->title('#')->responsivePriority(1)->addClass('all'),
+            Column::computed('title')->searchable(true)->title(__('field.title'))->responsivePriority(1)->addClass('all'),
+            Column::computed('users')->searchable(false)->orderable(false)->title(__('field.users'))->responsivePriority(2)->addClass('all'),
+            Column::computed('text')->searchable(true)->title(__('field.text'))->addClass('none'),
+            Column::make('created_at')->searchable(true)->title(__('field.created_at'))->addClass('none'),
         ];
     }
 
