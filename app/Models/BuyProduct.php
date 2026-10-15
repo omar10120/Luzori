@@ -7,6 +7,7 @@ use App\Traits\UpdatedAtTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BuyProduct extends Model
@@ -28,6 +29,10 @@ class BuyProduct extends Model
     public function sales_worker(): BelongsTo
     {
         return $this->belongsTo(Worker::class, 'sales_worker_id');
+    }
+    public function saleItem(): MorphOne
+    {
+        return $this->morphOne(SaleItem::class, 'itemable');
     }
 
     public function worker(): BelongsTo
