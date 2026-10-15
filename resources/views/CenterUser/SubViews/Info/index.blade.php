@@ -173,7 +173,7 @@
                             <small class="lz-field-help">{{ __('general.enter_the_twitter_url') }}</small>
                             <div class="input-group">
                                 <span class="input-group-text">
-                                    <img src="{{ asset('assets/icons/twitter.svg') }}" alt="" style="width:20px;height:20px;">
+                                    <img src="{{ asset('assets/icons/twitter.svg') }}?v=2" alt="X" style="width:18px;height:18px;display:block;">
                                 </span>
                                 <input type="text" class="form-control" name="twitter" value="{{ $item->twitter }}"
                                     placeholder="{{ __('field.twitter') }}" />
