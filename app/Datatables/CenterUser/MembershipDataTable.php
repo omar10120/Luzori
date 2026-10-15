@@ -36,19 +36,20 @@ class MembershipDataTable extends DataTable
                 return '<img src="' . $src . '" alt="" class="lz-membership-thumb">';
             })
             ->editColumn('user.first_name', function ($row) {
-                return '<span class="lz-customer-name">' . e($row->user->name ?? '—') . '</span>';
+                $name = $row->user?->name ?? '—';
+                return '<span class="lz-customer-name">' . e($name) . '</span>';
             })
             ->editColumn('user.phone', function ($row) {
-                return e($row->user->full_phone ?? '—');
+                return e($row->user?->full_phone ?? '—');
             })
             ->editColumn('membership_no', function ($row) {
                 return '<span class="lz-membership-no">' . e($row->membership_no ?? '—') . '</span>';
             })
             ->editColumn('percent', function ($row) {
-                return '<span class="lz-percent-badge">' . e($row->percent) . '%</span>';
+                return '<span class="lz-percent-badge">' . e((string) ($row->percent ?? '0')) . '%</span>';
             })
             ->editColumn('created_user.name', function ($row) {
-                return e($row->created_user->name ?? '—');
+                return e($row->created_user?->name ?? '—');
             })
             ->editColumn('status', function ($row) {
                 $checked = $row->deleted_at ? '' : 'checked';
@@ -69,17 +70,22 @@ class MembershipDataTable extends DataTable
                 return e($row->end_at ?: '—');
             })
             ->editColumn('created_at', function ($row) {
-                return $row->created_at ? $row->created_at->diffForHumans() : '—';
+                try {
+                    return $row->created_at ? $row->created_at->diffForHumans() : '—';
+                } catch (\Throwable $e) {
+                    return e((string) ($row->created_at ?? '—'));
+                }
             })
-            ->rawColumns(['action', 'status', 'user.first_name', 'image', 'membership_no', 'percent'], true)
+            ->rawColumns(['action', 'status', 'user.first_name', 'image', 'membership_no', 'percent'])
             ->setRowId('id');
     }
 
     public function query(Membership $model): QueryBuilder
     {
-        $model = $model->query()->with(['user', 'created_user', 'media'])
-            ->withTrashed()->orderBy('memberships_cards.id', 'DESC');
-        return $this->applyScopes($model);
+        return $model->query()
+            ->with(['user', 'created_user', 'media'])
+            ->withTrashed()
+            ->orderBy('memberships_cards.id', 'DESC');
     }
 
     public function html(): HtmlBuilder
@@ -91,7 +97,7 @@ class MembershipDataTable extends DataTable
             ->addTableClass('dt-responsive')
             ->columns($this->getColumns())
             ->minifiedAjax()
-            ->orderBy(1)
+            ->orderBy(0)
             ->responsive([
                 'details' => [
                     'type' => 'column',
@@ -149,15 +155,15 @@ class MembershipDataTable extends DataTable
     {
         return [
             Column::make('id')->searchable(true)->title('#')->responsivePriority(1)->addClass('all'),
-            Column::computed('image')->searchable(false)->title(__('field.image'))->responsivePriority(2)->addClass('all'),
+            Column::computed('image')->searchable(false)->orderable(false)->title(__('field.image'))->responsivePriority(2)->addClass('all'),
             Column::make('user.first_name')->searchable(true)->title(__('field.customer_name'))->responsivePriority(1)->addClass('all'),
             Column::make('membership_no')->searchable(true)->title(__('field.membership_no'))->responsivePriority(2)->addClass('all'),
-            Column::computed('percent')->searchable(false)->title(__('field.percent'))->responsivePriority(2)->addClass('all'),
-            Column::computed('status')->searchable(false)->title(__('field.status'))->responsivePriority(2)->addClass('all'),
-            Column::make('user.phone')->searchable(true)->title(__('field.customer_phone'))->addClass('none'),
+            Column::computed('percent')->searchable(false)->orderable(false)->title(__('field.percent'))->responsivePriority(2)->addClass('all'),
+            Column::computed('status')->searchable(false)->orderable(false)->title(__('field.status'))->responsivePriority(2)->addClass('all'),
+            Column::computed('user.phone')->searchable(false)->orderable(false)->title(__('field.customer_phone'))->addClass('none'),
             Column::make('start_at')->searchable(true)->title(__('field.start_at'))->addClass('none'),
             Column::make('end_at')->searchable(true)->title(__('field.end_at'))->addClass('none'),
-            Column::make('created_user.name')->searchable(false)->title(__('field.created_by'))->addClass('none'),
+            Column::computed('created_user.name')->searchable(false)->orderable(false)->title(__('field.created_by'))->addClass('none'),
             Column::make('created_at')->searchable(true)->title(__('field.created_at'))->addClass('none'),
         ];
     }

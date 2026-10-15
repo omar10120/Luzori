@@ -38,7 +38,7 @@ class PackageDataTable extends DataTable
             ->editColumn('packageServicePaid.service.translation.name', function ($row) {
                 $services = '';
                 foreach ($row->packageServicePaid as $service) {
-                    $name = $service->service->name ?? null;
+                    $name = $service->service?->name ?? null;
                     if (!$name) {
                         continue;
                     }
@@ -49,7 +49,7 @@ class PackageDataTable extends DataTable
             ->editColumn('packageServiceFree.service.translation.name', function ($row) {
                 $services = '';
                 foreach ($row->packageServiceFree as $service) {
-                    $name = $service->service->name ?? null;
+                    $name = $service->service?->name ?? null;
                     if (!$name) {
                         continue;
                     }
