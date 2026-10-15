@@ -98,7 +98,8 @@
                 </div>
                 <h1 class="lz-page-title">{{ __('general.manage') }} {{ $title }}</h1>
             </div>
-            <div class="lz-page-actions" id="lz-sales-actions">
+            <div class="lz-page-actions" id="lz-sales-actions"><a href="{{ route('center_user.sales.cart') }}" class="btn btn-luzori-primary btn-sm mx-1 px-3 py-2 lz-btn-add-new">{{ __('general.add_new') }} <i class="ti ti-plus"></i></a>
+                
                 <select id="booking_source_filter" class="form-select form-select-sm lz-branch-filter" aria-label="{{ __('api.booking_source') }}">
                     <option value="">{{ __('general.all') }}</option>
                     <option value="inside_booking">{{ __('api.inside_booking') ?? 'Inside Booking' }}</option>

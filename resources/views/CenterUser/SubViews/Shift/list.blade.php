@@ -50,7 +50,7 @@
                 </div>
                 <h1 class="lz-page-title">{{ __('general.manage') }} {{ $title }}</h1>
             </div>
-            <div class="lz-page-actions" id="lz-shifts-actions"></div>
+            <div class="lz-page-actions" id="lz-shifts-actions"><a href="{{ route('center_user.shifts.create') }}" class="btn btn-luzori-primary btn-sm mx-1 px-3 py-2 lz-btn-add-new">{{ __('general.add_new') }} <i class="ti ti-plus"></i></a></div>
         </div>
 
         <div class="card lz-table-card">

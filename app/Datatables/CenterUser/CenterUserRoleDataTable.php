@@ -65,12 +65,6 @@ class CenterUserRoleDataTable extends DataTable
     public function html(): HtmlBuilder
     {
         $buttonClass = 'btn mx-1 px-3 py-2 btn-sm';
-        $addRoute = route('center_user.' . $this->plural . '.create');
-
-        $initCompleteJs = 'function () {';
-        $initCompleteJs .= 'var $lzAct=$(".dt-action-buttons").first();';
-        $initCompleteJs .= '$lzAct.append("<a href=\'' . $addRoute . '\' class=\"btn btn-luzori-primary btn-sm mx-1 px-3 py-2\">' . __('general.add_new') . ' <i class=\"ti ti-plus\"></i></a>");';
-        $initCompleteJs .= '}';
 
         return $this->builder()
             ->setTableId($this->plural . '-table')
@@ -121,7 +115,6 @@ class CenterUserRoleDataTable extends DataTable
             ])
             ->language($this->getDataTableLanguageUrl())
             ->addTableClass('table table-hover')
-            ->initComplete($initCompleteJs)
             ->parameters([]);
     }
 
