@@ -149,18 +149,6 @@
                 }, 120);
                 setTimeout(() => clearInterval(timer), 4000);
             }
-
-            $(document).on('dblclick', '#withdrawal_requests-table tbody tr', function (e) {
-                const $tr = $(this);
-                if ($tr.hasClass('child')) return;
-                if ($(e.target).closest('a, button, input, label, .switch, .dropdown, .dropdown-menu').length) {
-                    return;
-                }
-                const $control = $tr.children('td.dtr-control').first();
-                if ($control.length) {
-                    $control.trigger('click');
-                }
-            });
         });
 
         function requestWithdrawal() {

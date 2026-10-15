@@ -44,6 +44,7 @@ return [
     'insufficient_balance'                          => 'رصيدك غير كافٍ',
     'withdrawal_instructions'                       => 'تعليمات السحب',
     'wallet_balance'                                => 'رصيد المحفظة',
+    'withdrawal_requests'                           => 'طلبات السحب',
     'withdrawal_request_sent'                       => 'تم إرسال طلب السحب بنجاح',
     'withdrawal_request_already_exists'             => 'يوجد طلب سحب قيد الانتظار',
     'withdrawal_request_created'                    => 'تم إنشاء طلب السحب بنجاح',

@@ -45,6 +45,7 @@ return [
     'insufficient_balance'                          => 'Insufficient wallet balance',
     'withdrawal_instructions'                       => 'Withdrawal Instructions',
     'wallet_balance'                                => 'Wallet Balance',
+    'withdrawal_requests'                           => 'Withdrawal Requests',
     'withdrawal_request_sent'                       => 'Withdrawal Request Sent Successfully',
     'withdrawal_request_already_exists'             => 'Withdrawal Request Already Exists',
     'withdrawal_request_created'                    => 'Withdrawal Request Created Successfully',

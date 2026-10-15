@@ -26,7 +26,7 @@
     @isset($options['show'])
         <a class="lz-action-btn" href="{{ route($route . '.show', ['id' => $id]) }}"
             title="{{ __('general.show') }}">
-            <i class="ti ti-eye"></i>
+            <i class="ti ti-file-info"></i>
         </a>
     @endisset
     @isset($options['add_tip'])
@@ -121,6 +121,45 @@
                     type: 'DELETE',
                     dataType: 'json',
                     data: { _token: '{{ csrf_token() }}' },
+                    success: function() {
+                        Swal.fire({
+                            title: "{{ __('general.success') }}",
+                            icon: 'success',
+                            timer: 3000
+                        });
+                        if ($('.table').DataTable().ajax.json())
+                            $('.table').DataTable().ajax.reload();
+                        else
+                            window.location.reload();
+                    },
+                    error: function(response) {
+                        if (response.status == 401) {
+                            fireMessage("{{ __('admin.ok') }}",
+                                "{{ __('admin.not_allowed') }}",
+                                "{{ __('admin.fire_message') }}",
+                                'error');
+                        } else {
+                            fireMessage("{{ __('admin.ok') }}",
+                                "{{ __('admin.an_error_occurred') }}",
+                                "",
+                                'error');
+                        }
+                    }
+                });
+            }
+        }
+
+        if (typeof changeStatusWeb !== 'function') {
+            function changeStatusWeb(id) {
+                var url = route('center_user.centerusers.changeStatusWeb');
+                $.ajax({
+                    url: url,
+                    type: 'POST',
+                    dataType: 'json',
+                    data: {
+                        _token: '{{ csrf_token() }}',
+                        id: id,
+                    },
                     success: function() {
                         Swal.fire({
                             title: "{{ __('general.success') }}",

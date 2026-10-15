@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Datatables\CenterUser;
 
 use App\Enums\DeleteActionEnum;
@@ -28,38 +29,48 @@ class CenterUserRoleDataTable extends DataTable
                     'operation' => DeleteActionEnum::FORCE_DELETE->value,
                     'with_trashed' => 0,
                 ];
-                $html = view()->make('_partials.center_actions', compact('id', 'route', 'options', 'model'))->render();
-                return $html;
+                return view()->make('_partials.center_action_icons', compact('id', 'route', 'options', 'model'))->render();
+            })
+            ->addColumn('permission_count', function ($row) {
+                $count = $row->permissions->count();
+                return '<span class="lz-perm-count">' . (int) $count . ' ' . e(__('field.permission')) . '</span>';
             })
             ->editColumn('permission', function ($row) {
-                $permissions = '';
                 $locale = app()->getLocale();
+                $permissions = '';
                 foreach ($row->permissions as $permission) {
                     $name = ($locale == 'ar') ? ($permission->name_ar ?? $permission->name) : $permission->name;
-                    $permissions .= '<span class="badge"
-                        style="border-radius:10px;background-color:blue;margin:5px;padding:7px;">' . htmlspecialchars($name) . '</span>';
+                    $permissions .= '<span class="lz-perm-badge">' . e($name) . '</span>';
                 }
-                return $permissions;
+                return $permissions !== '' ? $permissions : '—';
             })
             ->editColumn('created_at', function ($row) {
-                return $row->created_at->diffForHumans();
+                return $row->created_at ? $row->created_at->diffForHumans() : '—';
             })
             ->editColumn('name', function ($row) {
-                return \App\Helpers\MyHelper::truncateWithReadMore($row->name ?? '');
+                return '<span class="lz-role-name">' . e($row->name ?? '—') . '</span>';
             })
-            ->rawColumns(['permission', 'name'], true)
+            ->rawColumns(['action', 'permission', 'permission_count', 'name'], true)
             ->setRowId('id');
     }
 
     public function query(Role $model): QueryBuilder
     {
-        return $model->query()->where('guard_name', 'center_api')->orderBy('roles.id', 'DESC');
+        return $model->query()
+            ->with('permissions')
+            ->where('guard_name', 'center_api')
+            ->orderBy('roles.id', 'DESC');
     }
 
     public function html(): HtmlBuilder
     {
-        $buttonClass = 'btn mx-1 mx-md-2 px-2 px-md-4 py-1 py-md-2 btn-sm';
+        $buttonClass = 'btn mx-1 px-3 py-2 btn-sm';
         $addRoute = route('center_user.' . $this->plural . '.create');
+
+        $initCompleteJs = 'function () {';
+        $initCompleteJs .= 'var $lzAct=$(".lz-page-actions").first();if(!$lzAct.length)$lzAct=$(".dt-action-buttons");';
+        $initCompleteJs .= '$lzAct.append("<a href=\'' . $addRoute . '\' class=\"btn btn-luzori-primary btn-sm mx-1 px-3 py-2\">' . __('general.add_new') . ' <i class=\"ti ti-plus\"></i></a>");';
+        $initCompleteJs .= '}';
 
         return $this->builder()
             ->setTableId($this->plural . '-table')
@@ -67,26 +78,38 @@ class CenterUserRoleDataTable extends DataTable
             ->columns($this->getColumns())
             ->minifiedAjax()
             ->orderBy(1)
-            ->responsive(true)
+            ->responsive([
+                'details' => [
+                    'type' => 'column',
+                    'target' => 0,
+                ],
+            ])
             ->dom('
                 <"card-header border-bottom p-3 d-flex justify-content-between align-items-center"
                     <"head-label"><"dt-action-buttons"B>
                 >
-                <"d-flex justify-content-between align-items-center mx-0 row"
+                <"d-flex justify-content-between align-items-center mx-0 row px-1 pt-2"
                     <"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"fr>
                 >
                 <"table-responsive"t>
-                <"d-flex justify-content-between mx-0 row"
+                <"d-flex justify-content-between mx-0 row px-1 pt-2"
                     <"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>
                 >
             ')
             ->selectStyleSingle()
-            ->addAction(['printable' => false, 'exportable' => false, 'className' => 'dt-center', 'title' => __('general.actions')])
+            ->addAction([
+                'printable' => false,
+                'exportable' => false,
+                'responsivePriority' => 1,
+                'className' => 'dt-center lz-actions-col',
+                'title' => __('general.actions'),
+            ])
             ->buttons([
-                Button::make('colvis')->addClass($buttonClass . ' btn-warning')->text(__('general.column_visibility')),
+                Button::make('colvis')->addClass($buttonClass . ' btn-luzori-beige')->text(__('general.column_visibility')),
                 [
                     'extend' => 'collection',
-                    'text' => __('general.export'),  'className' => $buttonClass,
+                    'text' => __('general.export'),
+                    'className' => $buttonClass . ' btn-luzori-muted',
                     'buttons' => [
                         'excel',
                         'csv',
@@ -97,27 +120,26 @@ class CenterUserRoleDataTable extends DataTable
                 ],
             ])
             ->language($this->getDataTableLanguageUrl())
-            ->addTableClass('table table-bordered table-hover')
-            ->initComplete('function () {
-             $(".dt-action-buttons").append("<a href=' . $addRoute . ' class=\"btn btn-primary btn-sm mx-1 mx-md-2 px-2 px-md-3 py-1 py-md-2\">' . __('general.add_new') . '<i class=\"ti ti-plus\"></i></a>");
-            }')
+            ->addTableClass('table table-hover')
+            ->initComplete($initCompleteJs)
             ->parameters([]);
     }
 
     public function getDataTableLanguageUrl()
     {
-        return app()->getLocale() == "ar" ?
-        asset('js/lang/ar_custom.json') :
-        "https://cdn.datatables.net/plug-ins/2.0.7/i18n/en-GB.json";
+        return app()->getLocale() == 'ar'
+            ? asset('js/lang/ar_custom.json')
+            : 'https://cdn.datatables.net/plug-ins/2.0.7/i18n/en-GB.json';
     }
 
     public function getColumns(): array
     {
         return [
-            Column::make('id')->searchable(true)->title('#'),
-            Column::make('name')->searchable(true)->title(__('field.name')),
-            Column::computed('permission')->searchable(true)->title(__('field.permission')),
-            Column::computed('created_at')->searchable(false)->title(__('field.created_at')),
+            Column::make('id')->searchable(true)->title('#')->responsivePriority(1)->addClass('all'),
+            Column::make('name')->searchable(true)->title(__('field.name'))->responsivePriority(1)->addClass('all'),
+            Column::computed('permission_count')->searchable(false)->title(__('field.permission'))->responsivePriority(2)->addClass('all'),
+            Column::computed('permission')->searchable(false)->title(__('field.permission'))->addClass('none'),
+            Column::computed('created_at')->searchable(false)->title(__('field.created_at'))->addClass('none'),
         ];
     }
 

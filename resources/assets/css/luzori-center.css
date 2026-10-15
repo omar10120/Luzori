@@ -1078,8 +1078,71 @@ body.luzori-center .lz-actions-col {
   white-space: nowrap;
 }
 
-body.luzori-center table.dataTable.dtr-column > tbody > tr > td.dtr-control {
-  cursor: pointer;
+/* Hide DataTables expand arrows — details open via eye dialog */
+body.luzori-center table.dataTable.dtr-column > tbody > tr > td.dtr-control,
+body.luzori-center table.dataTable.dtr-inline.collapsed > tbody > tr > td.dtr-control {
+  cursor: default;
+}
+
+body.luzori-center table.dataTable.dtr-column > tbody > tr > td.dtr-control:before,
+body.luzori-center table.dataTable.dtr-column.collapsed > tbody > tr > td.dtr-control:before,
+body.luzori-center table.dataTable.dtr-inline.collapsed > tbody > tr > td.dtr-control:before,
+body.luzori-center table.dataTable > tbody > tr > td.dtr-control:before {
+  display: none !important;
+  content: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  background: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+body.luzori-center .lz-inline-row-details {
+  display: inline-flex;
+  margin-inline-start: 0.4rem;
+  vertical-align: middle;
+}
+
+body.luzori-center .lz-row-details-modal {
+  border: 0;
+  border-radius: 18px;
+  background: #fdfaf6;
+  box-shadow: 0 16px 40px rgba(0, 43, 38, 0.14);
+}
+
+body.luzori-center .lz-row-details-modal .modal-header {
+  border-bottom-color: #efe6d8;
+}
+
+body.luzori-center .lz-row-details-modal .modal-title {
+  color: var(--lz-forest);
+  font-weight: 700;
+}
+
+body.luzori-center .lz-row-details-modal .modal-footer {
+  border-top-color: #efe6d8;
+}
+
+body.luzori-center .lz-row-details-table {
+  margin: 0;
+}
+
+body.luzori-center .lz-row-details-table th {
+  width: 34%;
+  color: #7a8582;
+  font-weight: 600;
+  font-size: 0.82rem;
+  border-color: #efe6d8;
+  vertical-align: top;
+  background: transparent;
+}
+
+body.luzori-center .lz-row-details-table td {
+  color: var(--lz-text);
+  border-color: #efe6d8;
+  vertical-align: top;
 }
 
 body.luzori-center table.dataTable > tbody > tr.child {

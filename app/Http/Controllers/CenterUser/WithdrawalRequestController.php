@@ -20,7 +20,7 @@ class WithdrawalRequestController extends Controller
         $currentDb = config('database.connections.mysql.database');
         $center = Center::where('database', $currentDb)->first();
 
-        $title = __('api.withdrawal_requests') ?? 'Withdrawal Requests';
+        $title = __('locale.withdrawal_requests');
         $walletBalance = $center ? $center->wallet : 0;
 
         // Ensure we pass a subview that renders the top header correctly

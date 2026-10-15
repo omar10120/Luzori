@@ -1,8 +1,8 @@
 <?php
+
 namespace App\Datatables\CenterUser;
 
 use App\Enums\DeleteActionEnum;
-use App\Models\Branch;
 use App\Models\Expense;
 use Illuminate\Database\Eloquent\Builder as QueryBuilder;
 use Yajra\DataTables\EloquentDataTable;
@@ -29,29 +29,37 @@ class ExpensesProviderDataTable extends DataTable
                     'operation' => DeleteActionEnum::FORCE_DELETE->value,
                     'with_trashed' => 1,
                 ];
-                $html = view()->make('_partials.center_actions', compact('id', 'route', 'options', 'model'))->render();
-                return $html;
+                return view()->make('_partials.center_action_icons', compact('id', 'route', 'options', 'model'))->render();
+            })
+            ->editColumn('expense_name', function ($row) {
+                return '<span class="lz-expense-type">' . e($row->expense_name ?: '—') . '</span>';
+            })
+            ->editColumn('payee', function ($row) {
+                return e($row->payee ?: '—');
             })
             ->editColumn('start_date', function ($row) {
-                return $row->start_date ? \Carbon\Carbon::parse($row->start_date)->format('Y-m-d') : '';
+                return $row->start_date ? \Carbon\Carbon::parse($row->start_date)->format('Y-m-d') : '—';
             })
             ->editColumn('end_date', function ($row) {
-                return $row->end_date ? \Carbon\Carbon::parse($row->end_date)->format('Y-m-d') : '';
+                return $row->end_date ? \Carbon\Carbon::parse($row->end_date)->format('Y-m-d') : '—';
             })
             ->editColumn('amount', function ($row) {
-                return number_format($row->amount, 0) . ' AED';
+                return '<span class="lz-amount">' . number_format((float) $row->amount, 2) . ' ' . e(get_currency()) . '</span>';
             })
             ->editColumn('date', function ($row) {
-                return $row->date ? \Carbon\Carbon::parse($row->date)->format('Y-m-d') : '';
+                return $row->date ? \Carbon\Carbon::parse($row->date)->format('Y-m-d') : '—';
             })
             ->editColumn('created_at', function ($row) {
-                return $row->created_at ? \Carbon\Carbon::parse($row->created_at)->format('Y-m-d H:i') : '';
+                return $row->created_at ? \Carbon\Carbon::parse($row->created_at)->format('Y-m-d H:i') : '—';
             })
             ->editColumn('receipt_image', function ($row) {
                 if ($row->receipt_image) {
-                    return '<img src="' . $row->receipt_image_url . '" alt="Receipt" class="img-thumbnail receipt-thumbnail" style="width: 50px; height: 50px; cursor: pointer;" data-bs-toggle="modal" data-bs-target="#receiptModal" data-receipt-url="' . $row->receipt_image_url . '">';
+                    return '<img src="' . e($row->receipt_image_url) . '" alt="Receipt" class="lz-receipt-thumb receipt-thumbnail" data-bs-toggle="modal" data-bs-target="#receiptModal" data-receipt-url="' . e($row->receipt_image_url) . '">';
                 }
-                return '<img src="https://via.placeholder.com/50x50" alt="No Receipt" class="img-thumbnail" style="width: 50px; height: 50px;">';
+                return '<span class="text-muted">—</span>';
+            })
+            ->editColumn('branch.name', function ($row) {
+                return e($row->branch?->name ?? '—');
             })
             ->editColumn('worker_description', function ($row) {
                 return \App\Helpers\MyHelper::truncateWithReadMore($row->worker_description ?? '');
@@ -59,27 +67,19 @@ class ExpensesProviderDataTable extends DataTable
             ->editColumn('notes', function ($row) {
                 return \App\Helpers\MyHelper::truncateWithReadMore($row->notes ?? '');
             })
-            ->rawColumns(['start_date', 'end_date', 'receipt_image', 'notes', 'action', 'worker_description'], true)
+            ->rawColumns(['expense_name', 'amount', 'receipt_image', 'notes', 'action', 'worker_description'], true)
             ->setRowId('id');
     }
 
     public function html(): HtmlBuilder
     {
-        $buttonClass = 'btn btn-sm mx-1 px-2';
+        $buttonClass = 'btn mx-1 px-3 py-2 btn-sm';
         $addRoute = route('center_user.expenses.create');
 
-          // Translation strings for the filter bar
-        $branchLabel     = __('field.branch');
-        $dateLabel       = __('field.date');
-        $expenseLabel    = __('field.expense_name');
-        $allBranches     = __('general.all_branches') ?: 'All Branches';
-        $allExpenses     = __('general.all_expenses') ?: 'All Expenses';
-        $clearText       = __('general.clear') ?: 'Clear';
-        $selectDatePlaceholder = __('field.select_date') ?: 'Select date';
-        $branches = Branch::query()->orderBy('id')->get();
-        $expenseNames = Expense::query()->distinct()->orderBy('expense_name')->pluck('expense_name');
-
-
+        $initCompleteJs = 'function () {';
+        $initCompleteJs .= 'var $lzAct=$(".lz-page-actions").first();if(!$lzAct.length)$lzAct=$(".dt-action-buttons");';
+        $initCompleteJs .= '$lzAct.append("<a href=\'' . $addRoute . '\' class=\"btn btn-luzori-primary btn-sm mx-1 px-3 py-2\">' . __('general.add_new') . ' <i class=\"ti ti-plus\"></i></a>");';
+        $initCompleteJs .= '}';
 
         return $this->builder()
             ->setTableId('expenses_providers-table')
@@ -91,27 +91,38 @@ class ExpensesProviderDataTable extends DataTable
                 'expense_name' => 'function () { return $("#nameFilter").val(); }',
             ])
             ->orderBy(0, 'desc')
-            ->responsive(true)
+            ->responsive([
+                'details' => [
+                    'type' => 'column',
+                    'target' => 0,
+                ],
+            ])
             ->dom('
-                <"card-header border-bottom p-3 d-flex flex-column flex-md-row justify-content-between align-items-center"
-                    <"head-label"><"dt-action-buttons d-flex flex-column flex-md-row gap-2"B>
+                <"card-header border-bottom p-3 d-flex justify-content-between align-items-center"
+                    <"head-label"><"dt-action-buttons"B>
                 >
-                <"d-flex justify-content-between align-items-center mx-0 row"
+                <"d-flex justify-content-between align-items-center mx-0 row px-1 pt-2"
                     <"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"fr>
                 >
                 <"table-responsive"t>
-                <"d-flex justify-content-between mx-0 row"
+                <"d-flex justify-content-between mx-0 row px-1 pt-2"
                     <"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>
                 >
             ')
             ->selectStyleSingle()
-            ->addAction(['printable' => false, 'exportable' => false, 'className' => 'dt-center', 'title' => __('general.actions')])
+            ->addAction([
+                'printable' => false,
+                'exportable' => false,
+                'responsivePriority' => 1,
+                'className' => 'dt-center lz-actions-col',
+                'title' => __('general.actions'),
+            ])
             ->buttons([
-                Button::make('colvis')->addClass($buttonClass . ' btn-warning')->text(__('general.column_visibility')),
+                Button::make('colvis')->addClass($buttonClass . ' btn-luzori-beige')->text(__('general.column_visibility')),
                 [
                     'extend' => 'collection',
-                    'text' => __('general.export'),  'className' => $buttonClass,
-                    'className' => $buttonClass . ' btn-secondary',
+                    'text' => __('general.export'),
+                    'className' => $buttonClass . ' btn-luzori-muted',
                     'buttons' => [
                         'excel',
                         'csv',
@@ -122,127 +133,32 @@ class ExpensesProviderDataTable extends DataTable
                 ],
             ])
             ->language($this->getDataTableLanguageUrl())
-            ->addTableClass('table table-bordered table-hover')
-            ->initComplete('function () {
-                $(".dt-action-buttons").append("<a href=' . $addRoute . ' class=\"btn btn-primary btn-sm mx-1 px-2\">' . __('general.add_new') . '<i class=\"ti ti-plus ms-1\"></i></a>");
-                
-                // Add filter controls
-                 var filterHtml = `
-                <div class="card mb-3">
-                    <div class="card-body p-3">
-                        <div class="row g-2 align-items-end">
-                            <div class="col-md-3">
-                                <label class="form-label small">' . $branchLabel . ':</label>
-                                <select id="branchFilter" class="form-select form-select-sm">
-                                    <option value="">' . $allBranches . '</option>
-                                    ' . $branches->map(function ($branch) {
-                                        return '<option value="' . $branch->id . '">' . e($branch->name) . '</option>';
-                                    })->implode('') . '
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label small">' . $dateLabel . ':</label>
-                                <input type="date" id="dateFilter" class="form-control form-control-sm" placeholder="' . $selectDatePlaceholder . '">
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label small">' . $expenseLabel . ':</label>
-                                <select id="nameFilter" class="form-select form-select-sm">
-                                    <option value="">' . $allExpenses . '</option>
-                                    ' . $expenseNames->map(function ($expenseName) {
-                                        return '<option value="' . e($expenseName) . '">' . e($expenseName) . '</option>';
-                                    })->implode('') . '
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <button type="button" id="clearFilters" class="btn btn-outline-secondary btn-sm">
-                                    <i class="ti ti-x"></i> ' . $clearText . '
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-                $(".dt-action-buttons").before(filterHtml);
-                
-                // Add receipt modal
-                var modalHtml = `
-                    <div class="modal fade" id="receiptModal" tabindex="-1" aria-labelledby="receiptModalLabel" aria-hidden="true">
-                        <div class="modal-dialog modal-xl">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title" id="receiptModalLabel">Receipt Image</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                </div>
-                                <div class="modal-body text-center">
-                                    <img id="receiptModalImage" src="" alt="Receipt" class="img-fluid" style="max-width: 80%; max-height: 80vh; object-fit: contain;">
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                $("body").append(modalHtml);
-                
-                // Store the table reference
-                var expensesTable = $("#expenses_providers-table").DataTable();
-                
-                // Filter change handlers
-                $("#branchFilter, #dateFilter, #nameFilter").on("change", function() {
-                    expensesTable.ajax.reload();
-                });
-                
-                // Receipt modal functionality
-                $(document).on(\'click\', \'.receipt-thumbnail\', function() {
-                    var receiptUrl = $(this).data(\'receipt-url\');
-                    $(\'#receiptModalImage\').attr(\'src\', receiptUrl);
-                });
-                
-                
-                // Clear all filters
-                $("#clearFilters").on("click", function() {
-                    // Reset filter inputs
-                    $("#branchFilter").val("");
-                    $("#dateFilter").val("");
-                    $("#nameFilter").val("");
-                    
-                    // Redraw table to apply cleared filters
-                    expensesTable.ajax.reload();
-                    
-                    // Show success message
-                    $(this).html("<i class=\"ti ti-check\"></i> Cleared!").removeClass("btn-outline-secondary").addClass("btn-success");
-                    
-                    // Reset button after 2 seconds
-                    setTimeout(function() {
-                        $("#clearFilters").html("<i class=\"ti ti-x\"></i> Clear").removeClass("btn-success").addClass("btn-outline-secondary");
-                    }, 2000);
-                });
-            }')
+            ->addTableClass('table table-hover')
+            ->initComplete($initCompleteJs)
             ->parameters([]);
     }
 
     public function getDataTableLanguageUrl()
     {
-        return app()->getLocale() == "ar" ?
-        asset('js/lang/ar_custom.json') :
-        "https://cdn.datatables.net/plug-ins/2.0.7/i18n/en-GB.json";
+        return app()->getLocale() == 'ar'
+            ? asset('js/lang/ar_custom.json')
+            : 'https://cdn.datatables.net/plug-ins/2.0.7/i18n/en-GB.json';
     }
 
     public function getColumns(): array
     {
         return [
-            Column::make('id')->searchable(true)->title('#'),
-            Column::make('expense_name')->searchable(true)->title(__('field.expense_name')),
-            Column::make('payee')->searchable(true)->title(__('field.payee')),
-            Column::make('date')->searchable(true)->title(__('field.date')),
-            Column::make('branch.name')->searchable(false)->title(__('field.branch')),
-            Column::make('start_date')->searchable(true)->title(__('field.start_date')),
-            Column::make('end_date')->searchable(true)->title(__('field.end_date')),
-            Column::computed('amount')->searchable(false)->title(__('field.amount')),
-            Column::computed('receipt_image')->searchable(false)->title(__('field.receipt')),
-            Column::computed('notes')->searchable(false)->title(__('field.notes')),
-            Column::make('created_at')->searchable(true)->title(__('field.created_at')),
+            Column::make('id')->searchable(true)->title('#')->responsivePriority(1)->addClass('all'),
+            Column::make('expense_name')->searchable(true)->title(__('field.expense_name'))->responsivePriority(1)->addClass('all'),
+            Column::make('payee')->searchable(true)->title(__('field.payee'))->responsivePriority(2)->addClass('all'),
+            Column::make('date')->searchable(true)->title(__('field.date'))->responsivePriority(2)->addClass('all'),
+            Column::make('branch.name')->searchable(false)->title(__('field.branch'))->responsivePriority(2)->addClass('all'),
+            Column::make('start_date')->searchable(true)->title(__('field.start_date'))->addClass('none'),
+            Column::make('end_date')->searchable(true)->title(__('field.end_date'))->addClass('none'),
+            Column::computed('amount')->searchable(false)->title(__('field.amount'))->responsivePriority(1)->addClass('all'),
+            Column::computed('receipt_image')->searchable(false)->title(__('field.receipt'))->responsivePriority(3)->addClass('all'),
+            Column::computed('notes')->searchable(false)->title(__('field.notes'))->addClass('none'),
+            Column::make('created_at')->searchable(true)->title(__('field.created_at'))->addClass('none'),
         ];
     }
 

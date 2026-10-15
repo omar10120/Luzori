@@ -85,17 +85,6 @@
             }
 
             // Double-click row to toggle details; arrow still works on single click
-            $(document).on('dblclick', '#branches-table tbody tr', function (e) {
-                const $tr = $(this);
-                if ($tr.hasClass('child')) return;
-                if ($(e.target).closest('.lz-action-icons, a, button, input, label, .switch, .dropdown, .dropdown-menu').length) {
-                    return;
-                }
-                const $control = $tr.children('td.dtr-control').first();
-                if ($control.length) {
-                    $control.trigger('click');
-                }
-            });
         });
     </script>
 @endsection

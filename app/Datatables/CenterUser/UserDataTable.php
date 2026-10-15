@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Datatables\CenterUser;
 
 use App\Enums\DeleteActionEnum;
@@ -29,19 +30,25 @@ class UserDataTable extends DataTable
                     'operation' => DeleteActionEnum::FORCE_DELETE->value,
                     'with_trashed' => 1,
                 ];
-                $html = view()->make('_partials.center_actions', compact('id', 'route', 'options', 'model'))->render();
-                return $html;
+                return view()->make('_partials.center_action_icons', compact('id', 'route', 'options', 'model'))->render();
             })
             ->editColumn('first_name', function ($row) {
-                return $row->name ?? '-';
+                return '<span class="lz-user-name">' . e($row->name ?? '—') . '</span>';
             })
             ->editColumn('phone', function ($row) {
-                return $row->country_code . $row->phone;
+                $phone = trim(($row->country_code ?? '') . ($row->phone ?? ''));
+                return e($phone !== '' ? $phone : '—');
+            })
+            ->editColumn('email', function ($row) {
+                return e($row->email ?: '—');
+            })
+            ->editColumn('wallet', function ($row) {
+                return '<span class="lz-wallet-num">' . e($row->wallet ?? 0) . '</span>';
             })
             ->editColumn('status', function ($row) {
                 $checked = $row->deleted_at ? '' : 'checked';
                 $operation = $row->deleted_at ? DeleteActionEnum::RESTORE_DELETED->value : DeleteActionEnum::SOFT_DELETE->value;
-                return '<label class="switch switch-square">
+                return '<label class="switch switch-square" onclick="event.stopPropagation()">
                             <input onChange="changeStatus(\'' . $this->model . '\',\'' . $row->id . '\',\'' . $operation . '\')"
                                 type="checkbox" class="switch-input"' . $checked . '>
                             <span class="switch-toggle-slider">
@@ -52,34 +59,34 @@ class UserDataTable extends DataTable
             })
             ->editColumn('packages', function ($row) {
                 $count = $row->packages->where('status', 'active')->count();
-                return '<span class="badge bg-info">' . $count . ' ' . __('locale.packages') . '</span>';
+                return '<span class="lz-pkg-badge">' . (int) $count . ' ' . e(__('locale.packages')) . '</span>';
             })
             ->editColumn('is_default', function ($row) {
-                return $row->is_default ? '<span class="badge bg-success">' . __('field.yes') . '</span>' : '<span class="badge bg-danger">' . __('field.no') . '</span>';
+                return $row->is_default
+                    ? '<span class="lz-yes-badge">' . e(__('field.yes')) . '</span>'
+                    : '<span class="lz-no-badge">' . e(__('field.no')) . '</span>';
             })
-            ->rawColumns(['status', 'first_name', 'packages', 'is_default'], true)
+            ->rawColumns(['action', 'status', 'first_name', 'packages', 'is_default', 'wallet'], true)
             ->setRowId('id');
     }
 
     public function query(User $model): QueryBuilder
     {
-        return $model->query()->withTrashed()->with(['media', 'packages' => function($q) {
+        return $model->query()->withTrashed()->with(['media', 'packages' => function ($q) {
             $q->where('status', 'active');
         }])->orderBy($this->plural . '.id', 'DESC');
     }
 
     public function html(): HtmlBuilder
     {
-        $buttonClass = 'btn mx-1 mx-md-2 px-2 px-md-4 py-1 py-md-2 btn-sm';
+        $buttonClass = 'btn mx-1 px-3 py-2 btn-sm';
         $addRoute = route('center_user.' . $this->plural . '.create');
-
-        // Check if user has permission to create users
         $canCreate = auth('center_user')->check() && auth('center_user')->user()->can('CREATE_USERS', 'center_api');
-        
-        // Build initComplete JavaScript - conditionally include add button
+
         $initCompleteJs = 'function () {';
+        $initCompleteJs .= 'var $lzAct=$(".lz-page-actions").first();if(!$lzAct.length)$lzAct=$(".dt-action-buttons");';
         if ($canCreate) {
-            $initCompleteJs .= '$(".dt-action-buttons").append("<a href=\'' . $addRoute . '\' class=\"btn btn-primary btn-sm mx-1 mx-md-2 px-2 px-md-3 py-1 py-md-2\">' . __('general.add_new') . '<i class=\"ti ti-plus\"></i></a>");';
+            $initCompleteJs .= '$lzAct.append("<a href=\'' . $addRoute . '\' class=\"btn btn-luzori-primary btn-sm mx-1 px-3 py-2\">' . __('general.add_new') . ' <i class=\"ti ti-plus\"></i></a>");';
         }
         $initCompleteJs .= '}';
 
@@ -89,26 +96,38 @@ class UserDataTable extends DataTable
             ->columns($this->getColumns())
             ->minifiedAjax()
             ->orderBy(1)
-            ->responsive(true)
+            ->responsive([
+                'details' => [
+                    'type' => 'column',
+                    'target' => 0,
+                ],
+            ])
             ->dom('
                 <"card-header border-bottom p-3 d-flex justify-content-between align-items-center"
                     <"head-label"><"dt-action-buttons"B>
                 >
-                <"d-flex justify-content-between align-items-center mx-0 row"
+                <"d-flex justify-content-between align-items-center mx-0 row px-1 pt-2"
                     <"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"fr>
                 >
                 <"table-responsive"t>
-                <"d-flex justify-content-between mx-0 row"
+                <"d-flex justify-content-between mx-0 row px-1 pt-2"
                     <"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>
                 >
             ')
             ->selectStyleSingle()
-            ->addAction(['printable' => false, 'exportable' => false, 'className' => 'dt-center', 'title' => __('general.actions')])
+            ->addAction([
+                'printable' => false,
+                'exportable' => false,
+                'responsivePriority' => 1,
+                'className' => 'dt-center lz-actions-col',
+                'title' => __('general.actions'),
+            ])
             ->buttons([
-                Button::make('colvis')->addClass($buttonClass . ' btn-warning')->text(__('general.column_visibility')),
+                Button::make('colvis')->addClass($buttonClass . ' btn-luzori-beige')->text(__('general.column_visibility')),
                 [
                     'extend' => 'collection',
-                    'text' => __('general.export'),  'className' => $buttonClass,
+                    'text' => __('general.export'),
+                    'className' => $buttonClass . ' btn-luzori-muted',
                     'buttons' => [
                         'excel',
                         'csv',
@@ -119,30 +138,30 @@ class UserDataTable extends DataTable
                 ],
             ])
             ->language($this->getDataTableLanguageUrl())
-            ->addTableClass('table table-bordered table-hover')
+            ->addTableClass('table table-hover')
             ->initComplete($initCompleteJs)
             ->parameters([]);
     }
 
     public function getDataTableLanguageUrl()
     {
-        return app()->getLocale() == "ar" ?
-        asset('js/lang/ar_custom.json') :
-        "https://cdn.datatables.net/plug-ins/2.0.7/i18n/en-GB.json";
+        return app()->getLocale() == 'ar'
+            ? asset('js/lang/ar_custom.json')
+            : 'https://cdn.datatables.net/plug-ins/2.0.7/i18n/en-GB.json';
     }
 
     public function getColumns(): array
     {
         return [
-            Column::make('id')->searchable(true)->title('#'),
-            Column::computed('first_name')->searchable(true)->title(__('field.name')),
-            Column::make('email')->searchable(true)->title(__('field.email')),
-            Column::computed('phone')->searchable(true)->title(__('field.phone')),
-            Column::make('wallet')->searchable(true)->title(__('field.wallet')),
-            Column::computed('packages')->searchable(false)->title(__('locale.packages')),
-            Column::computed('is_default')->searchable(false)->title(__('field.is_default')),
-            Column::computed('status')->searchable(false)->title(__('field.status')),
-            Column::make('created_at')->searchable(true)->title(__('field.created_at')),
+            Column::make('id')->searchable(true)->title('#')->responsivePriority(1)->addClass('all'),
+            Column::computed('first_name')->searchable(true)->title(__('field.name'))->responsivePriority(1)->addClass('all'),
+            Column::make('email')->searchable(true)->title(__('field.email'))->responsivePriority(2)->addClass('all'),
+            Column::computed('phone')->searchable(true)->title(__('field.phone'))->responsivePriority(2)->addClass('all'),
+            Column::make('wallet')->searchable(true)->title(__('field.wallet'))->responsivePriority(2)->addClass('all'),
+            Column::computed('packages')->searchable(false)->title(__('locale.packages'))->responsivePriority(2)->addClass('all'),
+            Column::computed('is_default')->searchable(false)->title(__('field.is_default'))->responsivePriority(3)->addClass('all'),
+            Column::computed('status')->searchable(false)->title(__('field.status'))->addClass('none'),
+            Column::make('created_at')->searchable(true)->title(__('field.created_at'))->addClass('none'),
         ];
     }
 

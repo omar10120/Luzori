@@ -10,3 +10,5 @@
 
 <script type="module" src="https://cdn.datatables.net/buttons/2.3.4/js/buttons.colVis.min.js"></script>
 <script type="module" src="https://cdn.datatables.net/plug-ins/2.0.3/dataRender/ellipsis.js"></script>
+
+@include('CenterUser.Components.luzori-row-details')

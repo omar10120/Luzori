@@ -152,8 +152,10 @@ class ExpensesController extends Controller
     public function providers(ExpensesProviderDataTable $dataTable)
     {
         $title = __('locale.expenses_providers');
-        
-        return $dataTable->render("CenterUser.SubViews.core-table", compact('title'));
+        $branches = Branch::query()->orderBy('id')->get();
+        $expenseNames = Expense::query()->distinct()->orderBy('expense_name')->pluck('expense_name');
+
+        return $dataTable->render('CenterUser.SubViews.Expenses.list', compact('title', 'branches', 'expenseNames'));
     }
 
     /**

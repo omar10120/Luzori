@@ -23,7 +23,7 @@ class InventoryMovementDataTable extends DataTable
                 $url = route('center_user.inventorymovements.show', ['productId' => $item->id]);
                 return '<div class="lz-action-icons" onclick="event.stopPropagation()">'
                     . '<a class="lz-action-btn" href="' . $url . '" title="' . e(__('general.show')) . '">'
-                    . '<i class="ti ti-eye"></i></a></div>';
+                    . '<i class="ti ti-file-info"></i></a></div>';
             })
             ->editColumn('select', function ($row) {
                 return '<input type="checkbox" class="form-check-input product-select" value="' . $row->id . '" aria-label="Select product" onclick="event.stopPropagation()">';

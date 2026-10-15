@@ -14,7 +14,7 @@ class SuppliersController extends Controller
     public function index(SuppliersDataTable $dataTable)
     {
         $title = __('locale.suppliers');
-        return $dataTable->render('CenterUser.SubViews.core-table', compact('title'));
+        return $dataTable->render('CenterUser.SubViews.Suppliers.list', compact('title'));
     }
 
     public function create(Request $request)

@@ -95,30 +95,6 @@
             }
 
             // Double-click row to toggle details; single-click arrow still works
-            $(document).on('dblclick', '#services-table tbody tr', function (e) {
-                const $tr = $(this);
-                if ($tr.hasClass('child')) return;
-                if ($(e.target).closest('.lz-action-icons, a, button, input, label, .switch, .dropdown, .dropdown-menu').length) {
-                    return;
-                }
-
-                const $control = $tr.children('td.dtr-control').first();
-                if ($control.length) {
-                    $control.trigger('click');
-                    return;
-                }
-
-                // Fallback if control class is missing
-                const table = $('#services-table').DataTable();
-                const row = table.row($tr);
-                if (!row.node()) return;
-                if (row.child.isShown()) {
-                    row.child.hide();
-                    $tr.removeClass('dtr-expanded parent');
-                } else if (table.responsive && typeof table.responsive.hasHidden === 'function' && table.responsive.hasHidden()) {
-                    $tr.children('td').first().trigger('click');
-                }
-            });
         });
     </script>
 @endsection
