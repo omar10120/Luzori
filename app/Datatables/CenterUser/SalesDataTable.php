@@ -88,10 +88,14 @@ class SalesDataTable extends DataTable
                     'show' => true,
                     'print' => true,
                     'row_details' => false,
-                    'sale_panel' => $this->salePanelAttr($this->salePanelPayload($item)),
                     'operation' => DeleteActionEnum::FORCE_DELETE->value,
                     'with_trashed' => 1,
                 ];
+                try {
+                    $options['sale_panel_b64'] = $this->salePanelB64($item);
+                } catch (\Throwable $e) {
+                    $options['row_details'] = true;
+                }
                 if ($canDelete) {
                     $options['sale_otp_delete'] = true;
                 }
@@ -110,69 +114,119 @@ class SalesDataTable extends DataTable
             ->editColumn('branch.translation.name', function ($row) {
                 return $row->branch?->translation?->name ?? '-';
             })
-            ->addColumn('services', function ($row) {
-                $panel = $this->salePanelPayload($row);
-                $count = count($panel['bookings'] ?? []);
+            ->editColumn('services', function ($row) {
+                $serviceDetails = [];
+                $count = 0;
 
-                if ($count === 0) {
+                foreach ($row->saleItems as $saleItem) {
+                    if ($saleItem->item_type === 'booking' && $saleItem->itemable) {
+                        $booking = $saleItem->itemable;
+                        foreach ($booking->details as $detail) {
+                            $count++;
+                            $serviceDetails[] = [
+                                'service' => $detail->service?->translation?->name ?? $detail->service?->name ?? 'N/A',
+                                'worker' => $detail->worker?->name ?? '-',
+                                'date' => (string) ($detail->_date ?? $booking->booking_date ?? '-'),
+                                'time' => ($detail->from_time ?? '') . '-' . ($detail->to_time ?? ''),
+                                'price' => number_format($detail->price ?? 0, 2) . ' ' . trim(get_currency()),
+                            ];
+                        }
+                    }
+                }
+
+                if (empty($serviceDetails)) {
                     return '-';
                 }
 
                 $html = '<span class="lz-sale-badge is-booking">' . $count . ' ' . __('locale.bookings') . '</span>';
-                $html .= ' <button type="button" class="btn btn-sm lz-sale-detail-btn ms-1 view-sale-side-details" data-focus="bookings" data-sale-panel="' . $this->salePanelAttr($panel) . '">';
+                $html .= ' <button type="button" class="btn btn-sm lz-sale-detail-btn ms-1 view-sale-side-details" data-focus="bookings" data-sale-id="' . $row->id . '">';
                 $html .= '<i class="ti ti-eye me-1"></i>' . __('general.view_details');
                 $html .= '</button>';
 
                 return $html;
             })
             ->addColumn('products', function ($row) {
-                $panel = $this->salePanelPayload($row);
-                $count = count($panel['products'] ?? []);
+                $productDetails = [];
+                $count = 0;
 
-                if ($count === 0) {
+                foreach ($row->saleItems as $saleItem) {
+                    if ($saleItem->item_type === 'buy_product' && $saleItem->itemable) {
+                        $buyProduct = $saleItem->itemable;
+                        foreach ($buyProduct->details as $detail) {
+                            $count++;
+                            $productDetails[] = [
+                                'product' => $detail->product?->translation?->name ?? $detail->product?->name ?? 'N/A',
+                                'price' => number_format($detail->price ?? 0, 2) . ' ' . trim(get_currency()),
+                            ];
+                        }
+                    }
+                }
+
+                if (empty($productDetails)) {
                     return '-';
                 }
 
                 $html = '<span class="lz-sale-badge is-product">' . $count . ' ' . __('locale.products') . '</span>';
-                $html .= ' <button type="button" class="btn btn-sm lz-sale-detail-btn ms-1 view-sale-side-details" data-focus="products" data-sale-panel="' . $this->salePanelAttr($panel) . '">';
+                $html .= ' <button type="button" class="btn btn-sm lz-sale-detail-btn ms-1 view-sale-side-details" data-focus="products" data-sale-id="' . $row->id . '">';
                 $html .= '<i class="ti ti-eye me-1"></i>' . __('general.view_details');
                 $html .= '</button>';
 
                 return $html;
             })
             ->addColumn('packages', function ($row) {
-                $panel = $this->salePanelPayload($row);
-                $count = count($panel['packages'] ?? []);
+                $packageDetails = [];
+                $count = 0;
 
-                if ($count === 0) {
+                foreach ($row->saleItems as $saleItem) {
+                    if ($saleItem->item_type === 'user_package' && $saleItem->itemable) {
+                        $count++;
+                        $userPackage = $saleItem->itemable;
+                        $packageDetails[] = [
+                            'package' => $userPackage->package?->translation?->name ?? $userPackage->package?->name ?? 'N/A',
+                            'price' => number_format($userPackage->price ?? 0, 2) . ' ' . trim(get_currency()),
+                        ];
+                    }
+                }
+
+                if (empty($packageDetails)) {
                     return '-';
                 }
 
                 $packageLabel = $count === 1 ? __('locale.package') : __('locale.packages');
                 $html = '<span class="lz-sale-badge is-package">' . $count . ' ' . $packageLabel . '</span>';
-                $html .= ' <button type="button" class="btn btn-sm lz-sale-detail-btn ms-1 view-sale-side-details" data-focus="packages" data-sale-panel="' . $this->salePanelAttr($panel) . '">';
+                $html .= ' <button type="button" class="btn btn-sm lz-sale-detail-btn ms-1 view-sale-side-details" data-focus="packages" data-sale-id="' . $row->id . '">';
                 $html .= '<i class="ti ti-eye me-1"></i>' . __('general.view_details');
                 $html .= '</button>';
 
                 return $html;
             })
             ->addColumn('coupons', function ($row) {
-                $panel = $this->salePanelPayload($row);
-                $count = count($panel['coupons'] ?? []);
+                $couponDetails = [];
+                $count = 0;
 
-                if ($count === 0) {
+                foreach ($row->saleItems as $saleItem) {
+                    if ($saleItem->item_type === 'user_wallet' && $saleItem->itemable) {
+                        $count++;
+                        $userWallet = $saleItem->itemable;
+                        $couponDetails[] = [
+                            'code' => $userWallet->wallet?->code ?? '-',
+                            'amount' => number_format($userWallet->amount ?? 0, 2) . ' ' . trim(get_currency()),
+                            'type' => $userWallet->wallet_type ?? '-',
+                            'user' => $userWallet->user?->name ?? '-',
+                        ];
+                    }
+                }
+
+                if (empty($couponDetails)) {
                     return '-';
                 }
 
                 $html = '<span class="lz-sale-badge is-coupon">' . $count . ' ' . __('field.coupons') . '</span>';
-                $html .= ' <button type="button" class="btn btn-sm lz-sale-detail-btn ms-1 view-sale-side-details" data-focus="coupons" data-sale-panel="' . $this->salePanelAttr($panel) . '">';
+                $html .= ' <button type="button" class="btn btn-sm lz-sale-detail-btn ms-1 view-sale-side-details" data-focus="coupons" data-sale-id="' . $row->id . '">';
                 $html .= '<i class="ti ti-eye me-1"></i>' . __('general.view_details');
                 $html .= '</button>';
 
                 return $html;
-            })
-            ->editColumn('client.name', function ($row) {
-                return $row->client?->name ?? __('general.walk_in');
             })
             ->addColumn('client_mobile', function ($row) {
                 if (!$row->client) {
@@ -547,10 +601,9 @@ class SalesDataTable extends DataTable
     }
 
     /**
-     * Compact sale summary for the right-side details drawer.
-     * Prefer direct sale relations (bookings / buyProducts) — same data the table already eager-loads.
+     * Base64 JSON for the right-side drawer (safe inside DataTables Ajax HTML).
      */
-    protected function salePanelPayload($row): array
+    protected function salePanelB64($row): string
     {
         $saleId = (int) $row->id;
         if (isset($this->salePanelCache[$saleId])) {
@@ -565,135 +618,86 @@ class SalesDataTable extends DataTable
         $notes = [];
         $paymentMethods = [];
 
-        // Bookings via sale.bookings (reliable; already eager-loaded)
-        foreach ($row->bookings ?? [] as $booking) {
-            if (!empty($booking->notes)) {
-                $notes[] = trim((string) $booking->notes);
-            }
-
-            $methods = $booking->payment_methods ?? null;
-            if (($booking->payment_type ?? null) === 'multiple' && is_array($methods)) {
-                foreach ($methods as $method) {
-                    $name = is_array($method) ? ($method['method'] ?? null) : null;
-                    if ($name && !in_array($name, $paymentMethods, true)) {
-                        $paymentMethods[] = $name;
-                    }
+        foreach ($row->saleItems as $saleItem) {
+            if ($saleItem->item_type === 'booking' && $saleItem->itemable) {
+                $booking = $saleItem->itemable;
+                if (!empty($booking->notes)) {
+                    $notes[] = trim((string) $booking->notes);
                 }
-            } elseif (!empty($booking->payment_type) && !in_array($booking->payment_type, $paymentMethods, true)) {
-                $paymentMethods[] = $booking->payment_type;
-            }
-
-            foreach ($booking->details ?? [] as $detail) {
-                $bookings[] = [
-                    'service' => $detail->service?->translation?->name ?? $detail->service?->name ?? 'N/A',
-                    'worker' => $detail->worker?->name ?? '-',
-                    'date' => $detail->_date ?? $booking->booking_date ?? '-',
-                    'time' => trim(($detail->from_time ?? '') . '-' . ($detail->to_time ?? ''), '-'),
-                    'price' => number_format((float) ($detail->price ?? 0), 2) . ' ' . $currency,
-                ];
-            }
-        }
-
-        // Products via sale.buyProducts
-        foreach ($row->buyProducts ?? [] as $buyProduct) {
-            $type = $buyProduct->payment_type ?? null;
-            if ($type && !in_array($type, $paymentMethods, true)) {
-                $paymentMethods[] = $type;
-            }
-            foreach ($buyProduct->details ?? [] as $detail) {
-                $products[] = [
-                    'product' => $detail->product?->translation?->name ?? $detail->product?->name ?? 'N/A',
-                    'price' => number_format((float) ($detail->price ?? 0), 2) . ' ' . $currency,
-                ];
-            }
-        }
-
-        // Packages / coupons still come from saleItems morph
-        foreach ($row->saleItems ?? [] as $saleItem) {
-            if (!$saleItem->itemable) {
-                continue;
-            }
-
-            if ($saleItem->item_type === 'user_package') {
+                if (($booking->payment_type ?? null) === 'multiple' && is_array($booking->payment_methods ?? null)) {
+                    foreach ($booking->payment_methods as $method) {
+                        $name = is_array($method) ? ($method['method'] ?? null) : null;
+                        if ($name && !in_array($name, $paymentMethods, true)) {
+                            $paymentMethods[] = (string) $name;
+                        }
+                    }
+                } elseif (!empty($booking->payment_type) && !in_array($booking->payment_type, $paymentMethods, true)) {
+                    $paymentMethods[] = (string) $booking->payment_type;
+                }
+                foreach ($booking->details as $detail) {
+                    $bookings[] = [
+                        'service' => (string) ($detail->service?->translation?->name ?? $detail->service?->name ?? 'N/A'),
+                        'worker' => (string) ($detail->worker?->name ?? '-'),
+                        'date' => (string) ($detail->_date ?? $booking->booking_date ?? '-'),
+                        'time' => (string) (($detail->from_time ?? '') . '-' . ($detail->to_time ?? '')),
+                        'price' => number_format($detail->price ?? 0, 2) . ' ' . $currency,
+                    ];
+                }
+            } elseif ($saleItem->item_type === 'buy_product' && $saleItem->itemable) {
+                $buyProduct = $saleItem->itemable;
+                if (!empty($buyProduct->payment_type) && !in_array($buyProduct->payment_type, $paymentMethods, true)) {
+                    $paymentMethods[] = (string) $buyProduct->payment_type;
+                }
+                foreach ($buyProduct->details as $detail) {
+                    $products[] = [
+                        'product' => (string) ($detail->product?->translation?->name ?? $detail->product?->name ?? 'N/A'),
+                        'price' => number_format($detail->price ?? 0, 2) . ' ' . $currency,
+                    ];
+                }
+            } elseif ($saleItem->item_type === 'user_package' && $saleItem->itemable) {
                 $userPackage = $saleItem->itemable;
                 $packages[] = [
-                    'package' => $userPackage->package?->translation?->name ?? $userPackage->package?->name ?? 'N/A',
-                    'price' => number_format((float) ($userPackage->price ?? 0), 2) . ' ' . $currency,
+                    'package' => (string) ($userPackage->package?->translation?->name ?? $userPackage->package?->name ?? 'N/A'),
+                    'price' => number_format($userPackage->price ?? 0, 2) . ' ' . $currency,
                 ];
-            } elseif ($saleItem->item_type === 'user_wallet') {
+            } elseif ($saleItem->item_type === 'user_wallet' && $saleItem->itemable) {
                 $userWallet = $saleItem->itemable;
-                $type = $userWallet->wallet_type ?? null;
-                if ($type && !in_array($type, $paymentMethods, true)) {
-                    $paymentMethods[] = $type;
+                if (!empty($userWallet->wallet_type) && !in_array($userWallet->wallet_type, $paymentMethods, true)) {
+                    $paymentMethods[] = (string) $userWallet->wallet_type;
                 }
                 $coupons[] = [
-                    'code' => $userWallet->wallet?->code ?? '-',
-                    'amount' => number_format((float) ($userWallet->amount ?? 0), 2) . ' ' . $currency,
-                    'type' => $userWallet->wallet_type ?? '-',
-                    'user' => $userWallet->user?->name ?? '-',
+                    'code' => (string) ($userWallet->wallet?->code ?? '-'),
+                    'amount' => number_format($userWallet->amount ?? 0, 2) . ' ' . $currency,
+                    'type' => (string) ($userWallet->wallet_type ?? '-'),
+                    'user' => (string) ($userWallet->user?->name ?? '-'),
                 ];
-            } elseif ($saleItem->item_type === 'booking' && empty($bookings) && $saleItem->itemable) {
-                // Fallback if bookings relation empty but saleItems present
-                $booking = $saleItem->itemable;
-                foreach ($booking->details ?? [] as $detail) {
-                    $bookings[] = [
-                        'service' => $detail->service?->translation?->name ?? $detail->service?->name ?? 'N/A',
-                        'worker' => $detail->worker?->name ?? '-',
-                        'date' => $detail->_date ?? $booking->booking_date ?? '-',
-                        'time' => trim(($detail->from_time ?? '') . '-' . ($detail->to_time ?? ''), '-'),
-                        'price' => number_format((float) ($detail->price ?? 0), 2) . ' ' . $currency,
-                    ];
-                }
-            } elseif ($saleItem->item_type === 'buy_product' && empty($products) && $saleItem->itemable) {
-                $buyProduct = $saleItem->itemable;
-                foreach ($buyProduct->details ?? [] as $detail) {
-                    $products[] = [
-                        'product' => $detail->product?->translation?->name ?? $detail->product?->name ?? 'N/A',
-                        'price' => number_format((float) ($detail->price ?? 0), 2) . ' ' . $currency,
-                    ];
-                }
             }
         }
 
         $statusLabel = '-';
         $statusTone = 'secondary';
-        $booking = optional($row->bookings)->first();
+        $booking = $row->bookings->first();
         if ($booking) {
-            $firstDetail = optional($booking->details)->first();
+            $firstDetail = $booking->details->first();
             $status = $firstDetail?->status ?? 'confirmed';
             $source = $firstDetail?->booking_source ?? 'inside_booking';
-
             if ($source !== 'outside_booking') {
                 $deletedStatus = $booking->deleted_at ? 'cancelled' : 'confirmed';
-                $statusLabel = __('field.booking_status_' . $deletedStatus);
+                $statusLabel = (string) __('field.booking_status_' . $deletedStatus);
                 $statusTone = $booking->deleted_at ? 'danger' : 'success';
             } else {
-                $statusLabel = __('field.booking_status_' . $status);
-                $map = [
-                    'pending' => 'warning',
-                    'confirmed' => 'success',
-                    'rejected' => 'danger',
-                ];
-                $statusTone = $map[$status] ?? 'secondary';
+                $statusLabel = (string) __('field.booking_status_' . $status);
+                $statusTone = ['pending' => 'warning', 'confirmed' => 'success', 'rejected' => 'danger'][$status] ?? 'secondary';
             }
-        }
-
-        $notes = array_values(array_unique(array_filter($notes)));
-
-        $showUrl = url('/center_user/sales/show/' . $saleId);
-        try {
-            $showUrl = route('center_user.sales.show', $saleId);
-        } catch (\Throwable $e) {
-            // keep fallback url
         }
 
         $payload = [
             'id' => $saleId,
             'ref' => '#' . $saleId,
-            'show_url' => $showUrl,
-            'branch' => $row->branch?->translation?->name ?? '-',
-            'client' => $row->client?->name ?? __('general.walk_in'),
-            'phone' => $row->client?->full_phone ?? $row->client?->phone ?? '-',
+            'show_url' => url('/center_user/sales/show/' . $saleId),
+            'branch' => (string) ($row->branch?->translation?->name ?? '-'),
+            'client' => (string) ($row->client?->name ?? __('general.walk_in')),
+            'phone' => (string) ($row->client?->full_phone ?? $row->client?->phone ?? '-'),
             'payment' => empty($paymentMethods) ? '-' : implode(', ', $paymentMethods),
             'created_at' => $row->created_at ? $row->created_at->format('Y-m-d H:i') : '-',
             'status_label' => $statusLabel,
@@ -703,25 +707,22 @@ class SalesDataTable extends DataTable
             'products' => $products,
             'packages' => $packages,
             'coupons' => $coupons,
-            'notes' => implode("\n", $notes),
+            'notes' => implode("\n", array_values(array_unique(array_filter($notes)))),
         ];
 
-        return $this->salePanelCache[$saleId] = $payload;
-    }
-
-    protected function salePanelAttr(array $panel): string
-    {
-        $flags = JSON_UNESCAPED_UNICODE;
-        if (defined('JSON_INVALID_UTF8_SUBSTITUTE')) {
-            $flags |= JSON_INVALID_UTF8_SUBSTITUTE;
+        try {
+            $payload['show_url'] = route('center_user.sales.show', $saleId);
+        } catch (\Throwable $e) {
+            // keep url() fallback
         }
 
-        $json = json_encode($panel, $flags);
+        // Default json_encode escapes unicode (\uXXXX) so base64 stays ASCII-safe for DataTables HTML.
+        $json = json_encode($payload);
         if ($json === false) {
-            $json = '{}';
+            $json = '{"id":' . $saleId . ',"ref":"#' . $saleId . '","bookings":[],"products":[],"packages":[],"coupons":[],"notes":""}';
         }
 
-        return e($json);
+        return $this->salePanelCache[$saleId] = base64_encode($json);
     }
 
     public function getColumns(): array

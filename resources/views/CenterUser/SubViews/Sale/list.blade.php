@@ -349,10 +349,16 @@
             }
 
             function parsePanel(btn) {
-                var raw = btn.getAttribute('data-sale-panel');
-                if (!raw) return null;
+                var b64 = btn.getAttribute('data-sale-panel-b64');
+                if (!b64) {
+                    var tr = btn.closest('tr');
+                    if (tr && tr.classList.contains('child')) tr = tr.previousElementSibling;
+                    var eye = tr ? tr.querySelector('.view-sale-side-details[data-sale-panel-b64]') : null;
+                    if (eye) b64 = eye.getAttribute('data-sale-panel-b64');
+                }
+                if (!b64) return null;
                 try {
-                    return typeof raw === 'string' ? JSON.parse(raw) : raw;
+                    return JSON.parse(atob(b64));
                 } catch (e) {
                     return null;
                 }

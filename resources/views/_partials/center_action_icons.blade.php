@@ -1,8 +1,8 @@
 <div class="lz-action-icons" onclick="event.stopPropagation()">
-    @isset($options['sale_panel'])
+    @isset($options['sale_panel_b64'])
         <a href="javascript:void(0)" class="lz-action-btn view-sale-side-details"
             title="{{ __('general.view_details') }}"
-            data-sale-panel="{!! $options['sale_panel'] !!}"
+            data-sale-panel-b64="{{ $options['sale_panel_b64'] }}"
             onclick="event.preventDefault(); event.stopPropagation();">
             <i class="ti ti-eye"></i>
         </a>
