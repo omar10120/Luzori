@@ -240,13 +240,41 @@
         .lz-sale-drawer-section-title {
             display: flex;
             align-items: center;
+            flex-wrap: wrap;
             gap: 0.45rem;
             font-size: 0.84rem;
             font-weight: 700;
             color: #002b26;
             margin-bottom: 0.55rem;
         }
+        .lz-sale-drawer-section-title > span { flex: 1 1 auto; min-width: 0; }
         .lz-sale-drawer-section-title i { color: #9a6923; }
+        .lz-sale-drawer-section-title .lz-sale-detail-btn {
+            margin-inline-start: auto;
+            flex: 0 0 auto;
+        }
+        .lz-drawer-section-extra {
+            margin-top: 0.55rem;
+            padding: 0.55rem;
+            border-radius: 10px;
+            background: #faf7f2;
+            border: 1px solid #efe6d8;
+        }
+        .lz-drawer-section-extra .table {
+            margin: 0;
+            font-size: 0.78rem;
+        }
+        .lz-drawer-section-extra .table th {
+            color: #7a6a55;
+            font-weight: 700;
+            white-space: nowrap;
+            border-color: #efe6d8;
+        }
+        .lz-drawer-section-extra .table td {
+            color: #002b26;
+            border-color: #efe6d8;
+            vertical-align: middle;
+        }
         .lz-sale-drawer-item {
             display: flex;
             align-items: flex-start;
@@ -461,8 +489,10 @@
                 package: @json(__('field.package')),
                 code: @json(__('field.code')),
                 amount: @json(__('field.amount')),
-                type: @json(__('field.type'))
+                type: @json(__('field.type')),
+                viewDetails: @json(__('general.view_details'))
             };
+            var currentPanelData = null;
 
             function esc(str) {
                 return String(str == null ? '' : str)
@@ -554,13 +584,66 @@
                     '</li>';
             }
 
-            function section(icon, title, innerHtml, sectionKey) {
-                var focusClass = '';
+            function section(icon, title, innerHtml, sectionKey, items) {
                 var keyAttr = sectionKey ? (' data-lz-section="' + esc(sectionKey) + '"') : '';
-                return '<div class="lz-sale-drawer-section' + focusClass + '"' + keyAttr + '>' +
-                    '<div class="lz-sale-drawer-section-title"><i class="ti ' + icon + '"></i><span>' + esc(title) + '</span></div>' +
-                    innerHtml +
+                var detailBtn = '';
+                if (sectionKey && sectionKey !== 'notes' && items && items.length) {
+                    detailBtn = '<button type="button" class="btn btn-sm lz-sale-detail-btn lz-drawer-section-details" data-section="' + esc(sectionKey) + '">' +
+                        '<i class="ti ti-eye me-1"></i>' + esc(labels.viewDetails) +
+                        '</button>';
+                }
+                return '<div class="lz-sale-drawer-section"' + keyAttr + '>' +
+                    '<div class="lz-sale-drawer-section-title"><i class="ti ' + icon + '"></i><span>' + esc(title) + '</span>' + detailBtn + '</div>' +
+                    '<div class="lz-drawer-section-list">' + innerHtml + '</div>' +
+                    '<div class="lz-drawer-section-extra" hidden></div>' +
                     '</div>';
+            }
+
+            function sectionDetailsTable(sectionKey, items) {
+                var headers = [];
+                var rows = [];
+                if (sectionKey === 'bookings') {
+                    headers = [labels.service, labels.employee, labels.date, labels.time, labels.price];
+                    rows = (items || []).map(function (d) { return [d.service, d.worker, d.date, d.time, d.price]; });
+                } else if (sectionKey === 'products') {
+                    headers = [labels.product, labels.price];
+                    rows = (items || []).map(function (d) { return [d.product, d.price]; });
+                } else if (sectionKey === 'packages') {
+                    headers = [labels.package, labels.price];
+                    rows = (items || []).map(function (d) { return [d.package, d.price]; });
+                } else if (sectionKey === 'coupons') {
+                    headers = [labels.code, labels.amount, labels.type, labels.client];
+                    rows = (items || []).map(function (d) { return [d.code, d.amount, d.type, d.user]; });
+                }
+                return rows.length ? tableHtml(headers, rows) : '<p class="text-muted mb-0">' + labels.empty + '</p>';
+            }
+
+            function toggleDrawerSectionDetails(btn) {
+                var sectionKey = btn.getAttribute('data-section') || '';
+                var wrap = btn.closest('.lz-sale-drawer-section');
+                if (!wrap || !currentPanelData) return;
+                var extra = wrap.querySelector('.lz-drawer-section-extra');
+                if (!extra) return;
+
+                if (!extra.hidden && extra.getAttribute('data-section') === sectionKey) {
+                    extra.hidden = true;
+                    extra.innerHTML = '';
+                    return;
+                }
+
+                var items = [];
+                if (sectionKey === 'bookings') items = currentPanelData.bookings || [];
+                else if (sectionKey === 'products') items = currentPanelData.products || [];
+                else if (sectionKey === 'packages') items = currentPanelData.packages || [];
+                else if (sectionKey === 'coupons') items = currentPanelData.coupons || [];
+
+                extra.setAttribute('data-section', sectionKey);
+                extra.innerHTML = sectionDetailsTable(sectionKey, items);
+                extra.hidden = false;
+                wrap.classList.add('is-focus');
+                setTimeout(function () {
+                    extra.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }, 30);
             }
 
             function renderBookings(items) {
@@ -625,6 +708,7 @@
                 if (!data || !bodyEl) return;
                 options = options || {};
                 ensureDrawerOnBody();
+                currentPanelData = data;
 
                 var titleEl = document.getElementById('saleDetailsOffcanvasLabel');
                 if (titleEl) {
@@ -632,6 +716,7 @@
                 }
 
                 var focusSection = options.focusSection || '';
+                var autoExpand = !!options.autoExpand;
                 var tone = data.status_tone || 'secondary';
                 var html = '';
                 html += '<div class="lz-sale-drawer-head">';
@@ -649,15 +734,15 @@
                 html += metaRow('ti-clock', labels.createdAt, data.created_at);
                 html += '</ul>';
 
-                html += section('ti-scissors', labels.services, renderBookings(data.bookings), 'bookings');
-                html += section('ti-package', labels.packages, renderSimple(data.packages, 'package'), 'packages');
-                html += section('ti-shopping-bag', labels.products, renderSimple(data.products, 'product'), 'products');
-                html += section('ti-ticket', labels.coupons, renderCoupons(data.coupons), 'coupons');
+                html += section('ti-scissors', labels.services, renderBookings(data.bookings), 'bookings', data.bookings);
+                html += section('ti-package', labels.packages, renderSimple(data.packages, 'package'), 'packages', data.packages);
+                html += section('ti-shopping-bag', labels.products, renderSimple(data.products, 'product'), 'products', data.products);
+                html += section('ti-ticket', labels.coupons, renderCoupons(data.coupons), 'coupons', data.coupons);
 
                 var notesHtml = data.notes
                     ? '<div class="lz-sale-drawer-notes">' + esc(data.notes) + '</div>'
                     : '<div class="lz-sale-drawer-empty">' + labels.empty + '</div>';
-                html += section('ti-notes', labels.notes, notesHtml, 'notes');
+                html += section('ti-notes', labels.notes, notesHtml, 'notes', null);
 
                 bodyEl.innerHTML = html;
 
@@ -665,6 +750,10 @@
                     var focusEl = bodyEl.querySelector('[data-lz-section="' + focusSection + '"]');
                     if (focusEl) {
                         focusEl.classList.add('is-focus');
+                        if (autoExpand) {
+                            var expandBtn = focusEl.querySelector('.lz-drawer-section-details');
+                            if (expandBtn) toggleDrawerSectionDetails(expandBtn);
+                        }
                         setTimeout(function () {
                             focusEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
                         }, 40);
@@ -672,9 +761,10 @@
                 }
 
                 if (fullLink) {
-                    var showUrl = data.show_url || (data.id ? ('{{ url('/center_user/sales/show') }}/' + data.id) : '#');
-                    fullLink.href = showUrl;
-                    fullLink.style.display = showUrl && showUrl !== '#' ? '' : 'none';
+                    var saleId = data.id || '';
+                    var showUrl = data.show_url || (saleId ? ('{{ url('/center_user/sales/show') }}/' + saleId) : '#');
+                    fullLink.href = showUrl !== '#' ? showUrl : '#';
+                    fullLink.style.display = saleId ? '' : 'none';
                 }
 
                 offcanvasEl.classList.add('show');
@@ -737,7 +827,7 @@
                 else if (sectionKey === 'coupons') data.coupons = details;
 
                 setActiveRow(btn);
-                openSidePanel(data, { title: title, focusSection: sectionKey });
+                openSidePanel(data, { title: title, focusSection: sectionKey, autoExpand: true });
                 return false;
             }
 
@@ -782,6 +872,13 @@
 
             // Capture-phase listener so stopPropagation cannot block the side panel
             document.addEventListener('click', function(e) {
+                var drawerSectionBtn = e.target && e.target.closest ? e.target.closest('.lz-drawer-section-details') : null;
+                if (drawerSectionBtn) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toggleDrawerSectionDetails(drawerSectionBtn);
+                    return;
+                }
                 var sideBtn = e.target && e.target.closest ? e.target.closest('.view-sale-side-details') : null;
                 if (sideBtn) {
                     e.preventDefault();
