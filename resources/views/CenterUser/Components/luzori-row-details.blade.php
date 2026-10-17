@@ -216,6 +216,13 @@
     };
 
     function injectDetailsButtons($, api) {
+        // Sales page uses its own side drawer eye — never inject the modal eye there
+        try {
+            if (api.table().node() && $(api.table().node()).closest('.lz-sales-page').length) {
+                return;
+            }
+        } catch (e) {}
+
         api.rows({ page: 'current' }).every(function () {
             const $tr = $(this.node());
             if (!$tr.length || $tr.hasClass('child')) return;

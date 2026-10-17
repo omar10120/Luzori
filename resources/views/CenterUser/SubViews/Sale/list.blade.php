@@ -94,11 +94,37 @@
             box-shadow: none !important;
         }
 
-        /* Sale details offcanvas */
-        #saleDetailsOffcanvas {
-            width: min(400px, 92vw);
-            border: 0;
-            box-shadow: -8px 0 28px rgba(0, 43, 38, 0.12);
+        /* Sale details drawer — fixed to viewport (not clipped by layout overflow) */
+        #saleDetailsOffcanvas.lz-sale-drawer {
+            position: fixed !important;
+            top: 0 !important;
+            right: 0 !important;
+            left: auto !important;
+            width: min(400px, 92vw) !important;
+            height: 100vh !important;
+            max-width: 100vw !important;
+            border: 0 !important;
+            z-index: 11000 !important;
+            background: #fff !important;
+            box-shadow: -8px 0 28px rgba(0, 43, 38, 0.18);
+            transform: translateX(100%) !important;
+            visibility: visible !important;
+            transition: transform 0.25s ease !important;
+        }
+        html[dir="rtl"] #saleDetailsOffcanvas.lz-sale-drawer {
+            right: auto !important;
+            left: 0 !important;
+            transform: translateX(-100%) !important;
+            box-shadow: 8px 0 28px rgba(0, 43, 38, 0.18);
+        }
+        #saleDetailsOffcanvas.lz-sale-drawer.show {
+            transform: translateX(0) !important;
+        }
+        .lz-sale-drawer-backdrop {
+            position: fixed !important;
+            inset: 0 !important;
+            z-index: 10990 !important;
+            background: rgba(0, 20, 18, 0.35) !important;
         }
         #saleDetailsOffcanvas .offcanvas-header {
             border-bottom: 1px solid #efe6d8;
@@ -115,6 +141,15 @@
             display: flex;
             flex-direction: column;
             background: #fff;
+            height: calc(100vh - 58px);
+            overflow: hidden;
+        }
+        .lz-sales-page .dataTables_scroll {
+            width: 100% !important;
+        }
+        .lz-sales-page .dataTables_scrollHead,
+        .lz-sales-page .dataTables_scrollBody {
+            width: 100% !important;
         }
         .lz-sale-drawer-scroll {
             flex: 1 1 auto;
@@ -309,10 +344,10 @@
             </div>
         </div>
 
-        <div class="offcanvas offcanvas-end" tabindex="-1" id="saleDetailsOffcanvas" aria-labelledby="saleDetailsOffcanvasLabel">
+        <div class="lz-sale-drawer" tabindex="-1" id="saleDetailsOffcanvas" aria-labelledby="saleDetailsOffcanvasLabel" aria-hidden="true">
             <div class="offcanvas-header">
                 <h5 class="offcanvas-title" id="saleDetailsOffcanvasLabel">{{ __('field.booking_details') }}</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                <button type="button" class="btn-close" id="saleDetailsCloseBtn" aria-label="Close"></button>
             </div>
             <div class="offcanvas-body">
                 <div class="lz-sale-drawer-scroll" id="saleDetailsOffcanvasBody"></div>
@@ -550,8 +585,25 @@
                 }).join('');
             }
 
+            function ensureDrawerOnBody() {
+                if (offcanvasEl.parentElement !== document.body) {
+                    document.body.appendChild(offcanvasEl);
+                }
+                offcanvasEl.classList.add('lz-sale-drawer');
+            }
+
+            function closeSidePanel() {
+                offcanvasEl.classList.remove('show');
+                offcanvasEl.setAttribute('aria-hidden', 'true');
+                document.body.classList.remove('overflow-hidden');
+                document.querySelectorAll('.lz-sale-drawer-backdrop').forEach(function(b) { b.remove(); });
+                document.querySelectorAll('.lz-sales-table tbody tr.lz-sale-row-active')
+                    .forEach(function(tr) { tr.classList.remove('lz-sale-row-active'); });
+            }
+
             function openSidePanel(data) {
                 if (!data || !bodyEl) return;
+                ensureDrawerOnBody();
 
                 var tone = data.status_tone || 'secondary';
                 var html = '';
@@ -582,32 +634,18 @@
 
                 bodyEl.innerHTML = html;
                 if (fullLink) {
-                    fullLink.href = data.show_url || '#';
-                    fullLink.style.display = data.show_url ? '' : 'none';
+                    var showUrl = data.show_url || (data.id ? ('{{ url('/center_user/sales/show') }}/' + data.id) : '#');
+                    fullLink.href = showUrl;
+                    fullLink.style.display = showUrl && showUrl !== '#' ? '' : 'none';
                 }
 
-                try {
-                    if (window.bootstrap && bootstrap.Offcanvas) {
-                        bootstrap.Offcanvas.getOrCreateInstance(offcanvasEl).show();
-                        return;
-                    }
-                } catch (err) {}
-
-                // Fallback if Bootstrap Offcanvas API is unavailable
                 offcanvasEl.classList.add('show');
-                offcanvasEl.style.visibility = 'visible';
-                offcanvasEl.removeAttribute('aria-hidden');
+                offcanvasEl.setAttribute('aria-hidden', 'false');
                 document.body.classList.add('overflow-hidden');
-                if (!document.querySelector('.offcanvas-backdrop.lz-sale-drawer-backdrop')) {
+                if (!document.querySelector('.lz-sale-drawer-backdrop')) {
                     var backdrop = document.createElement('div');
-                    backdrop.className = 'offcanvas-backdrop fade show lz-sale-drawer-backdrop';
-                    backdrop.addEventListener('click', function() {
-                        offcanvasEl.classList.remove('show');
-                        offcanvasEl.style.visibility = '';
-                        offcanvasEl.setAttribute('aria-hidden', 'true');
-                        document.body.classList.remove('overflow-hidden');
-                        document.querySelectorAll('.lz-sale-drawer-backdrop').forEach(function(b) { b.remove(); });
-                    });
+                    backdrop.className = 'lz-sale-drawer-backdrop';
+                    backdrop.addEventListener('click', closeSidePanel);
                     document.body.appendChild(backdrop);
                 }
             }
@@ -672,13 +710,26 @@
                         openSectionDialog(btn);
                         return false;
                     }
-                    var data = parsePanel(btn);
-                    if (!data) {
-                        var eye = findRowEye(btn);
-                        if (eye) data = parsePanel(eye);
+                    var target = btn;
+                    if (!target.getAttribute('data-sale-panel-b64')) {
+                        target = findRowEye(btn) || btn;
                     }
-                    if (!data) return false;
-                    setActiveRow(btn);
+                    var data = parsePanel(target);
+                    if (!data) {
+                        // Last resort: build a minimal panel from the row
+                        var tr = (target.closest && target.closest('tr')) || null;
+                        var saleId = target.getAttribute('data-sale-id') || (tr && tr.id ? String(tr.id).replace(/\D/g, '') : '');
+                        data = {
+                            id: saleId,
+                            ref: saleId ? ('#' + saleId) : '#',
+                            show_url: saleId ? ('{{ url('/center_user/sales/show') }}/' + saleId) : '#',
+                            branch: '-', client: '-', phone: '-', payment: '-', created_at: '-',
+                            status_label: '-', status_tone: 'secondary',
+                            bookings: [], products: [], packages: [], coupons: [], notes: ''
+                        };
+                        data = enrichPanelFromRow(target, data);
+                    }
+                    setActiveRow(target);
                     openSidePanel(data);
                     return false;
                 } catch (err) {
@@ -686,6 +737,10 @@
                     return false;
                 }
             };
+
+            ensureDrawerOnBody();
+            var closeBtn = document.getElementById('saleDetailsCloseBtn');
+            if (closeBtn) closeBtn.addEventListener('click', closeSidePanel);
 
             // Capture-phase listener so stopPropagation cannot block the side panel
             document.addEventListener('click', function(e) {
@@ -714,12 +769,6 @@
                 return false;
             };
 
-            offcanvasEl.addEventListener('hidden.bs.offcanvas', function() {
-                document.querySelectorAll('.lz-sales-table tbody tr.lz-sale-row-active')
-                    .forEach(function(tr) { tr.classList.remove('lz-sale-row-active'); });
-                document.querySelectorAll('.lz-sale-drawer-backdrop').forEach(function(b) { b.remove(); });
-                document.body.classList.remove('overflow-hidden');
-            });
         })();
     </script>
 @endsection

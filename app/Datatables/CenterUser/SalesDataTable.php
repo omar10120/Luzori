@@ -529,12 +529,18 @@ function () {
     $filter.off("change.lzSales").on("change.lzSales", function () {
         api.ajax.reload();
     });
+    // After ColVis toggle, force columns to actually reflow/show
+    api.on('column-visibility.dt', function () {
+        setTimeout(function () {
+            api.columns.adjust();
+            api.draw(false);
+        }, 0);
+    });
 }
 JS;
 
         return $this->builder()
             ->setTableId($this->plural . '-table')
-            ->addTableClass('dt-responsive')
             ->columns($this->getColumns())
             ->ajax([
                 'data' => 'function(d) {
@@ -543,8 +549,8 @@ JS;
                 }',
             ])
             ->orderBy(1)
-            // Disable Responsive child-rows so ColVis can actually show/hide columns in the table
             ->responsive(false)
+            ->autoWidth(false)
             ->dom('
                 <"card-header border-bottom p-3 d-flex justify-content-between align-items-center"
                     <"head-label"><"dt-action-buttons"B>
@@ -552,7 +558,7 @@ JS;
                 <"d-flex justify-content-between align-items-center mx-0 row px-1 pt-2"
                     <"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"fr>
                 >
-                <"table-responsive"t>
+                t
                 <"d-flex justify-content-between mx-0 row px-1 pt-2"
                     <"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>
                 >
@@ -561,8 +567,7 @@ JS;
             ->addAction([
                 'printable' => false,
                 'exportable' => false,
-                'responsivePriority' => 1,
-                'className' => 'dt-center lz-actions-col all noVis',
+                'className' => 'dt-center lz-actions-col noVis',
                 'title' => __('general.actions'),
             ])
             ->buttons([
@@ -589,10 +594,11 @@ JS;
                 ],
             ])
             ->language($this->getDataTableLanguageUrl())
-            ->addTableClass('table table-hover')
+            ->addTableClass('table table-hover lz-sales-dt')
             ->initComplete($initCompleteJs)
             ->parameters([
                 'scrollX' => true,
+                'autoWidth' => false,
             ]);
     }
 
