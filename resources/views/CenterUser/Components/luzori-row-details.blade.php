@@ -219,7 +219,8 @@
         api.rows({ page: 'current' }).every(function () {
             const $tr = $(this.node());
             if (!$tr.length || $tr.hasClass('child')) return;
-            if ($tr.find('.lz-open-row-details').length) return;
+            // Skip when row already has details control (modal eye or sales side-drawer eye)
+            if ($tr.find('.lz-open-row-details, .view-sale-side-details').length) return;
 
             const btn = detailsButtonHtml();
             const $icons = $tr.find('.lz-action-icons').first();

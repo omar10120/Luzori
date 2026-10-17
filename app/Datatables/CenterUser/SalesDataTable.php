@@ -87,6 +87,8 @@ class SalesDataTable extends DataTable
                 $options = [
                     'show' => true,
                     'print' => true,
+                    'row_details' => false,
+                    'sale_panel' => $this->salePanelAttr($this->salePanelPayload($item)),
                     'operation' => DeleteActionEnum::FORCE_DELETE->value,
                     'with_trashed' => 1,
                 ];
@@ -108,10 +110,9 @@ class SalesDataTable extends DataTable
             ->editColumn('branch.translation.name', function ($row) {
                 return $row->branch?->translation?->name ?? '-';
             })
-            ->editColumn('services', function ($row) {
+            ->addColumn('services', function ($row) {
                 $panel = $this->salePanelPayload($row);
-                $serviceDetails = $panel['bookings'] ?? [];
-                $count = count($serviceDetails);
+                $count = count($panel['bookings'] ?? []);
 
                 if ($count === 0) {
                     return '-';
@@ -126,8 +127,7 @@ class SalesDataTable extends DataTable
             })
             ->addColumn('products', function ($row) {
                 $panel = $this->salePanelPayload($row);
-                $productDetails = $panel['products'] ?? [];
-                $count = count($productDetails);
+                $count = count($panel['products'] ?? []);
 
                 if ($count === 0) {
                     return '-';
@@ -142,8 +142,7 @@ class SalesDataTable extends DataTable
             })
             ->addColumn('packages', function ($row) {
                 $panel = $this->salePanelPayload($row);
-                $packageDetails = $panel['packages'] ?? [];
-                $count = count($packageDetails);
+                $count = count($panel['packages'] ?? []);
 
                 if ($count === 0) {
                     return '-';
@@ -159,8 +158,7 @@ class SalesDataTable extends DataTable
             })
             ->addColumn('coupons', function ($row) {
                 $panel = $this->salePanelPayload($row);
-                $couponDetails = $panel['coupons'] ?? [];
-                $count = count($couponDetails);
+                $count = count($panel['coupons'] ?? []);
 
                 if ($count === 0) {
                     return '-';
@@ -550,6 +548,7 @@ class SalesDataTable extends DataTable
 
     /**
      * Compact sale summary for the right-side details drawer.
+     * Prefer direct sale relations (bookings / buyProducts) — same data the table already eager-loads.
      */
     protected function salePanelPayload($row): array
     {
@@ -558,150 +557,166 @@ class SalesDataTable extends DataTable
             return $this->salePanelCache[$saleId];
         }
 
-        try {
-            $currency = trim((string) get_currency());
-            $bookings = [];
-            $products = [];
-            $packages = [];
-            $coupons = [];
-            $notes = [];
-            $paymentMethods = [];
+        $currency = trim((string) get_currency());
+        $bookings = [];
+        $products = [];
+        $packages = [];
+        $coupons = [];
+        $notes = [];
+        $paymentMethods = [];
 
-            foreach ($row->saleItems ?? [] as $saleItem) {
-                if (!$saleItem->itemable) {
-                    continue;
-                }
-
-                if ($saleItem->item_type === 'booking') {
-                    $booking = $saleItem->itemable;
-                    if (!empty($booking->notes)) {
-                        $notes[] = trim((string) $booking->notes);
-                    }
-
-                    $methods = $booking->payment_methods ?? null;
-                    if (($booking->payment_type ?? null) === 'multiple' && is_array($methods)) {
-                        foreach ($methods as $method) {
-                            $name = is_array($method) ? ($method['method'] ?? null) : null;
-                            if ($name && !in_array($name, $paymentMethods, true)) {
-                                $paymentMethods[] = $name;
-                            }
-                        }
-                    } elseif (!empty($booking->payment_type) && !in_array($booking->payment_type, $paymentMethods, true)) {
-                        $paymentMethods[] = $booking->payment_type;
-                    }
-
-                    foreach ($booking->details ?? [] as $detail) {
-                        $bookings[] = [
-                            'service' => $detail->service?->translation?->name ?? $detail->service?->name ?? 'N/A',
-                            'worker' => $detail->worker?->name ?? '-',
-                            'date' => $detail->_date ?? $booking->booking_date ?? '-',
-                            'time' => trim(($detail->from_time ?? '') . '-' . ($detail->to_time ?? ''), '-'),
-                            'price' => number_format((float) ($detail->price ?? 0), 2) . ' ' . $currency,
-                        ];
-                    }
-                } elseif ($saleItem->item_type === 'buy_product') {
-                    $buyProduct = $saleItem->itemable;
-                    $type = $buyProduct->payment_type ?? null;
-                    if ($type && !in_array($type, $paymentMethods, true)) {
-                        $paymentMethods[] = $type;
-                    }
-                    foreach ($buyProduct->details ?? [] as $detail) {
-                        $products[] = [
-                            'product' => $detail->product?->translation?->name ?? $detail->product?->name ?? 'N/A',
-                            'price' => number_format((float) ($detail->price ?? 0), 2) . ' ' . $currency,
-                        ];
-                    }
-                } elseif ($saleItem->item_type === 'user_package') {
-                    $userPackage = $saleItem->itemable;
-                    $packages[] = [
-                        'package' => $userPackage->package?->translation?->name ?? $userPackage->package?->name ?? 'N/A',
-                        'price' => number_format((float) ($userPackage->price ?? 0), 2) . ' ' . $currency,
-                    ];
-                } elseif ($saleItem->item_type === 'user_wallet') {
-                    $userWallet = $saleItem->itemable;
-                    $type = $userWallet->wallet_type ?? null;
-                    if ($type && !in_array($type, $paymentMethods, true)) {
-                        $paymentMethods[] = $type;
-                    }
-                    $coupons[] = [
-                        'code' => $userWallet->wallet?->code ?? '-',
-                        'amount' => number_format((float) ($userWallet->amount ?? 0), 2) . ' ' . $currency,
-                        'type' => $userWallet->wallet_type ?? '-',
-                        'user' => $userWallet->user?->name ?? '-',
-                    ];
-                }
+        // Bookings via sale.bookings (reliable; already eager-loaded)
+        foreach ($row->bookings ?? [] as $booking) {
+            if (!empty($booking->notes)) {
+                $notes[] = trim((string) $booking->notes);
             }
 
-            $statusLabel = '-';
-            $statusTone = 'secondary';
-            $booking = optional($row->bookings)->first();
-            if ($booking) {
-                $firstDetail = optional($booking->details)->first();
-                $status = $firstDetail?->status ?? 'confirmed';
-                $source = $firstDetail?->booking_source ?? 'inside_booking';
-
-                if ($source !== 'outside_booking') {
-                    $deletedStatus = $booking->deleted_at ? 'cancelled' : 'confirmed';
-                    $statusLabel = __('field.booking_status_' . $deletedStatus);
-                    $statusTone = $booking->deleted_at ? 'danger' : 'success';
-                } else {
-                    $statusLabel = __('field.booking_status_' . $status);
-                    $statusTone = match ($status) {
-                        'pending' => 'warning',
-                        'confirmed' => 'success',
-                        'rejected' => 'danger',
-                        default => 'secondary',
-                    };
+            $methods = $booking->payment_methods ?? null;
+            if (($booking->payment_type ?? null) === 'multiple' && is_array($methods)) {
+                foreach ($methods as $method) {
+                    $name = is_array($method) ? ($method['method'] ?? null) : null;
+                    if ($name && !in_array($name, $paymentMethods, true)) {
+                        $paymentMethods[] = $name;
+                    }
                 }
+            } elseif (!empty($booking->payment_type) && !in_array($booking->payment_type, $paymentMethods, true)) {
+                $paymentMethods[] = $booking->payment_type;
             }
 
-            $notes = array_values(array_unique(array_filter($notes)));
-
-            $payload = [
-                'id' => $saleId,
-                'ref' => '#' . $saleId,
-                'show_url' => route('center_user.sales.show', $saleId),
-                'branch' => $row->branch?->translation?->name ?? '-',
-                'client' => $row->client?->name ?? __('general.walk_in'),
-                'phone' => $row->client?->full_phone ?? $row->client?->phone ?? '-',
-                'payment' => empty($paymentMethods) ? '-' : implode(', ', $paymentMethods),
-                'created_at' => $row->created_at ? $row->created_at->format('Y-m-d H:i') : '-',
-                'status_label' => $statusLabel,
-                'status_tone' => $statusTone,
-                'total' => number_format((float) ($row->total ?? 0), 2) . ' ' . $currency,
-                'bookings' => $bookings,
-                'products' => $products,
-                'packages' => $packages,
-                'coupons' => $coupons,
-                'notes' => implode("\n", $notes),
-            ];
-        } catch (\Throwable $e) {
-            $payload = [
-                'id' => $saleId,
-                'ref' => '#' . $saleId,
-                'show_url' => route('center_user.sales.show', $saleId),
-                'branch' => '-',
-                'client' => '-',
-                'phone' => '-',
-                'payment' => '-',
-                'created_at' => '-',
-                'status_label' => '-',
-                'status_tone' => 'secondary',
-                'total' => '-',
-                'bookings' => [],
-                'products' => [],
-                'packages' => [],
-                'coupons' => [],
-                'notes' => '',
-            ];
+            foreach ($booking->details ?? [] as $detail) {
+                $bookings[] = [
+                    'service' => $detail->service?->translation?->name ?? $detail->service?->name ?? 'N/A',
+                    'worker' => $detail->worker?->name ?? '-',
+                    'date' => $detail->_date ?? $booking->booking_date ?? '-',
+                    'time' => trim(($detail->from_time ?? '') . '-' . ($detail->to_time ?? ''), '-'),
+                    'price' => number_format((float) ($detail->price ?? 0), 2) . ' ' . $currency,
+                ];
+            }
         }
+
+        // Products via sale.buyProducts
+        foreach ($row->buyProducts ?? [] as $buyProduct) {
+            $type = $buyProduct->payment_type ?? null;
+            if ($type && !in_array($type, $paymentMethods, true)) {
+                $paymentMethods[] = $type;
+            }
+            foreach ($buyProduct->details ?? [] as $detail) {
+                $products[] = [
+                    'product' => $detail->product?->translation?->name ?? $detail->product?->name ?? 'N/A',
+                    'price' => number_format((float) ($detail->price ?? 0), 2) . ' ' . $currency,
+                ];
+            }
+        }
+
+        // Packages / coupons still come from saleItems morph
+        foreach ($row->saleItems ?? [] as $saleItem) {
+            if (!$saleItem->itemable) {
+                continue;
+            }
+
+            if ($saleItem->item_type === 'user_package') {
+                $userPackage = $saleItem->itemable;
+                $packages[] = [
+                    'package' => $userPackage->package?->translation?->name ?? $userPackage->package?->name ?? 'N/A',
+                    'price' => number_format((float) ($userPackage->price ?? 0), 2) . ' ' . $currency,
+                ];
+            } elseif ($saleItem->item_type === 'user_wallet') {
+                $userWallet = $saleItem->itemable;
+                $type = $userWallet->wallet_type ?? null;
+                if ($type && !in_array($type, $paymentMethods, true)) {
+                    $paymentMethods[] = $type;
+                }
+                $coupons[] = [
+                    'code' => $userWallet->wallet?->code ?? '-',
+                    'amount' => number_format((float) ($userWallet->amount ?? 0), 2) . ' ' . $currency,
+                    'type' => $userWallet->wallet_type ?? '-',
+                    'user' => $userWallet->user?->name ?? '-',
+                ];
+            } elseif ($saleItem->item_type === 'booking' && empty($bookings) && $saleItem->itemable) {
+                // Fallback if bookings relation empty but saleItems present
+                $booking = $saleItem->itemable;
+                foreach ($booking->details ?? [] as $detail) {
+                    $bookings[] = [
+                        'service' => $detail->service?->translation?->name ?? $detail->service?->name ?? 'N/A',
+                        'worker' => $detail->worker?->name ?? '-',
+                        'date' => $detail->_date ?? $booking->booking_date ?? '-',
+                        'time' => trim(($detail->from_time ?? '') . '-' . ($detail->to_time ?? ''), '-'),
+                        'price' => number_format((float) ($detail->price ?? 0), 2) . ' ' . $currency,
+                    ];
+                }
+            } elseif ($saleItem->item_type === 'buy_product' && empty($products) && $saleItem->itemable) {
+                $buyProduct = $saleItem->itemable;
+                foreach ($buyProduct->details ?? [] as $detail) {
+                    $products[] = [
+                        'product' => $detail->product?->translation?->name ?? $detail->product?->name ?? 'N/A',
+                        'price' => number_format((float) ($detail->price ?? 0), 2) . ' ' . $currency,
+                    ];
+                }
+            }
+        }
+
+        $statusLabel = '-';
+        $statusTone = 'secondary';
+        $booking = optional($row->bookings)->first();
+        if ($booking) {
+            $firstDetail = optional($booking->details)->first();
+            $status = $firstDetail?->status ?? 'confirmed';
+            $source = $firstDetail?->booking_source ?? 'inside_booking';
+
+            if ($source !== 'outside_booking') {
+                $deletedStatus = $booking->deleted_at ? 'cancelled' : 'confirmed';
+                $statusLabel = __('field.booking_status_' . $deletedStatus);
+                $statusTone = $booking->deleted_at ? 'danger' : 'success';
+            } else {
+                $statusLabel = __('field.booking_status_' . $status);
+                $map = [
+                    'pending' => 'warning',
+                    'confirmed' => 'success',
+                    'rejected' => 'danger',
+                ];
+                $statusTone = $map[$status] ?? 'secondary';
+            }
+        }
+
+        $notes = array_values(array_unique(array_filter($notes)));
+
+        $showUrl = url('/center_user/sales/show/' . $saleId);
+        try {
+            $showUrl = route('center_user.sales.show', $saleId);
+        } catch (\Throwable $e) {
+            // keep fallback url
+        }
+
+        $payload = [
+            'id' => $saleId,
+            'ref' => '#' . $saleId,
+            'show_url' => $showUrl,
+            'branch' => $row->branch?->translation?->name ?? '-',
+            'client' => $row->client?->name ?? __('general.walk_in'),
+            'phone' => $row->client?->full_phone ?? $row->client?->phone ?? '-',
+            'payment' => empty($paymentMethods) ? '-' : implode(', ', $paymentMethods),
+            'created_at' => $row->created_at ? $row->created_at->format('Y-m-d H:i') : '-',
+            'status_label' => $statusLabel,
+            'status_tone' => $statusTone,
+            'total' => number_format((float) ($row->total ?? 0), 2) . ' ' . $currency,
+            'bookings' => $bookings,
+            'products' => $products,
+            'packages' => $packages,
+            'coupons' => $coupons,
+            'notes' => implode("\n", $notes),
+        ];
 
         return $this->salePanelCache[$saleId] = $payload;
     }
 
     protected function salePanelAttr(array $panel): string
     {
-        $json = json_encode($panel, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+        $flags = JSON_UNESCAPED_UNICODE;
+        if (defined('JSON_INVALID_UTF8_SUBSTITUTE')) {
+            $flags |= JSON_INVALID_UTF8_SUBSTITUTE;
+        }
+
+        $json = json_encode($panel, $flags);
         if ($json === false) {
             $json = '{}';
         }
