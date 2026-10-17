@@ -3,9 +3,10 @@
 namespace App\Services;
 
 use App\Models\CenterUser;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-
+use App\Models\Center;
 class CenterUserService
 {
     public function all()
@@ -72,7 +73,10 @@ class CenterUserService
             unset($request['password']);
         }
 
+        $oldEmail = $centerUser->email;
         $centerUser->update($request);
+        $this->syncMainCenterProfile($centerUser, $oldEmail, $request);
+
         if (isset($request['role'])) {
             $centerUser->roles()->detach();
             // Get the role by ID to assign it properly
@@ -81,6 +85,44 @@ class CenterUserService
         }
         DB::commit();
         return $centerUser;
+    }
+
+    /**
+     * Mirror profile fields onto the central centers row when this user's
+     * email belongs to the active center (main database).
+     */
+    private function syncMainCenterProfile(CenterUser $centerUser, ?string $oldEmail, array $request): void
+    {
+        if (!$oldEmail) {
+            return;
+        }
+
+        $database = Config::get('database.connections.mysql.database');
+        $center = Center::query()
+            ->where('database', $database)
+            ->where('email', $oldEmail)
+            ->first();
+
+        if (!$center) {
+            return;
+        }
+
+        $payload = [];
+        foreach (['name', 'email', 'country_code', 'phone', 'currency', 'bank_name'] as $field) {
+            if (array_key_exists($field, $request)) {
+                $payload[$field] = $request[$field];
+            }
+        }
+
+        if (!empty($request['password'])) {
+            $payload['password'] = $request['password'];
+        }
+
+        if ($payload === []) {
+            return;
+        }
+
+        $center->update($payload);
     }
 
     public function changeLanguage($language_id, $id)
