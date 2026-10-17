@@ -3,7 +3,7 @@
         <a href="javascript:void(0)" class="lz-action-btn view-sale-side-details"
             title="{{ __('general.view_details') }}"
             data-sale-panel-b64="{{ $options['sale_panel_b64'] }}"
-            onclick="event.preventDefault(); event.stopPropagation();">
+            onclick="event.preventDefault(); event.stopPropagation(); if (window.lzOpenSaleSideDetails) { window.lzOpenSaleSideDetails(this); } return false;">
             <i class="ti ti-eye"></i>
         </a>
     @elseif(!isset($options['row_details']) || $options['row_details'])

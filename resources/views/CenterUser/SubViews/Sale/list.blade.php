@@ -504,8 +504,29 @@
                     fullLink.style.display = data.show_url ? '' : 'none';
                 }
 
-                if (window.bootstrap && bootstrap.Offcanvas) {
-                    bootstrap.Offcanvas.getOrCreateInstance(offcanvasEl).show();
+                try {
+                    if (window.bootstrap && bootstrap.Offcanvas) {
+                        bootstrap.Offcanvas.getOrCreateInstance(offcanvasEl).show();
+                        return;
+                    }
+                } catch (err) {}
+
+                // Fallback if Bootstrap Offcanvas API is unavailable
+                offcanvasEl.classList.add('show');
+                offcanvasEl.style.visibility = 'visible';
+                offcanvasEl.removeAttribute('aria-hidden');
+                document.body.classList.add('overflow-hidden');
+                if (!document.querySelector('.offcanvas-backdrop.lz-sale-drawer-backdrop')) {
+                    var backdrop = document.createElement('div');
+                    backdrop.className = 'offcanvas-backdrop fade show lz-sale-drawer-backdrop';
+                    backdrop.addEventListener('click', function() {
+                        offcanvasEl.classList.remove('show');
+                        offcanvasEl.style.visibility = '';
+                        offcanvasEl.setAttribute('aria-hidden', 'true');
+                        document.body.classList.remove('overflow-hidden');
+                        document.querySelectorAll('.lz-sale-drawer-backdrop').forEach(function(b) { b.remove(); });
+                    });
+                    document.body.appendChild(backdrop);
                 }
             }
 
@@ -561,15 +582,21 @@
                 }
             }
 
-            // Action eye → side drawer
+            // Global opener (works even when inline onclick stops bubbling)
+            window.lzOpenSaleSideDetails = function(btn) {
+                if (!btn) return false;
+                var data = parsePanel(btn);
+                if (!data) return false;
+                setActiveRow(btn);
+                openSidePanel(data);
+                return false;
+            };
+
+            // Action eye → side drawer (delegated fallback)
             $(document).on('click', '.view-sale-side-details', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
-                var btn = this;
-                var data = parsePanel(btn);
-                if (!data) return;
-                setActiveRow(btn);
-                openSidePanel(data);
+                window.lzOpenSaleSideDetails(this);
             });
 
             // Booking/product/package/coupon "View details" → centered dialog
@@ -581,10 +608,12 @@
 
             // Force row-details eye (legacy modal) to open the side drawer on Sales page
             window.lzOpenRowDetails = function(el) {
-                var eye = findRowEye(el) || (el && el.classList && el.classList.contains('view-sale-side-details') ? el : null);
+                var eye = findRowEye(el);
                 if (eye) {
-                    eye.click();
-                    return false;
+                    return window.lzOpenSaleSideDetails(eye);
+                }
+                if (el && el.getAttribute && el.getAttribute('data-sale-panel-b64')) {
+                    return window.lzOpenSaleSideDetails(el);
                 }
                 return false;
             };
