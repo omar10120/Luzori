@@ -1177,6 +1177,7 @@ class CenterService
                 unset($request['password']);
             }
 
+            $oldEmail = $center->email;
             $center->update($request);
             
             if (isset($request['role'])) {
@@ -1188,6 +1189,8 @@ class CenterService
                 $this->setupCenterDatabase($center);
             }
 
+            $this->syncTenantCenterUser($center, $oldEmail, $request);
+
             DB::commit();
             return $center;
         } catch (Exception $e) {
@@ -1198,6 +1201,43 @@ class CenterService
             ]);
             throw $e;
         }
+    }
+
+    /**
+     * Mirror center profile onto the tenant center_users row that shares the previous email.
+     */
+    private function syncTenantCenterUser(Center $center, ?string $oldEmail, array $request): void
+    {
+        if (!$oldEmail || !$center->database) {
+            return;
+        }
+
+        $payload = [];
+        foreach (['name', 'email', 'country_code', 'phone', 'currency', 'bank_name'] as $field) {
+            if (array_key_exists($field, $request)) {
+                $payload[$field] = $center->{$field};
+            }
+        }
+
+        // Center mutator already hashed the password; write it directly so it is not hashed again.
+        if (!empty($request['password'])) {
+            $payload['password'] = $center->password;
+        }
+
+        if ($payload === []) {
+            return;
+        }
+
+        $payload['updated_at'] = now();
+
+        Config::set('database.connections.tenant.database', $center->database);
+        DB::purge('tenant');
+        DB::reconnect('tenant');
+
+        DB::connection('tenant')
+            ->table('center_users')
+            ->where('email', $oldEmail)
+            ->update($payload);
     }
 
     public function delete($id)
