@@ -16,6 +16,9 @@ class SalesDataTable extends DataTable
     private $model = 'Sale';
     private $plural = 'sales';
 
+    /** @var array<int, array> */
+    private array $salePanelCache = [];
+
     public function dataTable(QueryBuilder $query): EloquentDataTable
     {
         $dataTable = (new EloquentDataTable($query));
@@ -115,7 +118,7 @@ class SalesDataTable extends DataTable
                 }
 
                 $html = '<span class="lz-sale-badge is-booking">' . $count . ' ' . __('locale.bookings') . '</span>';
-                $html .= ' <button type="button" class="btn btn-sm lz-sale-detail-btn ms-1 view-sale-side-details" data-focus="bookings" data-sale-panel="' . e(json_encode($panel)) . '">';
+                $html .= ' <button type="button" class="btn btn-sm lz-sale-detail-btn ms-1 view-sale-side-details" data-focus="bookings" data-sale-panel="' . $this->salePanelAttr($panel) . '">';
                 $html .= '<i class="ti ti-eye me-1"></i>' . __('general.view_details');
                 $html .= '</button>';
 
@@ -131,7 +134,7 @@ class SalesDataTable extends DataTable
                 }
 
                 $html = '<span class="lz-sale-badge is-product">' . $count . ' ' . __('locale.products') . '</span>';
-                $html .= ' <button type="button" class="btn btn-sm lz-sale-detail-btn ms-1 view-sale-side-details" data-focus="products" data-sale-panel="' . e(json_encode($panel)) . '">';
+                $html .= ' <button type="button" class="btn btn-sm lz-sale-detail-btn ms-1 view-sale-side-details" data-focus="products" data-sale-panel="' . $this->salePanelAttr($panel) . '">';
                 $html .= '<i class="ti ti-eye me-1"></i>' . __('general.view_details');
                 $html .= '</button>';
 
@@ -148,7 +151,7 @@ class SalesDataTable extends DataTable
 
                 $packageLabel = $count === 1 ? __('locale.package') : __('locale.packages');
                 $html = '<span class="lz-sale-badge is-package">' . $count . ' ' . $packageLabel . '</span>';
-                $html .= ' <button type="button" class="btn btn-sm lz-sale-detail-btn ms-1 view-sale-side-details" data-focus="packages" data-sale-panel="' . e(json_encode($panel)) . '">';
+                $html .= ' <button type="button" class="btn btn-sm lz-sale-detail-btn ms-1 view-sale-side-details" data-focus="packages" data-sale-panel="' . $this->salePanelAttr($panel) . '">';
                 $html .= '<i class="ti ti-eye me-1"></i>' . __('general.view_details');
                 $html .= '</button>';
 
@@ -164,7 +167,7 @@ class SalesDataTable extends DataTable
                 }
 
                 $html = '<span class="lz-sale-badge is-coupon">' . $count . ' ' . __('field.coupons') . '</span>';
-                $html .= ' <button type="button" class="btn btn-sm lz-sale-detail-btn ms-1 view-sale-side-details" data-focus="coupons" data-sale-panel="' . e(json_encode($panel)) . '">';
+                $html .= ' <button type="button" class="btn btn-sm lz-sale-detail-btn ms-1 view-sale-side-details" data-focus="coupons" data-sale-panel="' . $this->salePanelAttr($panel) . '">';
                 $html .= '<i class="ti ti-eye me-1"></i>' . __('general.view_details');
                 $html .= '</button>';
 
@@ -550,129 +553,160 @@ class SalesDataTable extends DataTable
      */
     protected function salePanelPayload($row): array
     {
-        if (isset($row->_lzSalePanelPayload) && is_array($row->_lzSalePanelPayload)) {
-            return $row->_lzSalePanelPayload;
+        $saleId = (int) $row->id;
+        if (isset($this->salePanelCache[$saleId])) {
+            return $this->salePanelCache[$saleId];
         }
 
-        $currency = trim(get_currency());
-        $bookings = [];
-        $products = [];
-        $packages = [];
-        $coupons = [];
-        $notes = [];
-        $paymentMethods = [];
+        try {
+            $currency = trim((string) get_currency());
+            $bookings = [];
+            $products = [];
+            $packages = [];
+            $coupons = [];
+            $notes = [];
+            $paymentMethods = [];
 
-        foreach ($row->saleItems as $saleItem) {
-            if (!$saleItem->itemable) {
-                continue;
-            }
-
-            if ($saleItem->item_type === 'booking') {
-                $booking = $saleItem->itemable;
-                if (!empty($booking->notes)) {
-                    $notes[] = trim((string) $booking->notes);
+            foreach ($row->saleItems ?? [] as $saleItem) {
+                if (!$saleItem->itemable) {
+                    continue;
                 }
 
-                if ($booking->payment_type === 'multiple' && !empty($booking->payment_methods)) {
-                    foreach ($booking->payment_methods as $method) {
-                        $name = $method['method'] ?? null;
-                        if ($name && !in_array($name, $paymentMethods, true)) {
-                            $paymentMethods[] = $name;
-                        }
+                if ($saleItem->item_type === 'booking') {
+                    $booking = $saleItem->itemable;
+                    if (!empty($booking->notes)) {
+                        $notes[] = trim((string) $booking->notes);
                     }
-                } elseif (!empty($booking->payment_type) && !in_array($booking->payment_type, $paymentMethods, true)) {
-                    $paymentMethods[] = $booking->payment_type;
-                }
 
-                foreach ($booking->details as $detail) {
-                    $bookings[] = [
-                        'service' => $detail->service?->translation?->name ?? $detail->service?->name ?? 'N/A',
-                        'worker' => $detail->worker?->name ?? '-',
-                        'date' => $detail->_date ?? $booking->booking_date ?? '-',
-                        'time' => trim(($detail->from_time ?? '') . '-' . ($detail->to_time ?? ''), '-'),
-                        'price' => number_format($detail->price ?? 0, 2) . ' ' . $currency,
+                    $methods = $booking->payment_methods ?? null;
+                    if (($booking->payment_type ?? null) === 'multiple' && is_array($methods)) {
+                        foreach ($methods as $method) {
+                            $name = is_array($method) ? ($method['method'] ?? null) : null;
+                            if ($name && !in_array($name, $paymentMethods, true)) {
+                                $paymentMethods[] = $name;
+                            }
+                        }
+                    } elseif (!empty($booking->payment_type) && !in_array($booking->payment_type, $paymentMethods, true)) {
+                        $paymentMethods[] = $booking->payment_type;
+                    }
+
+                    foreach ($booking->details ?? [] as $detail) {
+                        $bookings[] = [
+                            'service' => $detail->service?->translation?->name ?? $detail->service?->name ?? 'N/A',
+                            'worker' => $detail->worker?->name ?? '-',
+                            'date' => $detail->_date ?? $booking->booking_date ?? '-',
+                            'time' => trim(($detail->from_time ?? '') . '-' . ($detail->to_time ?? ''), '-'),
+                            'price' => number_format((float) ($detail->price ?? 0), 2) . ' ' . $currency,
+                        ];
+                    }
+                } elseif ($saleItem->item_type === 'buy_product') {
+                    $buyProduct = $saleItem->itemable;
+                    $type = $buyProduct->payment_type ?? null;
+                    if ($type && !in_array($type, $paymentMethods, true)) {
+                        $paymentMethods[] = $type;
+                    }
+                    foreach ($buyProduct->details ?? [] as $detail) {
+                        $products[] = [
+                            'product' => $detail->product?->translation?->name ?? $detail->product?->name ?? 'N/A',
+                            'price' => number_format((float) ($detail->price ?? 0), 2) . ' ' . $currency,
+                        ];
+                    }
+                } elseif ($saleItem->item_type === 'user_package') {
+                    $userPackage = $saleItem->itemable;
+                    $packages[] = [
+                        'package' => $userPackage->package?->translation?->name ?? $userPackage->package?->name ?? 'N/A',
+                        'price' => number_format((float) ($userPackage->price ?? 0), 2) . ' ' . $currency,
+                    ];
+                } elseif ($saleItem->item_type === 'user_wallet') {
+                    $userWallet = $saleItem->itemable;
+                    $type = $userWallet->wallet_type ?? null;
+                    if ($type && !in_array($type, $paymentMethods, true)) {
+                        $paymentMethods[] = $type;
+                    }
+                    $coupons[] = [
+                        'code' => $userWallet->wallet?->code ?? '-',
+                        'amount' => number_format((float) ($userWallet->amount ?? 0), 2) . ' ' . $currency,
+                        'type' => $userWallet->wallet_type ?? '-',
+                        'user' => $userWallet->user?->name ?? '-',
                     ];
                 }
-            } elseif ($saleItem->item_type === 'buy_product') {
-                $buyProduct = $saleItem->itemable;
-                $type = $buyProduct->payment_type ?? null;
-                if ($type && !in_array($type, $paymentMethods, true)) {
-                    $paymentMethods[] = $type;
-                }
-                foreach ($buyProduct->details as $detail) {
-                    $products[] = [
-                        'product' => $detail->product?->translation?->name ?? $detail->product?->name ?? 'N/A',
-                        'price' => number_format($detail->price ?? 0, 2) . ' ' . $currency,
-                    ];
-                }
-            } elseif ($saleItem->item_type === 'user_package') {
-                $userPackage = $saleItem->itemable;
-                $packages[] = [
-                    'package' => $userPackage->package?->translation?->name ?? $userPackage->package?->name ?? 'N/A',
-                    'price' => number_format($userPackage->price ?? 0, 2) . ' ' . $currency,
-                ];
-            } elseif ($saleItem->item_type === 'user_wallet') {
-                $userWallet = $saleItem->itemable;
-                $type = $userWallet->wallet_type ?? null;
-                if ($type && !in_array($type, $paymentMethods, true)) {
-                    $paymentMethods[] = $type;
-                }
-                $coupons[] = [
-                    'code' => $userWallet->wallet?->code ?? '-',
-                    'amount' => number_format($userWallet->amount ?? 0, 2) . ' ' . $currency,
-                    'type' => $userWallet->wallet_type ?? '-',
-                    'user' => $userWallet->user?->name ?? '-',
-                ];
             }
+
+            $statusLabel = '-';
+            $statusTone = 'secondary';
+            $booking = optional($row->bookings)->first();
+            if ($booking) {
+                $firstDetail = optional($booking->details)->first();
+                $status = $firstDetail?->status ?? 'confirmed';
+                $source = $firstDetail?->booking_source ?? 'inside_booking';
+
+                if ($source !== 'outside_booking') {
+                    $deletedStatus = $booking->deleted_at ? 'cancelled' : 'confirmed';
+                    $statusLabel = __('field.booking_status_' . $deletedStatus);
+                    $statusTone = $booking->deleted_at ? 'danger' : 'success';
+                } else {
+                    $statusLabel = __('field.booking_status_' . $status);
+                    $statusTone = match ($status) {
+                        'pending' => 'warning',
+                        'confirmed' => 'success',
+                        'rejected' => 'danger',
+                        default => 'secondary',
+                    };
+                }
+            }
+
+            $notes = array_values(array_unique(array_filter($notes)));
+
+            $payload = [
+                'id' => $saleId,
+                'ref' => '#' . $saleId,
+                'show_url' => route('center_user.sales.show', $saleId),
+                'branch' => $row->branch?->translation?->name ?? '-',
+                'client' => $row->client?->name ?? __('general.walk_in'),
+                'phone' => $row->client?->full_phone ?? $row->client?->phone ?? '-',
+                'payment' => empty($paymentMethods) ? '-' : implode(', ', $paymentMethods),
+                'created_at' => $row->created_at ? $row->created_at->format('Y-m-d H:i') : '-',
+                'status_label' => $statusLabel,
+                'status_tone' => $statusTone,
+                'total' => number_format((float) ($row->total ?? 0), 2) . ' ' . $currency,
+                'bookings' => $bookings,
+                'products' => $products,
+                'packages' => $packages,
+                'coupons' => $coupons,
+                'notes' => implode("\n", $notes),
+            ];
+        } catch (\Throwable $e) {
+            $payload = [
+                'id' => $saleId,
+                'ref' => '#' . $saleId,
+                'show_url' => route('center_user.sales.show', $saleId),
+                'branch' => '-',
+                'client' => '-',
+                'phone' => '-',
+                'payment' => '-',
+                'created_at' => '-',
+                'status_label' => '-',
+                'status_tone' => 'secondary',
+                'total' => '-',
+                'bookings' => [],
+                'products' => [],
+                'packages' => [],
+                'coupons' => [],
+                'notes' => '',
+            ];
         }
 
-        $statusLabel = '-';
-        $statusTone = 'secondary';
-        $booking = $row->bookings->first();
-        if ($booking) {
-            $firstDetail = $booking->details->first();
-            $status = $firstDetail->status ?? 'confirmed';
-            $source = $firstDetail->booking_source ?? 'inside_booking';
+        return $this->salePanelCache[$saleId] = $payload;
+    }
 
-            if ($source !== 'outside_booking') {
-                $deletedStatus = $booking->deleted_at ? 'cancelled' : 'confirmed';
-                $statusLabel = __('field.booking_status_' . $deletedStatus);
-                $statusTone = $booking->deleted_at ? 'danger' : 'success';
-            } else {
-                $statusLabel = __('field.booking_status_' . $status);
-                $statusTone = match ($status) {
-                    'pending' => 'warning',
-                    'confirmed' => 'success',
-                    'rejected' => 'danger',
-                    default => 'secondary',
-                };
-            }
+    protected function salePanelAttr(array $panel): string
+    {
+        $json = json_encode($panel, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+        if ($json === false) {
+            $json = '{}';
         }
 
-        $notes = array_values(array_unique(array_filter($notes)));
-
-        $payload = [
-            'id' => $row->id,
-            'ref' => '#' . $row->id,
-            'show_url' => route('center_user.sales.show', $row->id),
-            'branch' => $row->branch?->translation?->name ?? $row->branch?->name ?? '-',
-            'client' => $row->client?->name ?? __('general.walk_in'),
-            'phone' => $row->client?->full_phone ?? $row->client?->phone ?? '-',
-            'payment' => empty($paymentMethods) ? '-' : implode(', ', $paymentMethods),
-            'created_at' => $row->created_at ? $row->created_at->format('Y-m-d H:i') : '-',
-            'status_label' => $statusLabel,
-            'status_tone' => $statusTone,
-            'total' => number_format((float) $row->total, 2) . ' ' . $currency,
-            'bookings' => $bookings,
-            'products' => $products,
-            'packages' => $packages,
-            'coupons' => $coupons,
-            'notes' => implode("\n", $notes),
-        ];
-
-        $row->_lzSalePanelPayload = $payload;
-
-        return $payload;
+        return e($json);
     }
 
     public function getColumns(): array
