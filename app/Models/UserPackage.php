@@ -36,7 +36,8 @@ class UserPackage extends Model
 
     public function package(): BelongsTo
     {
-        return $this->belongsTo(Package::class);
+        // Keep package name visible on sales even if the package was soft-deleted
+        return $this->belongsTo(Package::class)->withTrashed();
     }
     
 

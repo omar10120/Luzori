@@ -193,20 +193,7 @@ class SalesDataTable extends DataTable
                 return $html;
             })
             ->addColumn('packages', function ($row) {
-                $details = [];
-                $currency = trim(get_currency());
-
-                foreach ($row->saleItems as $saleItem) {
-                    if ($saleItem->item_type !== 'user_package' || !$saleItem->itemable) {
-                        continue;
-                    }
-                    $userPackage = $saleItem->itemable;
-                    $details[] = [
-                        'package' => (string) ($userPackage->package?->translation?->name ?? $userPackage->package?->name ?? 'N/A'),
-                        'price' => number_format($userPackage->price ?? 0, 2) . ' ' . $currency,
-                    ];
-                }
-
+                $details = $this->collectPackageDetails($row);
                 $count = count($details);
                 if ($count === 0) {
                     return '-';
@@ -221,22 +208,7 @@ class SalesDataTable extends DataTable
                 return $html;
             })
             ->addColumn('coupons', function ($row) {
-                $details = [];
-                $currency = trim(get_currency());
-
-                foreach ($row->saleItems as $saleItem) {
-                    if ($saleItem->item_type !== 'user_wallet' || !$saleItem->itemable) {
-                        continue;
-                    }
-                    $userWallet = $saleItem->itemable;
-                    $details[] = [
-                        'code' => (string) ($userWallet->wallet?->code ?? '-'),
-                        'amount' => number_format($userWallet->amount ?? 0, 2) . ' ' . $currency,
-                        'type' => (string) ($userWallet->wallet_type ?? '-'),
-                        'user' => (string) ($userWallet->user?->name ?? '-'),
-                    ];
-                }
-
+                $details = $this->collectCouponDetails($row);
                 $count = count($details);
                 if ($count === 0) {
                     return '-';
@@ -507,21 +479,13 @@ class SalesDataTable extends DataTable
             'branch.translation',
             'saleItems' => function ($q) {
                 $q->with([
-                    'itemable' => function ($q) {
-                        // Morph eager-load: constrain by related model when possible
-                        $related = $q->getModel();
-                        if ($related instanceof \App\Models\Booking) {
-                            if (method_exists($q, 'withTrashed')) {
-                                $q->withTrashed();
-                            }
-                            $q->with(['details.service.translation', 'details.worker']);
-                        } elseif ($related instanceof \App\Models\BuyProduct) {
-                            $q->with(['details.product.translation', 'sales_worker', 'worker']);
-                        } elseif ($related instanceof \App\Models\UserWallet) {
-                            $q->with(['wallet', 'user', 'worker']);
-                        } elseif ($related instanceof \App\Models\UserPackage) {
-                            $q->with(['package.translation']);
-                        }
+                    'itemable' => function (\Illuminate\Database\Eloquent\Relations\MorphTo $morphTo) {
+                        $morphTo->withTrashed()->morphWith([
+                            \App\Models\Booking::class => ['details.service.translation', 'details.worker'],
+                            \App\Models\BuyProduct::class => ['details.product.translation', 'sales_worker', 'worker'],
+                            \App\Models\UserWallet::class => ['wallet', 'user', 'worker'],
+                            \App\Models\UserPackage::class => ['package'],
+                        ]);
                     },
                 ]);
             },
@@ -639,6 +603,79 @@ class SalesDataTable extends DataTable
         return base64_encode($json);
     }
 
+    protected function collectPackageDetails($row): array
+    {
+        $currency = trim((string) get_currency());
+        $details = [];
+        $items = $row->saleItems->where('item_type', 'user_package')->values();
+
+        if ($items->isEmpty()) {
+            return [];
+        }
+
+        $missingIds = $items->filter(fn ($si) => !$si->itemable && $si->itemable_id)
+            ->pluck('itemable_id')
+            ->unique()
+            ->all();
+
+        $fallback = !empty($missingIds)
+            ? \App\Models\UserPackage::with(['package' => fn ($q) => $q->withTrashed()])
+                ->whereIn('id', $missingIds)
+                ->get()
+                ->keyBy('id')
+            : collect();
+
+        foreach ($items as $saleItem) {
+            $userPackage = $saleItem->itemable ?? $fallback->get($saleItem->itemable_id);
+            $packageName = $userPackage?->package?->name
+                ?? $userPackage?->package?->translation?->name
+                ?? null;
+
+            $details[] = [
+                'package' => (string) ($packageName ?: (__('locale.package') . ' #' . $saleItem->itemable_id)),
+                'price' => number_format((float) ($userPackage->price ?? $saleItem->subtotal ?? $saleItem->price ?? 0), 2) . ' ' . $currency,
+            ];
+        }
+
+        return $details;
+    }
+
+    protected function collectCouponDetails($row): array
+    {
+        $currency = trim((string) get_currency());
+        $details = [];
+        $items = $row->saleItems->where('item_type', 'user_wallet')->values();
+
+        if ($items->isEmpty()) {
+            return [];
+        }
+
+        $missingIds = $items->filter(fn ($si) => !$si->itemable && $si->itemable_id)
+            ->pluck('itemable_id')
+            ->unique()
+            ->all();
+
+        $fallback = !empty($missingIds)
+            ? \App\Models\UserWallet::withTrashed()
+                ->with(['wallet', 'user'])
+                ->whereIn('id', $missingIds)
+                ->get()
+                ->keyBy('id')
+            : collect();
+
+        foreach ($items as $saleItem) {
+            $userWallet = $saleItem->itemable ?? $fallback->get($saleItem->itemable_id);
+            $details[] = [
+                'code' => (string) ($userWallet?->wallet?->code ?? ('#' . $saleItem->itemable_id)),
+                'amount' => number_format((float) ($userWallet->amount ?? $saleItem->subtotal ?? $saleItem->price ?? 0), 2) . ' ' . $currency,
+                'type' => (string) ($userWallet?->wallet_type ?? '-'),
+                'user' => (string) ($userWallet?->user?->name ?? '-'),
+            ];
+        }
+
+        return $details;
+    }
+
     /**
      * Base64 JSON for the right-side drawer (safe inside DataTables Ajax HTML).
      */
@@ -722,25 +759,16 @@ class SalesDataTable extends DataTable
             }
         }
 
+        $packages = $this->collectPackageDetails($row);
+        $coupons = $this->collectCouponDetails($row);
+        foreach ($coupons as $coupon) {
+            if (!empty($coupon['type']) && $coupon['type'] !== '-' && !in_array($coupon['type'], $paymentMethods, true)) {
+                $paymentMethods[] = (string) $coupon['type'];
+            }
+        }
+
         foreach ($row->saleItems as $saleItem) {
-            if ($saleItem->item_type === 'user_package' && $saleItem->itemable) {
-                $userPackage = $saleItem->itemable;
-                $packages[] = [
-                    'package' => (string) ($userPackage->package?->translation?->name ?? $userPackage->package?->name ?? 'N/A'),
-                    'price' => number_format($userPackage->price ?? 0, 2) . ' ' . $currency,
-                ];
-            } elseif ($saleItem->item_type === 'user_wallet' && $saleItem->itemable) {
-                $userWallet = $saleItem->itemable;
-                if (!empty($userWallet->wallet_type) && !in_array($userWallet->wallet_type, $paymentMethods, true)) {
-                    $paymentMethods[] = (string) $userWallet->wallet_type;
-                }
-                $coupons[] = [
-                    'code' => (string) ($userWallet->wallet?->code ?? '-'),
-                    'amount' => number_format($userWallet->amount ?? 0, 2) . ' ' . $currency,
-                    'type' => (string) ($userWallet->wallet_type ?? '-'),
-                    'user' => (string) ($userWallet->user?->name ?? '-'),
-                ];
-            } elseif ($saleItem->item_type === 'booking' && $saleItem->itemable && empty($bookings)) {
+            if ($saleItem->item_type === 'booking' && $saleItem->itemable && empty($bookings)) {
                 $booking = $saleItem->itemable;
                 foreach ($booking->details as $detail) {
                     $bookings[] = [

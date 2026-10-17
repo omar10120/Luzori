@@ -36,7 +36,8 @@ class SaleItem extends Model
 
     public function itemable(): MorphTo
     {
-        return $this->morphTo();
+        // Include soft-deleted bookings/products/wallets so Sales table columns stay populated
+        return $this->morphTo()->withTrashed();
     }
 }
 
