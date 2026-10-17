@@ -17,13 +17,39 @@
             box-shadow: inset 3px 0 0 #0a3a34;
         }
         .lz-sales-page .lz-branch-filter {
-            min-width: 160px;
-            max-width: 220px;
-            border-color: #e4d8c4;
+            min-width: 180px;
+            max-width: 240px;
+            border: 1px solid #c5a070;
             background: #fff;
             color: #002b26;
             font-size: 0.875rem;
             height: 38px;
+            border-radius: 10px;
+            padding-inline: 0.75rem;
+            appearance: auto;
+            -webkit-appearance: menulist;
+            cursor: pointer;
+        }
+        .lz-sales-page .lz-page-actions {
+            overflow: visible !important;
+            z-index: 60;
+        }
+        .lz-sales-page .lz-page-toolbar {
+            overflow: visible !important;
+            z-index: 55;
+        }
+        /* Keep Column/Export menus above the table */
+        .lz-sales-page div.dt-button-collection {
+            position: fixed !important;
+            z-index: 2000 !important;
+            max-height: min(70vh, 420px);
+            overflow-y: auto !important;
+        }
+        .lz-sales-page .dt-buttons {
+            display: inline-flex;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+            align-items: center;
         }
         .lz-sales-table .lz-sale-badge {
             display: inline-flex;
@@ -267,10 +293,10 @@
                 </div>
                 <h1 class="lz-page-title">{{ __('general.manage') }} {{ $title }}</h1>
             </div>
-            <div class="lz-page-actions" id="lz-sales-actions"><a href="{{ route('center_user.sales.cart') }}" class="btn btn-luzori-primary btn-sm mx-1 px-3 py-2 lz-btn-add-new">{{ __('general.add_new') }} <i class="ti ti-plus"></i></a>
-                
+            <div class="lz-page-actions" id="lz-sales-actions">
+                <a href="{{ route('center_user.sales.cart') }}" class="btn btn-luzori-primary btn-sm mx-1 px-3 py-2 lz-btn-add-new">{{ __('general.add_new') }} <i class="ti ti-plus"></i></a>
                 <select id="booking_source_filter" class="form-select form-select-sm lz-branch-filter" aria-label="{{ __('api.booking_source') }}">
-                    <option value="">{{ __('general.all') }}</option>
+                    <option value="">{{ __('general.all') }} — {{ __('api.booking_source') ?? 'Source' }}</option>
                     <option value="inside_booking">{{ __('api.inside_booking') ?? 'Inside Booking' }}</option>
                     <option value="outside_booking">{{ __('api.outside_booking') ?? 'Outside Booking' }}</option>
                 </select>
@@ -328,14 +354,18 @@
             const target = document.getElementById('lz-sales-actions');
 
             const moveButtons = () => {
-                const source = document.querySelector('.dt-action-buttons');
-                if (!target || !source || !source.children.length) return false;
-                while (source.firstChild) {
-                    target.appendChild(source.firstChild);
+                if (!target) return false;
+                // Prefer moving the whole .dt-buttons group so Column/Export menus keep working
+                const buttons = document.querySelector('.lz-table-card .dt-action-buttons .dt-buttons, .lz-table-card .dt-buttons');
+                if (buttons && !target.contains(buttons)) {
+                    target.appendChild(buttons);
                 }
-                const header = source.closest('.card-header');
-                if (header) header.style.display = 'none';
-                return true;
+                const source = document.querySelector('.lz-table-card .dt-action-buttons');
+                if (source) {
+                    const header = source.closest('.card-header');
+                    if (header) header.style.display = 'none';
+                }
+                return !!(buttons && target.contains(buttons));
             };
 
             if (!moveButtons()) {
@@ -344,6 +374,16 @@
                 }, 120);
                 setTimeout(() => clearInterval(timer), 4000);
             }
+
+            // Extra filter binding (works even if initComplete is delayed by module scripts)
+            $(document).off('change.lzSalesFilter', '#booking_source_filter')
+                .on('change.lzSalesFilter', '#booking_source_filter', function () {
+                    var table = document.getElementById('sales-table');
+                    if (!table || !window.jQuery || !jQuery.fn.dataTable) return;
+                    if (jQuery.fn.dataTable.isDataTable(table)) {
+                        jQuery(table).DataTable().ajax.reload();
+                    }
+                });
         });
 
         (function() {

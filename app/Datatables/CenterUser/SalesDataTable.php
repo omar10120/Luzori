@@ -88,21 +88,28 @@ class SalesDataTable extends DataTable
                     'show' => true,
                     'print' => true,
                     'row_details' => false,
-                    'sale_panel_b64' => $this->salePanelB64($item),
                     'operation' => DeleteActionEnum::FORCE_DELETE->value,
                     'with_trashed' => 1,
                 ];
+                try {
+                    $options['sale_panel_b64'] = $this->salePanelB64($item);
+                } catch (\Throwable $e) {
+                    $options['row_details'] = true;
+                }
                 if ($canDelete) {
                     $options['sale_otp_delete'] = true;
                 }
 
-                $hasBooking = $item->bookings->isNotEmpty()
-                    || $item->saleItems->contains(fn ($si) => $si->item_type === 'booking');
-                $hasTip = (float) ($item->tip ?? 0) > 0
-                    || $item->bookings->flatMap->details->sum(fn ($d) => (float) ($d->tip ?? 0)) > 0;
-
-                if ($hasBooking && !$hasTip) {
-                    $options['add_tip'] = true;
+                try {
+                    $hasBooking = $item->bookings->isNotEmpty()
+                        || $item->saleItems->contains(fn ($si) => $si->item_type === 'booking');
+                    $hasTip = (float) ($item->tip ?? 0) > 0
+                        || $item->bookings->flatMap(fn ($b) => $b->details ?? collect())->sum(fn ($d) => (float) ($d->tip ?? 0)) > 0;
+                    if ($hasBooking && !$hasTip) {
+                        $options['add_tip'] = true;
+                    }
+                } catch (\Throwable $e) {
+                    // ignore tip action errors
                 }
 
                 return view()->make('_partials.center_action_icons', compact('id', 'route', 'options', 'model'))->render();
@@ -473,22 +480,11 @@ class SalesDataTable extends DataTable
         $user = auth('center_user')->user();
         $branchId = $user->branch_id ?? null;
 
-            $query = $model->query()->with([
+        $query = $model->query()->with([
             'worker',
             'client',
             'branch.translation',
-            'saleItems' => function ($q) {
-                $q->with([
-                    'itemable' => function (\Illuminate\Database\Eloquent\Relations\MorphTo $morphTo) {
-                        $morphTo->withTrashed()->morphWith([
-                            \App\Models\Booking::class => ['details.service.translation', 'details.worker'],
-                            \App\Models\BuyProduct::class => ['details.product.translation', 'sales_worker', 'worker'],
-                            \App\Models\UserWallet::class => ['wallet', 'user', 'worker'],
-                            \App\Models\UserPackage::class => ['package'],
-                        ]);
-                    },
-                ]);
-            },
+            'saleItems.itemable',
             'bookings' => function ($q) {
                 $q->withTrashed()->with([
                     'details.service.translation',
@@ -504,18 +500,24 @@ class SalesDataTable extends DataTable
             $query->where('branch_id', $branchId);
         }
 
-        $query->when(request()->has('branch_id'), function ($query) {
+        $query->when(request()->filled('branch_id'), function ($query) {
             $query->where('branch_id', request()->input('branch_id'));
         });
 
-        $query->when(request()->has('booking_source'), function ($query) {
-            $source = request()->input('booking_source');
-            if ($source === 'inside_booking' || $source === 'outside_booking') {
-                $query->whereHas('bookings.details', function ($q) use ($source) {
-                    $q->where('booking_source', $source);
-                });
-            }
-        });
+        $source = request()->input('booking_source');
+        if ($source === 'inside_booking' || $source === 'outside_booking') {
+            $query->whereHas('bookings.details', function ($q) use ($source) {
+                if ($source === 'inside_booking') {
+                    $q->where(function ($inner) {
+                        $inner->where('booking_source', 'inside_booking')
+                            ->orWhereNull('booking_source')
+                            ->orWhere('booking_source', '');
+                    });
+                } else {
+                    $q->where('booking_source', 'outside_booking');
+                }
+            });
+        }
 
         return $query->orderBy($this->plural . '.id', 'DESC');
     }
@@ -523,11 +525,16 @@ class SalesDataTable extends DataTable
     public function html(): HtmlBuilder
     {
         $buttonClass = 'btn mx-1 px-3 py-2 btn-sm';
-        $addRoute = route('center_user.' . $this->plural . '.cart');
 
-        $initCompleteJs = 'function () {';
-        $initCompleteJs .= '$("#booking_source_filter").on("change", function() { window.LaravelDataTables["sales-table"].draw(); });';
-        $initCompleteJs .= '}';
+        $initCompleteJs = <<<'JS'
+function () {
+    var api = this.api();
+    var $filter = $("#booking_source_filter");
+    $filter.off("change.lzSales").on("change.lzSales", function () {
+        api.ajax.reload();
+    });
+}
+JS;
 
         return $this->builder()
             ->setTableId($this->plural . '-table')
@@ -535,7 +542,8 @@ class SalesDataTable extends DataTable
             ->columns($this->getColumns())
             ->ajax([
                 'data' => 'function(d) {
-                    d.booking_source = $("#booking_source_filter").val();
+                    var $f = $("#booking_source_filter");
+                    d.booking_source = $f.length ? ($f.val() || "") : "";
                 }',
             ])
             ->orderBy(1)
@@ -562,11 +570,19 @@ class SalesDataTable extends DataTable
                 'printable' => false,
                 'exportable' => false,
                 'responsivePriority' => 1,
-                'className' => 'dt-center lz-actions-col all',
+                'className' => 'dt-center lz-actions-col all noVis',
                 'title' => __('general.actions'),
             ])
             ->buttons([
-                Button::make('colvis')->addClass($buttonClass . ' btn-luzori-beige')->text(__('general.column_visibility')),
+                [
+                    'extend' => 'colvis',
+                    'className' => $buttonClass . ' btn-luzori-beige',
+                    'text' => __('general.column_visibility'),
+                    'columns' => ':not(.noVis)',
+                    'attr' => [
+                        'id' => 'lz-sales-colvis',
+                    ],
+                ],
                 [
                     'extend' => 'collection',
                     'text' => __('general.export'),
