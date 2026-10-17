@@ -389,12 +389,14 @@
         (function() {
             var offcanvasEl = document.getElementById('saleDetailsOffcanvas');
             var modalEl = document.getElementById('salesSectionModal');
-            if (!offcanvasEl) return;
-
             var bodyEl = document.getElementById('saleDetailsOffcanvasBody');
             var fullLink = document.getElementById('saleDetailsFullLink');
             var modalTitle = document.getElementById('salesSectionModalLabel');
             var modalBody = document.getElementById('salesSectionModalBody');
+            if (!offcanvasEl || !bodyEl) {
+                console.warn('Sale side panel markup missing');
+                return;
+            }
             var labels = {
                 branch: @json(__('field.branch')),
                 client: @json(__('field.client')),
@@ -664,34 +666,48 @@
 
             // Global opener (works even when inline onclick stops bubbling)
             window.lzOpenSaleSideDetails = function(btn) {
-                if (!btn) return false;
-                var data = parsePanel(btn);
-                if (!data) return false;
-                setActiveRow(btn);
-                openSidePanel(data);
-                return false;
+                try {
+                    if (!btn) return false;
+                    if (btn.classList && btn.classList.contains('view-sale-section-dialog')) {
+                        openSectionDialog(btn);
+                        return false;
+                    }
+                    var data = parsePanel(btn);
+                    if (!data) {
+                        var eye = findRowEye(btn);
+                        if (eye) data = parsePanel(eye);
+                    }
+                    if (!data) return false;
+                    setActiveRow(btn);
+                    openSidePanel(data);
+                    return false;
+                } catch (err) {
+                    console.error('lzOpenSaleSideDetails', err);
+                    return false;
+                }
             };
 
-            // Action eye → side drawer (delegated fallback)
-            $(document).on('click', '.view-sale-side-details', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                window.lzOpenSaleSideDetails(this);
-            });
-
-            // Booking/product/package/coupon "View details" → centered dialog
-            $(document).on('click', '.view-sale-section-dialog', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                openSectionDialog(this);
-            });
+            // Capture-phase listener so stopPropagation cannot block the side panel
+            document.addEventListener('click', function(e) {
+                var sideBtn = e.target && e.target.closest ? e.target.closest('.view-sale-side-details') : null;
+                if (sideBtn) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    window.lzOpenSaleSideDetails(sideBtn);
+                    return;
+                }
+                var sectionBtn = e.target && e.target.closest ? e.target.closest('.view-sale-section-dialog') : null;
+                if (sectionBtn) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    openSectionDialog(sectionBtn);
+                }
+            }, true);
 
             // Force row-details eye (legacy modal) to open the side drawer on Sales page
             window.lzOpenRowDetails = function(el) {
                 var eye = findRowEye(el);
-                if (eye) {
-                    return window.lzOpenSaleSideDetails(eye);
-                }
+                if (eye) return window.lzOpenSaleSideDetails(eye);
                 if (el && el.getAttribute && el.getAttribute('data-sale-panel-b64')) {
                     return window.lzOpenSaleSideDetails(el);
                 }
@@ -701,6 +717,8 @@
             offcanvasEl.addEventListener('hidden.bs.offcanvas', function() {
                 document.querySelectorAll('.lz-sales-table tbody tr.lz-sale-row-active')
                     .forEach(function(tr) { tr.classList.remove('lz-sale-row-active'); });
+                document.querySelectorAll('.lz-sale-drawer-backdrop').forEach(function(b) { b.remove(); });
+                document.body.classList.remove('overflow-hidden');
             });
         })();
     </script>

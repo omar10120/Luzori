@@ -88,14 +88,10 @@ class SalesDataTable extends DataTable
                     'show' => true,
                     'print' => true,
                     'row_details' => false,
+                    'sale_panel_b64' => $this->salePanelB64($item),
                     'operation' => DeleteActionEnum::FORCE_DELETE->value,
                     'with_trashed' => 1,
                 ];
-                try {
-                    $options['sale_panel_b64'] = $this->salePanelB64($item);
-                } catch (\Throwable $e) {
-                    $options['row_details'] = true;
-                }
                 if ($canDelete) {
                     $options['sale_otp_delete'] = true;
                 }
@@ -547,12 +543,8 @@ JS;
                 }',
             ])
             ->orderBy(1)
-            ->responsive([
-                'details' => [
-                    'type' => 'column',
-                    'target' => 0,
-                ],
-            ])
+            // Disable Responsive child-rows so ColVis can actually show/hide columns in the table
+            ->responsive(false)
             ->dom('
                 <"card-header border-bottom p-3 d-flex justify-content-between align-items-center"
                     <"head-label"><"dt-action-buttons"B>
@@ -599,7 +591,9 @@ JS;
             ->language($this->getDataTableLanguageUrl())
             ->addTableClass('table table-hover')
             ->initComplete($initCompleteJs)
-            ->parameters([]);
+            ->parameters([
+                'scrollX' => true,
+            ]);
     }
 
     public function getDataTableLanguageUrl()
@@ -913,27 +907,29 @@ JS;
         $user = auth('center_user')->user();
         $canDelete = $user && $user->can('DELETE_SALES', 'center_api');
         
+        // Do NOT use Responsive class "none" here — it permanently hides columns even when ColVis marks them visible.
+        // Use visible(false) for initially-hidden columns so Column dropdown can show them.
         $columns = [
-            Column::make('id')->searchable(true)->title('#')->responsivePriority(1)->addClass('dtr-control all'),
-            Column::computed('branch.translation.name')->searchable(true)->title(__('field.branch'))->responsivePriority(2)->addClass('all'),
-            Column::computed('services')->searchable(false)->title(__('field.services') . ' (' . __('locale.bookings') . ')')->responsivePriority(2)->addClass('all'),
-            Column::computed('packages')->searchable(false)->title(__('field.packages') . ' (' . __('locale.packages') . ')')->responsivePriority(3)->addClass('all'),
-            Column::computed('products')->searchable(false)->title(__('locale.products'))->responsivePriority(3)->addClass('all'),
-            Column::computed('coupons')->searchable(false)->title(__('field.coupons'))->responsivePriority(3)->addClass('all'),
-            Column::computed('client.name')->searchable(true)->title(__('field.client'))->responsivePriority(1)->addClass('all'),
-            Column::make('client_mobile')->searchable(true)->title(__('field.phone'))->responsivePriority(2)->addClass('all'),
-            Column::computed('payment_methods')->searchable(false)->title(__('field.payment_methods') ?? 'Payment Methods')->addClass('none'),
-            Column::computed('booking_payment')->searchable(true)->title(__('field.payment_method') . ' (' . __('locale.bookings') . ')')->addClass('none'),
-            Column::computed('product_payment')->searchable(true)->title(__('field.payment_method') . ' (' . __('locale.products') . ')')->addClass('none'),
-            Column::computed('coupon_payment')->searchable(true)->title(__('field.payment_method') . ' (' . __('field.coupons') . ')')->addClass('none'),
-            Column::make('created_at')->searchable(true)->title(__('field.created_at'))->addClass('none'),
-            Column::computed('booking_source')->searchable(false)->title(__('api.booking_source') ?? 'Source')->addClass('none'),
-            Column::computed('status')->searchable(false)->title(__('field.status'))->addClass('none'),
-            Column::computed('booking_employees')->searchable(false)->title(__('field.employee') . ' (' . __('locale.bookings') . ')')->addClass('none'),
-            Column::computed('product_employees')->searchable(false)->title(__('field.employee') . ' (' . __('locale.products') . ')')->addClass('none'),
-            Column::computed('worker.name')->searchable(true)->title(__('field.worker'))->addClass('none'),
-            Column::computed('tip')->searchable(false)->title(__('field.tip'))->addClass('none'),
-            Column::computed('total')->searchable(false)->title(__('field.total'))->responsivePriority(2)->addClass('all'),
+            Column::make('id')->searchable(true)->title('#')->addClass('all'),
+            Column::computed('branch.translation.name')->searchable(true)->title(__('field.branch'))->addClass('all'),
+            Column::computed('services')->searchable(false)->title(__('field.services') . ' (' . __('locale.bookings') . ')')->addClass('all'),
+            Column::computed('packages')->searchable(false)->title(__('field.packages') . ' (' . __('locale.packages') . ')')->addClass('all'),
+            Column::computed('products')->searchable(false)->title(__('locale.products'))->addClass('all'),
+            Column::computed('coupons')->searchable(false)->title(__('field.coupons'))->addClass('all'),
+            Column::computed('client.name')->searchable(true)->title(__('field.client'))->addClass('all'),
+            Column::make('client_mobile')->searchable(true)->title(__('field.phone'))->addClass('all'),
+            Column::computed('payment_methods')->searchable(false)->title(__('field.payment_methods') ?? 'Payment Methods')->visible(false),
+            Column::computed('booking_payment')->searchable(true)->title(__('field.payment_method') . ' (' . __('locale.bookings') . ')')->visible(false),
+            Column::computed('product_payment')->searchable(true)->title(__('field.payment_method') . ' (' . __('locale.products') . ')')->visible(false),
+            Column::computed('coupon_payment')->searchable(true)->title(__('field.payment_method') . ' (' . __('field.coupons') . ')')->visible(false),
+            Column::make('created_at')->searchable(true)->title(__('field.created_at'))->visible(false),
+            Column::computed('booking_source')->searchable(false)->title(__('api.booking_source') ?? 'Source')->visible(false),
+            Column::computed('status')->searchable(false)->title(__('field.status'))->visible(false),
+            Column::computed('booking_employees')->searchable(false)->title(__('field.employee') . ' (' . __('locale.bookings') . ')')->visible(false),
+            Column::computed('product_employees')->searchable(false)->title(__('field.employee') . ' (' . __('locale.products') . ')')->visible(false),
+            Column::computed('worker.name')->searchable(true)->title(__('field.worker'))->visible(false),
+            Column::computed('tip')->searchable(false)->title(__('field.tip'))->visible(false),
+            Column::computed('total')->searchable(false)->title(__('field.total'))->addClass('all'),
         ];
         
         if ($canDelete) {
