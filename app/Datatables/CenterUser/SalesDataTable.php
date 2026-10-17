@@ -114,27 +114,22 @@ class SalesDataTable extends DataTable
             ->editColumn('branch.translation.name', function ($row) {
                 return $row->branch?->translation?->name ?? '-';
             })
-            ->editColumn('services', function ($row) {
-                $serviceDetails = [];
+            ->addColumn('services', function ($row) {
                 $count = 0;
 
-                foreach ($row->saleItems as $saleItem) {
-                    if ($saleItem->item_type === 'booking' && $saleItem->itemable) {
-                        $booking = $saleItem->itemable;
-                        foreach ($booking->details as $detail) {
-                            $count++;
-                            $serviceDetails[] = [
-                                'service' => $detail->service?->translation?->name ?? $detail->service?->name ?? 'N/A',
-                                'worker' => $detail->worker?->name ?? '-',
-                                'date' => (string) ($detail->_date ?? $booking->booking_date ?? '-'),
-                                'time' => ($detail->from_time ?? '') . '-' . ($detail->to_time ?? ''),
-                                'price' => number_format($detail->price ?? 0, 2) . ' ' . trim(get_currency()),
-                            ];
+                // Prefer sale.bookings (direct FK) — saleItems morph is often empty/null
+                foreach ($row->bookings as $booking) {
+                    $count += $booking->details->count();
+                }
+                if ($count === 0) {
+                    foreach ($row->saleItems as $saleItem) {
+                        if ($saleItem->item_type === 'booking' && $saleItem->itemable) {
+                            $count += $saleItem->itemable->details->count();
                         }
                     }
                 }
 
-                if (empty($serviceDetails)) {
+                if ($count === 0) {
                     return '-';
                 }
 
@@ -146,23 +141,20 @@ class SalesDataTable extends DataTable
                 return $html;
             })
             ->addColumn('products', function ($row) {
-                $productDetails = [];
                 $count = 0;
 
-                foreach ($row->saleItems as $saleItem) {
-                    if ($saleItem->item_type === 'buy_product' && $saleItem->itemable) {
-                        $buyProduct = $saleItem->itemable;
-                        foreach ($buyProduct->details as $detail) {
-                            $count++;
-                            $productDetails[] = [
-                                'product' => $detail->product?->translation?->name ?? $detail->product?->name ?? 'N/A',
-                                'price' => number_format($detail->price ?? 0, 2) . ' ' . trim(get_currency()),
-                            ];
+                foreach ($row->buyProducts as $buyProduct) {
+                    $count += $buyProduct->details->count();
+                }
+                if ($count === 0) {
+                    foreach ($row->saleItems as $saleItem) {
+                        if ($saleItem->item_type === 'buy_product' && $saleItem->itemable) {
+                            $count += $saleItem->itemable->details->count();
                         }
                     }
                 }
 
-                if (empty($productDetails)) {
+                if ($count === 0) {
                     return '-';
                 }
 
@@ -174,21 +166,15 @@ class SalesDataTable extends DataTable
                 return $html;
             })
             ->addColumn('packages', function ($row) {
-                $packageDetails = [];
                 $count = 0;
 
                 foreach ($row->saleItems as $saleItem) {
                     if ($saleItem->item_type === 'user_package' && $saleItem->itemable) {
                         $count++;
-                        $userPackage = $saleItem->itemable;
-                        $packageDetails[] = [
-                            'package' => $userPackage->package?->translation?->name ?? $userPackage->package?->name ?? 'N/A',
-                            'price' => number_format($userPackage->price ?? 0, 2) . ' ' . trim(get_currency()),
-                        ];
                     }
                 }
 
-                if (empty($packageDetails)) {
+                if ($count === 0) {
                     return '-';
                 }
 
@@ -201,23 +187,15 @@ class SalesDataTable extends DataTable
                 return $html;
             })
             ->addColumn('coupons', function ($row) {
-                $couponDetails = [];
                 $count = 0;
 
                 foreach ($row->saleItems as $saleItem) {
                     if ($saleItem->item_type === 'user_wallet' && $saleItem->itemable) {
                         $count++;
-                        $userWallet = $saleItem->itemable;
-                        $couponDetails[] = [
-                            'code' => $userWallet->wallet?->code ?? '-',
-                            'amount' => number_format($userWallet->amount ?? 0, 2) . ' ' . trim(get_currency()),
-                            'type' => $userWallet->wallet_type ?? '-',
-                            'user' => $userWallet->user?->name ?? '-',
-                        ];
                     }
                 }
 
-                if (empty($couponDetails)) {
+                if ($count === 0) {
                     return '-';
                 }
 
@@ -484,24 +462,32 @@ class SalesDataTable extends DataTable
             'worker',
             'client',
             'branch.translation',
-            'saleItems' => function($q) {
+            'saleItems' => function ($q) {
                 $q->with([
-                    'itemable' => function($q) {
-                        $model = $q->getModel();
-                        if ($model instanceof \App\Models\Booking) {
+                    'itemable' => function ($q) {
+                        // Morph eager-load: constrain by related model when possible
+                        $related = $q->getModel();
+                        if ($related instanceof \App\Models\Booking) {
+                            if (method_exists($q, 'withTrashed')) {
+                                $q->withTrashed();
+                            }
                             $q->with(['details.service.translation', 'details.worker']);
-                        } elseif ($model instanceof \App\Models\BuyProduct) {
+                        } elseif ($related instanceof \App\Models\BuyProduct) {
                             $q->with(['details.product.translation', 'sales_worker', 'worker']);
-                        } elseif ($model instanceof \App\Models\UserWallet) {
+                        } elseif ($related instanceof \App\Models\UserWallet) {
                             $q->with(['wallet', 'user', 'worker']);
-                        } elseif ($model instanceof \App\Models\UserPackage) {
+                        } elseif ($related instanceof \App\Models\UserPackage) {
                             $q->with(['package.translation']);
                         }
-                    }
+                    },
                 ]);
             },
-            'bookings.details.service.translation',
-            'bookings.details.worker',
+            'bookings' => function ($q) {
+                $q->withTrashed()->with([
+                    'details.service.translation',
+                    'details.worker',
+                ]);
+            },
             'buyProducts.details.product.translation',
             'buyProducts.sales_worker',
             'buyProducts.worker',
@@ -618,43 +604,45 @@ class SalesDataTable extends DataTable
         $notes = [];
         $paymentMethods = [];
 
-        foreach ($row->saleItems as $saleItem) {
-            if ($saleItem->item_type === 'booking' && $saleItem->itemable) {
-                $booking = $saleItem->itemable;
-                if (!empty($booking->notes)) {
-                    $notes[] = trim((string) $booking->notes);
-                }
-                if (($booking->payment_type ?? null) === 'multiple' && is_array($booking->payment_methods ?? null)) {
-                    foreach ($booking->payment_methods as $method) {
-                        $name = is_array($method) ? ($method['method'] ?? null) : null;
-                        if ($name && !in_array($name, $paymentMethods, true)) {
-                            $paymentMethods[] = (string) $name;
-                        }
+        foreach ($row->bookings as $booking) {
+            if (!empty($booking->notes)) {
+                $notes[] = trim((string) $booking->notes);
+            }
+            if (($booking->payment_type ?? null) === 'multiple' && is_array($booking->payment_methods ?? null)) {
+                foreach ($booking->payment_methods as $method) {
+                    $name = is_array($method) ? ($method['method'] ?? null) : null;
+                    if ($name && !in_array($name, $paymentMethods, true)) {
+                        $paymentMethods[] = (string) $name;
                     }
-                } elseif (!empty($booking->payment_type) && !in_array($booking->payment_type, $paymentMethods, true)) {
-                    $paymentMethods[] = (string) $booking->payment_type;
                 }
-                foreach ($booking->details as $detail) {
-                    $bookings[] = [
-                        'service' => (string) ($detail->service?->translation?->name ?? $detail->service?->name ?? 'N/A'),
-                        'worker' => (string) ($detail->worker?->name ?? '-'),
-                        'date' => (string) ($detail->_date ?? $booking->booking_date ?? '-'),
-                        'time' => (string) (($detail->from_time ?? '') . '-' . ($detail->to_time ?? '')),
-                        'price' => number_format($detail->price ?? 0, 2) . ' ' . $currency,
-                    ];
-                }
-            } elseif ($saleItem->item_type === 'buy_product' && $saleItem->itemable) {
-                $buyProduct = $saleItem->itemable;
-                if (!empty($buyProduct->payment_type) && !in_array($buyProduct->payment_type, $paymentMethods, true)) {
-                    $paymentMethods[] = (string) $buyProduct->payment_type;
-                }
-                foreach ($buyProduct->details as $detail) {
-                    $products[] = [
-                        'product' => (string) ($detail->product?->translation?->name ?? $detail->product?->name ?? 'N/A'),
-                        'price' => number_format($detail->price ?? 0, 2) . ' ' . $currency,
-                    ];
-                }
-            } elseif ($saleItem->item_type === 'user_package' && $saleItem->itemable) {
+            } elseif (!empty($booking->payment_type) && !in_array($booking->payment_type, $paymentMethods, true)) {
+                $paymentMethods[] = (string) $booking->payment_type;
+            }
+            foreach ($booking->details as $detail) {
+                $bookings[] = [
+                    'service' => (string) ($detail->service?->translation?->name ?? $detail->service?->name ?? 'N/A'),
+                    'worker' => (string) ($detail->worker?->name ?? '-'),
+                    'date' => (string) ($detail->_date ?? $booking->booking_date ?? '-'),
+                    'time' => (string) (($detail->from_time ?? '') . '-' . ($detail->to_time ?? '')),
+                    'price' => number_format($detail->price ?? 0, 2) . ' ' . $currency,
+                ];
+            }
+        }
+
+        foreach ($row->buyProducts as $buyProduct) {
+            if (!empty($buyProduct->payment_type) && !in_array($buyProduct->payment_type, $paymentMethods, true)) {
+                $paymentMethods[] = (string) $buyProduct->payment_type;
+            }
+            foreach ($buyProduct->details as $detail) {
+                $products[] = [
+                    'product' => (string) ($detail->product?->translation?->name ?? $detail->product?->name ?? 'N/A'),
+                    'price' => number_format($detail->price ?? 0, 2) . ' ' . $currency,
+                ];
+            }
+        }
+
+        foreach ($row->saleItems as $saleItem) {
+            if ($saleItem->item_type === 'user_package' && $saleItem->itemable) {
                 $userPackage = $saleItem->itemable;
                 $packages[] = [
                     'package' => (string) ($userPackage->package?->translation?->name ?? $userPackage->package?->name ?? 'N/A'),
@@ -671,6 +659,25 @@ class SalesDataTable extends DataTable
                     'type' => (string) ($userWallet->wallet_type ?? '-'),
                     'user' => (string) ($userWallet->user?->name ?? '-'),
                 ];
+            } elseif ($saleItem->item_type === 'booking' && $saleItem->itemable && empty($bookings)) {
+                $booking = $saleItem->itemable;
+                foreach ($booking->details as $detail) {
+                    $bookings[] = [
+                        'service' => (string) ($detail->service?->translation?->name ?? $detail->service?->name ?? 'N/A'),
+                        'worker' => (string) ($detail->worker?->name ?? '-'),
+                        'date' => (string) ($detail->_date ?? $booking->booking_date ?? '-'),
+                        'time' => (string) (($detail->from_time ?? '') . '-' . ($detail->to_time ?? '')),
+                        'price' => number_format($detail->price ?? 0, 2) . ' ' . $currency,
+                    ];
+                }
+            } elseif ($saleItem->item_type === 'buy_product' && $saleItem->itemable && empty($products)) {
+                $buyProduct = $saleItem->itemable;
+                foreach ($buyProduct->details as $detail) {
+                    $products[] = [
+                        'product' => (string) ($detail->product?->translation?->name ?? $detail->product?->name ?? 'N/A'),
+                        'price' => number_format($detail->price ?? 0, 2) . ' ' . $currency,
+                    ];
+                }
             }
         }
 
