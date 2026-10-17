@@ -1368,6 +1368,25 @@ body.luzori-center .lz-row-details-table td {
   color: var(--lz-text);
   border-color: #efe6d8;
   vertical-align: top;
+  overflow-wrap: anywhere;
+}
+
+body.luzori-center .lz-row-details-modal .modal-body {
+  overflow-x: hidden;
+}
+
+body.luzori-center .lz-row-details-table img,
+body.luzori-center .lz-row-details-modal .modal-body img {
+  display: block;
+  max-width: 160px;
+  max-height: 160px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 12px;
+  border: 1px solid #efe6d8;
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(0, 43, 38, 0.06);
 }
 
 body.luzori-center .lz-row-details-table .lz-perm-badge {

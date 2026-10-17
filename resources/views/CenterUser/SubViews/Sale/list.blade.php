@@ -228,6 +228,14 @@
         .lz-sale-drawer-section {
             padding: 0.85rem 0;
             border-top: 1px solid #efe6d8;
+            scroll-margin-top: 0.75rem;
+        }
+        .lz-sale-drawer-section.is-focus {
+            outline: 1px solid rgba(197, 160, 112, 0.55);
+            background: #faf7f2;
+            border-radius: 12px;
+            padding: 0.75rem 0.7rem;
+            margin-top: 0.35rem;
         }
         .lz-sale-drawer-section-title {
             display: flex;
@@ -546,8 +554,10 @@
                     '</li>';
             }
 
-            function section(icon, title, innerHtml) {
-                return '<div class="lz-sale-drawer-section">' +
+            function section(icon, title, innerHtml, sectionKey) {
+                var focusClass = '';
+                var keyAttr = sectionKey ? (' data-lz-section="' + esc(sectionKey) + '"') : '';
+                return '<div class="lz-sale-drawer-section' + focusClass + '"' + keyAttr + '>' +
                     '<div class="lz-sale-drawer-section-title"><i class="ti ' + icon + '"></i><span>' + esc(title) + '</span></div>' +
                     innerHtml +
                     '</div>';
@@ -611,10 +621,17 @@
                     .forEach(function(tr) { tr.classList.remove('lz-sale-row-active'); });
             }
 
-            function openSidePanel(data) {
+            function openSidePanel(data, options) {
                 if (!data || !bodyEl) return;
+                options = options || {};
                 ensureDrawerOnBody();
 
+                var titleEl = document.getElementById('saleDetailsOffcanvasLabel');
+                if (titleEl) {
+                    titleEl.textContent = options.title || @json(__('field.booking_details'));
+                }
+
+                var focusSection = options.focusSection || '';
                 var tone = data.status_tone || 'secondary';
                 var html = '';
                 html += '<div class="lz-sale-drawer-head">';
@@ -632,17 +649,28 @@
                 html += metaRow('ti-clock', labels.createdAt, data.created_at);
                 html += '</ul>';
 
-                html += section('ti-scissors', labels.services, renderBookings(data.bookings));
-                html += section('ti-package', labels.packages, renderSimple(data.packages, 'package'));
-                html += section('ti-shopping-bag', labels.products, renderSimple(data.products, 'product'));
-                html += section('ti-ticket', labels.coupons, renderCoupons(data.coupons));
+                html += section('ti-scissors', labels.services, renderBookings(data.bookings), 'bookings');
+                html += section('ti-package', labels.packages, renderSimple(data.packages, 'package'), 'packages');
+                html += section('ti-shopping-bag', labels.products, renderSimple(data.products, 'product'), 'products');
+                html += section('ti-ticket', labels.coupons, renderCoupons(data.coupons), 'coupons');
 
                 var notesHtml = data.notes
                     ? '<div class="lz-sale-drawer-notes">' + esc(data.notes) + '</div>'
                     : '<div class="lz-sale-drawer-empty">' + labels.empty + '</div>';
-                html += section('ti-notes', labels.notes, notesHtml);
+                html += section('ti-notes', labels.notes, notesHtml, 'notes');
 
                 bodyEl.innerHTML = html;
+
+                if (focusSection) {
+                    var focusEl = bodyEl.querySelector('[data-lz-section="' + focusSection + '"]');
+                    if (focusEl) {
+                        focusEl.classList.add('is-focus');
+                        setTimeout(function () {
+                            focusEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }, 40);
+                    }
+                }
+
                 if (fullLink) {
                     var showUrl = data.show_url || (data.id ? ('{{ url('/center_user/sales/show') }}/' + data.id) : '#');
                     fullLink.href = showUrl;
@@ -682,34 +710,35 @@
                 return h;
             }
 
-            function openSectionDialog(btn) {
-                if (!modalEl || !modalBody) return;
+            // Section View Details (bookings / packages / products / coupons) → side drawer
+            function openSectionInSidePanel(btn) {
+                if (!btn) return false;
+                var sectionKey = btn.getAttribute('data-section') || 'bookings';
                 var details = decodeB64Json(btn.getAttribute('data-details-b64')) || [];
-                var section = btn.getAttribute('data-section') || 'bookings';
                 var title = btn.getAttribute('data-modal-title') || labels.services;
-                var headers = [];
-                var rows = [];
 
-                if (section === 'bookings') {
-                    headers = [labels.service, labels.employee, labels.date, labels.time, labels.price];
-                    rows = details.map(function(d) { return [d.service, d.worker, d.date, d.time, d.price]; });
-                } else if (section === 'products') {
-                    headers = [labels.product, labels.price];
-                    rows = details.map(function(d) { return [d.product, d.price]; });
-                } else if (section === 'packages') {
-                    headers = [labels.package, labels.price];
-                    rows = details.map(function(d) { return [d.package, d.price]; });
-                } else if (section === 'coupons') {
-                    headers = [labels.code, labels.amount, labels.type, labels.client];
-                    rows = details.map(function(d) { return [d.code, d.amount, d.type, d.user]; });
+                var eye = findRowEye(btn);
+                var data = parsePanel(eye || btn);
+                if (!data) {
+                    data = {
+                        id: '',
+                        ref: '#',
+                        show_url: '#',
+                        branch: '-', client: '-', phone: '-', payment: '-', created_at: '-',
+                        status_label: '-', status_tone: 'secondary',
+                        bookings: [], products: [], packages: [], coupons: [], notes: ''
+                    };
+                    data = enrichPanelFromRow(btn, data);
                 }
 
-                if (modalTitle) modalTitle.textContent = title;
-                modalBody.innerHTML = rows.length ? tableHtml(headers, rows) : '<p class="text-muted mb-0">' + labels.empty + '</p>';
+                if (sectionKey === 'bookings') data.bookings = details;
+                else if (sectionKey === 'products') data.products = details;
+                else if (sectionKey === 'packages') data.packages = details;
+                else if (sectionKey === 'coupons') data.coupons = details;
 
-                if (window.bootstrap && bootstrap.Modal) {
-                    bootstrap.Modal.getOrCreateInstance(modalEl).show();
-                }
+                setActiveRow(btn);
+                openSidePanel(data, { title: title, focusSection: sectionKey });
+                return false;
             }
 
             // Global opener (works even when inline onclick stops bubbling)
@@ -717,11 +746,10 @@
                 try {
                     if (!btn) return false;
                     if (btn.classList && btn.classList.contains('view-sale-section-dialog')) {
-                        openSectionDialog(btn);
-                        return false;
+                        return openSectionInSidePanel(btn);
                     }
                     var target = btn;
-                    if (!target.getAttribute('data-sale-panel-b64')) {
+                    if (!target.getAttribute('data-sale-panel-b64') && !target.getAttribute('data-sale-id')) {
                         target = findRowEye(btn) || btn;
                     }
                     var data = parsePanel(target);
@@ -765,7 +793,7 @@
                 if (sectionBtn) {
                     e.preventDefault();
                     e.stopPropagation();
-                    openSectionDialog(sectionBtn);
+                    openSectionInSidePanel(sectionBtn);
                 }
             }, true);
 
