@@ -12,6 +12,10 @@
             background: #faf7f2 !important;
         }
         .lz-sales-table tbody tr.dtr-expanded { background: #f3ebe0 !important; }
+        .lz-sales-table tbody tr.lz-sale-row-active > td {
+            background: #e8f2ef !important;
+            box-shadow: inset 3px 0 0 #0a3a34;
+        }
         .lz-sales-page .lz-branch-filter {
             min-width: 160px;
             max-width: 220px;
@@ -63,17 +67,170 @@
             border-color: #c5a070 !important;
             box-shadow: none !important;
         }
-        #salesDetailModal .modal-content {
+
+        /* Sale details offcanvas */
+        #saleDetailsOffcanvas {
+            width: min(400px, 92vw);
             border: 0;
-            border-radius: 16px;
+            box-shadow: -8px 0 28px rgba(0, 43, 38, 0.12);
+        }
+        #saleDetailsOffcanvas .offcanvas-header {
+            border-bottom: 1px solid #efe6d8;
+            padding: 1rem 1.15rem;
             background: #fdfaf6;
         }
-        #salesDetailModal .modal-header {
-            border-bottom-color: #efe6d8;
-        }
-        #salesDetailModal .modal-title {
+        #saleDetailsOffcanvas .offcanvas-title {
             color: #002b26;
             font-weight: 700;
+            font-size: 1.05rem;
+        }
+        #saleDetailsOffcanvas .offcanvas-body {
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            background: #fff;
+        }
+        .lz-sale-drawer-scroll {
+            flex: 1 1 auto;
+            overflow-y: auto;
+            padding: 1.1rem 1.15rem 0.5rem;
+        }
+        .lz-sale-drawer-footer {
+            flex: 0 0 auto;
+            padding: 0.85rem 1.15rem 1.1rem;
+            border-top: 1px solid #efe6d8;
+            background: #fdfaf6;
+        }
+        .lz-sale-drawer-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+        .lz-sale-drawer-ref {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            color: #002b26;
+            font-weight: 700;
+            font-size: 0.98rem;
+            line-height: 1.3;
+        }
+        .lz-sale-drawer-ref i {
+            color: #9a6923;
+            font-size: 1.15rem;
+        }
+        .lz-sale-drawer-status {
+            border-radius: 999px;
+            font-weight: 700;
+            font-size: 0.72rem;
+            padding: 0.28rem 0.7rem;
+            white-space: nowrap;
+        }
+        .lz-sale-drawer-status.is-success { background: #e6f3ee; color: #1a6b5a; }
+        .lz-sale-drawer-status.is-warning { background: #fff4df; color: #9a6923; }
+        .lz-sale-drawer-status.is-danger { background: #fde8e8; color: #b42318; }
+        .lz-sale-drawer-status.is-secondary { background: #eef3f2; color: #4a5c58; }
+        .lz-sale-drawer-meta {
+            list-style: none;
+            margin: 0 0 1.15rem;
+            padding: 0;
+        }
+        .lz-sale-drawer-meta li {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.65rem;
+            padding: 0.45rem 0;
+            border-bottom: 1px solid #f3ebe0;
+            font-size: 0.86rem;
+            color: #002b26;
+        }
+        .lz-sale-drawer-meta li:last-child { border-bottom: 0; }
+        .lz-sale-drawer-meta i {
+            color: #9a6923;
+            font-size: 1.05rem;
+            margin-top: 0.1rem;
+            flex: 0 0 auto;
+        }
+        .lz-sale-drawer-meta .lz-meta-label {
+            display: block;
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: #7a6a55;
+            margin-bottom: 0.1rem;
+        }
+        .lz-sale-drawer-meta .lz-meta-value {
+            font-weight: 600;
+            word-break: break-word;
+        }
+        .lz-sale-drawer-section {
+            padding: 0.85rem 0;
+            border-top: 1px solid #efe6d8;
+        }
+        .lz-sale-drawer-section-title {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            font-size: 0.84rem;
+            font-weight: 700;
+            color: #002b26;
+            margin-bottom: 0.55rem;
+        }
+        .lz-sale-drawer-section-title i { color: #9a6923; }
+        .lz-sale-drawer-item {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 0.5rem;
+            padding: 0.35rem 0;
+            font-size: 0.84rem;
+            color: #2a3d39;
+        }
+        .lz-sale-drawer-item .lz-item-name { font-weight: 600; }
+        .lz-sale-drawer-item .lz-item-sub {
+            display: block;
+            font-size: 0.74rem;
+            color: #7a6a55;
+            font-weight: 500;
+            margin-top: 0.1rem;
+        }
+        .lz-sale-drawer-item .lz-item-price {
+            white-space: nowrap;
+            font-weight: 600;
+            color: #0a3a34;
+            font-size: 0.8rem;
+        }
+        .lz-sale-drawer-empty {
+            font-size: 0.82rem;
+            color: #9a8a75;
+        }
+        .lz-sale-drawer-notes {
+            font-size: 0.84rem;
+            color: #2a3d39;
+            line-height: 1.45;
+            white-space: pre-wrap;
+        }
+        .lz-sale-drawer-full-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            width: 100%;
+            border: 1px solid #c5a070;
+            background: #fff;
+            color: #002b26;
+            border-radius: 10px;
+            padding: 0.65rem 1rem;
+            font-weight: 700;
+            font-size: 0.88rem;
+            text-decoration: none;
+            transition: background 0.15s ease, border-color 0.15s ease;
+        }
+        .lz-sale-drawer-full-btn:hover {
+            background: #f3ebe0;
+            border-color: #9a6923;
+            color: #002b26;
         }
     </style>
 @endsection
@@ -114,17 +271,18 @@
             </div>
         </div>
 
-        <div class="modal fade" id="salesDetailModal" tabindex="-1" aria-labelledby="salesDetailModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg modal-dialog-scrollable">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="salesDetailModalLabel"></h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body" id="salesDetailModalBody"></div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-luzori-muted" data-bs-dismiss="modal">{{ __('general.cancel') }}</button>
-                    </div>
+        <div class="offcanvas offcanvas-end" tabindex="-1" id="saleDetailsOffcanvas" aria-labelledby="saleDetailsOffcanvasLabel">
+            <div class="offcanvas-header">
+                <h5 class="offcanvas-title" id="saleDetailsOffcanvasLabel">{{ __('field.booking_details') }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            </div>
+            <div class="offcanvas-body">
+                <div class="lz-sale-drawer-scroll" id="saleDetailsOffcanvasBody"></div>
+                <div class="lz-sale-drawer-footer">
+                    <a href="#" class="lz-sale-drawer-full-btn" id="saleDetailsFullLink" target="_blank" rel="noopener">
+                        <i class="ti ti-eye"></i>
+                        <span>{{ __('general.view_details') }}</span>
+                    </a>
                 </div>
             </div>
         </div>
@@ -162,78 +320,185 @@
         });
 
         (function() {
-            var modalEl = document.getElementById('salesDetailModal');
-            if (!modalEl) return;
-            var modalTitle = document.getElementById('salesDetailModalLabel');
-            var modalBody = document.getElementById('salesDetailModalBody');
+            var offcanvasEl = document.getElementById('saleDetailsOffcanvas');
+            if (!offcanvasEl) return;
 
-            function parseDetails(btn) {
-                var raw = btn.attr('data-details');
-                if (Array.isArray(raw)) return raw;
-                if (typeof raw !== 'string') return [];
+            var bodyEl = document.getElementById('saleDetailsOffcanvasBody');
+            var fullLink = document.getElementById('saleDetailsFullLink');
+            var labels = {
+                branch: @json(__('field.branch')),
+                client: @json(__('field.client')),
+                phone: @json(__('field.phone')),
+                payment: @json(__('field.payment_method')),
+                createdAt: @json(__('field.created_at')),
+                services: @json(__('field.services') . ' (' . __('locale.bookings') . ')'),
+                packages: @json(__('field.packages')),
+                products: @json(__('locale.products')),
+                coupons: @json(__('field.coupons')),
+                notes: @json(__('field.notes')),
+                booking: @json(__('locale.bookings')),
+                empty: '—'
+            };
+
+            function esc(str) {
+                return String(str == null ? '' : str)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;');
+            }
+
+            function parsePanel(btn) {
+                var raw = btn.getAttribute('data-sale-panel');
+                if (!raw) return null;
                 try {
-                    var parsed = JSON.parse(raw);
-                    return Array.isArray(parsed) ? parsed : [];
+                    return typeof raw === 'string' ? JSON.parse(raw) : raw;
                 } catch (e) {
-                    return [];
+                    return null;
                 }
             }
 
-            function tableHtml(headers, rows) {
-                var h = '<table class="table table-sm"><thead><tr>';
-                headers.forEach(function(th) { h += '<th>' + th + '</th>'; });
-                h += '</tr></thead><tbody>';
-                rows.forEach(function(row) {
-                    h += '<tr>';
-                    row.forEach(function(cell) { h += '<td>' + (cell || '—') + '</td>'; });
-                    h += '</tr>';
-                });
-                h += '</tbody></table>';
-                return h;
+            function metaRow(icon, label, value) {
+                return '<li>' +
+                    '<i class="ti ' + icon + '"></i>' +
+                    '<div><span class="lz-meta-label">' + esc(label) + '</span>' +
+                    '<span class="lz-meta-value">' + esc(value || labels.empty) + '</span></div>' +
+                    '</li>';
             }
 
-            $(document).on('click', '.view-booking-details', function() {
-                var btn = $(this);
-                var details = parseDetails(btn);
-                var title = btn.attr('data-modal-title') || '{{ __("locale.bookings") }} {{ __("general.show") }}';
-                var headers = ['{{ __("field.service") }}', '{{ __("field.employee") }}', '{{ __("field.date") }}', '{{ __("field.time") }}', '{{ __("field.price") }}'];
-                var rows = details.map(function(d) { return [d.service, d.worker, d.date, d.time, d.price]; });
-                if (modalTitle) modalTitle.textContent = title;
-                if (modalBody) modalBody.innerHTML = rows.length ? tableHtml(headers, rows) : '<p class="text-muted">—</p>';
-                (new bootstrap.Modal(modalEl)).show();
+            function section(icon, title, innerHtml) {
+                return '<div class="lz-sale-drawer-section">' +
+                    '<div class="lz-sale-drawer-section-title"><i class="ti ' + icon + '"></i><span>' + esc(title) + '</span></div>' +
+                    innerHtml +
+                    '</div>';
+            }
+
+            function renderBookings(items) {
+                if (!items || !items.length) {
+                    return '<div class="lz-sale-drawer-empty">' + labels.empty + '</div>';
+                }
+                return items.map(function(d) {
+                    var sub = [d.worker, d.date, d.time].filter(Boolean).join(' · ');
+                    return '<div class="lz-sale-drawer-item">' +
+                        '<div><span class="lz-item-name">' + esc(d.service) + '</span>' +
+                        (sub ? '<span class="lz-item-sub">' + esc(sub) + '</span>' : '') +
+                        '</div>' +
+                        '<span class="lz-item-price">' + esc(d.price || '') + '</span>' +
+                        '</div>';
+                }).join('');
+            }
+
+            function renderSimple(items, nameKey) {
+                if (!items || !items.length) {
+                    return '<div class="lz-sale-drawer-empty">' + labels.empty + '</div>';
+                }
+                return items.map(function(d) {
+                    return '<div class="lz-sale-drawer-item">' +
+                        '<div><span class="lz-item-name">' + esc(d[nameKey]) + '</span></div>' +
+                        '<span class="lz-item-price">' + esc(d.price || d.amount || '') + '</span>' +
+                        '</div>';
+                }).join('');
+            }
+
+            function renderCoupons(items) {
+                if (!items || !items.length) {
+                    return '<div class="lz-sale-drawer-empty">' + labels.empty + '</div>';
+                }
+                return items.map(function(d) {
+                    var sub = [d.type, d.user].filter(function(v) { return v && v !== '-'; }).join(' · ');
+                    return '<div class="lz-sale-drawer-item">' +
+                        '<div><span class="lz-item-name">' + esc(d.code) + '</span>' +
+                        (sub ? '<span class="lz-item-sub">' + esc(sub) + '</span>' : '') +
+                        '</div>' +
+                        '<span class="lz-item-price">' + esc(d.amount || '') + '</span>' +
+                        '</div>';
+                }).join('');
+            }
+
+            function renderPanel(data, focus) {
+                var tone = data.status_tone || 'secondary';
+                var html = '';
+
+                html += '<div class="lz-sale-drawer-head">';
+                html += '<div class="lz-sale-drawer-ref"><i class="ti ti-calendar-event"></i><span>' + esc(data.ref || ('#' + data.id)) + '</span></div>';
+                if (data.status_label && data.status_label !== '-') {
+                    html += '<span class="lz-sale-drawer-status is-' + esc(tone) + '">' + esc(data.status_label) + '</span>';
+                }
+                html += '</div>';
+
+                html += '<ul class="lz-sale-drawer-meta">';
+                html += metaRow('ti-building-store', labels.branch, data.branch);
+                html += metaRow('ti-user', labels.client, data.client);
+                html += metaRow('ti-phone', labels.phone, data.phone);
+                html += metaRow('ti-credit-card', labels.payment, data.payment);
+                html += metaRow('ti-clock', labels.createdAt, data.created_at);
+                html += '</ul>';
+
+                html += section('ti-scissors', labels.services, renderBookings(data.bookings));
+                html += section('ti-package', labels.packages, renderSimple(data.packages, 'package'));
+                html += section('ti-shopping-bag', labels.products, renderSimple(data.products, 'product'));
+                html += section('ti-ticket', labels.coupons, renderCoupons(data.coupons));
+
+                var notesHtml = data.notes
+                    ? '<div class="lz-sale-drawer-notes">' + esc(data.notes) + '</div>'
+                    : '<div class="lz-sale-drawer-empty">' + labels.empty + '</div>';
+                html += section('ti-notes', labels.notes, notesHtml);
+
+                bodyEl.innerHTML = html;
+
+                if (fullLink) {
+                    fullLink.href = data.show_url || '#';
+                    fullLink.style.display = data.show_url ? '' : 'none';
+                }
+
+                if (focus) {
+                    // Soft scroll toward focused section after paint
+                    setTimeout(function() {
+                        var titles = bodyEl.querySelectorAll('.lz-sale-drawer-section-title span');
+                        var map = {
+                            bookings: labels.services,
+                            packages: labels.packages,
+                            products: labels.products,
+                            coupons: labels.coupons
+                        };
+                        var want = map[focus];
+                        if (!want) return;
+                        titles.forEach(function(el) {
+                            if (el.textContent === want) {
+                                el.closest('.lz-sale-drawer-section')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                            }
+                        });
+                    }, 180);
+                }
+            }
+
+            function setActiveRow(btn) {
+                document.querySelectorAll('.lz-sales-table tbody tr.lz-sale-row-active')
+                    .forEach(function(tr) { tr.classList.remove('lz-sale-row-active'); });
+                var tr = btn.closest('tr');
+                if (tr && !tr.classList.contains('child')) {
+                    tr.classList.add('lz-sale-row-active');
+                }
+            }
+
+            $(document).on('click', '.view-sale-side-details', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                var btn = this;
+                var data = parsePanel(btn);
+                if (!data) return;
+
+                setActiveRow(btn);
+                renderPanel(data, btn.getAttribute('data-focus'));
+
+                if (window.bootstrap && bootstrap.Offcanvas) {
+                    bootstrap.Offcanvas.getOrCreateInstance(offcanvasEl).show();
+                }
             });
 
-            $(document).on('click', '.view-product-details', function() {
-                var btn = $(this);
-                var details = parseDetails(btn);
-                var title = btn.attr('data-modal-title') || '{{ __("locale.products") }} {{ __("general.show") }}';
-                var headers = ['{{ __("field.product") }}', '{{ __("field.price") }}'];
-                var rows = details.map(function(d) { return [d.product, d.price]; });
-                if (modalTitle) modalTitle.textContent = title;
-                if (modalBody) modalBody.innerHTML = rows.length ? tableHtml(headers, rows) : '<p class="text-muted">—</p>';
-                (new bootstrap.Modal(modalEl)).show();
-            });
-
-            $(document).on('click', '.view-package-details', function() {
-                var btn = $(this);
-                var details = parseDetails(btn);
-                var title = btn.attr('data-modal-title') || '{{ __("locale.packages") }} {{ __("general.show") }}';
-                var headers = ['{{ __("field.package") }}', '{{ __("field.price") }}'];
-                var rows = details.map(function(d) { return [d.package, d.price]; });
-                if (modalTitle) modalTitle.textContent = title;
-                if (modalBody) modalBody.innerHTML = rows.length ? tableHtml(headers, rows) : '<p class="text-muted">—</p>';
-                (new bootstrap.Modal(modalEl)).show();
-            });
-
-            $(document).on('click', '.view-coupon-details', function() {
-                var btn = $(this);
-                var details = parseDetails(btn);
-                var title = btn.attr('data-modal-title') || '{{ __("field.coupons") }} {{ __("general.show") }}';
-                var headers = ['{{ __("field.code") }}', '{{ __("field.amount") }}', '{{ __("field.type") }}', '{{ __("field.client") }}'];
-                var rows = details.map(function(d) { return [d.code, d.amount, d.type, d.user]; });
-                if (modalTitle) modalTitle.textContent = title;
-                if (modalBody) modalBody.innerHTML = rows.length ? tableHtml(headers, rows) : '<p class="text-muted">—</p>';
-                (new bootstrap.Modal(modalEl)).show();
+            offcanvasEl.addEventListener('hidden.bs.offcanvas', function() {
+                document.querySelectorAll('.lz-sales-table tbody tr.lz-sale-row-active')
+                    .forEach(function(tr) { tr.classList.remove('lz-sale-row-active'); });
             });
         })();
     </script>
