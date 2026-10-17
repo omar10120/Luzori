@@ -100,18 +100,12 @@ class InventoryMovementDataTable extends DataTable
 
         return $this->builder()
             ->setTableId($this->plural . '-table')
-            ->addTableClass('dt-responsive')
             ->columns($this->getColumns())
             ->minifiedAjax('', null, [
                 'branch_id' => 'function () { return $("#inventoryBranchFilter").val(); }',
             ])
             ->orderBy(1)
-            ->responsive([
-                'details' => [
-                    'type' => 'column',
-                    'target' => 1,
-                ],
-            ])
+            ->responsive(false)
             ->dom('
                 <"card-header border-bottom p-3 d-flex justify-content-between align-items-center"
                     <"head-label"><"dt-action-buttons"B>
@@ -129,11 +123,16 @@ class InventoryMovementDataTable extends DataTable
                 'printable' => false,
                 'exportable' => false,
                 'responsivePriority' => 1,
-                'className' => 'dt-center lz-actions-col all',
+                'className' => 'dt-center lz-actions-col all noVis',
                 'title' => __('general.actions'),
             ])
             ->buttons([
-                Button::make('colvis')->addClass($buttonClass . ' btn-luzori-beige')->text(__('general.column_visibility')),
+                [
+                    'extend' => 'colvis',
+                    'className' => $buttonClass . ' btn-luzori-beige',
+                    'text' => __('general.column_visibility'),
+                    'columns' => ':not(.noVis)',
+                ],
                 [
                     'extend' => 'collection',
                     'text' => __('general.export'),

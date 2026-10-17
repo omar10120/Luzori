@@ -94,16 +94,10 @@ class MembershipDataTable extends DataTable
 
         return $this->builder()
             ->setTableId($this->plural . '-table')
-            ->addTableClass('dt-responsive')
             ->columns($this->getColumns())
             ->minifiedAjax()
             ->orderBy(0)
-            ->responsive([
-                'details' => [
-                    'type' => 'column',
-                    'target' => 0,
-                ],
-            ])
+            ->responsive(false)
             ->dom('
                 <"card-header border-bottom p-3 d-flex justify-content-between align-items-center"
                     <"head-label"><"dt-action-buttons"B>
@@ -121,11 +115,16 @@ class MembershipDataTable extends DataTable
                 'printable' => false,
                 'exportable' => false,
                 'responsivePriority' => 1,
-                'className' => 'dt-center lz-actions-col all',
+                'className' => 'dt-center lz-actions-col all noVis',
                 'title' => __('general.actions'),
             ])
             ->buttons([
-                Button::make('colvis')->addClass($buttonClass . ' btn-luzori-beige')->text(__('general.column_visibility')),
+                [
+                    'extend' => 'colvis',
+                    'className' => $buttonClass . ' btn-luzori-beige',
+                    'text' => __('general.column_visibility'),
+                    'columns' => ':not(.noVis)',
+                ],
                 [
                     'extend' => 'collection',
                     'text' => __('general.export'),
@@ -160,11 +159,11 @@ class MembershipDataTable extends DataTable
             Column::make('membership_no')->searchable(true)->title(__('field.membership_no'))->responsivePriority(2)->addClass('all'),
             Column::computed('percent')->searchable(false)->orderable(false)->title(__('field.percent'))->responsivePriority(2)->addClass('all'),
             Column::computed('status')->searchable(false)->orderable(false)->title(__('field.status'))->responsivePriority(2)->addClass('all'),
-            Column::computed('user.phone')->searchable(false)->orderable(false)->title(__('field.customer_phone'))->addClass('none'),
-            Column::make('start_at')->searchable(true)->title(__('field.start_at'))->addClass('none'),
-            Column::make('end_at')->searchable(true)->title(__('field.end_at'))->addClass('none'),
-            Column::computed('created_user.name')->searchable(false)->orderable(false)->title(__('field.created_by'))->addClass('none'),
-            Column::make('created_at')->searchable(true)->title(__('field.created_at'))->addClass('none'),
+            Column::computed('user.phone')->searchable(false)->orderable(false)->title(__('field.customer_phone'))->visible(false),
+            Column::make('start_at')->searchable(true)->title(__('field.start_at'))->visible(false),
+            Column::make('end_at')->searchable(true)->title(__('field.end_at'))->visible(false),
+            Column::computed('created_user.name')->searchable(false)->orderable(false)->title(__('field.created_by'))->visible(false),
+            Column::make('created_at')->searchable(true)->title(__('field.created_at'))->visible(false),
         ];
     }
 

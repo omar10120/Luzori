@@ -61,16 +61,10 @@ class SuppliersDataTable extends DataTable
 
         return $this->builder()
             ->setTableId('suppliers-table')
-            ->addTableClass('dt-responsive')
             ->columns($this->getColumns())
             ->minifiedAjax()
             ->orderBy(0)
-            ->responsive([
-                'details' => [
-                    'type' => 'column',
-                    'target' => 0,
-                ],
-            ])
+            ->responsive(false)
             ->dom('
                 <"card-header border-bottom p-3 d-flex justify-content-between align-items-center"
                     <"head-label"><"dt-action-buttons"B>
@@ -88,11 +82,16 @@ class SuppliersDataTable extends DataTable
                 'printable' => false,
                 'exportable' => false,
                 'responsivePriority' => 1,
-                'className' => 'dt-center lz-actions-col all',
+                'className' => 'dt-center lz-actions-col all noVis',
                 'title' => __('general.actions'),
             ])
             ->buttons([
-                Button::make('colvis')->addClass($buttonClass . ' btn-luzori-beige')->text(__('general.column_visibility')),
+                [
+                    'extend' => 'colvis',
+                    'className' => $buttonClass . ' btn-luzori-beige',
+                    'text' => __('general.column_visibility'),
+                    'columns' => ':not(.noVis)',
+                ],
                 [
                     'extend' => 'collection',
                     'text' => __('general.export'),
@@ -126,7 +125,7 @@ class SuppliersDataTable extends DataTable
             Column::make('name')->searchable(true)->title(__('field.name'))->responsivePriority(1)->addClass('all'),
             Column::make('email')->searchable(true)->title(__('field.email'))->responsivePriority(2)->addClass('all'),
             Column::make('phone')->searchable(true)->title(__('field.phone_number'))->responsivePriority(2)->addClass('all'),
-            Column::computed('description')->searchable(false)->title(__('field.description'))->addClass('none'),
+            Column::computed('description')->searchable(false)->title(__('field.description'))->visible(false),
         ];
     }
 

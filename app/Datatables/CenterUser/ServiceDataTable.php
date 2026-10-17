@@ -78,16 +78,10 @@ class ServiceDataTable extends DataTable
         // Build initComplete JavaScript - conditionally include add button
         return $this->builder()
             ->setTableId($this->plural . '-table')
-            ->addTableClass('dt-responsive')
             ->columns($this->getColumns())
             ->minifiedAjax()
             ->orderBy(1)
-            ->responsive([
-                'details' => [
-                    'type' => 'column',
-                    'target' => 0, // keep expand arrow on first column
-                ],
-            ])
+            ->responsive(false)
             ->dom('
                 <"card-header border-bottom p-3 d-flex justify-content-between align-items-center"
                     <"head-label"><"dt-action-buttons"B>
@@ -105,11 +99,16 @@ class ServiceDataTable extends DataTable
                 'printable' => false,
                 'exportable' => false,
                 'responsivePriority' => 1,
-                'className' => 'dt-center lz-actions-col all',
+                'className' => 'dt-center lz-actions-col all noVis',
                 'title' => __('general.actions'),
             ])
             ->buttons([
-                Button::make('colvis')->addClass($buttonClass . ' btn-luzori-beige')->text(__('general.column_visibility')),
+                [
+                    'extend' => 'colvis',
+                    'className' => $buttonClass . ' btn-luzori-beige',
+                    'text' => __('general.column_visibility'),
+                    'columns' => ':not(.noVis)',
+                ],
                 [
                     'extend' => 'collection',
                     'text' => __('general.export'),
@@ -146,12 +145,12 @@ class ServiceDataTable extends DataTable
             Column::computed('price')->searchable(true)->title(__('field.price'))->responsivePriority(2)->addClass('all'),
             Column::computed('status')->searchable(false)->title(__('field.status'))->responsivePriority(3)->addClass('all'),
             // Always expand into child row (so whole-row click always reveals details)
-            Column::computed('translation.description')->searchable(true)->title(__('field.description'))->addClass('none'),
-            Column::make('rooms_no')->searchable(true)->title(__('field.rooms_no'))->addClass('none'),
-            Column::make('free_book')->searchable(true)->title(__('field.free_book'))->addClass('none'),
-            Column::make('sort_order')->searchable(true)->title(__('field.sort_order'))->addClass('none'),
-            Column::computed('is_top')->searchable(true)->title(__('field.is_top'))->addClass('none'),
-            Column::make('created_at')->searchable(true)->title(__('field.created_at'))->addClass('none'),
+            Column::computed('translation.description')->searchable(true)->title(__('field.description'))->visible(false),
+            Column::make('rooms_no')->searchable(true)->title(__('field.rooms_no'))->visible(false),
+            Column::make('free_book')->searchable(true)->title(__('field.free_book'))->visible(false),
+            Column::make('sort_order')->searchable(true)->title(__('field.sort_order'))->visible(false),
+            Column::computed('is_top')->searchable(true)->title(__('field.is_top'))->visible(false),
+            Column::make('created_at')->searchable(true)->title(__('field.created_at'))->visible(false),
         ];
     }
 

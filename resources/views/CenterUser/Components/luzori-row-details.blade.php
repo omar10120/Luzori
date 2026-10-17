@@ -83,6 +83,12 @@
             return true;
         }
         try {
+            // Initially-hidden ColVis columns use visible(false), not Responsive "none"
+            if (colApi && typeof colApi.visible === 'function' && colApi.visible() === false) {
+                return true;
+            }
+        } catch (e) {}
+        try {
             if (colApi && typeof colApi.responsiveHidden === 'function' && colApi.responsiveHidden()) {
                 return true;
             }

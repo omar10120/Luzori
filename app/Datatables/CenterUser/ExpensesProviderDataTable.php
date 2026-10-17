@@ -77,7 +77,6 @@ class ExpensesProviderDataTable extends DataTable
 
         return $this->builder()
             ->setTableId('expenses_providers-table')
-            ->addTableClass('dt-responsive')
             ->columns($this->getColumns())
             ->minifiedAjax('', null, [
                 'branch_id' => 'function () { return $("#branchFilter").val(); }',
@@ -85,12 +84,7 @@ class ExpensesProviderDataTable extends DataTable
                 'expense_name' => 'function () { return $("#nameFilter").val(); }',
             ])
             ->orderBy(0, 'desc')
-            ->responsive([
-                'details' => [
-                    'type' => 'column',
-                    'target' => 0,
-                ],
-            ])
+            ->responsive(false)
             ->dom('
                 <"card-header border-bottom p-3 d-flex justify-content-between align-items-center"
                     <"head-label"><"dt-action-buttons"B>
@@ -108,11 +102,16 @@ class ExpensesProviderDataTable extends DataTable
                 'printable' => false,
                 'exportable' => false,
                 'responsivePriority' => 1,
-                'className' => 'dt-center lz-actions-col all',
+                'className' => 'dt-center lz-actions-col all noVis',
                 'title' => __('general.actions'),
             ])
             ->buttons([
-                Button::make('colvis')->addClass($buttonClass . ' btn-luzori-beige')->text(__('general.column_visibility')),
+                [
+                    'extend' => 'colvis',
+                    'className' => $buttonClass . ' btn-luzori-beige',
+                    'text' => __('general.column_visibility'),
+                    'columns' => ':not(.noVis)',
+                ],
                 [
                     'extend' => 'collection',
                     'text' => __('general.export'),
@@ -146,12 +145,12 @@ class ExpensesProviderDataTable extends DataTable
             Column::make('payee')->searchable(true)->title(__('field.payee'))->responsivePriority(2)->addClass('all'),
             Column::make('date')->searchable(true)->title(__('field.date'))->responsivePriority(2)->addClass('all'),
             Column::make('branch.name')->searchable(false)->title(__('field.branch'))->responsivePriority(2)->addClass('all'),
-            Column::make('start_date')->searchable(true)->title(__('field.start_date'))->addClass('none'),
-            Column::make('end_date')->searchable(true)->title(__('field.end_date'))->addClass('none'),
+            Column::make('start_date')->searchable(true)->title(__('field.start_date'))->visible(false),
+            Column::make('end_date')->searchable(true)->title(__('field.end_date'))->visible(false),
             Column::computed('amount')->searchable(false)->title(__('field.amount'))->responsivePriority(1)->addClass('all'),
             Column::computed('receipt_image')->searchable(false)->title(__('field.receipt'))->responsivePriority(3)->addClass('all'),
-            Column::computed('notes')->searchable(false)->title(__('field.notes'))->addClass('none'),
-            Column::make('created_at')->searchable(true)->title(__('field.created_at'))->addClass('none'),
+            Column::computed('notes')->searchable(false)->title(__('field.notes'))->visible(false),
+            Column::make('created_at')->searchable(true)->title(__('field.created_at'))->visible(false),
         ];
     }
 

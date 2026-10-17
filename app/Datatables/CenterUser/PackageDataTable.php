@@ -117,16 +117,10 @@ class PackageDataTable extends DataTable
 
         return $this->builder()
             ->setTableId($this->plural . '-table')
-            ->addTableClass('dt-responsive')
             ->columns($this->getColumns())
             ->minifiedAjax()
             ->orderBy(0)
-            ->responsive([
-                'details' => [
-                    'type' => 'column',
-                    'target' => 0,
-                ],
-            ])
+            ->responsive(false)
             ->dom('
                 <"card-header border-bottom p-3 d-flex justify-content-between align-items-center"
                     <"head-label"><"dt-action-buttons"B>
@@ -144,11 +138,16 @@ class PackageDataTable extends DataTable
                 'printable' => false,
                 'exportable' => false,
                 'responsivePriority' => 1,
-                'className' => 'dt-center lz-actions-col all',
+                'className' => 'dt-center lz-actions-col all noVis',
                 'title' => __('general.actions'),
             ])
             ->buttons([
-                Button::make('colvis')->addClass($buttonClass . ' btn-luzori-beige')->text(__('general.column_visibility')),
+                [
+                    'extend' => 'colvis',
+                    'className' => $buttonClass . ' btn-luzori-beige',
+                    'text' => __('general.column_visibility'),
+                    'columns' => ':not(.noVis)',
+                ],
                 [
                     'extend' => 'collection',
                     'text' => __('general.export'),
@@ -181,11 +180,11 @@ class PackageDataTable extends DataTable
             Column::computed('name')->searchable(true)->orderable(false)->title(__('field.name'))->responsivePriority(1)->addClass('all'),
             Column::make('price')->searchable(true)->title(__('field.price'))->responsivePriority(2)->addClass('all'),
             Column::computed('status')->searchable(false)->orderable(false)->title(__('field.status'))->responsivePriority(2)->addClass('all'),
-            Column::computed('total_value')->searchable(false)->orderable(false)->title(__('field.total_services_price'))->addClass('none'),
-            Column::computed('paid_services')->searchable(false)->orderable(false)->title(__('field.paid_services'))->addClass('none'),
-            Column::computed('free_services')->searchable(false)->orderable(false)->title(__('field.free_services'))->addClass('none'),
-            Column::computed('users')->searchable(false)->orderable(false)->title(__('field.users'))->addClass('none'),
-            Column::make('created_at')->searchable(true)->title(__('field.created_at'))->addClass('none'),
+            Column::computed('total_value')->searchable(false)->orderable(false)->title(__('field.total_services_price'))->visible(false),
+            Column::computed('paid_services')->searchable(false)->orderable(false)->title(__('field.paid_services'))->visible(false),
+            Column::computed('free_services')->searchable(false)->orderable(false)->title(__('field.free_services'))->visible(false),
+            Column::computed('users')->searchable(false)->orderable(false)->title(__('field.users'))->visible(false),
+            Column::make('created_at')->searchable(true)->title(__('field.created_at'))->visible(false),
         ];
     }
 

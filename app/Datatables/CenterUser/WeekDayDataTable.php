@@ -48,16 +48,10 @@ class WeekDayDataTable extends DataTable
 
         return $this->builder()
             ->setTableId($this->plural . '-table')
-            ->addTableClass('dt-responsive')
             ->columns($this->getColumns())
             ->minifiedAjax()
             ->orderBy(1)
-            ->responsive([
-                'details' => [
-                    'type' => 'column',
-                    'target' => 0,
-                ],
-            ])
+            ->responsive(false)
             ->dom('
                 <"card-header border-bottom p-3 d-flex justify-content-between align-items-center"
                     <"head-label"><"dt-action-buttons"B>
@@ -72,7 +66,12 @@ class WeekDayDataTable extends DataTable
             ')
             ->selectStyleSingle()
             ->buttons([
-                Button::make('colvis')->addClass($buttonClass . ' btn-luzori-beige')->text(__('general.column_visibility')),
+                [
+                    'extend' => 'colvis',
+                    'className' => $buttonClass . ' btn-luzori-beige',
+                    'text' => __('general.column_visibility'),
+                    'columns' => ':not(.noVis)',
+                ],
                 [
                     'extend' => 'collection',
                     'text' => __('general.export'),
@@ -104,8 +103,8 @@ class WeekDayDataTable extends DataTable
             Column::make('id')->searchable(true)->title('#')->responsivePriority(1)->addClass('dtr-control all'),
             Column::computed('day')->searchable(true)->title(__('field.day'))->responsivePriority(1)->addClass('all'),
             Column::computed('status')->searchable(false)->title(__('field.is_open'))->responsivePriority(1)->addClass('all'),
-            Column::make('created_at')->searchable(true)->title(__('field.created_at'))->addClass('none'),
-            Column::make('updated_at')->searchable(true)->title(__('field.updated_at'))->addClass('none'),
+            Column::make('created_at')->searchable(true)->title(__('field.created_at'))->visible(false),
+            Column::make('updated_at')->searchable(true)->title(__('field.updated_at'))->visible(false),
         ];
     }
 

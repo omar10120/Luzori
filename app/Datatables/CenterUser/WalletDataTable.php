@@ -113,16 +113,10 @@ class WalletDataTable extends DataTable
 
         return $this->builder()
             ->setTableId($this->plural . '-table')
-            ->addTableClass('dt-responsive')
             ->columns($this->getColumns())
             ->minifiedAjax()
             ->orderBy(0)
-            ->responsive([
-                'details' => [
-                    'type' => 'column',
-                    'target' => 0,
-                ],
-            ])
+            ->responsive(false)
             ->dom('
                 <"card-header border-bottom p-3 d-flex justify-content-between align-items-center"
                     <"head-label"><"dt-action-buttons"B>
@@ -140,11 +134,16 @@ class WalletDataTable extends DataTable
                 'printable' => false,
                 'exportable' => false,
                 'responsivePriority' => 1,
-                'className' => 'dt-center lz-actions-col all',
+                'className' => 'dt-center lz-actions-col all noVis',
                 'title' => __('general.actions'),
             ])
             ->buttons([
-                Button::make('colvis')->addClass($buttonClass . ' btn-luzori-beige')->text(__('general.column_visibility')),
+                [
+                    'extend' => 'colvis',
+                    'className' => $buttonClass . ' btn-luzori-beige',
+                    'text' => __('general.column_visibility'),
+                    'columns' => ':not(.noVis)',
+                ],
                 [
                     'extend' => 'collection',
                     'text' => __('general.export'),
@@ -178,12 +177,12 @@ class WalletDataTable extends DataTable
             Column::make('amount')->searchable(true)->title(__('field.amount'))->responsivePriority(2)->addClass('all'),
             Column::computed('used_label')->searchable(false)->orderable(false)->title(__('field.used'))->responsivePriority(2)->addClass('all'),
             Column::computed('status')->searchable(false)->orderable(false)->title(__('field.status'))->responsivePriority(2)->addClass('all'),
-            Column::make('serial_number')->searchable(true)->title(__('field.serial_number'))->addClass('none'),
-            Column::computed('users_list')->searchable(false)->orderable(false)->title(__('field.users'))->addClass('none'),
-            Column::make('invoiced_amount')->searchable(true)->title(__('field.invoiced_amount'))->addClass('none'),
-            Column::make('start_at')->searchable(true)->title(__('field.start_at'))->addClass('none'),
-            Column::make('end_at')->searchable(true)->title(__('field.end_at'))->addClass('none'),
-            Column::make('created_at')->searchable(true)->title(__('field.created_at'))->addClass('none'),
+            Column::make('serial_number')->searchable(true)->title(__('field.serial_number'))->visible(false),
+            Column::computed('users_list')->searchable(false)->orderable(false)->title(__('field.users'))->visible(false),
+            Column::make('invoiced_amount')->searchable(true)->title(__('field.invoiced_amount'))->visible(false),
+            Column::make('start_at')->searchable(true)->title(__('field.start_at'))->visible(false),
+            Column::make('end_at')->searchable(true)->title(__('field.end_at'))->visible(false),
+            Column::make('created_at')->searchable(true)->title(__('field.created_at'))->visible(false),
         ];
     }
 

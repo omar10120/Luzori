@@ -49,16 +49,10 @@ class MainStockDataTable extends DataTable
 
         return $this->builder()
             ->setTableId('mainstocks-table')
-            ->addTableClass('dt-responsive')
             ->columns($this->getColumns())
             ->minifiedAjax()
             ->orderBy(0)
-            ->responsive([
-                'details' => [
-                    'type' => 'column',
-                    'target' => 0,
-                ],
-            ])
+            ->responsive(false)
             ->dom('
                 <"card-header border-bottom p-3 d-flex justify-content-between align-items-center"
                     <"head-label"><"dt-action-buttons"B>
@@ -72,7 +66,12 @@ class MainStockDataTable extends DataTable
                 >
             ')
             ->buttons([
-                Button::make('colvis')->addClass($buttonClass . ' btn-luzori-beige')->text(__('general.column_visibility')),
+                [
+                    'extend' => 'colvis',
+                    'className' => $buttonClass . ' btn-luzori-beige',
+                    'text' => __('general.column_visibility'),
+                    'columns' => ':not(.noVis)',
+                ],
                 [
                     'extend' => 'collection',
                     'text' => __('general.export'),
@@ -123,7 +122,7 @@ class MainStockDataTable extends DataTable
                 ->addClass('all'),
             Column::make('reorder_level')
                 ->title(__('field.reorder_level'))
-                ->addClass('none'),
+                ->visible(false),
         ];
     }
 

@@ -93,16 +93,10 @@ class DiscountDataTable extends DataTable
 
         return $this->builder()
             ->setTableId($this->plural . '-table')
-            ->addTableClass('dt-responsive')
             ->columns($this->getColumns())
             ->minifiedAjax()
             ->orderBy(0)
-            ->responsive([
-                'details' => [
-                    'type' => 'column',
-                    'target' => 0,
-                ],
-            ])
+            ->responsive(false)
             ->dom('
                 <"card-header border-bottom p-3 d-flex justify-content-between align-items-center"
                     <"head-label"><"dt-action-buttons"B>
@@ -120,11 +114,16 @@ class DiscountDataTable extends DataTable
                 'printable' => false,
                 'exportable' => false,
                 'responsivePriority' => 1,
-                'className' => 'dt-center lz-actions-col all',
+                'className' => 'dt-center lz-actions-col all noVis',
                 'title' => __('general.actions'),
             ])
             ->buttons([
-                Button::make('colvis')->addClass($buttonClass . ' btn-luzori-beige')->text(__('general.column_visibility')),
+                [
+                    'extend' => 'colvis',
+                    'className' => $buttonClass . ' btn-luzori-beige',
+                    'text' => __('general.column_visibility'),
+                    'columns' => ':not(.noVis)',
+                ],
                 [
                     'extend' => 'collection',
                     'text' => __('general.export'),
@@ -158,11 +157,11 @@ class DiscountDataTable extends DataTable
             Column::make('type')->searchable(true)->title(__('field.type'))->responsivePriority(2)->addClass('all'),
             Column::make('amount')->searchable(true)->title(__('field.amount'))->responsivePriority(2)->addClass('all'),
             Column::computed('status')->searchable(false)->orderable(false)->title(__('field.status'))->responsivePriority(2)->addClass('all'),
-            Column::make('start_at')->searchable(true)->title(__('field.start_at'))->addClass('none'),
-            Column::make('end_at')->searchable(true)->title(__('field.end_at'))->addClass('none'),
-            Column::make('using_type')->searchable(true)->title(__('field.using_type'))->addClass('none'),
-            Column::make('benefit_numbers')->searchable(false)->title(__('field.benefit_numbers'))->addClass('none'),
-            Column::make('created_at')->searchable(true)->title(__('field.created_at'))->addClass('none'),
+            Column::make('start_at')->searchable(true)->title(__('field.start_at'))->visible(false),
+            Column::make('end_at')->searchable(true)->title(__('field.end_at'))->visible(false),
+            Column::make('using_type')->searchable(true)->title(__('field.using_type'))->visible(false),
+            Column::make('benefit_numbers')->searchable(false)->title(__('field.benefit_numbers'))->visible(false),
+            Column::make('created_at')->searchable(true)->title(__('field.created_at'))->visible(false),
         ];
     }
 

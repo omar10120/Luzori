@@ -68,16 +68,10 @@ class CenterUserRoleDataTable extends DataTable
 
         return $this->builder()
             ->setTableId($this->plural . '-table')
-            ->addTableClass('dt-responsive')
             ->columns($this->getColumns())
             ->minifiedAjax()
             ->orderBy(1)
-            ->responsive([
-                'details' => [
-                    'type' => 'column',
-                    'target' => 0,
-                ],
-            ])
+            ->responsive(false)
             ->dom('
                 <"card-header border-bottom p-3 d-flex justify-content-between align-items-center"
                     <"head-label"><"dt-action-buttons"B>
@@ -95,11 +89,16 @@ class CenterUserRoleDataTable extends DataTable
                 'printable' => false,
                 'exportable' => false,
                 'responsivePriority' => 1,
-                'className' => 'dt-center lz-actions-col all',
+                'className' => 'dt-center lz-actions-col all noVis',
                 'title' => __('general.actions'),
             ])
             ->buttons([
-                Button::make('colvis')->addClass($buttonClass . ' btn-luzori-beige')->text(__('general.column_visibility')),
+                [
+                    'extend' => 'colvis',
+                    'className' => $buttonClass . ' btn-luzori-beige',
+                    'text' => __('general.column_visibility'),
+                    'columns' => ':not(.noVis)',
+                ],
                 [
                     'extend' => 'collection',
                     'text' => __('general.export'),
@@ -131,8 +130,8 @@ class CenterUserRoleDataTable extends DataTable
             Column::make('id')->searchable(true)->title('#')->responsivePriority(1)->addClass('all'),
             Column::make('name')->searchable(true)->title(__('field.name'))->responsivePriority(1)->addClass('all'),
             Column::computed('permission_count')->searchable(false)->title(__('field.permission'))->responsivePriority(2)->addClass('all lz-details-skip'),
-            Column::computed('permission')->searchable(false)->title(__('field.permission'))->addClass('none'),
-            Column::computed('created_at')->searchable(false)->title(__('field.created_at'))->addClass('none'),
+            Column::computed('permission')->searchable(false)->title(__('field.permission'))->visible(false),
+            Column::computed('created_at')->searchable(false)->title(__('field.created_at'))->visible(false),
         ];
     }
 

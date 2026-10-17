@@ -99,16 +99,10 @@ class WorkerDataTable extends DataTable
 
         return $this->builder()
             ->setTableId($this->plural . '-table')
-            ->addTableClass('dt-responsive')
             ->columns($this->getColumns())
             ->minifiedAjax()
             ->orderBy(1)
-            ->responsive([
-                'details' => [
-                    'type' => 'column',
-                    'target' => 0,
-                ],
-            ])
+            ->responsive(false)
             ->dom('
                 <"card-header border-bottom p-3 d-flex justify-content-between align-items-center"
                     <"head-label"><"dt-action-buttons"B>
@@ -126,11 +120,16 @@ class WorkerDataTable extends DataTable
                 'printable' => false,
                 'exportable' => false,
                 'responsivePriority' => 1,
-                'className' => 'dt-center lz-actions-col all',
+                'className' => 'dt-center lz-actions-col all noVis',
                 'title' => __('general.actions'),
             ])
             ->buttons([
-                Button::make('colvis')->addClass($buttonClass . ' btn-luzori-beige')->text(__('general.column_visibility')),
+                [
+                    'extend' => 'colvis',
+                    'className' => $buttonClass . ' btn-luzori-beige',
+                    'text' => __('general.column_visibility'),
+                    'columns' => ':not(.noVis)',
+                ],
                 [
                     'extend' => 'collection',
                     'text' => __('general.export'),
@@ -166,14 +165,14 @@ class WorkerDataTable extends DataTable
             Column::computed('services.service.translation.name')->searchable(true)->title(__('field.services'))->responsivePriority(2)->addClass('all'),
             Column::computed('status')->searchable(false)->title(__('field.status'))->responsivePriority(2)->addClass('all'),
             // Expandable details
-            Column::computed('email')->searchable(true)->title(__('field.email'))->addClass('none'),
-            Column::computed('phone')->searchable(true)->title(__('field.phone'))->addClass('none'),
-            Column::computed('percentage')->searchable(true)->title(__('field.percentage'))->addClass('none'),
-            Column::computed('salary')->searchable(true)->title(__('field.salary'))->addClass('none'),
-            Column::computed('visa_start_date')->searchable(true)->title(__('field.visa_start_date'))->addClass('none'),
-            Column::computed('visa_end_date')->searchable(true)->title(__('field.visa_end_date'))->addClass('none'),
-            Column::computed('is_professional')->searchable(true)->title(__('field.is_professional'))->addClass('none'),
-            Column::make('created_at')->searchable(true)->title(__('field.created_at'))->addClass('none'),
+            Column::computed('email')->searchable(true)->title(__('field.email'))->visible(false),
+            Column::computed('phone')->searchable(true)->title(__('field.phone'))->visible(false),
+            Column::computed('percentage')->searchable(true)->title(__('field.percentage'))->visible(false),
+            Column::computed('salary')->searchable(true)->title(__('field.salary'))->visible(false),
+            Column::computed('visa_start_date')->searchable(true)->title(__('field.visa_start_date'))->visible(false),
+            Column::computed('visa_end_date')->searchable(true)->title(__('field.visa_end_date'))->visible(false),
+            Column::computed('is_professional')->searchable(true)->title(__('field.is_professional'))->visible(false),
+            Column::make('created_at')->searchable(true)->title(__('field.created_at'))->visible(false),
         ];
     }
 

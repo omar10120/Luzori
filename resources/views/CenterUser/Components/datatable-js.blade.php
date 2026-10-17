@@ -69,6 +69,17 @@
                 }, 0);
                 setTimeout(moveDtActionButtons, 120);
             });
+
+            // ColVis: after toggling a column, force layout so visible(false) columns actually show
+            jQuery(document).on('column-visibility.dt', function (e, settings) {
+                try {
+                    var api = new jQuery.fn.dataTable.Api(settings);
+                    setTimeout(function () {
+                        api.columns.adjust();
+                        api.draw(false);
+                    }, 0);
+                } catch (err) {}
+            });
         }
     }
 

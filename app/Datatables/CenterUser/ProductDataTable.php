@@ -102,16 +102,10 @@ class ProductDataTable extends DataTable
 
         return $this->builder()
             ->setTableId($this->plural . '-table')
-            ->addTableClass('dt-responsive')
             ->columns($this->getColumns())
             ->minifiedAjax()
             ->orderBy(1)
-            ->responsive([
-                'details' => [
-                    'type' => 'column',
-                    'target' => 0,
-                ],
-            ])
+            ->responsive(false)
             ->dom('
                 <"card-header border-bottom p-3 d-flex justify-content-between align-items-center"
                     <"head-label"><"dt-action-buttons"B>
@@ -129,11 +123,16 @@ class ProductDataTable extends DataTable
                 'printable' => false,
                 'exportable' => false,
                 'responsivePriority' => 1,
-                'className' => 'dt-center lz-actions-col all',
+                'className' => 'dt-center lz-actions-col all noVis',
                 'title' => __('general.actions'),
             ])
             ->buttons([
-                Button::make('colvis')->addClass($buttonClass . ' btn-luzori-beige')->text(__('general.column_visibility')),
+                [
+                    'extend' => 'colvis',
+                    'className' => $buttonClass . ' btn-luzori-beige',
+                    'text' => __('general.column_visibility'),
+                    'columns' => ':not(.noVis)',
+                ],
                 [
                     'extend' => 'collection',
                     'text' => __('general.export'),
@@ -170,13 +169,13 @@ class ProductDataTable extends DataTable
             Column::computed('qty')->searchable(false)->title(__('field.quantity'))->responsivePriority(2)->addClass('all'),
             Column::computed('status')->searchable(false)->title(__('field.status'))->responsivePriority(2)->addClass('all'),
             // Expandable details
-            Column::make('created_at')->searchable(true)->title(__('field.created_at'))->addClass('none'),
-            Column::computed('productSuppliers')->searchable(false)->title(__('field.suppliers'))->addClass('none'),
-            Column::make('barcode')->searchable(true)->title(__('field.barcode'))->addClass('none'),
-            Column::make('supply_price')->searchable(true)->title(__('field.supply_price'))->addClass('none'),
-            Column::make('retail_price')->searchable(true)->title(__('field.retail_price'))->addClass('none'),
-            Column::computed('translation.text')->searchable(true)->title(__('field.description'))->addClass('none'),
-            Column::computed('image')->searchable(false)->title(__('field.image'))->addClass('none'),
+            Column::make('created_at')->searchable(true)->title(__('field.created_at'))->visible(false),
+            Column::computed('productSuppliers')->searchable(false)->title(__('field.suppliers'))->visible(false),
+            Column::make('barcode')->searchable(true)->title(__('field.barcode'))->visible(false),
+            Column::make('supply_price')->searchable(true)->title(__('field.supply_price'))->visible(false),
+            Column::make('retail_price')->searchable(true)->title(__('field.retail_price'))->visible(false),
+            Column::computed('translation.text')->searchable(true)->title(__('field.description'))->visible(false),
+            Column::computed('image')->searchable(false)->title(__('field.image'))->visible(false),
         ];
     }
 
