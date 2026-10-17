@@ -1,5 +1,12 @@
 <div class="lz-action-icons" onclick="event.stopPropagation()">
-    @isset($options['sale_panel_b64'])
+    @isset($options['sale_side_id'])
+        <a href="javascript:void(0)" class="lz-action-btn view-sale-side-details"
+            title="{{ __('general.view_details') }}"
+            data-sale-id="{{ $options['sale_side_id'] }}"
+            onclick="event.preventDefault();event.stopImmediatePropagation();event.stopPropagation();if(window.lzOpenSaleSideDetails){window.lzOpenSaleSideDetails(this);}return false;">
+            <i class="ti ti-eye"></i>
+        </a>
+    @elseif(isset($options['sale_panel_b64']))
         <a href="javascript:void(0)" class="lz-action-btn view-sale-side-details"
             title="{{ __('general.view_details') }}"
             data-sale-id="{{ $id }}"

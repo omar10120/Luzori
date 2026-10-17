@@ -80,149 +80,125 @@ class SalesDataTable extends DataTable
         
         return $dataTable
             ->editColumn('action', function ($item) {
-                $route = 'center_user.' . $this->plural;
-                $id = $item->id;
-                $model = $this->model;
-                $canDelete = auth('center_user')->user()?->can('DELETE_SALES', 'center_api');
-                $options = [
-                    'show' => true,
-                    'print' => true,
-                    'row_details' => false,
-                    'sale_panel_b64' => $this->salePanelB64($item),
-                    'operation' => DeleteActionEnum::FORCE_DELETE->value,
-                    'with_trashed' => 1,
-                ];
-                if ($canDelete) {
-                    $options['sale_otp_delete'] = true;
-                }
-
                 try {
-                    $hasBooking = $item->bookings->isNotEmpty()
-                        || $item->saleItems->contains(fn ($si) => $si->item_type === 'booking');
-                    $hasTip = (float) ($item->tip ?? 0) > 0
-                        || $item->bookings->flatMap(fn ($b) => $b->details ?? collect())->sum(fn ($d) => (float) ($d->tip ?? 0)) > 0;
-                    if ($hasBooking && !$hasTip) {
-                        $options['add_tip'] = true;
+                    $route = 'center_user.' . $this->plural;
+                    $id = $item->id;
+                    $model = $this->model;
+                    $canDelete = auth('center_user')->user()?->can('DELETE_SALES', 'center_api');
+                    $options = [
+                        'show' => true,
+                        'print' => true,
+                        'row_details' => false,
+                        // Lightweight: only sale id — side panel is built in JS from the row
+                        'sale_side_id' => (int) $item->id,
+                        'operation' => DeleteActionEnum::FORCE_DELETE->value,
+                        'with_trashed' => 1,
+                    ];
+                    if ($canDelete) {
+                        $options['sale_otp_delete'] = true;
                     }
-                } catch (\Throwable $e) {
-                    // ignore tip action errors
-                }
 
-                return view()->make('_partials.center_action_icons', compact('id', 'route', 'options', 'model'))->render();
+                    try {
+                        $hasBooking = $item->bookings->isNotEmpty()
+                            || $item->saleItems->contains(fn ($si) => $si->item_type === 'booking');
+                        $hasTip = (float) ($item->tip ?? 0) > 0;
+                        if (!$hasTip) {
+                            foreach ($item->bookings as $booking) {
+                                foreach ($booking->details ?? [] as $detail) {
+                                    if ((float) ($detail->tip ?? 0) > 0) {
+                                        $hasTip = true;
+                                        break 2;
+                                    }
+                                }
+                            }
+                        }
+                        if ($hasBooking && !$hasTip) {
+                            $options['add_tip'] = true;
+                        }
+                    } catch (\Throwable $e) {
+                        // ignore tip action errors
+                    }
+
+                    return view()->make('_partials.center_action_icons', compact('id', 'route', 'options', 'model'))->render();
+                } catch (\Throwable $e) {
+                    return '';
+                }
             })
             ->editColumn('branch.translation.name', function ($row) {
                 return $row->branch?->translation?->name ?? '-';
             })
             ->addColumn('services', function ($row) {
-                $details = [];
-                $currency = trim(get_currency());
-
-                foreach ($row->bookings as $booking) {
-                    foreach ($booking->details as $detail) {
-                        $details[] = [
-                            'service' => (string) ($detail->service?->translation?->name ?? $detail->service?->name ?? 'N/A'),
-                            'worker' => (string) ($detail->worker?->name ?? '-'),
-                            'date' => (string) ($detail->_date ?? $booking->booking_date ?? '-'),
-                            'time' => (string) (($detail->from_time ?? '') . '-' . ($detail->to_time ?? '')),
-                            'price' => number_format($detail->price ?? 0, 2) . ' ' . $currency,
-                        ];
+                try {
+                    $details = $this->collectBookingDetails($row);
+                    $count = count($details);
+                    if ($count === 0) {
+                        return '-';
                     }
-                }
-                if (empty($details)) {
-                    foreach ($row->saleItems as $saleItem) {
-                        if ($saleItem->item_type !== 'booking' || !$saleItem->itemable) {
-                            continue;
-                        }
-                        foreach ($saleItem->itemable->details as $detail) {
-                            $details[] = [
-                                'service' => (string) ($detail->service?->translation?->name ?? $detail->service?->name ?? 'N/A'),
-                                'worker' => (string) ($detail->worker?->name ?? '-'),
-                                'date' => (string) ($detail->_date ?? $saleItem->itemable->booking_date ?? '-'),
-                                'time' => (string) (($detail->from_time ?? '') . '-' . ($detail->to_time ?? '')),
-                                'price' => number_format($detail->price ?? 0, 2) . ' ' . $currency,
-                            ];
-                        }
-                    }
-                }
 
-                $count = count($details);
-                if ($count === 0) {
+                    $html = '<span class="lz-sale-badge is-booking">' . $count . ' ' . __('locale.bookings') . '</span>';
+                    $html .= ' <button type="button" class="btn btn-sm lz-sale-detail-btn ms-1 view-sale-section-dialog" data-section="bookings" data-modal-title="' . e(__('field.booking_details')) . '" data-details-b64="' . $this->jsonB64($details) . '">';
+                    $html .= '<i class="ti ti-eye me-1"></i>' . __('general.view_details');
+                    $html .= '</button>';
+
+                    return $html;
+                } catch (\Throwable $e) {
                     return '-';
                 }
-
-                $html = '<span class="lz-sale-badge is-booking">' . $count . ' ' . __('locale.bookings') . '</span>';
-                $html .= ' <button type="button" class="btn btn-sm lz-sale-detail-btn ms-1 view-sale-section-dialog" data-section="bookings" data-modal-title="' . e(__('field.booking_details')) . '" data-details-b64="' . $this->jsonB64($details) . '">';
-                $html .= '<i class="ti ti-eye me-1"></i>' . __('general.view_details');
-                $html .= '</button>';
-
-                return $html;
             })
             ->addColumn('products', function ($row) {
-                $details = [];
-                $currency = trim(get_currency());
-
-                foreach ($row->buyProducts as $buyProduct) {
-                    foreach ($buyProduct->details as $detail) {
-                        $details[] = [
-                            'product' => (string) ($detail->product?->translation?->name ?? $detail->product?->name ?? 'N/A'),
-                            'price' => number_format($detail->price ?? 0, 2) . ' ' . $currency,
-                        ];
+                try {
+                    $details = $this->collectProductDetails($row);
+                    $count = count($details);
+                    if ($count === 0) {
+                        return '-';
                     }
-                }
-                if (empty($details)) {
-                    foreach ($row->saleItems as $saleItem) {
-                        if ($saleItem->item_type !== 'buy_product' || !$saleItem->itemable) {
-                            continue;
-                        }
-                        foreach ($saleItem->itemable->details as $detail) {
-                            $details[] = [
-                                'product' => (string) ($detail->product?->translation?->name ?? $detail->product?->name ?? 'N/A'),
-                                'price' => number_format($detail->price ?? 0, 2) . ' ' . $currency,
-                            ];
-                        }
-                    }
-                }
 
-                $count = count($details);
-                if ($count === 0) {
+                    $html = '<span class="lz-sale-badge is-product">' . $count . ' ' . __('locale.products') . '</span>';
+                    $html .= ' <button type="button" class="btn btn-sm lz-sale-detail-btn ms-1 view-sale-section-dialog" data-section="products" data-modal-title="' . e(__('locale.products') . ' ' . __('general.show')) . '" data-details-b64="' . $this->jsonB64($details) . '">';
+                    $html .= '<i class="ti ti-eye me-1"></i>' . __('general.view_details');
+                    $html .= '</button>';
+
+                    return $html;
+                } catch (\Throwable $e) {
                     return '-';
                 }
-
-                $html = '<span class="lz-sale-badge is-product">' . $count . ' ' . __('locale.products') . '</span>';
-                $html .= ' <button type="button" class="btn btn-sm lz-sale-detail-btn ms-1 view-sale-section-dialog" data-section="products" data-modal-title="' . e(__('locale.products') . ' ' . __('general.show')) . '" data-details-b64="' . $this->jsonB64($details) . '">';
-                $html .= '<i class="ti ti-eye me-1"></i>' . __('general.view_details');
-                $html .= '</button>';
-
-                return $html;
             })
             ->addColumn('packages', function ($row) {
-                $details = $this->collectPackageDetails($row);
-                $count = count($details);
-                if ($count === 0) {
+                try {
+                    $details = $this->collectPackageDetails($row);
+                    $count = count($details);
+                    if ($count === 0) {
+                        return '-';
+                    }
+
+                    $packageLabel = $count === 1 ? __('locale.package') : __('locale.packages');
+                    $html = '<span class="lz-sale-badge is-package">' . $count . ' ' . $packageLabel . '</span>';
+                    $html .= ' <button type="button" class="btn btn-sm lz-sale-detail-btn ms-1 view-sale-section-dialog" data-section="packages" data-modal-title="' . e(__('field.packages') . ' ' . __('general.show')) . '" data-details-b64="' . $this->jsonB64($details) . '">';
+                    $html .= '<i class="ti ti-eye me-1"></i>' . __('general.view_details');
+                    $html .= '</button>';
+
+                    return $html;
+                } catch (\Throwable $e) {
                     return '-';
                 }
-
-                $packageLabel = $count === 1 ? __('locale.package') : __('locale.packages');
-                $html = '<span class="lz-sale-badge is-package">' . $count . ' ' . $packageLabel . '</span>';
-                $html .= ' <button type="button" class="btn btn-sm lz-sale-detail-btn ms-1 view-sale-section-dialog" data-section="packages" data-modal-title="' . e(__('field.packages') . ' ' . __('general.show')) . '" data-details-b64="' . $this->jsonB64($details) . '">';
-                $html .= '<i class="ti ti-eye me-1"></i>' . __('general.view_details');
-                $html .= '</button>';
-
-                return $html;
             })
             ->addColumn('coupons', function ($row) {
-                $details = $this->collectCouponDetails($row);
-                $count = count($details);
-                if ($count === 0) {
+                try {
+                    $details = $this->collectCouponDetails($row);
+                    $count = count($details);
+                    if ($count === 0) {
+                        return '-';
+                    }
+
+                    $html = '<span class="lz-sale-badge is-coupon">' . $count . ' ' . __('field.coupons') . '</span>';
+                    $html .= ' <button type="button" class="btn btn-sm lz-sale-detail-btn ms-1 view-sale-section-dialog" data-section="coupons" data-modal-title="' . e(__('field.coupons') . ' ' . __('general.show')) . '" data-details-b64="' . $this->jsonB64($details) . '">';
+                    $html .= '<i class="ti ti-eye me-1"></i>' . __('general.view_details');
+                    $html .= '</button>';
+
+                    return $html;
+                } catch (\Throwable $e) {
                     return '-';
                 }
-
-                $html = '<span class="lz-sale-badge is-coupon">' . $count . ' ' . __('field.coupons') . '</span>';
-                $html .= ' <button type="button" class="btn btn-sm lz-sale-detail-btn ms-1 view-sale-section-dialog" data-section="coupons" data-modal-title="' . e(__('field.coupons') . ' ' . __('general.show')) . '" data-details-b64="' . $this->jsonB64($details) . '">';
-                $html .= '<i class="ti ti-eye me-1"></i>' . __('general.view_details');
-                $html .= '</button>';
-
-                return $html;
             })
             ->addColumn('client_mobile', function ($row) {
                 if (!$row->client) {
@@ -261,192 +237,188 @@ class SalesDataTable extends DataTable
                 }
             })
             ->addColumn('booking_payment', function ($row) {
-                $methods = [];
-                
-                foreach ($row->saleItems as $saleItem) {
-                    if ($saleItem->item_type === 'booking' && $saleItem->itemable) {
-                        $booking = $saleItem->itemable;
-                        if ($booking->payment_type === 'multiple' && !empty($booking->payment_methods)) {
+                try {
+                    $methods = [];
+                    foreach ($row->bookings ?? [] as $booking) {
+                        if (($booking->payment_type ?? null) === 'multiple' && !empty($booking->payment_methods)) {
                             foreach ($booking->payment_methods as $method) {
                                 $methodName = $method['method'] ?? 'N/A';
                                 $amount = number_format($method['amount'] ?? 0, 2);
-                                $methods[] = $methodName . " (" . $amount . ")";
+                                $methods[] = $methodName . ' (' . $amount . ')';
                             }
-                        } elseif ($booking->payment_type) {
-                            if (!in_array($booking->payment_type, $methods, true)) {
-                                $methods[] = $booking->payment_type;
-                            }
+                        } elseif (!empty($booking->payment_type) && !in_array($booking->payment_type, $methods, true)) {
+                            $methods[] = $booking->payment_type;
                         }
                     }
+                    return empty($methods) ? '-' : implode(', ', $methods);
+                } catch (\Throwable $e) {
+                    return '-';
                 }
-
-                return empty($methods) ? '-' : implode(', ', $methods);
             })
             ->addColumn('booking_source', function ($row) {
-                $sources = [];
-                foreach ($row->saleItems as $saleItem) {
-                    if ($saleItem->item_type === 'booking' && $saleItem->itemable) {
-                        $booking = $saleItem->itemable;
-                        foreach ($booking->details as $detail) {
+                try {
+                    $sources = [];
+                    foreach ($row->bookings ?? [] as $booking) {
+                        foreach ($booking->details ?? [] as $detail) {
                             $source = $detail->booking_source ?? 'inside_booking';
                             if (!in_array($source, $sources, true)) {
                                 $sources[] = $source;
                             }
                         }
                     }
-                }
-                
-                if (empty($sources)) {
+
+                    if (empty($sources)) {
+                        return '-';
+                    }
+
+                    $html = '';
+                    foreach ($sources as $source) {
+                        if ($source === 'outside_booking') {
+                            $html .= '<span class="badge bg-label-info mb-1">' . __('api.outside_booking') . '</span><br>';
+                        } else {
+                            $html .= '<span class="badge bg-label-secondary mb-1">' . __('api.inside_booking') . '</span><br>';
+                        }
+                    }
+                    return $html;
+                } catch (\Throwable $e) {
                     return '-';
                 }
-                
-                $html = '';
-                foreach ($sources as $source) {
-                    if ($source === 'outside_booking') {
-                        $html .= '<span class="badge bg-label-info mb-1">' . __('api.outside_booking') . '</span><br>';
-                    } else {
-                        $html .= '<span class="badge bg-label-secondary mb-1">' . __('api.inside_booking') . '</span><br>';
-                    }
-                }
-                return $html;
             })
             ->addColumn('status', function ($row) {
-                // Find all bookings associated with this sale
-                $booking = $row->bookings->first();
-                if (!$booking) {
+                try {
+                    $booking = optional($row->bookings)->first();
+                    if (!$booking) {
+                        return '-';
+                    }
+
+                    $firstDetail = optional($booking->details)->first();
+                    $status = $firstDetail->status ?? 'confirmed';
+                    $source = $firstDetail->booking_source ?? 'inside_booking';
+
+                    if ($source !== 'outside_booking') {
+                        $deletedStatus = $booking->deleted_at ? 'cancelled' : 'confirmed';
+                        $class = $booking->deleted_at ? 'bg-label-danger' : 'bg-label-success';
+                        return '<span class="badge ' . $class . '">' . __('field.booking_status_' . $deletedStatus) . '</span>';
+                    }
+
+                    $map = [
+                        'pending'   => 'bg-label-warning',
+                        'confirmed' => 'bg-label-success',
+                        'rejected'  => 'bg-label-danger',
+                    ];
+                    $class = $map[$status] ?? 'bg-label-secondary';
+                    $html = '<span class="badge ' . $class . '">' . __('field.booking_status_' . $status) . '</span>';
+
+                    $user = auth('center_user')->user();
+                    if ($status === 'pending' && $user && $user->can('UPDATE_BOOKINGS', 'center_api')) {
+                        $id = $booking->id;
+                        $confirmUrl = route('center_user.bookings.confirm');
+                        $rejectUrl = route('center_user.bookings.reject');
+
+                        $html .= '<div class="mt-1">
+                                    <button type="button" onclick="bookingAction(\'' . $confirmUrl . '\', ' . $id . ')" class="btn btn-success btn-xs me-1" title="' . __('general.confirm') . '">
+                                        <i class="ti ti-check ti-xs"></i>
+                                    </button>
+                                    <button type="button" onclick="bookingAction(\'' . $rejectUrl . '\', ' . $id . ')" class="btn btn-danger btn-xs" title="' . __('general.reject') . '">
+                                        <i class="ti ti-x ti-xs"></i>
+                                    </button>
+                                  </div>';
+                    }
+
+                    return $html;
+                } catch (\Throwable $e) {
                     return '-';
                 }
-
-                $firstDetail = $booking->details->first();
-                $status = $firstDetail->status ?? 'confirmed';
-                $source = $firstDetail->booking_source ?? 'inside_booking';
-
-                // Handle inside bookings (just look at deleted_at)
-                if ($source !== 'outside_booking') {
-                    $deletedStatus = $booking->deleted_at ? 'cancelled' : 'confirmed';
-                    $class = $booking->deleted_at ? 'bg-label-danger' : 'bg-label-success';
-                    return '<span class="badge ' . $class . '">' . __('field.booking_status_' . $deletedStatus) . '</span>';
-                }
-
-                // Handle outside bookings (use the new status column)
-                $map = [
-                    'pending'   => 'bg-label-warning',
-                    'confirmed' => 'bg-label-success',
-                    'rejected'  => 'bg-label-danger',
-                ];
-                $class = $map[$status] ?? 'bg-label-secondary';
-                $html = '<span class="badge ' . $class . '">' . __('field.booking_status_' . $status) . '</span>';
-
-                // Add confirm/reject actions for pending outside bookings
-                $user = auth('center_user')->user();
-                if ($status === 'pending' && $user && $user->can('UPDATE_BOOKINGS', 'center_api')) {
-                    $id = $booking->id;
-                    $confirmUrl = route('center_user.bookings.confirm');
-                    $rejectUrl = route('center_user.bookings.reject');
-
-                    $html .= '<div class="mt-1">
-                                <button type="button" onclick="bookingAction(\'' . $confirmUrl . '\', ' . $id . ')" class="btn btn-success btn-xs me-1" title="' . __('general.confirm') . '">
-                                    <i class="ti ti-check ti-xs"></i>
-                                </button>
-                                <button type="button" onclick="bookingAction(\'' . $rejectUrl . '\', ' . $id . ')" class="btn btn-danger btn-xs" title="' . __('general.reject') . '">
-                                    <i class="ti ti-x ti-xs"></i>
-                                </button>
-                              </div>';
-                }
-
-                return $html;
             })
             ->addColumn('product_payment', function ($row) {
-                $types = [];
-
-                foreach ($row->saleItems as $saleItem) {
-                    if ($saleItem->item_type === 'buy_product' && $saleItem->itemable) {
-                        $buyProduct = $saleItem->itemable;
-                        if ($buyProduct->payment_type && !in_array($buyProduct->payment_type, $types, true)) {
+                try {
+                    $types = [];
+                    foreach ($row->buyProducts ?? [] as $buyProduct) {
+                        if (!empty($buyProduct->payment_type) && !in_array($buyProduct->payment_type, $types, true)) {
                             $types[] = $buyProduct->payment_type;
                         }
                     }
+                    return empty($types) ? '-' : implode(', ', $types);
+                } catch (\Throwable $e) {
+                    return '-';
                 }
-
-                return empty($types) ? '-' : implode(', ', $types);
             })
             ->addColumn('coupon_payment', function ($row) {
-                $types = [];
-
-                foreach ($row->saleItems as $saleItem) {
-                    if ($saleItem->item_type === 'user_wallet' && $saleItem->itemable) {
-                        $userWallet = $saleItem->itemable;
-                        if ($userWallet->wallet_type && !in_array($userWallet->wallet_type, $types, true)) {
-                            $types[] = $userWallet->wallet_type;
+                try {
+                    $types = [];
+                    foreach ($this->collectCouponDetails($row) as $coupon) {
+                        if (!empty($coupon['type']) && $coupon['type'] !== '-' && !in_array($coupon['type'], $types, true)) {
+                            $types[] = $coupon['type'];
                         }
                     }
+                    return empty($types) ? '-' : implode(', ', $types);
+                } catch (\Throwable $e) {
+                    return '-';
                 }
-
-                return empty($types) ? '-' : implode(', ', $types);
             })
             ->addColumn('payment_methods', function ($row) {
-                $methods = [];
-                
-                foreach ($row->saleItems as $saleItem) {
-                    if ($saleItem->itemable) {
-                        $itemable = $saleItem->itemable;
-                        
-                        // Check for common payment_type field
-                        $type = $itemable->payment_type ?? $itemable->wallet_type ?? null;
-                        
-                        if ($type === 'multiple' && isset($itemable->payment_methods) && !empty($itemable->payment_methods)) {
-                            foreach ($itemable->payment_methods as $method) {
-                                $name = $method['method'] ?? 'N/A';
-                                if (!in_array($name, $methods, true)) {
+                try {
+                    $methods = [];
+                    foreach ($row->bookings ?? [] as $booking) {
+                        if (($booking->payment_type ?? null) === 'multiple' && !empty($booking->payment_methods)) {
+                            foreach ($booking->payment_methods as $method) {
+                                $name = $method['method'] ?? null;
+                                if ($name && !in_array($name, $methods, true)) {
                                     $methods[] = $name;
                                 }
                             }
-                        } elseif ($type && !in_array($type, $methods, true)) {
-                            $methods[] = $type;
+                        } elseif (!empty($booking->payment_type) && !in_array($booking->payment_type, $methods, true)) {
+                            $methods[] = $booking->payment_type;
                         }
                     }
+                    foreach ($row->buyProducts ?? [] as $buyProduct) {
+                        if (!empty($buyProduct->payment_type) && !in_array($buyProduct->payment_type, $methods, true)) {
+                            $methods[] = $buyProduct->payment_type;
+                        }
+                    }
+                    foreach ($this->collectCouponDetails($row) as $coupon) {
+                        if (!empty($coupon['type']) && $coupon['type'] !== '-' && !in_array($coupon['type'], $methods, true)) {
+                            $methods[] = $coupon['type'];
+                        }
+                    }
+                    return empty($methods) ? '-' : implode(', ', $methods);
+                } catch (\Throwable $e) {
+                    return '-';
                 }
-                
-                return empty($methods) ? '-' : implode(', ', $methods);
             })
             ->editColumn('worker.name', function ($row) {
-                return \App\Helpers\MyHelper::truncateWithReadMore($row->worker?->name ?? '-');
+                try {
+                    return \App\Helpers\MyHelper::truncateWithReadMore($row->worker?->name ?? '-');
+                } catch (\Throwable $e) {
+                    return '-';
+                }
             })
             ->addColumn('booking_employees', function ($row) {
-                $employees = [];
-
-                foreach ($row->saleItems as $saleItem) {
-                    if ($saleItem->item_type === 'booking' && $saleItem->itemable) {
-                        $booking = $saleItem->itemable;
-                        foreach ($booking->details as $detail) {
-                            if ($detail->worker && $detail->worker->name) {
-                                $workerName = $detail->worker->name;
-                                if (!in_array($workerName, $employees, true)) {
-                                    $employees[] = $workerName;
-                                }
+                try {
+                    $employees = [];
+                    foreach ($row->bookings ?? [] as $booking) {
+                        foreach ($booking->details ?? [] as $detail) {
+                            $workerName = $detail->worker->name ?? null;
+                            if ($workerName && !in_array($workerName, $employees, true)) {
+                                $employees[] = $workerName;
                             }
                         }
                     }
+                    return empty($employees) ? '-' : implode('<br>', $employees);
+                } catch (\Throwable $e) {
+                    return '-';
                 }
-
-                return empty($employees) ? '-' : implode('<br>', $employees);
             })
             ->addColumn('product_employees', function ($row) {
-                $employees = [];
-
-                foreach ($row->saleItems as $saleItem) {
-                    if ($saleItem->item_type === 'buy_product' && $saleItem->itemable) {
-                        $buyProduct = $saleItem->itemable;
-                        
-                        // Add sales worker
+                try {
+                    $employees = [];
+                    foreach ($row->buyProducts ?? [] as $buyProduct) {
                         if ($buyProduct->sales_worker && $buyProduct->sales_worker->name) {
                             $salesWorkerName = $buyProduct->sales_worker->name . ' (' . __('field.sales_worker') . ')';
                             if (!in_array($salesWorkerName, $employees, true)) {
                                 $employees[] = $salesWorkerName;
                             }
                         }
-                        
-                        // Add worker
                         if ($buyProduct->worker && $buyProduct->worker->name) {
                             $workerName = $buyProduct->worker->name . ' (' . __('field.worker') . ')';
                             if (!in_array($workerName, $employees, true)) {
@@ -454,18 +426,31 @@ class SalesDataTable extends DataTable
                             }
                         }
                     }
+                    return empty($employees) ? '-' : implode('<br>', $employees);
+                } catch (\Throwable $e) {
+                    return '-';
                 }
-
-                return empty($employees) ? '-' : implode('<br>', $employees);
             })
             ->editColumn('client.name', function ($row) {
-                return \App\Helpers\MyHelper::truncateWithReadMore($row->client?->name ?? __('general.walk_in'));
+                try {
+                    return \App\Helpers\MyHelper::truncateWithReadMore($row->client?->name ?? __('general.walk_in'));
+                } catch (\Throwable $e) {
+                    return __('general.walk_in');
+                }
             })
-             ->editColumn('tip', function ($row) {
-                return $row->tip > 0 ? number_format($row->tip, 2) . ' ' . trim(get_currency()) : '-';
+            ->editColumn('tip', function ($row) {
+                try {
+                    return $row->tip > 0 ? number_format((float) $row->tip, 2) . ' ' . trim(get_currency()) : '-';
+                } catch (\Throwable $e) {
+                    return '-';
+                }
             })
             ->editColumn('total', function ($row) {
-                return number_format($row->total, 2) . ' ' . trim(get_currency());
+                try {
+                    return number_format((float) $row->total, 2) . ' ' . trim(get_currency());
+                } catch (\Throwable $e) {
+                    return '-';
+                }
             })
             ->rawColumns(['status', 'worker.name', 'client.name', 'services', 'products', 'packages', 'coupons', 'booking_employees', 'product_employees', 'booking_source', 'action'], true)
             ->setRowId('id');
@@ -476,11 +461,12 @@ class SalesDataTable extends DataTable
         $user = auth('center_user')->user();
         $branchId = $user->branch_id ?? null;
 
+        // Do not eager-load saleItems.itemable — invalid morph types / soft-deletes can 500 the Ajax request.
         $query = $model->query()->with([
             'worker',
             'client',
             'branch.translation',
-            'saleItems.itemable',
+            'saleItems',
             'bookings' => function ($q) {
                 $q->withTrashed()->with([
                     'details.service.translation',
@@ -550,7 +536,6 @@ JS;
             ])
             ->orderBy(1)
             ->responsive(false)
-            ->autoWidth(false)
             ->dom('
                 <"card-header border-bottom p-3 d-flex justify-content-between align-items-center"
                     <"head-label"><"dt-action-buttons"B>
@@ -558,7 +543,7 @@ JS;
                 <"d-flex justify-content-between align-items-center mx-0 row px-1 pt-2"
                     <"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"fr>
                 >
-                t
+                <"table-responsive"t>
                 <"d-flex justify-content-between mx-0 row px-1 pt-2"
                     <"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>
                 >
@@ -596,10 +581,7 @@ JS;
             ->language($this->getDataTableLanguageUrl())
             ->addTableClass('table table-hover lz-sales-dt')
             ->initComplete($initCompleteJs)
-            ->parameters([
-                'scrollX' => true,
-                'autoWidth' => false,
-            ]);
+            ->parameters([]);
     }
 
     public function getDataTableLanguageUrl()
@@ -636,25 +618,6 @@ JS;
             }
         }
 
-        if (!empty($details)) {
-            return $details;
-        }
-
-        foreach ($row->saleItems ?? [] as $saleItem) {
-            if (($saleItem->item_type ?? null) !== 'booking' || !$saleItem->itemable) {
-                continue;
-            }
-            foreach ($saleItem->itemable->details ?? [] as $detail) {
-                $details[] = [
-                    'service' => (string) ($detail->service?->translation?->name ?? $detail->service?->name ?? 'N/A'),
-                    'worker' => (string) ($detail->worker?->name ?? '-'),
-                    'date' => (string) ($detail->_date ?? $saleItem->itemable->booking_date ?? '-'),
-                    'time' => (string) (($detail->from_time ?? '') . '-' . ($detail->to_time ?? '')),
-                    'price' => number_format((float) ($detail->price ?? 0), 2) . ' ' . $currency,
-                ];
-            }
-        }
-
         return $details;
     }
 
@@ -665,22 +628,6 @@ JS;
 
         foreach ($row->buyProducts ?? [] as $buyProduct) {
             foreach ($buyProduct->details ?? [] as $detail) {
-                $details[] = [
-                    'product' => (string) ($detail->product?->translation?->name ?? $detail->product?->name ?? 'N/A'),
-                    'price' => number_format((float) ($detail->price ?? 0), 2) . ' ' . $currency,
-                ];
-            }
-        }
-
-        if (!empty($details)) {
-            return $details;
-        }
-
-        foreach ($row->saleItems ?? [] as $saleItem) {
-            if (($saleItem->item_type ?? null) !== 'buy_product' || !$saleItem->itemable) {
-                continue;
-            }
-            foreach ($saleItem->itemable->details ?? [] as $detail) {
                 $details[] = [
                     'product' => (string) ($detail->product?->translation?->name ?? $detail->product?->name ?? 'N/A'),
                     'price' => number_format((float) ($detail->price ?? 0), 2) . ' ' . $currency,
@@ -701,20 +648,16 @@ JS;
             return [];
         }
 
-        $missingIds = $items->filter(fn ($si) => !$si->itemable && $si->itemable_id)
-            ->pluck('itemable_id')
-            ->unique()
-            ->all();
-
-        $fallback = !empty($missingIds)
+        $ids = $items->pluck('itemable_id')->filter()->unique()->all();
+        $fallback = !empty($ids)
             ? \App\Models\UserPackage::with(['package'])
-                ->whereIn('id', $missingIds)
+                ->whereIn('id', $ids)
                 ->get()
                 ->keyBy('id')
             : collect();
 
         foreach ($items as $saleItem) {
-            $userPackage = $saleItem->itemable ?? $fallback->get($saleItem->itemable_id);
+            $userPackage = $fallback->get($saleItem->itemable_id);
             $packageName = $userPackage?->package?->name
                 ?? $userPackage?->package?->translation?->name
                 ?? null;
@@ -738,21 +681,17 @@ JS;
             return [];
         }
 
-        $missingIds = $items->filter(fn ($si) => !$si->itemable && $si->itemable_id)
-            ->pluck('itemable_id')
-            ->unique()
-            ->all();
-
-        $fallback = !empty($missingIds)
+        $ids = $items->pluck('itemable_id')->filter()->unique()->all();
+        $fallback = !empty($ids)
             ? \App\Models\UserWallet::withTrashed()
                 ->with(['wallet', 'user'])
-                ->whereIn('id', $missingIds)
+                ->whereIn('id', $ids)
                 ->get()
                 ->keyBy('id')
             : collect();
 
         foreach ($items as $saleItem) {
-            $userWallet = $saleItem->itemable ?? $fallback->get($saleItem->itemable_id);
+            $userWallet = $fallback->get($saleItem->itemable_id);
             $details[] = [
                 'code' => (string) ($userWallet?->wallet?->code ?? ('#' . ($saleItem->itemable_id ?? ''))),
                 'amount' => number_format((float) ($userWallet?->amount ?? $saleItem->subtotal ?? $saleItem->price ?? 0), 2) . ' ' . $currency,

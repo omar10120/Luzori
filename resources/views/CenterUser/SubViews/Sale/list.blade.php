@@ -476,18 +476,28 @@
             function findRowEye(el) {
                 var tr = el.closest('tr');
                 if (tr && tr.classList.contains('child')) tr = tr.previousElementSibling;
-                return tr ? tr.querySelector('.view-sale-side-details[data-sale-panel-b64]') : null;
+                return tr ? tr.querySelector('.view-sale-side-details') : null;
             }
 
             function parsePanel(btn) {
-                var b64 = btn.getAttribute('data-sale-panel-b64');
-                if (!b64) {
-                    var eye = findRowEye(btn);
-                    if (eye) b64 = eye.getAttribute('data-sale-panel-b64');
+                var target = btn;
+                if (!target.getAttribute('data-sale-id') && !target.getAttribute('data-sale-panel-b64')) {
+                    target = findRowEye(btn) || btn;
                 }
-                var data = decodeB64Json(b64);
-                if (!data) return null;
-                return enrichPanelFromRow(btn, data);
+                var b64 = target.getAttribute('data-sale-panel-b64');
+                var data = b64 ? decodeB64Json(b64) : null;
+                var saleId = target.getAttribute('data-sale-id') || '';
+                if (!data) {
+                    data = {
+                        id: saleId,
+                        ref: saleId ? ('#' + saleId) : '#',
+                        show_url: saleId ? ('{{ url('/center_user/sales/show') }}/' + saleId) : '#',
+                        branch: '-', client: '-', phone: '-', payment: '-', created_at: '-',
+                        status_label: '-', status_tone: 'secondary',
+                        bookings: [], products: [], packages: [], coupons: [], notes: ''
+                    };
+                }
+                return enrichPanelFromRow(target, data);
             }
 
             function enrichPanelFromRow(btn, data) {
