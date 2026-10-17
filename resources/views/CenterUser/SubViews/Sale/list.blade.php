@@ -232,6 +232,18 @@
             border-color: #9a6923;
             color: #002b26;
         }
+        #salesSectionModal .modal-content {
+            border: 0;
+            border-radius: 16px;
+            background: #fdfaf6;
+        }
+        #salesSectionModal .modal-header {
+            border-bottom-color: #efe6d8;
+        }
+        #salesSectionModal .modal-title {
+            color: #002b26;
+            font-weight: 700;
+        }
     </style>
 @endsection
 
@@ -286,6 +298,21 @@
                 </div>
             </div>
         </div>
+
+        <div class="modal fade" id="salesSectionModal" tabindex="-1" aria-labelledby="salesSectionModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="salesSectionModalLabel"></h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" id="salesSectionModalBody"></div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-luzori-muted" data-bs-dismiss="modal">{{ __('general.cancel') }}</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 @endsection
 
@@ -321,10 +348,13 @@
 
         (function() {
             var offcanvasEl = document.getElementById('saleDetailsOffcanvas');
+            var modalEl = document.getElementById('salesSectionModal');
             if (!offcanvasEl) return;
 
             var bodyEl = document.getElementById('saleDetailsOffcanvasBody');
             var fullLink = document.getElementById('saleDetailsFullLink');
+            var modalTitle = document.getElementById('salesSectionModalLabel');
+            var modalBody = document.getElementById('salesSectionModalBody');
             var labels = {
                 branch: @json(__('field.branch')),
                 client: @json(__('field.client')),
@@ -336,8 +366,17 @@
                 products: @json(__('locale.products')),
                 coupons: @json(__('field.coupons')),
                 notes: @json(__('field.notes')),
-                booking: @json(__('locale.bookings')),
-                empty: '—'
+                empty: '—',
+                service: @json(__('field.service')),
+                employee: @json(__('field.employee')),
+                date: @json(__('field.date')),
+                time: @json(__('field.time')),
+                price: @json(__('field.price')),
+                product: @json(__('field.product')),
+                package: @json(__('field.package')),
+                code: @json(__('field.code')),
+                amount: @json(__('field.amount')),
+                type: @json(__('field.type'))
             };
 
             function esc(str) {
@@ -348,20 +387,28 @@
                     .replace(/"/g, '&quot;');
             }
 
-            function parsePanel(btn) {
-                var b64 = btn.getAttribute('data-sale-panel-b64');
-                if (!b64) {
-                    var tr = btn.closest('tr');
-                    if (tr && tr.classList.contains('child')) tr = tr.previousElementSibling;
-                    var eye = tr ? tr.querySelector('.view-sale-side-details[data-sale-panel-b64]') : null;
-                    if (eye) b64 = eye.getAttribute('data-sale-panel-b64');
-                }
+            function decodeB64Json(b64) {
                 if (!b64) return null;
                 try {
                     return JSON.parse(atob(b64));
                 } catch (e) {
                     return null;
                 }
+            }
+
+            function findRowEye(el) {
+                var tr = el.closest('tr');
+                if (tr && tr.classList.contains('child')) tr = tr.previousElementSibling;
+                return tr ? tr.querySelector('.view-sale-side-details[data-sale-panel-b64]') : null;
+            }
+
+            function parsePanel(btn) {
+                var b64 = btn.getAttribute('data-sale-panel-b64');
+                if (!b64) {
+                    var eye = findRowEye(btn);
+                    if (eye) b64 = eye.getAttribute('data-sale-panel-b64');
+                }
+                return decodeB64Json(b64);
             }
 
             function metaRow(icon, label, value) {
@@ -421,10 +468,11 @@
                 }).join('');
             }
 
-            function renderPanel(data, focus) {
+            function openSidePanel(data) {
+                if (!data || !bodyEl) return;
+
                 var tone = data.status_tone || 'secondary';
                 var html = '';
-
                 html += '<div class="lz-sale-drawer-head">';
                 html += '<div class="lz-sale-drawer-ref"><i class="ti ti-calendar-event"></i><span>' + esc(data.ref || ('#' + data.id)) + '</span></div>';
                 if (data.status_label && data.status_label !== '-') {
@@ -451,30 +499,13 @@
                 html += section('ti-notes', labels.notes, notesHtml);
 
                 bodyEl.innerHTML = html;
-
                 if (fullLink) {
                     fullLink.href = data.show_url || '#';
                     fullLink.style.display = data.show_url ? '' : 'none';
                 }
 
-                if (focus) {
-                    // Soft scroll toward focused section after paint
-                    setTimeout(function() {
-                        var titles = bodyEl.querySelectorAll('.lz-sale-drawer-section-title span');
-                        var map = {
-                            bookings: labels.services,
-                            packages: labels.packages,
-                            products: labels.products,
-                            coupons: labels.coupons
-                        };
-                        var want = map[focus];
-                        if (!want) return;
-                        titles.forEach(function(el) {
-                            if (el.textContent === want) {
-                                el.closest('.lz-sale-drawer-section')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                            }
-                        });
-                    }, 180);
+                if (window.bootstrap && bootstrap.Offcanvas) {
+                    bootstrap.Offcanvas.getOrCreateInstance(offcanvasEl).show();
                 }
             }
 
@@ -487,20 +518,76 @@
                 }
             }
 
+            function tableHtml(headers, rows) {
+                var h = '<div class="table-responsive"><table class="table table-sm mb-0"><thead><tr>';
+                headers.forEach(function(th) { h += '<th>' + esc(th) + '</th>'; });
+                h += '</tr></thead><tbody>';
+                rows.forEach(function(row) {
+                    h += '<tr>';
+                    row.forEach(function(cell) { h += '<td>' + esc(cell || '—') + '</td>'; });
+                    h += '</tr>';
+                });
+                h += '</tbody></table></div>';
+                return h;
+            }
+
+            function openSectionDialog(btn) {
+                if (!modalEl || !modalBody) return;
+                var details = decodeB64Json(btn.getAttribute('data-details-b64')) || [];
+                var section = btn.getAttribute('data-section') || 'bookings';
+                var title = btn.getAttribute('data-modal-title') || labels.services;
+                var headers = [];
+                var rows = [];
+
+                if (section === 'bookings') {
+                    headers = [labels.service, labels.employee, labels.date, labels.time, labels.price];
+                    rows = details.map(function(d) { return [d.service, d.worker, d.date, d.time, d.price]; });
+                } else if (section === 'products') {
+                    headers = [labels.product, labels.price];
+                    rows = details.map(function(d) { return [d.product, d.price]; });
+                } else if (section === 'packages') {
+                    headers = [labels.package, labels.price];
+                    rows = details.map(function(d) { return [d.package, d.price]; });
+                } else if (section === 'coupons') {
+                    headers = [labels.code, labels.amount, labels.type, labels.client];
+                    rows = details.map(function(d) { return [d.code, d.amount, d.type, d.user]; });
+                }
+
+                if (modalTitle) modalTitle.textContent = title;
+                modalBody.innerHTML = rows.length ? tableHtml(headers, rows) : '<p class="text-muted mb-0">' + labels.empty + '</p>';
+
+                if (window.bootstrap && bootstrap.Modal) {
+                    bootstrap.Modal.getOrCreateInstance(modalEl).show();
+                }
+            }
+
+            // Action eye → side drawer
             $(document).on('click', '.view-sale-side-details', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
                 var btn = this;
                 var data = parsePanel(btn);
                 if (!data) return;
-
                 setActiveRow(btn);
-                renderPanel(data, btn.getAttribute('data-focus'));
-
-                if (window.bootstrap && bootstrap.Offcanvas) {
-                    bootstrap.Offcanvas.getOrCreateInstance(offcanvasEl).show();
-                }
+                openSidePanel(data);
             });
+
+            // Booking/product/package/coupon "View details" → centered dialog
+            $(document).on('click', '.view-sale-section-dialog', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                openSectionDialog(this);
+            });
+
+            // Force row-details eye (legacy modal) to open the side drawer on Sales page
+            window.lzOpenRowDetails = function(el) {
+                var eye = findRowEye(el) || (el && el.classList && el.classList.contains('view-sale-side-details') ? el : null);
+                if (eye) {
+                    eye.click();
+                    return false;
+                }
+                return false;
+            };
 
             offcanvasEl.addEventListener('hidden.bs.offcanvas', function() {
                 document.querySelectorAll('.lz-sales-table tbody tr.lz-sale-row-active')
