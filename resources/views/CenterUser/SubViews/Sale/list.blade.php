@@ -408,7 +408,47 @@
                     var eye = findRowEye(btn);
                     if (eye) b64 = eye.getAttribute('data-sale-panel-b64');
                 }
-                return decodeB64Json(b64);
+                var data = decodeB64Json(b64);
+                if (!data) return null;
+                return enrichPanelFromRow(btn, data);
+            }
+
+            function enrichPanelFromRow(btn, data) {
+                var tr = btn.closest('tr');
+                if (tr && tr.classList.contains('child')) tr = tr.previousElementSibling;
+                if (!tr) return data;
+
+                function sectionDetails(section) {
+                    var el = tr.querySelector('.view-sale-section-dialog[data-section="' + section + '"]');
+                    return el ? (decodeB64Json(el.getAttribute('data-details-b64')) || []) : [];
+                }
+
+                if (!data.bookings || !data.bookings.length) data.bookings = sectionDetails('bookings');
+                if (!data.products || !data.products.length) data.products = sectionDetails('products');
+                if (!data.packages || !data.packages.length) data.packages = sectionDetails('packages');
+                if (!data.coupons || !data.coupons.length) data.coupons = sectionDetails('coupons');
+
+                // Fill meta from visible cells when panel payload is empty
+                try {
+                    if (window.jQuery && jQuery.fn.dataTable) {
+                        var $table = jQuery(tr).closest('table');
+                        if ($table.length && jQuery.fn.dataTable.isDataTable($table)) {
+                            var api = $table.DataTable();
+                            var rowIdx = api.row(tr).index();
+                            api.columns().every(function(colIdx) {
+                                var title = (jQuery(this.header()).text() || '').replace(/\s+/g, ' ').trim().toLowerCase();
+                                var val = '';
+                                try { val = jQuery(api.cell(rowIdx, colIdx).node()).text().replace(/\s+/g, ' ').trim(); } catch (e) {}
+                                if (!val || val === '-' || val === '—') return;
+                                if ((!data.branch || data.branch === '-') && title.indexOf('branch') !== -1) data.branch = val;
+                                if ((!data.client || data.client === '-') && (title.indexOf('client') !== -1 || title.indexOf('عميل') !== -1)) data.client = val;
+                                if ((!data.phone || data.phone === '-') && (title.indexOf('phone') !== -1 || title.indexOf('جوال') !== -1 || title.indexOf('هاتف') !== -1)) data.phone = val;
+                            });
+                        }
+                    }
+                } catch (e) {}
+
+                return data;
             }
 
             function metaRow(icon, label, value) {
