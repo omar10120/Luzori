@@ -12,14 +12,15 @@
     @if (!isset($navbarFull))
         <div class="app-brand demo">
             @if (str_contains(url()->current(), 'admin'))
-
-                <a href="{{ route('admin.cp') }}" class="app-brand-link">
-                    <span class="app-brand-logo demo">
-                            @if ($configData['style'] === 'light')
-                            @include('_partials.macros', ['height' => 20])
-                        @else
+                <a href="{{ route('admin.cp') }}" class="app-brand-link luzori-brand-link">
+                    <span class="app-brand-logo demo luzori-brand-logo">
+                        <img src="{{ asset('assets/img/branding/luzori-logo-sidebar.png') }}?v=2"
+                             alt="LUZORI"
+                             class="luzori-sidebar-logo"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                        <span class="luzori-logo-fallback" style="display:none;">
                             @include('_partials.macros_light', ['height' => 20])
-                        @endif
+                        </span>
                     </span>
                 </a>
             @else
@@ -110,14 +111,12 @@
         @endforeach
     </ul>
 
-    @if (!str_contains(url()->current(), 'admin'))
-        <div class="luzori-menu-footer">
-            <div class="luzori-menu-footer-text">
-                {{ __('field.better_management') }}<br>
-                {{ __('field.bigger_growth') }}
-            </div>
+    <div class="luzori-menu-footer">
+        <div class="luzori-menu-footer-text">
+            {{ __('field.better_management') }}<br>
+            {{ __('field.bigger_growth') }}
         </div>
-    @endif
+    </div>
 </aside>
 
 
