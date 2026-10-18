@@ -1,21 +1,22 @@
+@php
+    $hasSaleDrawer = isset($options['sale_panel_b64']) || isset($options['sale_side_id']);
+    // Any "view details / show" action opens the side drawer (not a centered modal / full page)
+    $openSideDetails = $hasSaleDrawer
+        || !isset($options['row_details'])
+        || $options['row_details']
+        || isset($options['show']);
+@endphp
 <div class="lz-action-icons" onclick="event.stopPropagation()">
-    @isset($options['sale_side_id'])
-        <a href="javascript:void(0)" class="lz-action-btn view-sale-side-details"
+    @if($hasSaleDrawer)
+        <a href="javascript:void(0)" class="lz-action-btn view-sale-side-details lz-view-side-details"
             title="{{ __('general.view_details') }}"
-            data-sale-id="{{ $options['sale_side_id'] }}"
+            data-sale-id="{{ $options['sale_side_id'] ?? $id }}"
+            @isset($options['sale_panel_b64']) data-sale-panel-b64="{{ $options['sale_panel_b64'] }}" @endisset
             onclick="event.preventDefault();event.stopImmediatePropagation();event.stopPropagation();if(window.lzOpenSaleSideDetails){window.lzOpenSaleSideDetails(this);}return false;">
             <i class="ti ti-eye"></i>
         </a>
-    @elseif(isset($options['sale_panel_b64']))
-        <a href="javascript:void(0)" class="lz-action-btn view-sale-side-details"
-            title="{{ __('general.view_details') }}"
-            data-sale-id="{{ $id }}"
-            data-sale-panel-b64="{{ $options['sale_panel_b64'] }}"
-            onclick="event.preventDefault();event.stopImmediatePropagation();event.stopPropagation();if(window.lzOpenSaleSideDetails){window.lzOpenSaleSideDetails(this);}return false;">
-            <i class="ti ti-eye"></i>
-        </a>
-    @elseif(!isset($options['row_details']) || $options['row_details'])
-        <a href="javascript:void(0)" class="lz-action-btn lz-open-row-details"
+    @elseif($openSideDetails)
+        <a href="javascript:void(0)" class="lz-action-btn lz-open-row-details lz-view-side-details"
             title="{{ __('general.view_details') }}"
             onclick="event.preventDefault(); event.stopPropagation(); if (window.lzOpenRowDetails) { window.lzOpenRowDetails(this); } return false;">
             <i class="ti ti-eye"></i>
@@ -69,7 +70,8 @@
             <i class="ti ti-package-import"></i>
         </a>
     @endisset
-    @isset($options['show'])
+    {{-- Optional: open full show page (not the side drawer) --}}
+    @isset($options['show_full_page'])
         <a class="lz-action-btn" href="{{ route($route . '.show', ['id' => $id]) }}"
             title="{{ __('general.show') }}">
             <i class="ti ti-file-info"></i>

@@ -694,27 +694,137 @@ class SalesController extends Controller
         }
 
         $sale = Sale::with([
-            'worker',
+            'worker' => fn ($q) => $q->withTrashed(),
             'client',
-            'branch',
-            'saleItems'
-        ])->findOrFail($id);
-        
-        // Load relationships based on item type
+            'branch.translation',
+            'saleItems',
+            'bookings' => function ($q) {
+                $q->withTrashed()->with([
+                    'details.service.translation',
+                    'details.worker' => fn ($wq) => $wq->withTrashed(),
+                ]);
+            },
+            'buyProducts.details.product.translation',
+            'buyProducts.sales_worker' => fn ($q) => $q->withTrashed(),
+            'buyProducts.worker' => fn ($q) => $q->withTrashed(),
+        ])->withTrashed()->findOrFail($id);
+
+        // Load relationships based on item type (packages / wallets / morph fallbacks)
         foreach ($sale->saleItems as $saleItem) {
             if ($saleItem->item_type === 'booking' && $saleItem->itemable) {
-                $saleItem->itemable->load(['details.service.translation']);
+                $saleItem->itemable->load([
+                    'details.service.translation',
+                    'details.worker' => fn ($wq) => $wq->withTrashed(),
+                ]);
             } elseif ($saleItem->item_type === 'buy_product' && $saleItem->itemable) {
                 $saleItem->itemable->load(['details.product.translation']);
+            } elseif ($saleItem->item_type === 'user_package' && $saleItem->itemable) {
+                $saleItem->itemable->load(['package']);
             }
         }
+
+        $currency = trim((string) get_currency());
+        $paymentMethods = [];
+        $bookingNotes = [];
+        $bookingEmployees = [];
+        $bookingRows = [];
+
+        foreach ($sale->bookings ?? [] as $booking) {
+            if (!empty($booking->notes)) {
+                $bookingNotes[] = trim((string) $booking->notes);
+            }
+            if (($booking->payment_type ?? null) === 'multiple' && is_array($booking->payment_methods ?? null)) {
+                foreach ($booking->payment_methods as $method) {
+                    $name = is_array($method) ? ($method['method'] ?? null) : null;
+                    if ($name && !in_array($name, $paymentMethods, true)) {
+                        $paymentMethods[] = (string) $name;
+                    }
+                }
+            } elseif (!empty($booking->payment_type) && !in_array($booking->payment_type, $paymentMethods, true)) {
+                $paymentMethods[] = (string) $booking->payment_type;
+            }
+
+            foreach ($booking->details ?? [] as $detail) {
+                $emp = $detail->worker?->name ?? null;
+                if ($emp && !in_array($emp, $bookingEmployees, true)) {
+                    $bookingEmployees[] = $emp;
+                }
+                $statusKey = (string) ($detail->status ?? ($booking->deleted_at ? 'cancelled' : 'confirmed'));
+                $tipAmount = (float) ($detail->tip ?? 0);
+                $from = (string) ($detail->from_time ?? '');
+                $to = (string) ($detail->to_time ?? '');
+                $bookingRows[] = [
+                    'service' => (string) ($detail->service?->translation?->name ?? $detail->service?->name ?? '-'),
+                    'worker' => (string) ($emp ?: '-'),
+                    'date' => (string) ($detail->_date ?? $booking->booking_date ?? '-'),
+                    'time' => ($from !== '' || $to !== '') ? trim($from . ' - ' . $to) : '-',
+                    'price' => number_format((float) ($detail->price ?? 0), 2) . ' ' . $currency,
+                    'tip' => $tipAmount > 0 ? number_format($tipAmount, 2) . ' ' . $currency : '-',
+                    'status' => (string) __('field.booking_status_' . $statusKey),
+                    'is_free' => (bool) ($detail->is_free ?? false),
+                    'payment' => (string) ($booking->payment_type ?? '-'),
+                ];
+            }
+        }
+
+        foreach ($sale->buyProducts ?? [] as $buyProduct) {
+            if (!empty($buyProduct->payment_type) && !in_array($buyProduct->payment_type, $paymentMethods, true)) {
+                $paymentMethods[] = (string) $buyProduct->payment_type;
+            }
+        }
+
+        $workerName = (string) ($sale->worker?->name ?? '');
+        if ($workerName === '' && !empty($bookingEmployees)) {
+            $workerName = $bookingEmployees[0];
+        }
+        if ($workerName === '') {
+            $workerName = '-';
+        }
+
+        $tipTotal = (float) ($sale->tip ?? 0);
+        if ($tipTotal <= 0) {
+            foreach ($sale->bookings ?? [] as $booking) {
+                foreach ($booking->details ?? [] as $detail) {
+                    $tipTotal += (float) ($detail->tip ?? 0);
+                }
+            }
+        }
+
+        $statusLabel = '-';
+        $firstBooking = optional($sale->bookings)->first();
+        if ($firstBooking) {
+            $firstDetail = optional($firstBooking->details)->first();
+            $status = $firstDetail?->status ?? 'confirmed';
+            $source = $firstDetail?->booking_source ?? 'inside_booking';
+            if ($source !== 'outside_booking') {
+                $statusLabel = (string) __('field.booking_status_' . ($firstBooking->deleted_at ? 'cancelled' : 'confirmed'));
+            } else {
+                $statusLabel = (string) __('field.booking_status_' . $status);
+            }
+        }
+
+        $saleDisplay = [
+            'branch' => (string) ($sale->branch?->translation?->name ?? $sale->branch?->name ?? '-'),
+            'phone' => (string) ($sale->client?->full_phone ?? $sale->client?->phone ?? '-'),
+            'payment' => empty($paymentMethods) ? '-' : implode(', ', $paymentMethods),
+            'worker' => $workerName,
+            'booking_employees' => $bookingEmployees,
+            'tip_total' => $tipTotal,
+            'tip_label' => $tipTotal > 0 && $workerName !== '-'
+                ? (__('field.tip') . ' (' . $workerName . ')')
+                : __('field.tip'),
+            'status_label' => $statusLabel,
+            'notes' => implode("\n", array_values(array_unique(array_filter($bookingNotes)))),
+            'booking_rows' => $bookingRows,
+            'currency' => $currency,
+        ];
 
         $menu = __('locale.' . $this->plural);
         $menu_link = route($this->indexRoute);
         $title = __('general.show') . ' ' . __('locale.' . $this->plural);
         Log::info('sale show', [$sale]);
         $view = 'CenterUser.SubViews.' . $this->model . '.show';
-        return view($view, compact('sale', 'title', 'menu', 'menu_link'));
+        return view($view, compact('sale', 'saleDisplay', 'title', 'menu', 'menu_link'));
     }
 
     /**

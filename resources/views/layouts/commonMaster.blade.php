@@ -35,6 +35,7 @@ $contentLayout = (isset($container) ? (($container === 'container-xxl') ? "layou
 
 <body @class([
   'luzori-center' => !str_contains(url()->current(), 'admin') && (str_contains(url()->current(), 'center_user') || auth('center_user')->check()),
+  'luzori-admin' => str_contains(url()->current(), 'admin'),
 ])>
   
 

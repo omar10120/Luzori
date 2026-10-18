@@ -86,14 +86,18 @@ class SalesDataTable extends DataTable
                     $model = $this->model;
                     $canDelete = auth('center_user')->user()?->can('DELETE_SALES', 'center_api');
                     $options = [
-                        'show' => true,
+                        'show_full_page' => true,
                         'print' => true,
                         'row_details' => false,
-                        // Lightweight: only sale id — side panel is built in JS from the row
                         'sale_side_id' => (int) $item->id,
                         'operation' => DeleteActionEnum::FORCE_DELETE->value,
                         'with_trashed' => 1,
                     ];
+                    try {
+                        $options['sale_panel_b64'] = $this->salePanelB64($item);
+                    } catch (\Throwable $e) {
+                        // keep sale_side_id fallback for the drawer
+                    }
                     if ($canDelete) {
                         $options['sale_otp_delete'] = true;
                     }
@@ -463,19 +467,19 @@ class SalesDataTable extends DataTable
 
         // Do not eager-load saleItems.itemable — invalid morph types / soft-deletes can 500 the Ajax request.
         $query = $model->query()->with([
-            'worker',
+            'worker' => fn ($q) => $q->withTrashed(),
             'client',
             'branch.translation',
             'saleItems',
             'bookings' => function ($q) {
                 $q->withTrashed()->with([
                     'details.service.translation',
-                    'details.worker',
+                    'details.worker' => fn ($wq) => $wq->withTrashed(),
                 ]);
             },
             'buyProducts.details.product.translation',
-            'buyProducts.sales_worker',
-            'buyProducts.worker',
+            'buyProducts.sales_worker' => fn ($q) => $q->withTrashed(),
+            'buyProducts.worker' => fn ($q) => $q->withTrashed(),
         ])->withTrashed();
 
         if ($branchId !== null) {
@@ -608,17 +612,127 @@ JS;
 
         foreach ($row->bookings ?? [] as $booking) {
             foreach ($booking->details ?? [] as $detail) {
+                $statusKey = (string) ($detail->status ?? ($booking->deleted_at ? 'cancelled' : 'confirmed'));
+                $tipAmount = (float) ($detail->tip ?? 0);
+                $from = (string) ($detail->from_time ?? '');
+                $to = (string) ($detail->to_time ?? '');
+                $time = ($from !== '' || $to !== '') ? trim($from . ' - ' . $to) : '-';
+
                 $details[] = [
                     'service' => (string) ($detail->service?->translation?->name ?? $detail->service?->name ?? 'N/A'),
                     'worker' => (string) ($detail->worker?->name ?? '-'),
                     'date' => (string) ($detail->_date ?? $booking->booking_date ?? '-'),
-                    'time' => (string) (($detail->from_time ?? '') . '-' . ($detail->to_time ?? '')),
+                    'time' => $time,
+                    'from_time' => $from ?: '-',
+                    'to_time' => $to ?: '-',
                     'price' => number_format((float) ($detail->price ?? 0), 2) . ' ' . $currency,
+                    'tip' => $tipAmount > 0 ? number_format($tipAmount, 2) . ' ' . $currency : '-',
+                    'status' => (string) __('field.booking_status_' . $statusKey),
+                    'status_key' => $statusKey,
+                    'is_free' => (bool) ($detail->is_free ?? false),
+                    'source' => (string) ($detail->booking_source ?? 'inside_booking'),
+                    'notes' => (string) ($booking->notes ?? ''),
+                    'payment' => (string) ($booking->payment_type ?? '-'),
                 ];
             }
         }
 
         return $details;
+    }
+
+    /**
+     * Resolve display fields shared by the side drawer and show page.
+     */
+    protected function resolveSaleDisplayMeta($row): array
+    {
+        $currency = trim((string) get_currency());
+        $paymentMethods = [];
+        $notes = [];
+        $bookingEmployees = [];
+
+        foreach ($row->bookings ?? [] as $booking) {
+            if (!empty($booking->notes)) {
+                $notes[] = trim((string) $booking->notes);
+            }
+            if (($booking->payment_type ?? null) === 'multiple' && is_array($booking->payment_methods ?? null)) {
+                foreach ($booking->payment_methods as $method) {
+                    $name = is_array($method) ? ($method['method'] ?? null) : null;
+                    if ($name && !in_array($name, $paymentMethods, true)) {
+                        $paymentMethods[] = (string) $name;
+                    }
+                }
+            } elseif (!empty($booking->payment_type) && !in_array($booking->payment_type, $paymentMethods, true)) {
+                $paymentMethods[] = (string) $booking->payment_type;
+            }
+            foreach ($booking->details ?? [] as $detail) {
+                $emp = $detail->worker?->name ?? null;
+                if ($emp && !in_array($emp, $bookingEmployees, true)) {
+                    $bookingEmployees[] = $emp;
+                }
+            }
+        }
+
+        foreach ($row->buyProducts ?? [] as $buyProduct) {
+            if (!empty($buyProduct->payment_type) && !in_array($buyProduct->payment_type, $paymentMethods, true)) {
+                $paymentMethods[] = (string) $buyProduct->payment_type;
+            }
+        }
+
+        $workerName = (string) ($row->worker?->name ?? '');
+        if ($workerName === '' && !empty($bookingEmployees)) {
+            $workerName = $bookingEmployees[0];
+        }
+        if ($workerName === '') {
+            $workerName = '-';
+        }
+
+        $tipAmount = (float) ($row->tip ?? 0);
+        if ($tipAmount <= 0) {
+            foreach ($row->bookings ?? [] as $booking) {
+                foreach ($booking->details ?? [] as $detail) {
+                    $tipAmount += (float) ($detail->tip ?? 0);
+                }
+            }
+        }
+
+        $statusLabel = '-';
+        $statusTone = 'secondary';
+        try {
+            $booking = optional($row->bookings)->first();
+            if ($booking) {
+                $firstDetail = optional($booking->details)->first();
+                $status = $firstDetail?->status ?? 'confirmed';
+                $source = $firstDetail?->booking_source ?? 'inside_booking';
+                if ($source !== 'outside_booking') {
+                    $deletedStatus = $booking->deleted_at ? 'cancelled' : 'confirmed';
+                    $statusLabel = (string) __('field.booking_status_' . $deletedStatus);
+                    $statusTone = $booking->deleted_at ? 'danger' : 'success';
+                } else {
+                    $statusLabel = (string) __('field.booking_status_' . $status);
+                    $statusTone = ['pending' => 'warning', 'confirmed' => 'success', 'rejected' => 'danger'][$status] ?? 'secondary';
+                }
+            }
+        } catch (\Throwable $e) {
+            // keep defaults
+        }
+
+        return [
+            'currency' => $currency,
+            'payment' => empty($paymentMethods) ? '-' : implode(', ', $paymentMethods),
+            'worker' => $workerName,
+            'booking_employees' => $bookingEmployees,
+            'tip_amount' => $tipAmount,
+            'tip' => $tipAmount > 0 ? number_format($tipAmount, 2) . ' ' . $currency : '-',
+            'tip_label' => $tipAmount > 0 && $workerName !== '-'
+                ? ((string) __('field.tip') . ' (' . $workerName . ')')
+                : (string) __('field.tip'),
+            'notes' => implode("\n", array_values(array_unique(array_filter($notes)))),
+            'status_label' => $statusLabel,
+            'status_tone' => $statusTone,
+            'subtotal' => number_format((float) ($row->subtotal ?? 0), 2) . ' ' . $currency,
+            'tax' => number_format((float) ($row->tax ?? 0), 2) . ' ' . $currency,
+            'total' => number_format((float) ($row->total ?? 0), 2) . ' ' . $currency,
+        ];
     }
 
     protected function collectProductDetails($row): array
@@ -713,15 +827,23 @@ JS;
             return $this->salePanelCache[$saleId];
         }
 
-        $currency = trim((string) get_currency());
         $bookings = [];
         $products = [];
         $packages = [];
         $coupons = [];
-        $notes = [];
-        $paymentMethods = [];
-        $statusLabel = '-';
-        $statusTone = 'secondary';
+        $meta = [
+            'payment' => '-',
+            'worker' => '-',
+            'booking_employees' => [],
+            'tip' => '-',
+            'tip_label' => (string) __('field.tip'),
+            'notes' => '',
+            'status_label' => '-',
+            'status_tone' => 'secondary',
+            'subtotal' => '-',
+            'tax' => '-',
+            'total' => '-',
+        ];
 
         try {
             $bookings = $this->collectBookingDetails($row);
@@ -748,48 +870,12 @@ JS;
         }
 
         try {
-            foreach ($row->bookings ?? [] as $booking) {
-                if (!empty($booking->notes)) {
-                    $notes[] = trim((string) $booking->notes);
-                }
-                if (($booking->payment_type ?? null) === 'multiple' && is_array($booking->payment_methods ?? null)) {
-                    foreach ($booking->payment_methods as $method) {
-                        $name = is_array($method) ? ($method['method'] ?? null) : null;
-                        if ($name && !in_array($name, $paymentMethods, true)) {
-                            $paymentMethods[] = (string) $name;
-                        }
-                    }
-                } elseif (!empty($booking->payment_type) && !in_array($booking->payment_type, $paymentMethods, true)) {
-                    $paymentMethods[] = (string) $booking->payment_type;
-                }
-            }
-            foreach ($row->buyProducts ?? [] as $buyProduct) {
-                if (!empty($buyProduct->payment_type) && !in_array($buyProduct->payment_type, $paymentMethods, true)) {
-                    $paymentMethods[] = (string) $buyProduct->payment_type;
-                }
-            }
+            $meta = array_merge($meta, $this->resolveSaleDisplayMeta($row));
             foreach ($coupons as $coupon) {
-                if (!empty($coupon['type']) && $coupon['type'] !== '-' && !in_array($coupon['type'], $paymentMethods, true)) {
-                    $paymentMethods[] = (string) $coupon['type'];
-                }
-            }
-        } catch (\Throwable $e) {
-            // keep partial payment/notes
-        }
-
-        try {
-            $booking = optional($row->bookings)->first();
-            if ($booking) {
-                $firstDetail = optional($booking->details)->first();
-                $status = $firstDetail?->status ?? 'confirmed';
-                $source = $firstDetail?->booking_source ?? 'inside_booking';
-                if ($source !== 'outside_booking') {
-                    $deletedStatus = $booking->deleted_at ? 'cancelled' : 'confirmed';
-                    $statusLabel = (string) __('field.booking_status_' . $deletedStatus);
-                    $statusTone = $booking->deleted_at ? 'danger' : 'success';
-                } else {
-                    $statusLabel = (string) __('field.booking_status_' . $status);
-                    $statusTone = ['pending' => 'warning', 'confirmed' => 'success', 'rejected' => 'danger'][$status] ?? 'secondary';
+                if (!empty($coupon['type']) && $coupon['type'] !== '-' && $meta['payment'] === '-') {
+                    $meta['payment'] = (string) $coupon['type'];
+                } elseif (!empty($coupon['type']) && $coupon['type'] !== '-' && strpos($meta['payment'], (string) $coupon['type']) === false) {
+                    $meta['payment'] .= ', ' . $coupon['type'];
                 }
             }
         } catch (\Throwable $e) {
@@ -810,16 +896,22 @@ JS;
             'branch' => (string) ($row->branch?->translation?->name ?? '-'),
             'client' => (string) ($row->client?->name ?? __('general.walk_in')),
             'phone' => (string) ($row->client?->full_phone ?? $row->client?->phone ?? '-'),
-            'payment' => empty($paymentMethods) ? '-' : implode(', ', $paymentMethods),
+            'payment' => $meta['payment'],
+            'worker' => $meta['worker'],
+            'booking_employees' => $meta['booking_employees'],
             'created_at' => $row->created_at ? $row->created_at->format('Y-m-d H:i') : '-',
-            'status_label' => $statusLabel,
-            'status_tone' => $statusTone,
-            'total' => number_format((float) ($row->total ?? 0), 2) . ' ' . $currency,
+            'status_label' => $meta['status_label'],
+            'status_tone' => $meta['status_tone'],
+            'subtotal' => $meta['subtotal'],
+            'tax' => $meta['tax'],
+            'tip' => $meta['tip'],
+            'tip_label' => $meta['tip_label'],
+            'total' => $meta['total'],
             'bookings' => $bookings,
             'products' => $products,
             'packages' => $packages,
             'coupons' => $coupons,
-            'notes' => implode("\n", array_values(array_unique(array_filter($notes)))),
+            'notes' => $meta['notes'],
         ];
 
         $json = json_encode($payload);

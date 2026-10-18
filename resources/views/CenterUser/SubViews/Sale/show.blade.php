@@ -283,10 +283,21 @@
         $saleDateInput = is_string($sale->created_at)
             ? substr($sale->created_at, 0, 10)
             : ($sale->created_at ? $sale->created_at->format('Y-m-d') : '');
-        $currency = trim((string) get_currency());
+        $saleDisplay = $saleDisplay ?? [];
+        $currency = $saleDisplay['currency'] ?? trim((string) get_currency());
         $canUpdateSale = auth('center_user')->user()->can('UPDATE_SALES', 'center_api')
             || auth('center_user')->user()->can('SHOW_SALES', 'center_api');
         $canDeleteSale = auth('center_user')->user()->can('DELETE_SALES', 'center_api');
+        $displayWorker = $saleDisplay['worker'] ?? ($sale->worker?->name ?? '-');
+        $displayPayment = $saleDisplay['payment'] ?? '-';
+        $displayBranch = $saleDisplay['branch'] ?? '-';
+        $displayPhone = $saleDisplay['phone'] ?? '-';
+        $displayStatus = $saleDisplay['status_label'] ?? '-';
+        $displayTipTotal = (float) ($saleDisplay['tip_total'] ?? $sale->tip ?? 0);
+        $displayTipLabel = $saleDisplay['tip_label'] ?? __('field.tip');
+        $bookingRows = $saleDisplay['booking_rows'] ?? [];
+        $bookingEmployees = $saleDisplay['booking_employees'] ?? [];
+        $displayNotes = $saleDisplay['notes'] ?? '';
     @endphp
 
     <div class="luzori-page lz-sale-show">
@@ -369,21 +380,35 @@
                                 </div>
                             </div>
                             <div class="lz-kv-row">
+                                <div class="lz-kv-label">{{ __('field.branch') }}</div>
+                                <div class="lz-kv-value {{ $displayBranch !== '-' ? '' : 'is-muted' }}">{{ $displayBranch }}</div>
+                            </div>
+                            <div class="lz-kv-row">
                                 <div class="lz-kv-label">{{ __('field.worker') }}</div>
-                                <div class="lz-kv-value {{ $sale->worker?->name ? '' : 'is-muted' }}">
-                                    {{ $sale->worker?->name ?? '-' }}
-                                </div>
+                                <div class="lz-kv-value {{ $displayWorker !== '-' ? '' : 'is-muted' }}">{{ $displayWorker }}</div>
                             </div>
                             <div class="lz-kv-row">
                                 <div class="lz-kv-label">{{ __('field.client') }}</div>
                                 <div class="lz-kv-value">{{ $sale->client?->name ?? __('general.walk_in') }}</div>
                             </div>
                             <div class="lz-kv-row">
-                                <div class="lz-kv-label">{{ __('field.payment_method') }}</div>
-                                <div class="lz-kv-value {{ $sale->payment_type ? '' : 'is-muted' }}">
-                                    {{ $sale->payment_type ?? '-' }}
-                                </div>
+                                <div class="lz-kv-label">{{ __('field.phone') }}</div>
+                                <div class="lz-kv-value {{ $displayPhone !== '-' ? '' : 'is-muted' }}">{{ $displayPhone }}</div>
                             </div>
+                            <div class="lz-kv-row">
+                                <div class="lz-kv-label">{{ __('field.payment_method') }}</div>
+                                <div class="lz-kv-value {{ $displayPayment !== '-' ? '' : 'is-muted' }}">{{ $displayPayment }}</div>
+                            </div>
+                            <div class="lz-kv-row">
+                                <div class="lz-kv-label">{{ __('field.status') }}</div>
+                                <div class="lz-kv-value {{ $displayStatus !== '-' ? '' : 'is-muted' }}">{{ $displayStatus }}</div>
+                            </div>
+                            @if(!empty($bookingEmployees))
+                                <div class="lz-kv-row">
+                                    <div class="lz-kv-label">{{ __('field.employee') }} ({{ __('locale.bookings') }})</div>
+                                    <div class="lz-kv-value">{{ implode(', ', $bookingEmployees) }}</div>
+                                </div>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -404,10 +429,15 @@
                             <span>{{ __('field.tax') }}</span>
                             <span>{{ number_format($sale->tax, 2) }} {{ $currency }}</span>
                         </div>
-                        @if($sale->tip > 0)
+                        @if($displayTipTotal > 0)
                             <div class="lz-finance-row lz-finance-tip">
-                                <span>{{ __('field.tip') }} ({{ $sale->worker?->name }})</span>
-                                <span>{{ number_format($sale->tip, 2) }} {{ $currency }}</span>
+                                <span>{{ $displayTipLabel }}</span>
+                                <span>{{ number_format($displayTipTotal, 2) }} {{ $currency }}</span>
+                            </div>
+                        @else
+                            <div class="lz-finance-row">
+                                <span>{{ __('field.tip') }}</span>
+                                <span class="is-muted">-</span>
                             </div>
                         @endif
                         <div class="lz-finance-row lz-finance-total">
@@ -418,6 +448,51 @@
                 </div>
             </div>
         </div>
+
+        @if(!empty($bookingRows))
+            <div class="card lz-items-card mb-3">
+                <div class="lz-panel-head">
+                    <i class="ti ti-calendar-event"></i>
+                    <span>{{ __('field.booking_details') }}</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table lz-items-table align-middle">
+                        <thead>
+                            <tr>
+                                <th>{{ __('field.service') }}</th>
+                                <th>{{ __('field.employee') }}</th>
+                                <th>{{ __('field.date') }}</th>
+                                <th>{{ __('field.time') }}</th>
+                                <th>{{ __('field.status') }}</th>
+                                <th class="text-end">{{ __('field.price') }}</th>
+                                <th class="text-end">{{ __('field.tip') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($bookingRows as $row)
+                                <tr>
+                                    <td>
+                                        <span class="lz-item-name">{{ $row['service'] }}</span>
+                                        @if(!empty($row['is_free']))
+                                            <span class="lz-item-free">({{ __('field.covered_by_package') ?? 'Covered by Package' }})</span>
+                                        @endif
+                                        @if(!empty($row['payment']) && $row['payment'] !== '-')
+                                            <span class="lz-item-sub">{{ __('field.payment_method') }}: {{ $row['payment'] }}</span>
+                                        @endif
+                                    </td>
+                                    <td>{{ $row['worker'] }}</td>
+                                    <td>{{ $row['date'] }}</td>
+                                    <td>{{ $row['time'] }}</td>
+                                    <td>{{ $row['status'] }}</td>
+                                    <td class="text-end fw-semibold">{{ $row['price'] }}</td>
+                                    <td class="text-end">{{ $row['tip'] }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        @endif
 
         <div class="card lz-items-card">
             <div class="lz-panel-head">
@@ -430,6 +505,7 @@
                         <tr>
                             <th>{{ __('field.type') }}</th>
                             <th>{{ __('field.item') }}</th>
+                            <th>{{ __('field.employee') }}</th>
                             <th>{{ __('field.quantity') }}</th>
                             <th class="text-end">{{ __('field.price') }}</th>
                             <th class="text-end">{{ __('field.subtotal') }}</th>
@@ -444,6 +520,7 @@
                                 $typeLabel = $saleItem->item_type === 'booking'
                                     ? __('locale.bookings')
                                     : ($saleItem->item_type === 'user_package' ? __('locale.packages') : __('locale.products'));
+                                $itemEmployee = '-';
                             @endphp
                             <tr>
                                 <td>
@@ -453,24 +530,44 @@
                                     @if($saleItem->item_type === 'booking')
                                         @php
                                             $booking = $saleItem->itemable;
-                                            $service = $booking->details->first()->service ?? null;
+                                            $details = $booking?->details ?? collect();
                                         @endphp
-                                        <span class="lz-item-name">{{ $service?->name ?? '-' }}</span>
-                                        @if($booking->details->first())
-                                            <span class="lz-item-sub">
-                                                {{ $booking->details->first()->_date }} •
-                                                {{ $booking->details->first()->from_time }} - {{ $booking->details->first()->to_time }}
-                                            </span>
-                                            @if($booking->details->first()->is_free)
-                                                <span class="lz-item-free">({{ __('field.covered_by_package') ?? 'Covered by Package' }})</span>
-                                            @endif
-                                        @endif
+                                        @forelse($details as $detail)
+                                            @php
+                                                $service = $detail->service ?? null;
+                                                $svcName = $service?->translation?->name ?? $service?->name ?? '-';
+                                                if ($itemEmployee === '-' && $detail->worker?->name) {
+                                                    $itemEmployee = $detail->worker->name;
+                                                }
+                                            @endphp
+                                            <div class="{{ !$loop->first ? 'mt-2' : '' }}">
+                                                <span class="lz-item-name">{{ $svcName }}</span>
+                                                <span class="lz-item-sub">
+                                                    {{ $detail->_date ?? '-' }} •
+                                                    {{ $detail->from_time ?? '' }} - {{ $detail->to_time ?? '' }}
+                                                    @if($detail->worker?->name)
+                                                        • {{ $detail->worker->name }}
+                                                    @endif
+                                                </span>
+                                                @if($detail->is_free)
+                                                    <span class="lz-item-free">({{ __('field.covered_by_package') ?? 'Covered by Package' }})</span>
+                                                @endif
+                                                @if((float) ($detail->tip ?? 0) > 0)
+                                                    <span class="lz-item-sub">{{ __('field.tip') }}: {{ number_format((float) $detail->tip, 2) }} {{ $currency }}</span>
+                                                @endif
+                                            </div>
+                                        @empty
+                                            <span class="lz-item-name">-</span>
+                                        @endforelse
                                     @elseif($saleItem->item_type === 'buy_product')
                                         @php
                                             $buyProduct = $saleItem->itemable;
-                                            $products = $buyProduct->details->map(function($detail) {
-                                                return $detail->product?->name;
+                                            $products = $buyProduct?->details?->map(function($detail) {
+                                                return $detail->product?->translation?->name ?? $detail->product?->name;
                                             })->filter()->implode(', ');
+                                            $itemEmployee = $buyProduct?->sales_worker?->name
+                                                ?? $buyProduct?->worker?->name
+                                                ?? '-';
                                         @endphp
                                         <span class="lz-item-name">{{ $products ?: '-' }}</span>
                                     @elseif($saleItem->item_type === 'user_package')
@@ -482,6 +579,7 @@
                                         <span class="lz-item-sub">{{ __('general.new_purchase') ?? 'New Purchase' }}</span>
                                     @endif
                                 </td>
+                                <td>{{ $itemEmployee }}</td>
                                 <td>{{ $saleItem->quantity }}</td>
                                 <td class="text-end">{{ number_format($saleItem->price, 2) }} {{ $currency }}</td>
                                 <td class="text-end fw-semibold">{{ number_format($saleItem->subtotal, 2) }} {{ $currency }}</td>
@@ -491,6 +589,18 @@
                 </table>
             </div>
         </div>
+
+        @if($displayNotes !== '')
+            <div class="card lz-panel mt-3">
+                <div class="lz-panel-head">
+                    <i class="ti ti-notes"></i>
+                    <span>{{ __('field.notes') }}</span>
+                </div>
+                <div class="lz-panel-body">
+                    <div class="lz-kv-value" style="white-space: pre-wrap;">{{ $displayNotes }}</div>
+                </div>
+            </div>
+        @endif
     </div>
 @endsection
 

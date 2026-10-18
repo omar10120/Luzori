@@ -67,7 +67,7 @@ class SalesService
             ])
             ->orderBy('id')
             ->get(['id', 'supply_price', 'retail_price']);
-            LOG::info("products now : " . $products);
+
         $discounts = Discount::query()
             ->select('id', 'code', 'type', 'amount', 'start_at', 'end_at')
             ->orderBy('id')
@@ -894,7 +894,6 @@ class SalesService
         $productBranch = ProductBranch::where('product_id', $productId)
             ->where('branch_id', $branchId)
             ->first();
-        LOG::info("prdoucts branch" . $productBranch);
 
         // Enforce stock limits when tracking is enabled or branch stock is configured
         if (!$product->track_stock && !$productBranch) {

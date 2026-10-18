@@ -42,9 +42,15 @@
                 <i class="ti ti-plus"></i>{{ __('field.add_user') }}
             </a>
         @endisset   
-        @isset($options['show'])
+        @if(isset($options['show']) || (!isset($options['row_details']) || $options['row_details']))
+            <a class="dropdown-item lz-open-row-details lz-view-side-details" href="javascript:void(0)"
+                onclick="event.preventDefault(); event.stopPropagation(); if (window.lzOpenRowDetails) { window.lzOpenRowDetails(this); } return false;">
+                <i class="ti ti-eye"></i>{{ __('general.view_details') }}
+            </a>
+        @endif
+        @isset($options['show_full_page'])
             <a class="dropdown-item" href="{{ route($route . '.show', ['id' => $id]) }}">
-                <i class="ti ti-eye"></i>{{ __('general.show') }}
+                <i class="ti ti-file-info"></i>{{ __('general.show') }}
             </a>
         @endisset
         @isset($options['edit'])

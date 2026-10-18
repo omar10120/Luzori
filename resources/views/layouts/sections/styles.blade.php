@@ -26,7 +26,7 @@
 @stack('styles')
 
 @if (!str_contains(url()->current(), 'admin') && (str_contains(url()->current(), 'center_user') || auth('center_user')->check()))
-<link rel="stylesheet" href="{{ asset('assets/css/luzori-center.css') }}?v=36">
+<link rel="stylesheet" href="{{ asset('assets/css/luzori-center.css') }}?v=37">
 <style>
   body.luzori-center .luzori-page::before,
   body.luzori-center .luzori-dashboard::before {
@@ -47,6 +47,41 @@
     }
     html.layout-navbar-fixed body.luzori-center #layout-navbar,
     html.layout-navbar-fixed body.luzori-center .layout-navbar.navbar-detached {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      height: 3.875rem !important;
+      margin: 0 !important;
+      margin-top: 0 !important;
+      border-radius: 0 !important;
+      background: #fff !important;
+      background-color: #fff !important;
+      z-index: 1085 !important;
+    }
+  }
+</style>
+@endif
+
+@if (str_contains(url()->current(), 'admin'))
+<link rel="stylesheet" href="{{ asset('assets/css/luzori-admin.css') }}?v=1">
+<style>
+  body.luzori-admin .luzori-page::before,
+  body.luzori-admin .luzori-dashboard::before {
+    background-image: url('{{ asset('assets/img/branding/corner-leaf-beige.png') }}') !important;
+  }
+
+  @media (max-width: 1199.98px) {
+    html.layout-navbar-fixed body.luzori-admin .layout-page {
+      padding-top: 0 !important;
+    }
+    html.layout-navbar-fixed body.luzori-admin .layout-page > .content-wrapper {
+      padding-top: 3.875rem !important;
+    }
+    html.layout-navbar-fixed body.luzori-admin #layout-navbar,
+    html.layout-navbar-fixed body.luzori-admin .layout-navbar.navbar-detached {
       position: fixed !important;
       top: 0 !important;
       left: 0 !important;
