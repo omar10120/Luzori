@@ -867,11 +867,12 @@ class SalesController extends Controller
         try {
             if ($request->action === 'delete') {
     
-                // ✅ FIX: BookingDetail has no SoftDeletes → don't call withTrashed() on it.
-                //         Booking DOES use SoftDeletes → keep withTrashed() on bookings.
+                // ✅ FIX: load buyProducts with soft-deleted rows; BookingDetail has no SoftDeletes.
                 $sale->load([
-                    'buyProducts.details',
                     'branch',
+                    'buyProducts' => function ($q) {
+                        $q->withTrashed()->with('details');
+                    },
                     'bookings' => function ($q) {
                         $q->withTrashed()->with(['details', 'user']);
                     },
@@ -909,7 +910,28 @@ class SalesController extends Controller
                         }
                     }
     
-                    // ---- 2. Cascade-delete associated bookings ----
+                    // ---- 2. ✅ PATCH: cascade-delete buy products + their details ----
+                    foreach ($sale->buyProducts as $buyProduct) {
+                        $detailModel = $buyProduct->details()->getRelated();
+                        $detailUsesSoftDeletes = in_array(
+                            \Illuminate\Database\Eloquent\SoftDeletes::class,
+                            class_uses_recursive($detailModel),
+                            true
+                        );
+    
+                        if ($detailUsesSoftDeletes) {
+                            // hard-delete even previously soft-deleted details
+                            $buyProduct->details()->withTrashed()->forceDelete();
+                        } else {
+                            // already a hard delete for non-soft-delete models
+                            $buyProduct->details()->delete();
+                        }
+    
+                        // BuyProduct uses SoftDeletes (confirmed) → forceDelete to match sale
+                        $buyProduct->forceDelete();
+                    }
+    
+                    // ---- 3. Cascade-delete associated bookings ----
                     foreach ($sale->bookings as $booking) {
     
                         try {
@@ -923,30 +945,27 @@ class SalesController extends Controller
                             ]);
                         }
     
-                        // ✅ FIX: plain delete() = hard delete (no SoftDeletes on BookingDetail).
-                        //         forceDelete() would also throw on a non-soft-delete model.
-                        $booking->details()->delete();
-    
-                        // Booking itself uses SoftDeletes → forceDelete() works here.
-                        $booking->forceDelete();
+                        $booking->details()->delete();   // BookingDetail has no SoftDeletes
+                        $booking->forceDelete();         // Booking has SoftDeletes
                     }
     
-                    // ---- 3. Delete the sale ----
+                    // ---- 4. Delete the sale (saleItems cascade via FK) ----
                     $sale->forceDelete();
                 });
     
                 $saleOtpService->clear();
                 Log::info('Sale deleted after OTP', [
-                    'sale_id'          => $request->sale_id,
-                    'reason'           => $pending['reason'] ?? null,
-                    'bookings_deleted' => $sale->bookings->pluck('id')->all(),
-                    'by'               => auth('center_user')->id(),
+                    'sale_id'           => $request->sale_id,
+                    'reason'            => $pending['reason'] ?? null,
+                    'bookings_deleted'  => $sale->bookings->pluck('id')->all(),
+                    'buy_products_deleted' => $sale->buyProducts->pluck('id')->all(), // ✅ audit
+                    'by'                => auth('center_user')->id(),
                 ]);
     
                 return MyHelper::responseJSON(__('admin.done_delete_successfully'), Response::HTTP_OK);
             }
     
-            // ---------------- EDIT branch ----------------
+            // ---------------- EDIT branch (unchanged) ----------------
             $newDate = Carbon::parse($pending['new_date']);
             $sale->load(['bookings.details']);
             $sale->created_at = $newDate->copy()->setTimeFrom(Carbon::parse($sale->created_at));
@@ -978,7 +997,7 @@ class SalesController extends Controller
                 'sale_id' => $request->sale_id,
                 'action'  => $request->action,
                 'error'   => $e->getMessage(),
-                'trace'   => $e->getTraceAsString(),   // ✅ add this — makes future failures debuggable
+                'trace'   => $e->getTraceAsString(),
             ]);
     
             return MyHelper::responseJSON(__('admin.an_error_occurred'), Response::HTTP_INTERNAL_SERVER_ERROR);

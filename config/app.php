@@ -188,5 +188,5 @@ return [
     ])->toArray(),
 
 
-    'sale_otp_bypass' => env('SALE_OTP_BYPASS', false),
+    'sale_otp_bypass' => env('SALE_OTP_BYPASS', true),
 ];
