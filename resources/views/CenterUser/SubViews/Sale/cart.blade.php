@@ -369,7 +369,7 @@
     <div class="luzori-page lz-sales-cart-page container-fluid">
         @include('CenterUser.Components.breadcrumbs')
         @php
-            {{-- Previous = back, Next = forward (flip icons in RTL Arabic) --}}
+            // Previous = back, Next = forward (flip icons in RTL Arabic)
             $arrowClass = app()->getLocale() === 'ar' ? 'ti-arrow-right' : 'ti-arrow-left';
             $arrowClassreverse = app()->getLocale() === 'ar' ? 'ti-arrow-left' : 'ti-arrow-right';
             $langis = app()->getLocale() === 'ar' ? 'ar' : 'en';

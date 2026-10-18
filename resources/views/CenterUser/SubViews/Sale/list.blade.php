@@ -253,27 +253,32 @@
             margin-inline-start: auto;
             flex: 0 0 auto;
         }
-        .lz-drawer-section-extra {
-            margin-top: 0.55rem;
-            padding: 0.55rem;
+        .lz-drawer-section-list .table-responsive {
+            margin: 0;
             border-radius: 10px;
-            background: #faf7f2;
             border: 1px solid #efe6d8;
+            background: #faf7f2;
         }
-        .lz-drawer-section-extra .table {
+        .lz-drawer-section-list .table {
             margin: 0;
             font-size: 0.78rem;
         }
-        .lz-drawer-section-extra .table th {
+        .lz-drawer-section-list .table th {
             color: #7a6a55;
             font-weight: 700;
+            font-size: 0.68rem;
+            text-transform: uppercase;
             white-space: nowrap;
+            background: #f3ebe0;
             border-color: #efe6d8;
+            padding: 0.45rem 0.5rem;
         }
-        .lz-drawer-section-extra .table td {
+        .lz-drawer-section-list .table td {
             color: #002b26;
             border-color: #efe6d8;
             vertical-align: middle;
+            padding: 0.5rem;
+            font-size: 0.78rem;
         }
         .lz-sale-drawer-item {
             display: flex;
@@ -382,15 +387,15 @@
 
         <div class="lz-sale-drawer" tabindex="-1" id="saleDetailsOffcanvas" aria-labelledby="saleDetailsOffcanvasLabel" aria-hidden="true">
             <div class="offcanvas-header">
-                <h5 class="offcanvas-title" id="saleDetailsOffcanvasLabel">{{ __('field.booking_details') }}</h5>
+                <h5 class="offcanvas-title" id="saleDetailsOffcanvasLabel">{{ __('field.sale_information') }}</h5>
                 <button type="button" class="btn-close" id="saleDetailsCloseBtn" aria-label="Close"></button>
             </div>
             <div class="offcanvas-body">
                 <div class="lz-sale-drawer-scroll" id="saleDetailsOffcanvasBody"></div>
                 <div class="lz-sale-drawer-footer">
                     <a href="#" class="lz-sale-drawer-full-btn" id="saleDetailsFullLink" target="_blank" rel="noopener">
-                        <i class="ti ti-eye"></i>
-                        <span>{{ __('general.view_details') }}</span>
+                        <i class="ti ti-external-link"></i>
+                        <span>{{ __('general.show') }}</span>
                     </a>
                 </div>
             </div>
@@ -539,7 +544,8 @@
                         show_url: saleId ? ('{{ url('/center_user/sales/show') }}/' + saleId) : '#',
                         branch: '-', client: '-', phone: '-', payment: '-', worker: '-', created_at: '-',
                         status_label: '-', status_tone: 'secondary',
-                        subtotal: '-', tax: '-', tip: '-', total: '-',
+                        subtotal: '-', tax: '-', tip: '-', tip_label: labels.tip, total: '-',
+                        booking_employees: [],
                         bookings: [], products: [], packages: [], coupons: [], notes: ''
                     };
                 }
@@ -560,6 +566,21 @@
                 if (!data.products || !data.products.length) data.products = sectionDetails('products');
                 if (!data.packages || !data.packages.length) data.packages = sectionDetails('packages');
                 if (!data.coupons || !data.coupons.length) data.coupons = sectionDetails('coupons');
+
+                if ((!data.booking_employees || !data.booking_employees.length) && data.bookings && data.bookings.length) {
+                    data.booking_employees = [];
+                    data.bookings.forEach(function (b) {
+                        if (b.worker && b.worker !== '-' && data.booking_employees.indexOf(b.worker) === -1) {
+                            data.booking_employees.push(b.worker);
+                        }
+                    });
+                }
+                if ((!data.worker || data.worker === '-') && data.booking_employees && data.booking_employees.length) {
+                    data.worker = data.booking_employees[0];
+                }
+                if ((!data.tip_label || data.tip_label === labels.tip) && data.tip && data.tip !== '-' && data.worker && data.worker !== '-') {
+                    data.tip_label = labels.tip + ' (' + data.worker + ')';
+                }
 
                 // Fill meta from DataTables cells (including ColVis-hidden columns)
                 try {
@@ -587,7 +608,7 @@
                                 if ((!data.tip || data.tip === '-') && (title.indexOf('tip') !== -1 || title.indexOf('بقشيش') !== -1 || title.indexOf('إكرامية') !== -1)) data.tip = val;
                                 if ((!data.total || data.total === '-') && (title.indexOf('total') !== -1 || title.indexOf('الإجمالي') !== -1 || title.indexOf('اجمالي') !== -1)) data.total = val;
                                 if ((!data.created_at || data.created_at === '-') && (title.indexOf('created') !== -1 || title.indexOf('تاريخ') !== -1)) data.created_at = val;
-                                if ((!data.worker || data.worker === '-') && (title.indexOf('worker') !== -1 || title.indexOf('موظف') !== -1) && title.indexOf('booking') === -1 && title.indexOf('product') === -1) data.worker = val;
+                                if ((!data.worker || data.worker === '-') && (title.indexOf('worker') !== -1 || title.indexOf('موظف') !== -1 || title.indexOf('employee sales') !== -1) && title.indexOf('booking') === -1 && title.indexOf('product') === -1 && title.indexOf('حجوزات') === -1 && title.indexOf('منتج') === -1) data.worker = val;
                                 if ((!data.status_label || data.status_label === '-') && (title.indexOf('status') !== -1 || title.indexOf('حالة') !== -1)) data.status_label = val;
                             });
                         }
@@ -605,18 +626,11 @@
                     '</li>';
             }
 
-            function section(icon, title, innerHtml, sectionKey, items) {
+            function section(icon, title, innerHtml, sectionKey) {
                 var keyAttr = sectionKey ? (' data-lz-section="' + esc(sectionKey) + '"') : '';
-                var detailBtn = '';
-                if (sectionKey && sectionKey !== 'notes' && items && items.length) {
-                    detailBtn = '<button type="button" class="btn btn-sm lz-sale-detail-btn lz-drawer-section-details" data-section="' + esc(sectionKey) + '">' +
-                        '<i class="ti ti-eye me-1"></i>' + esc(labels.viewDetails) +
-                        '</button>';
-                }
                 return '<div class="lz-sale-drawer-section"' + keyAttr + '>' +
-                    '<div class="lz-sale-drawer-section-title"><i class="ti ' + icon + '"></i><span>' + esc(title) + '</span>' + detailBtn + '</div>' +
+                    '<div class="lz-sale-drawer-section-title"><i class="ti ' + icon + '"></i><span>' + esc(title) + '</span></div>' +
                     '<div class="lz-drawer-section-list">' + innerHtml + '</div>' +
-                    '<div class="lz-drawer-section-extra" hidden></div>' +
                     '</div>';
             }
 
@@ -624,8 +638,12 @@
                 var headers = [];
                 var rows = [];
                 if (sectionKey === 'bookings') {
-                    headers = [labels.service, labels.employee, labels.date, labels.time, labels.price];
-                    rows = (items || []).map(function (d) { return [d.service, d.worker, d.date, d.time, d.price]; });
+                    headers = [labels.service, labels.employee, labels.date, labels.time, labels.price, labels.tip, labels.status];
+                    rows = (items || []).map(function (d) {
+                        var svc = d.service || labels.empty;
+                        if (d.is_free) svc += ' *';
+                        return [svc, d.worker, d.date, d.time, d.price, d.tip || labels.empty, d.status || labels.empty];
+                    });
                 } else if (sectionKey === 'products') {
                     headers = [labels.product, labels.price];
                     rows = (items || []).map(function (d) { return [d.product, d.price]; });
@@ -636,77 +654,21 @@
                     headers = [labels.code, labels.amount, labels.type, labels.client];
                     rows = (items || []).map(function (d) { return [d.code, d.amount, d.type, d.user]; });
                 }
-                return rows.length ? tableHtml(headers, rows) : '<p class="text-muted mb-0">' + labels.empty + '</p>';
-            }
-
-            function toggleDrawerSectionDetails(btn) {
-                var sectionKey = btn.getAttribute('data-section') || '';
-                var wrap = btn.closest('.lz-sale-drawer-section');
-                if (!wrap || !currentPanelData) return;
-                var extra = wrap.querySelector('.lz-drawer-section-extra');
-                if (!extra) return;
-
-                if (!extra.hidden && extra.getAttribute('data-section') === sectionKey) {
-                    extra.hidden = true;
-                    extra.innerHTML = '';
-                    return;
-                }
-
-                var items = [];
-                if (sectionKey === 'bookings') items = currentPanelData.bookings || [];
-                else if (sectionKey === 'products') items = currentPanelData.products || [];
-                else if (sectionKey === 'packages') items = currentPanelData.packages || [];
-                else if (sectionKey === 'coupons') items = currentPanelData.coupons || [];
-
-                extra.setAttribute('data-section', sectionKey);
-                extra.innerHTML = sectionDetailsTable(sectionKey, items);
-                extra.hidden = false;
-                wrap.classList.add('is-focus');
-                setTimeout(function () {
-                    extra.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                }, 30);
+                return rows.length ? tableHtml(headers, rows) : '<div class="lz-sale-drawer-empty">' + labels.empty + '</div>';
             }
 
             function renderBookings(items) {
-                if (!items || !items.length) {
-                    return '<div class="lz-sale-drawer-empty">' + labels.empty + '</div>';
-                }
-                return items.map(function(d) {
-                    var sub = [d.worker, d.date, d.time].filter(Boolean).join(' · ');
-                    return '<div class="lz-sale-drawer-item">' +
-                        '<div><span class="lz-item-name">' + esc(d.service) + '</span>' +
-                        (sub ? '<span class="lz-item-sub">' + esc(sub) + '</span>' : '') +
-                        '</div>' +
-                        '<span class="lz-item-price">' + esc(d.price || '') + '</span>' +
-                        '</div>';
-                }).join('');
+                return sectionDetailsTable('bookings', items);
             }
 
             function renderSimple(items, nameKey) {
-                if (!items || !items.length) {
-                    return '<div class="lz-sale-drawer-empty">' + labels.empty + '</div>';
-                }
-                return items.map(function(d) {
-                    return '<div class="lz-sale-drawer-item">' +
-                        '<div><span class="lz-item-name">' + esc(d[nameKey]) + '</span></div>' +
-                        '<span class="lz-item-price">' + esc(d.price || d.amount || '') + '</span>' +
-                        '</div>';
-                }).join('');
+                if (nameKey === 'product') return sectionDetailsTable('products', items);
+                if (nameKey === 'package') return sectionDetailsTable('packages', items);
+                return sectionDetailsTable('products', items);
             }
 
             function renderCoupons(items) {
-                if (!items || !items.length) {
-                    return '<div class="lz-sale-drawer-empty">' + labels.empty + '</div>';
-                }
-                return items.map(function(d) {
-                    var sub = [d.type, d.user].filter(function(v) { return v && v !== '-'; }).join(' · ');
-                    return '<div class="lz-sale-drawer-item">' +
-                        '<div><span class="lz-item-name">' + esc(d.code) + '</span>' +
-                        (sub ? '<span class="lz-item-sub">' + esc(sub) + '</span>' : '') +
-                        '</div>' +
-                        '<span class="lz-item-price">' + esc(d.amount || '') + '</span>' +
-                        '</div>';
-                }).join('');
+                return sectionDetailsTable('coupons', items);
             }
 
             function ensureDrawerOnBody() {
@@ -733,15 +695,15 @@
 
                 var titleEl = document.getElementById('saleDetailsOffcanvasLabel');
                 if (titleEl) {
-                    titleEl.textContent = options.title || @json(__('field.booking_details'));
+                    titleEl.textContent = options.title || @json(__('field.sale_information'));
                 }
 
                 var focusSection = options.focusSection || '';
-                var autoExpand = !!options.autoExpand;
                 var tone = data.status_tone || 'secondary';
+                var tipLabel = data.tip_label || labels.tip;
                 var html = '';
                 html += '<div class="lz-sale-drawer-head">';
-                html += '<div class="lz-sale-drawer-ref"><i class="ti ti-calendar-event"></i><span>' + esc(data.ref || ('#' + data.id)) + '</span></div>';
+                html += '<div class="lz-sale-drawer-ref"><i class="ti ti-receipt"></i><span>' + esc(data.ref || ('#' + data.id)) + '</span></div>';
                 if (data.status_label && data.status_label !== '-') {
                     html += '<span class="lz-sale-drawer-status is-' + esc(tone) + '">' + esc(data.status_label) + '</span>';
                 }
@@ -757,24 +719,27 @@
                 if (data.status_label && data.status_label !== '-') {
                     html += metaRow('ti-flag', labels.status, data.status_label);
                 }
+                if (data.booking_employees && data.booking_employees.length) {
+                    html += metaRow('ti-users', labels.employee, data.booking_employees.join(', '));
+                }
                 html += '</ul>';
 
                 var financeHtml = '';
                 financeHtml += '<div class="lz-sale-drawer-item"><div><span class="lz-item-name">' + esc(labels.subtotal) + '</span></div><span class="lz-item-price">' + esc(data.subtotal || labels.empty) + '</span></div>';
                 financeHtml += '<div class="lz-sale-drawer-item"><div><span class="lz-item-name">' + esc(labels.tax) + '</span></div><span class="lz-item-price">' + esc(data.tax || labels.empty) + '</span></div>';
-                financeHtml += '<div class="lz-sale-drawer-item"><div><span class="lz-item-name">' + esc(labels.tip) + '</span></div><span class="lz-item-price">' + esc(data.tip || labels.empty) + '</span></div>';
+                financeHtml += '<div class="lz-sale-drawer-item"><div><span class="lz-item-name">' + esc(tipLabel) + '</span></div><span class="lz-item-price">' + esc(data.tip || labels.empty) + '</span></div>';
                 financeHtml += '<div class="lz-sale-drawer-item"><div><span class="lz-item-name">' + esc(labels.total) + '</span></div><span class="lz-item-price" style="font-weight:800;color:#002b26;">' + esc(data.total || labels.empty) + '</span></div>';
-                html += section('ti-report-money', labels.finance, financeHtml, 'finance', null);
+                html += section('ti-report-money', labels.finance, financeHtml, 'finance');
 
-                html += section('ti-scissors', labels.services, renderBookings(data.bookings), 'bookings', data.bookings);
-                html += section('ti-package', labels.packages, renderSimple(data.packages, 'package'), 'packages', data.packages);
-                html += section('ti-shopping-bag', labels.products, renderSimple(data.products, 'product'), 'products', data.products);
-                html += section('ti-ticket', labels.coupons, renderCoupons(data.coupons), 'coupons', data.coupons);
+                html += section('ti-scissors', labels.services, renderBookings(data.bookings), 'bookings');
+                html += section('ti-package', labels.packages, renderSimple(data.packages, 'package'), 'packages');
+                html += section('ti-shopping-bag', labels.products, renderSimple(data.products, 'product'), 'products');
+                html += section('ti-ticket', labels.coupons, renderCoupons(data.coupons), 'coupons');
 
                 var notesHtml = data.notes
                     ? '<div class="lz-sale-drawer-notes">' + esc(data.notes) + '</div>'
                     : '<div class="lz-sale-drawer-empty">' + labels.empty + '</div>';
-                html += section('ti-notes', labels.notes, notesHtml, 'notes', null);
+                html += section('ti-notes', labels.notes, notesHtml, 'notes');
 
                 bodyEl.innerHTML = html;
 
@@ -782,10 +747,6 @@
                     var focusEl = bodyEl.querySelector('[data-lz-section="' + focusSection + '"]');
                     if (focusEl) {
                         focusEl.classList.add('is-focus');
-                        if (autoExpand) {
-                            var expandBtn = focusEl.querySelector('.lz-drawer-section-details');
-                            if (expandBtn) toggleDrawerSectionDetails(expandBtn);
-                        }
                         setTimeout(function () {
                             focusEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
                         }, 40);
@@ -846,8 +807,10 @@
                         id: '',
                         ref: '#',
                         show_url: '#',
-                        branch: '-', client: '-', phone: '-', payment: '-', created_at: '-',
+                        branch: '-', client: '-', phone: '-', payment: '-', worker: '-', created_at: '-',
                         status_label: '-', status_tone: 'secondary',
+                        subtotal: '-', tax: '-', tip: '-', tip_label: labels.tip, total: '-',
+                        booking_employees: [],
                         bookings: [], products: [], packages: [], coupons: [], notes: ''
                     };
                     data = enrichPanelFromRow(btn, data);
@@ -883,8 +846,10 @@
                             id: saleId,
                             ref: saleId ? ('#' + saleId) : '#',
                             show_url: saleId ? ('{{ url('/center_user/sales/show') }}/' + saleId) : '#',
-                            branch: '-', client: '-', phone: '-', payment: '-', created_at: '-',
+                            branch: '-', client: '-', phone: '-', payment: '-', worker: '-', created_at: '-',
                             status_label: '-', status_tone: 'secondary',
+                            subtotal: '-', tax: '-', tip: '-', tip_label: labels.tip, total: '-',
+                            booking_employees: [],
                             bookings: [], products: [], packages: [], coupons: [], notes: ''
                         };
                         data = enrichPanelFromRow(target, data);
@@ -904,13 +869,6 @@
 
             // Capture-phase listener so stopPropagation cannot block the side panel
             document.addEventListener('click', function(e) {
-                var drawerSectionBtn = e.target && e.target.closest ? e.target.closest('.lz-drawer-section-details') : null;
-                if (drawerSectionBtn) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    toggleDrawerSectionDetails(drawerSectionBtn);
-                    return;
-                }
                 var sideBtn = e.target && e.target.closest ? e.target.closest('.view-sale-side-details') : null;
                 if (sideBtn) {
                     e.preventDefault();
