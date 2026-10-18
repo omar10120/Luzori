@@ -8,6 +8,9 @@ use Exception;
 use App\Helpers\MyHelper;
 use App\Models\CenterUser;
 use App\Models\Center;
+
+
+
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\DB;
@@ -131,7 +134,7 @@ class LoginController extends Controller
                     \DB::purge('mysql');
                     \DB::reconnect('mysql');
     
-                    $centerUser = \App\Models\CenterUser::withTrashed()
+                    $centerUser = CenterUser::withTrashed()
                         ->where('statusWeb', 1)
                         ->where('email', $request->email)
                         ->first();
