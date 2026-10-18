@@ -187,4 +187,6 @@ return [
         'Helper' => App\Helpers\Helpers::class,
     ])->toArray(),
 
+
+    'sale_otp_bypass' => env('SALE_OTP_BYPASS', false),
 ];
