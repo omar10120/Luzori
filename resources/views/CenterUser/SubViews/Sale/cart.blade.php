@@ -214,8 +214,51 @@
             font-size: 1.05rem;
             vertical-align: middle;
         }
+        .lz-sales-cart-page #booking-service-container .lz-service-block {
+            border: 1px solid #efe6d8;
+            border-radius: 14px;
+            background: #fbfaf7;
+            padding: 1rem 1.1rem 0.85rem;
+            margin-bottom: 1.1rem;
+        }
+        .lz-sales-cart-page #booking-service-container .lz-service-block > h5 {
+            color: #002b26;
+            font-weight: 700;
+            font-size: 1.05rem;
+            margin: 0 0 0.85rem;
+        }
         .lz-sales-cart-page #booking-service-container .form-label {
             color: #0a3a34 !important;
+            font-weight: 600;
+            font-size: 0.82rem;
+            margin-bottom: 0.35rem;
+            white-space: nowrap;
+            display: block;
+        }
+        .lz-sales-cart-page #booking-service-container .form-control,
+        .lz-sales-cart-page #booking-service-container .form-select,
+        .lz-sales-cart-page #booking-service-container select.form-control {
+            min-height: 40px;
+            border-radius: 10px;
+            border-color: #e5ddd2;
+            background: #fff;
+            width: 100%;
+            min-width: 0;
+        }
+        .lz-sales-cart-page #booking-service-container .lz-readonly-field {
+            display: flex;
+            align-items: center;
+            min-height: 40px;
+            padding: 0.45rem 0.85rem;
+            border-radius: 10px;
+            border: 1px solid #e5ddd2;
+            background: #f3ebe0;
+            color: #002b26;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .lz-sales-cart-page #booking-service-container .row > [class*="col-"] {
+            margin-bottom: 0.75rem;
         }
         .lz-sales-cart-page .form-check-input:checked {
             background-color: #002b26 !important;
@@ -1917,16 +1960,14 @@
                     var workers = get_workers(service.id);
 
                     var service_info = `
-                        <div class="row mb-4">
-                            <h2>${service.name}</h2>
-                            <div class="col-md-3">
-                                <div class="mb-1">
+                        <div class="lz-service-block" data-service-id="${service.id}">
+                            <h5>${service.name}</h5>
+                            <div class="row g-3 align-items-end">
+                                <div class="col-6 col-md-3">
                                     <label class="form-label">{{ __('field.date') }}</label>
                                     <input type="date" class="form-control" name="service[${service.id}][date]" value="{{ Carbon\Carbon::now()->toDateString() }}" />
                                 </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="mb-1">
+                                <div class="col-6 col-md-3">
                                     <label class="form-label">{{ __('field.worker') }}</label>
                                     <select class="form-control booking-worker-select" name="service[${service.id}][worker_id]" data-service-id="${service.id}">`;
                     $.each(workers, function(index, worker) {
@@ -1935,56 +1976,50 @@
                         const displayText = `${worker.name} - ${workerPhone} (${centerUserName})`;
                         service_info += `<option value="${worker.id}" data-worker-percentage="${worker.percentage || 0}">${displayText}</option>`;
                     });
-                    service_info += `</select></div></div>
-                        <div class="col-md-3">
-                                <div class="mb-1">
+                    service_info += `</select>
+                                </div>
+                                <div class="col-6 col-md-3">
                                     <label class="form-label">{{ __('field.from') }}</label>
                                     <input type="time" class="form-control" name="service[${service.id}][from_time]" value="{{ Carbon\Carbon::now()->format('H:i') }}" />
                                 </div>
-                            </div>
-                        <div class="col-md-3">
-                                <div class="mb-1">
+                                <div class="col-6 col-md-3">
                                     <label class="form-label">{{ __('field.to') }}</label>
                                     <input type="time" class="form-control" name="service[${service.id}][to_time]" value="{{ Carbon\Carbon::now()->addHour()->format('H:i') }}" />
-                                </div>
-                            </div>`;    
-                    
+                                </div>`;
+
                     if (posConfig.hasCommissionPermission && posConfig.allowedCommissionType) {
                         const commissionTypeLabel = posConfig.allowedCommissionType === 'percentage'
                             ? '{{ __("field.percentage") }}'
                             : '{{ __("field.fixed_value") }}';
                         service_info += `
-                            <div class="col-md-2">
-                                <div class="mb-1">
+                                <div class="col-6 col-md-4">
                                     <label class="form-label">{{ __('field.commission_type') }}</label>
                                     <input type="hidden" name="service[${service.id}][commission_type]" value="${posConfig.allowedCommissionType}">
-                                    <div class="form-control bg-light" readonly>${commissionTypeLabel}</div>
+                                    <div class="lz-readonly-field">${commissionTypeLabel}</div>
                                 </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="mb-1">
+                                <div class="col-6 col-md-4">
                                     <label class="form-label">{{ __('field.commission') }}</label>`;
-                        
+
                         if (posConfig.allowedCommissionType === 'percentage') {
                             service_info += `
-                                        <select class="form-control commission-percentage-select" name="service[${service.id}][commission]" id="booking-commission_percentage_${service.id}">
-                                            <option value="">${posConfig.translations.select_commission}</option>`;
+                                    <select class="form-control commission-percentage-select" name="service[${service.id}][commission]" id="booking-commission_percentage_${service.id}">
+                                        <option value="">${posConfig.translations.select_commission}</option>`;
                             for (let i = 1; i <= 100; i++) {
                                 service_info += `<option value="${i}">${i}%</option>`;
                             }
-                            service_info += `
-                                        </select>`;
+                            service_info += `</select>`;
                         } else {
                             service_info += `
-                                        <input type="number" class="form-control commission-fixed-input" name="service[${service.id}][commission]" id="booking-commission_fixed_${service.id}" placeholder="{{ __('field.commission') }}" step="0.01" min="0" max="${servicePrice}" data-service-price="${servicePrice}">
-                                        <small class="text-muted commission-max-hint" id="booking-commission_max_hint_${service.id}">${posConfig.translations.max_commission}: ${parseFloat(servicePrice).toFixed(5)} ${posConfig.currency}</small>`;
+                                    <input type="number" class="form-control commission-fixed-input" name="service[${service.id}][commission]" id="booking-commission_fixed_${service.id}" placeholder="{{ __('field.commission') }}" step="0.01" min="0" max="${servicePrice}" data-service-price="${servicePrice}">
+                                    <small class="text-muted commission-max-hint" id="booking-commission_max_hint_${service.id}">${posConfig.translations.max_commission}: ${parseFloat(servicePrice).toFixed(2)} ${posConfig.currency}</small>`;
                         }
                         service_info += `
-                                </div>
-                            </div>`;
+                                </div>`;
                     }
-                    
-                    service_info += `</div>`;
+
+                    service_info += `
+                            </div>
+                        </div>`;
 
                     $('#booking-service-container').append(service_info);
 
