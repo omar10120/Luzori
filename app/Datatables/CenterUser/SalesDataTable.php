@@ -86,14 +86,18 @@ class SalesDataTable extends DataTable
                     $model = $this->model;
                     $canDelete = auth('center_user')->user()?->can('DELETE_SALES', 'center_api');
                     $options = [
-                        'show' => true,
+                        'show_full_page' => true,
                         'print' => true,
                         'row_details' => false,
-                        // Lightweight: only sale id — side panel is built in JS from the row
                         'sale_side_id' => (int) $item->id,
                         'operation' => DeleteActionEnum::FORCE_DELETE->value,
                         'with_trashed' => 1,
                     ];
+                    try {
+                        $options['sale_panel_b64'] = $this->salePanelB64($item);
+                    } catch (\Throwable $e) {
+                        // keep sale_side_id fallback for the drawer
+                    }
                     if ($canDelete) {
                         $options['sale_otp_delete'] = true;
                     }
@@ -803,6 +807,7 @@ JS;
             // keep url fallback
         }
 
+        $tipAmount = (float) ($row->tip ?? 0);
         $payload = [
             'id' => $saleId,
             'ref' => '#' . $saleId,
@@ -811,9 +816,13 @@ JS;
             'client' => (string) ($row->client?->name ?? __('general.walk_in')),
             'phone' => (string) ($row->client?->full_phone ?? $row->client?->phone ?? '-'),
             'payment' => empty($paymentMethods) ? '-' : implode(', ', $paymentMethods),
+            'worker' => (string) ($row->worker?->name ?? '-'),
             'created_at' => $row->created_at ? $row->created_at->format('Y-m-d H:i') : '-',
             'status_label' => $statusLabel,
             'status_tone' => $statusTone,
+            'subtotal' => number_format((float) ($row->subtotal ?? 0), 2) . ' ' . $currency,
+            'tax' => number_format((float) ($row->tax ?? 0), 2) . ' ' . $currency,
+            'tip' => $tipAmount > 0 ? number_format($tipAmount, 2) . ' ' . $currency : '-',
             'total' => number_format((float) ($row->total ?? 0), 2) . ' ' . $currency,
             'bookings' => $bookings,
             'products' => $products,

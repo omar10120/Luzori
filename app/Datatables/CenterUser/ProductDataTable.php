@@ -44,7 +44,11 @@ class ProductDataTable extends DataTable
                         </label>';
             })
             ->editColumn('image', function ($row) {
-                return '<img src="' . e($row->image) . '" alt="">';
+                $src = e($row->image ?? '');
+                if ($src === '') {
+                    return '-';
+                }
+                return '<img src="' . $src . '" alt="" class="lz-details-thumb" style="max-width:72px;max-height:72px;width:auto;height:auto;object-fit:contain;border-radius:10px;border:1px solid #efe6d8;display:block;">';
             })
             ->editColumn('skus', function ($row) {
                 $skus = $row->skus;

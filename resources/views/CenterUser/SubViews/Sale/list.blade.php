@@ -490,7 +490,14 @@
                 code: @json(__('field.code')),
                 amount: @json(__('field.amount')),
                 type: @json(__('field.type')),
-                viewDetails: @json(__('general.view_details'))
+                viewDetails: @json(__('general.view_details')),
+                tip: @json(__('field.tip')),
+                subtotal: @json(__('field.subtotal')),
+                tax: @json(__('field.tax')),
+                total: @json(__('field.total')),
+                worker: @json(__('field.worker')),
+                status: @json(__('field.status')),
+                finance: @json(__('field.financial_summary'))
             };
             var currentPanelData = null;
 
@@ -530,8 +537,9 @@
                         id: saleId,
                         ref: saleId ? ('#' + saleId) : '#',
                         show_url: saleId ? ('{{ url('/center_user/sales/show') }}/' + saleId) : '#',
-                        branch: '-', client: '-', phone: '-', payment: '-', created_at: '-',
+                        branch: '-', client: '-', phone: '-', payment: '-', worker: '-', created_at: '-',
                         status_label: '-', status_tone: 'secondary',
+                        subtotal: '-', tax: '-', tip: '-', total: '-',
                         bookings: [], products: [], packages: [], coupons: [], notes: ''
                     };
                 }
@@ -553,7 +561,7 @@
                 if (!data.packages || !data.packages.length) data.packages = sectionDetails('packages');
                 if (!data.coupons || !data.coupons.length) data.coupons = sectionDetails('coupons');
 
-                // Fill meta from visible cells when panel payload is empty
+                // Fill meta from DataTables cells (including ColVis-hidden columns)
                 try {
                     if (window.jQuery && jQuery.fn.dataTable) {
                         var $table = jQuery(tr).closest('table');
@@ -563,11 +571,24 @@
                             api.columns().every(function(colIdx) {
                                 var title = (jQuery(this.header()).text() || '').replace(/\s+/g, ' ').trim().toLowerCase();
                                 var val = '';
-                                try { val = jQuery(api.cell(rowIdx, colIdx).node()).text().replace(/\s+/g, ' ').trim(); } catch (e) {}
+                                try {
+                                    var node = api.cell(rowIdx, colIdx).node();
+                                    val = node ? jQuery(node).text().replace(/\s+/g, ' ').trim() : '';
+                                    if (!val) {
+                                        var rendered = api.cell(rowIdx, colIdx).render('display');
+                                        val = jQuery('<div>').html(rendered == null ? '' : rendered).text().replace(/\s+/g, ' ').trim();
+                                    }
+                                } catch (e) {}
                                 if (!val || val === '-' || val === '—') return;
                                 if ((!data.branch || data.branch === '-') && title.indexOf('branch') !== -1) data.branch = val;
                                 if ((!data.client || data.client === '-') && (title.indexOf('client') !== -1 || title.indexOf('عميل') !== -1)) data.client = val;
                                 if ((!data.phone || data.phone === '-') && (title.indexOf('phone') !== -1 || title.indexOf('جوال') !== -1 || title.indexOf('هاتف') !== -1)) data.phone = val;
+                                if ((!data.payment || data.payment === '-') && (title.indexOf('payment') !== -1 || title.indexOf('دفع') !== -1)) data.payment = val;
+                                if ((!data.tip || data.tip === '-') && (title.indexOf('tip') !== -1 || title.indexOf('بقشيش') !== -1 || title.indexOf('إكرامية') !== -1)) data.tip = val;
+                                if ((!data.total || data.total === '-') && (title.indexOf('total') !== -1 || title.indexOf('الإجمالي') !== -1 || title.indexOf('اجمالي') !== -1)) data.total = val;
+                                if ((!data.created_at || data.created_at === '-') && (title.indexOf('created') !== -1 || title.indexOf('تاريخ') !== -1)) data.created_at = val;
+                                if ((!data.worker || data.worker === '-') && (title.indexOf('worker') !== -1 || title.indexOf('موظف') !== -1) && title.indexOf('booking') === -1 && title.indexOf('product') === -1) data.worker = val;
+                                if ((!data.status_label || data.status_label === '-') && (title.indexOf('status') !== -1 || title.indexOf('حالة') !== -1)) data.status_label = val;
                             });
                         }
                     }
@@ -730,9 +751,20 @@
                 html += metaRow('ti-building-store', labels.branch, data.branch);
                 html += metaRow('ti-user', labels.client, data.client);
                 html += metaRow('ti-phone', labels.phone, data.phone);
+                html += metaRow('ti-user-star', labels.worker, data.worker);
                 html += metaRow('ti-credit-card', labels.payment, data.payment);
                 html += metaRow('ti-clock', labels.createdAt, data.created_at);
+                if (data.status_label && data.status_label !== '-') {
+                    html += metaRow('ti-flag', labels.status, data.status_label);
+                }
                 html += '</ul>';
+
+                var financeHtml = '';
+                financeHtml += '<div class="lz-sale-drawer-item"><div><span class="lz-item-name">' + esc(labels.subtotal) + '</span></div><span class="lz-item-price">' + esc(data.subtotal || labels.empty) + '</span></div>';
+                financeHtml += '<div class="lz-sale-drawer-item"><div><span class="lz-item-name">' + esc(labels.tax) + '</span></div><span class="lz-item-price">' + esc(data.tax || labels.empty) + '</span></div>';
+                financeHtml += '<div class="lz-sale-drawer-item"><div><span class="lz-item-name">' + esc(labels.tip) + '</span></div><span class="lz-item-price">' + esc(data.tip || labels.empty) + '</span></div>';
+                financeHtml += '<div class="lz-sale-drawer-item"><div><span class="lz-item-name">' + esc(labels.total) + '</span></div><span class="lz-item-price" style="font-weight:800;color:#002b26;">' + esc(data.total || labels.empty) + '</span></div>';
+                html += section('ti-report-money', labels.finance, financeHtml, 'finance', null);
 
                 html += section('ti-scissors', labels.services, renderBookings(data.bookings), 'bookings', data.bookings);
                 html += section('ti-package', labels.packages, renderSimple(data.packages, 'package'), 'packages', data.packages);

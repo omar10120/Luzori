@@ -195,6 +195,36 @@
             background: rgba(26, 107, 90, 0.15) !important;
             color: #1a6b5a !important;
         }
+        .lz-sales-cart-page .alert-info,
+        .lz-sales-cart-page #booking-customer-info-display {
+            background: #fbfaf7 !important;
+            border: 1px solid #efe6d8 !important;
+            color: #002b26 !important;
+            border-radius: 14px !important;
+        }
+        .lz-sales-cart-page .btn-label-secondary.btn-prev {
+            background: #f3ebe0 !important;
+            border-color: #e5ddd2 !important;
+            color: #002b26 !important;
+            border-radius: 10px !important;
+            font-weight: 600;
+        }
+        .lz-sales-cart-page .btn-prev i,
+        .lz-sales-cart-page .btn-next i {
+            font-size: 1.05rem;
+            vertical-align: middle;
+        }
+        .lz-sales-cart-page #booking-service-container .form-label {
+            color: #0a3a34 !important;
+        }
+        .lz-sales-cart-page .form-check-input:checked {
+            background-color: #002b26 !important;
+            border-color: #002b26 !important;
+        }
+        .lz-sales-cart-page .form-switch .form-check-input:checked {
+            background-color: #0a3a34 !important;
+            border-color: #0a3a34 !important;
+        }
         .lz-sales-cart-page .table thead th {
             color: #002b26;
             font-weight: 700;
@@ -339,8 +369,9 @@
     <div class="luzori-page lz-sales-cart-page container-fluid">
         @include('CenterUser.Components.breadcrumbs')
         @php
-            $arrowClass = app()->getLocale() === 'ar' ? 'ti-arrow-left' : 'ti-arrow-right';
-            $arrowClassreverse = app()->getLocale() === 'ar' ? 'ti-arrow-right' : 'ti-arrow-left';
+            {{-- Previous = back, Next = forward (flip icons in RTL Arabic) --}}
+            $arrowClass = app()->getLocale() === 'ar' ? 'ti-arrow-right' : 'ti-arrow-left';
+            $arrowClassreverse = app()->getLocale() === 'ar' ? 'ti-arrow-left' : 'ti-arrow-right';
             $langis = app()->getLocale() === 'ar' ? 'ar' : 'en';
         @endphp
 
@@ -682,13 +713,7 @@
                                                         </button>
                                                         <button type="button" class="btn btn-primary btn-next" id="booking-nextStep3" disabled>
                                                             <span class="align-middle d-sm-inline-block d-none me-sm-1">{{ __('field.next') }}</span>
-                                                             @if(app()->getLocale() === 'ar')
-                                                                
-                                                                <i class="ti {{ $arrowClassreverse }} "></i>
-                                                            @else
-                                                                <i class="ti {{ $arrowClass }} "></i>
-                                                                
-                                                            @endif
+                                                            <i class="ti {{ $arrowClassreverse }}"></i>
                                                         </button>
                                                     </div>
                                                 </div>
@@ -1925,16 +1950,15 @@
                             </div>`;    
                     
                     if (posConfig.hasCommissionPermission && posConfig.allowedCommissionType) {
+                        const commissionTypeLabel = posConfig.allowedCommissionType === 'percentage'
+                            ? '{{ __("field.percentage") }}'
+                            : '{{ __("field.fixed_value") }}';
                         service_info += `
                             <div class="col-md-2">
                                 <div class="mb-1">
                                     <label class="form-label">{{ __('field.commission_type') }}</label>
                                     <input type="hidden" name="service[${service.id}][commission_type]" value="${posConfig.allowedCommissionType}">
-                                    <select class="form-control commission-type-select" name="service[${service.id}][commission_type_display]" data-service-id="${service.id}" disabled>
-                                        <option value="${posConfig.allowedCommissionType}" selected>
-                                            ${posConfig.allowedCommissionType === 'percentage' ? '{{ __("field.percentage") }}' : '{{ __("field.fixed_value") }}'}
-                                        </option>
-                                    </select>
+                                    <div class="form-control bg-light" readonly>${commissionTypeLabel}</div>
                                 </div>
                             </div>
                             <div class="col-md-4">

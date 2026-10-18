@@ -1,16 +1,114 @@
-{{-- Luzori: eye in Actions opens dialog with remaining row fields --}}
-<div class="modal fade" id="lzRowDetailsModal" tabindex="-1" aria-labelledby="lzRowDetailsModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
-        <div class="modal-content lz-row-details-modal">
-            <div class="modal-header">
-                <h5 class="modal-title" id="lzRowDetailsModalLabel">{{ __('general.view_details') }}</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body" id="lzRowDetailsModalBody"></div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-luzori-muted btn-sm" data-bs-dismiss="modal">{{ __('general.cancel') }}</button>
-            </div>
-        </div>
+{{-- Luzori: eye in Actions opens a right-side details drawer --}}
+<style>
+    #lzRowDetailsDrawer.lz-row-drawer {
+        position: fixed !important;
+        top: 0 !important;
+        right: 0 !important;
+        left: auto !important;
+        width: min(420px, 94vw) !important;
+        height: 100vh !important;
+        max-width: 100vw !important;
+        border: 0 !important;
+        z-index: 11000 !important;
+        background: #fff !important;
+        box-shadow: -8px 0 28px rgba(0, 43, 38, 0.18);
+        transform: translateX(100%) !important;
+        visibility: visible !important;
+        transition: transform 0.25s ease !important;
+        display: flex;
+        flex-direction: column;
+    }
+    html[dir="rtl"] #lzRowDetailsDrawer.lz-row-drawer {
+        right: auto !important;
+        left: 0 !important;
+        transform: translateX(-100%) !important;
+        box-shadow: 8px 0 28px rgba(0, 43, 38, 0.18);
+    }
+    #lzRowDetailsDrawer.lz-row-drawer.show {
+        transform: translateX(0) !important;
+    }
+    .lz-row-drawer-backdrop {
+        position: fixed !important;
+        inset: 0 !important;
+        z-index: 10990 !important;
+        background: rgba(0, 20, 18, 0.35) !important;
+    }
+    #lzRowDetailsDrawer .lz-row-drawer-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        padding: 1rem 1.15rem;
+        background: #fdfaf6;
+        border-bottom: 1px solid #efe6d8;
+        flex: 0 0 auto;
+    }
+    #lzRowDetailsDrawer .lz-row-drawer-title {
+        margin: 0;
+        color: #002b26;
+        font-weight: 700;
+        font-size: 1.05rem;
+    }
+    #lzRowDetailsDrawer .lz-row-drawer-body {
+        flex: 1 1 auto;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding: 1rem 1.15rem 1.25rem;
+        background: #fff;
+    }
+    #lzRowDetailsDrawer .lz-row-drawer-footer {
+        flex: 0 0 auto;
+        padding: 0.85rem 1.15rem 1.1rem;
+        border-top: 1px solid #efe6d8;
+        background: #fdfaf6;
+    }
+    #lzRowDetailsDrawer .lz-row-details-table {
+        margin: 0;
+    }
+    #lzRowDetailsDrawer .lz-row-details-table th {
+        width: 34%;
+        color: #7a8582;
+        font-weight: 600;
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+        border-color: #efe6d8;
+        vertical-align: top;
+        background: transparent;
+        padding: 0.75rem 0.5rem 0.75rem 0;
+    }
+    #lzRowDetailsDrawer .lz-row-details-table td {
+        color: #1a2a27;
+        border-color: #efe6d8;
+        vertical-align: top;
+        overflow-wrap: anywhere;
+        padding: 0.75rem 0;
+    }
+    #lzRowDetailsDrawer .lz-row-details-table img,
+    #lzRowDetailsDrawer .lz-row-drawer-body img {
+        display: block !important;
+        max-width: 140px !important;
+        max-height: 140px !important;
+        width: auto !important;
+        height: auto !important;
+        object-fit: contain !important;
+        border-radius: 12px;
+        border: 1px solid #efe6d8;
+        background: #fff;
+        box-shadow: 0 4px 12px rgba(0, 43, 38, 0.06);
+    }
+</style>
+
+<div class="lz-row-drawer" id="lzRowDetailsDrawer" tabindex="-1" aria-labelledby="lzRowDetailsDrawerLabel" aria-hidden="true">
+    <div class="lz-row-drawer-header">
+        <h5 class="lz-row-drawer-title" id="lzRowDetailsDrawerLabel">{{ __('general.view_details') }}</h5>
+        <button type="button" class="btn-close" id="lzRowDetailsCloseBtn" aria-label="Close"></button>
+    </div>
+    <div class="lz-row-drawer-body" id="lzRowDetailsDrawerBody"></div>
+    <div class="lz-row-drawer-footer">
+        <button type="button" class="btn btn-luzori-muted btn-sm w-100" id="lzRowDetailsCloseFooter">
+            {{ __('general.cancel') }}
+        </button>
     </div>
 </div>
 
@@ -24,7 +122,7 @@
     const actionsLabels = ['actions', 'action', 'الإجراءات', 'اجراءات'];
 
     function detailsButtonHtml() {
-        return '<a href="javascript:void(0)" class="lz-action-btn lz-open-row-details" title="' +
+        return '<a href="javascript:void(0)" class="lz-action-btn lz-open-row-details lz-view-side-details" title="' +
             detailsBtnTitle.replace(/"/g, '&quot;') +
             '" onclick="event.preventDefault();event.stopPropagation();window.lzOpenRowDetails(this);return false;">' +
             '<i class="ti ti-eye"></i></a>';
@@ -42,7 +140,6 @@
         if ($table.length && $.fn.dataTable.isDataTable($table)) {
             return $table.DataTable();
         }
-        // Scroll/responsive wrappers sometimes nest tables
         const $wrap = $btn.closest('.dataTables_wrapper, .dt-container');
         if ($wrap.length) {
             const $t = $wrap.find('table.dataTable').first();
@@ -57,16 +154,31 @@
         try {
             const rendered = api.cell(rowIdx, colIdx).render('display');
             if (rendered !== null && rendered !== undefined && String(rendered).trim() !== '') {
-                return rendered;
+                return constrainImages(String(rendered));
             }
         } catch (e) {}
         try {
             const data = api.cell(rowIdx, colIdx).data();
             if (data !== null && data !== undefined && String(data).trim() !== '') {
-                return data;
+                return constrainImages(String(data));
             }
         } catch (e) {}
         return emptyLabel;
+    }
+
+    function constrainImages(html) {
+        try {
+            const $wrap = jQuery('<div>').html(html);
+            $wrap.find('img').each(function () {
+                this.setAttribute('style', 'max-width:140px;max-height:140px;width:auto;height:auto;object-fit:contain;display:block;');
+                this.removeAttribute('width');
+                this.removeAttribute('height');
+                this.classList.add('lz-details-thumb');
+            });
+            return $wrap.html();
+        } catch (e) {
+            return html;
+        }
     }
 
     function isDetailsSkip($header, $cell) {
@@ -83,7 +195,6 @@
             return true;
         }
         try {
-            // Initially-hidden ColVis columns use visible(false), not Responsive "none"
             if (colApi && typeof colApi.visible === 'function' && colApi.visible() === false) {
                 return true;
             }
@@ -149,21 +260,30 @@
         });
     }
 
-    function ensureBackdrop() {
-        let backdrop = document.querySelector('.modal-backdrop.lz-row-details-backdrop');
-        if (!backdrop) {
-            backdrop = document.createElement('div');
-            backdrop.className = 'modal-backdrop fade show lz-row-details-backdrop';
-            document.body.appendChild(backdrop);
+    function ensureDrawerOnBody() {
+        const drawer = document.getElementById('lzRowDetailsDrawer');
+        if (drawer && drawer.parentElement !== document.body) {
+            document.body.appendChild(drawer);
         }
-        return backdrop;
+        return drawer;
     }
 
-    function openDetailsModal(items) {
-        const body = document.getElementById('lzRowDetailsModalBody');
-        const label = document.getElementById('lzRowDetailsModalLabel');
-        const modalEl = document.getElementById('lzRowDetailsModal');
-        if (!body || !modalEl) return;
+    function closeDetailsDrawer() {
+        const drawer = document.getElementById('lzRowDetailsDrawer');
+        if (!drawer) return;
+        drawer.classList.remove('show');
+        drawer.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('overflow-hidden');
+        document.querySelectorAll('.lz-row-drawer-backdrop').forEach(function (b) { b.remove(); });
+        document.querySelectorAll('table.dataTable tbody tr.lz-sale-row-active, table.dataTable tbody tr.lz-row-details-active')
+            .forEach(function (tr) { tr.classList.remove('lz-sale-row-active', 'lz-row-details-active'); });
+    }
+
+    function openDetailsDrawer(items) {
+        const drawer = ensureDrawerOnBody();
+        const body = document.getElementById('lzRowDetailsDrawerBody');
+        const label = document.getElementById('lzRowDetailsDrawerLabel');
+        if (!drawer || !body) return;
 
         if (label) label.textContent = detailsTitle;
 
@@ -176,35 +296,39 @@
             });
             html += '</tbody></table>';
             body.innerHTML = html;
+            // Extra pass: constrain any images after inject
+            body.querySelectorAll('img').forEach(function (img) {
+                img.style.maxWidth = '140px';
+                img.style.maxHeight = '140px';
+                img.style.width = 'auto';
+                img.style.height = 'auto';
+                img.style.objectFit = 'contain';
+                img.style.display = 'block';
+                img.removeAttribute('width');
+                img.removeAttribute('height');
+            });
         }
 
-        // Prefer Bootstrap 5 API
-        try {
-            if (window.bootstrap && bootstrap.Modal) {
-                bootstrap.Modal.getOrCreateInstance(modalEl).show();
-                return;
-            }
-        } catch (e) {}
-
-        // jQuery bootstrap plugin fallback
-        try {
-            if (window.jQuery && jQuery.fn && typeof jQuery.fn.modal === 'function') {
-                jQuery(modalEl).modal('show');
-                return;
-            }
-        } catch (e) {}
-
-        // Manual fallback
-        modalEl.style.display = 'block';
-        modalEl.classList.add('show');
-        modalEl.removeAttribute('aria-hidden');
-        modalEl.setAttribute('aria-modal', 'true');
-        document.body.classList.add('modal-open');
-        ensureBackdrop();
+        drawer.classList.add('show');
+        drawer.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('overflow-hidden');
+        if (!document.querySelector('.lz-row-drawer-backdrop')) {
+            const backdrop = document.createElement('div');
+            backdrop.className = 'lz-row-drawer-backdrop';
+            backdrop.addEventListener('click', closeDetailsDrawer);
+            document.body.appendChild(backdrop);
+        }
     }
 
     // Global — called from inline onclick (bypasses stopPropagation on parent)
     window.lzOpenRowDetails = function (el) {
+        // Sales page keeps its own side drawer
+        try {
+            if (el && el.closest && el.closest('.lz-sales-page') && window.lzOpenSaleSideDetails) {
+                return window.lzOpenSaleSideDetails(el);
+            }
+        } catch (e) {}
+
         if (!window.jQuery || !jQuery.fn || !jQuery.fn.dataTable) return false;
 
         const $ = jQuery;
@@ -217,12 +341,15 @@
         const row = api.row($tr);
         if (!row.node()) return false;
 
-        openDetailsModal(collectHiddenDetails($, api, row.index()));
+        document.querySelectorAll('table.dataTable tbody tr.lz-row-details-active')
+            .forEach(function (tr) { tr.classList.remove('lz-row-details-active'); });
+        if ($tr[0]) $tr[0].classList.add('lz-row-details-active');
+
+        openDetailsDrawer(collectHiddenDetails($, api, row.index()));
         return false;
     };
 
     function injectDetailsButtons($, api) {
-        // Sales page uses its own side drawer eye — never inject the modal eye there
         try {
             if (api.table().node() && $(api.table().node()).closest('.lz-sales-page').length) {
                 return;
@@ -232,8 +359,7 @@
         api.rows({ page: 'current' }).every(function () {
             const $tr = $(this.node());
             if (!$tr.length || $tr.hasClass('child')) return;
-            // Skip when row already has details control (modal eye or sales side-drawer eye)
-            if ($tr.find('.lz-open-row-details, .view-sale-side-details').length) return;
+            if ($tr.find('.lz-open-row-details, .view-sale-side-details, .lz-view-side-details').length) return;
 
             const btn = detailsButtonHtml();
             const $icons = $tr.find('.lz-action-icons').first();
@@ -300,18 +426,68 @@
         setTimeout(function () { clearInterval(timer); }, 12000);
     }
 
-    // Close manual modal
-    document.addEventListener('click', function (e) {
-        const modalEl = document.getElementById('lzRowDetailsModal');
-        if (!modalEl || !modalEl.classList.contains('show')) return;
-        if (e.target.closest('[data-bs-dismiss="modal"]') || e.target === modalEl) {
-            modalEl.classList.remove('show');
-            modalEl.style.display = 'none';
-            modalEl.setAttribute('aria-hidden', 'true');
-            document.body.classList.remove('modal-open');
-            document.querySelectorAll('.lz-row-details-backdrop').forEach(function (b) { b.remove(); });
-        }
+    document.addEventListener('DOMContentLoaded', function () {
+        ensureDrawerOnBody();
+        const closeBtn = document.getElementById('lzRowDetailsCloseBtn');
+        const closeFooter = document.getElementById('lzRowDetailsCloseFooter');
+        if (closeBtn) closeBtn.addEventListener('click', closeDetailsDrawer);
+        if (closeFooter) closeFooter.addEventListener('click', closeDetailsDrawer);
     });
+
+    function isViewDetailsControl(el) {
+        if (!el || !el.closest) return null;
+        // Preferred markers (always side drawer)
+        let btn = el.closest('.lz-open-row-details, .lz-view-side-details, .view-sale-side-details');
+        if (btn) return btn;
+
+        // Fallback: action eye whose title looks like view details
+        btn = el.closest('a.lz-action-btn, a.dropdown-item, button');
+        if (!btn) return null;
+
+        // Sale section buttons have their own nested side drawer
+        if (btn.classList.contains('view-sale-section-dialog') || btn.classList.contains('lz-sale-detail-btn')) {
+            return null;
+        }
+
+        const href = (btn.getAttribute('href') || '').toLowerCase();
+        // Let dedicated full-page show links navigate normally
+        if (href && href !== '#' && href.indexOf('javascript:') !== 0 && href.indexOf('/show/') !== -1) {
+            return null;
+        }
+
+        const title = ((btn.getAttribute('title') || btn.textContent || '') + '').toLowerCase().replace(/\s+/g, ' ').trim();
+        const looksLikeDetails =
+            title.indexOf('view details') !== -1 ||
+            title.indexOf('عرض التفاصيل') !== -1 ||
+            (title.indexOf('تفاصيل') !== -1 && title.indexOf('حذف') === -1);
+        if (!looksLikeDetails) return null;
+        // Never hijack edit/delete/print/etc.
+        if (btn.classList.contains('lz-action-danger')) return null;
+        if (btn.querySelector('.ti-pencil, .ti-trash, .ti-printer, .ti-plus, .ti-coin, .ti-file-info')) return null;
+        return btn;
+    }
+
+    // Capture-phase: any view-details control opens the side drawer
+    document.addEventListener('click', function (e) {
+        const sideBtn = isViewDetailsControl(e.target);
+        if (!sideBtn) return;
+
+        // Sales dedicated drawer
+        if (sideBtn.classList.contains('view-sale-side-details')) {
+            if (window.lzOpenSaleSideDetails) {
+                e.preventDefault();
+                e.stopPropagation();
+                window.lzOpenSaleSideDetails(sideBtn);
+            }
+            return;
+        }
+
+        e.preventDefault();
+        e.stopPropagation();
+        if (window.lzOpenRowDetails) {
+            window.lzOpenRowDetails(sideBtn);
+        }
+    }, true);
 
     ensureReady(function ($) {
         $.extend(true, $.fn.dataTable.defaults, {
@@ -335,13 +511,6 @@
 
                 $header.addClass('all lz-actions-col');
                 $(api.cells(null, idx).nodes()).addClass('all lz-actions-col');
-
-                try {
-                    // DataTables Responsive: class "all" => never hide this column
-                    if (this.responsivePriority) {
-                        // no-op; priority set via column defs
-                    }
-                } catch (e) {}
             });
 
             try {
