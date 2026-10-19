@@ -47,21 +47,25 @@ class StaffReportController extends Controller
             }
             $report = $temp_report->get();
             $temp_users = Worker::query();
-            // if (get_user_role() != 1) {
-            //     $temp_users->where('branch_id', auth('center_user')->user()->branch_id);
-            // }
+            if (get_user_role() != 1) {
+                $temp_users->where('branch_id', auth('center_user')->user()->branch_id);
+            }
             if (!empty($branch_id)) {
                 $temp_users->where('branch_id', $branch_id);
             }
-            $firstusers = $temp_users->skip(0)->take(16)->get();
+            // $firstusers = $temp_users->skip(0)->take(16)->get();
+            $firstusers  = (clone $temp_users)->skip(0)->take(16)->get();
+
             $firstusers_last_total = [];
             $firstusers_last_total_price = [];
             $firstusers_last_total_tips = [];
-            $secondusers = $temp_users->skip(16)->take(33)->get();
+            // $secondusers = $temp_users->skip(16)->take(33)->get();
+            $secondusers = (clone $temp_users)->skip(16)->take(33)->get();   // workers 16–48
             $secondusers_last_total = [];
             $secondusers_last_total_price = [];
             $secondusers_last_total_tips = [];
-            $restusers = $temp_users->skip(33)->get();
+            // $restusers = $temp_users->skip(33)->get();
+            $restusers   = (clone $temp_users)->skip(49)->get();              // workers 49+
             $restusers_last_total = [];
             $restusers_last_total_price = [];
             $restusers_last_total_tips = [];
