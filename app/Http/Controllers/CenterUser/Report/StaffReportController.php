@@ -47,9 +47,9 @@ class StaffReportController extends Controller
             }
             $report = $temp_report->get();
             $temp_users = Worker::query();
-            if (get_user_role() != 1) {
-                $temp_users->where('branch_id', auth('center_user')->user()->branch_id);
-            }
+            // if (get_user_role() != 1) {
+            //     $temp_users->where('branch_id', auth('center_user')->user()->branch_id);
+            // }
             if (!empty($branch_id)) {
                 $temp_users->where('branch_id', $branch_id);
             }
