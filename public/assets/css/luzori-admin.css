@@ -1,4 +1,4 @@
-/* Luzori Admin Dashboard Theme — matches brand mockup */
+﻿/* Luzori Admin Dashboard Theme â€” matches brand mockup */
 
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Cairo:wght@300;400;500;600;700&display=swap');
 
@@ -21,7 +21,7 @@ body.luzori-admin {
   --lz-font-display: 'Cormorant Garamond', Georgia, serif;
   --lz-font-body: 'DM Sans', 'Cairo', sans-serif;
 
-  /* Remap theme / Bootstrap primary (blue/purple) → Luzori forest */
+  /* Remap theme / Bootstrap primary (blue/purple) â†’ Luzori forest */
   --bs-primary: #002b26;
   --bs-primary-rgb: 0, 43, 38;
   --bs-link-color: #0a3a34;
@@ -51,7 +51,7 @@ body.luzori-admin .bg-navbar-theme {
   -webkit-backdrop-filter: none !important;
 }
 
-/* Solid navbar — remove outer margin/gutter only (keep theme width vs sidebar) */
+/* Solid navbar â€” remove outer margin/gutter only (keep theme width vs sidebar) */
 body.luzori-admin .navbar-detached,
 body.luzori-admin .layout-navbar.navbar-detached,
 body.luzori-admin #layout-navbar {
@@ -72,7 +72,7 @@ body.luzori-admin .layout-wrapper:not(.layout-navbar-full) .layout-navbar.navbar
   max-width: none !important;
 }
 
-/* Fixed: keep sidebar offset — only drop the theme side padding from width */
+/* Fixed: keep sidebar offset â€” only drop the theme side padding from width */
 html.layout-navbar-fixed:not(.layout-menu-collapsed) body.luzori-admin .layout-content-navbar:not(.layout-without-menu) .layout-navbar.navbar-detached {
   width: calc(100% - 16.25rem) !important;
   max-width: none !important;
@@ -85,8 +85,8 @@ html.layout-navbar-fixed.layout-menu-collapsed body.luzori-admin .layout-content
 
 /*
  * Mobile navbar fix:
- * - Theme uses position:fixed + margin-top:$spacer → gap above bar
- * - Helpers.js injects .layout-page{padding-top:navbarHeight} → extra empty band
+ * - Theme uses position:fixed + margin-top:$spacer â†’ gap above bar
+ * - Helpers.js injects .layout-page{padding-top:navbarHeight} â†’ extra empty band
  * Keep navbar FIXED (does not scroll), flush to top, solid white.
  * Move the reserved space to .content-wrapper only.
  */
@@ -150,7 +150,7 @@ body.luzori-admin .bg-menu-theme {
   background: var(--lz-forest) !important;
   box-shadow: none !important;
   border: none !important;
-  /* Keep theme fixed positioning — do not force position:relative (causes content gap) */
+  /* Keep theme fixed positioning â€” do not force position:relative (causes content gap) */
 }
 
 html.layout-menu-fixed body.luzori-admin .layout-menu,
@@ -364,7 +364,7 @@ html.layout-menu-collapsed:not(.layout-menu-hover) body.luzori-admin .layout-men
   display: none !important;
 }
 
-/* Theme sets opacity:0 on all divs when collapsed — keep icon wraps visible */
+/* Theme sets opacity:0 on all divs when collapsed â€” keep icon wraps visible */
 html.layout-menu-collapsed:not(.layout-menu-hover) body.luzori-admin .layout-menu .menu-inner > .menu-item div.lz-menu-icon-wrap,
 html.layout-menu-collapsed:not(.layout-menu-hover) body.luzori-admin .layout-menu .menu-inner > .menu-item > .menu-link > .lz-menu-icon-wrap {
   opacity: 1 !important;
@@ -580,7 +580,7 @@ body.luzori-admin .layout-menu .menu-item.active > .menu-link:not(.menu-toggle) 
   opacity: 0.85;
 }
 
-/* Submenu panel — vertical tree line linking children to parent */
+/* Submenu panel â€” vertical tree line linking children to parent */
 body.luzori-admin .layout-menu .menu-item.open > .menu-sub,
 body.luzori-admin .layout-menu .menu-sub {
   position: relative !important;
@@ -599,7 +599,7 @@ body.luzori-admin .layout-menu .menu-sub > .menu-item {
   position: relative;
 }
 
-/* No horizontal connectors — vertical line only */
+/* No horizontal connectors â€” vertical line only */
 body.luzori-admin .bg-menu-theme.menu-vertical .menu-sub > .menu-item > .menu-link::before,
 body.luzori-admin .layout-menu .menu-sub > .menu-item > .menu-link::before {
   content: none !important;
@@ -1313,7 +1313,7 @@ body.luzori-admin table.dataTable td.all.lz-actions-col {
   display: table-cell !important;
 }
 
-/* Hide DataTables expand arrows — details open via eye dialog */
+/* Hide DataTables expand arrows â€” details open via eye dialog */
 body.luzori-admin table.dataTable.dtr-column > tbody > tr > td.dtr-control,
 body.luzori-admin table.dataTable.dtr-inline.collapsed > tbody > tr > td.dtr-control {
   cursor: default;
@@ -1432,7 +1432,7 @@ body.luzori-admin table.dataTable > tbody > tr.child span.dtr-title {
   min-width: 140px;
 }
 
-/* Expanded / selected DataTable rows — no theme blue */
+/* Expanded / selected DataTable rows â€” no theme blue */
 body.luzori-admin table.dataTable > tbody > tr.parent,
 body.luzori-admin table.dataTable > tbody > tr.parent > *,
 body.luzori-admin table.dataTable > tbody > tr.selected,
@@ -1565,7 +1565,7 @@ body.luzori-admin .progress-bar {
   background-color: var(--lz-forest) !important;
 }
 
-/* Luzori loaders — dual ring (forest + gold) */
+/* Luzori loaders â€” dual ring (forest + gold) */
 @keyframes lz-spin {
   to {
     transform: rotate(360deg);
@@ -1643,7 +1643,7 @@ body.luzori-admin .spinner-grow.text-primary {
   border-radius: 50% !important;
 }
 
-/* DataTables processing — square loader; must hide when DT finishes */
+/* DataTables processing â€” square loader; must hide when DT finishes */
 body.luzori-admin div.dataTables_processing,
 body.luzori-admin div.dt-processing {
   top: 50% !important;
@@ -1668,7 +1668,7 @@ body.luzori-admin div.dt-processing {
   justify-content: center !important;
 }
 
-/* Default hidden — only show when DataTables sets display:block inline */
+/* Default hidden â€” only show when DataTables sets display:block inline */
 body.luzori-admin div.dataTables_processing:not([style*='display: block']):not([style*='display:block']),
 body.luzori-admin div.dt-processing:not([style*='display: block']):not([style*='display:block']) {
   display: none !important;
@@ -2425,29 +2425,33 @@ body.luzori-admin .lz-form-card .note-editor .note-editable {
   background: #fff !important;
 }
 
+
 /* ==========================================================================
-   Dark theme � html.dark-style (template toggle)
+   Dark theme — html.dark-style
+   Keep forest green for sidebar; gold only for accents.
    ========================================================================== */
 html.dark-style body.luzori-admin {
-  --lz-forest: #d4b483;
-  --lz-forest-soft: #e8d5b5;
-  --lz-cream: #1a1f2e;
-  --lz-cream-card: #232839;
+  --lz-forest: #002b26;
+  --lz-forest-soft: #0a3a34;
+  --lz-cream: #141824;
+  --lz-cream-card: #1c2233;
   --lz-gold: #c5a070;
-  --lz-gold-soft: #9a7a4a;
+  --lz-gold-soft: #d4b483;
   --lz-gold-deep: #e8d5b5;
   --lz-mint: #1e3d36;
   --lz-mint-text: #8fd4c0;
   --lz-peach: #3a2e24;
   --lz-peach-text: #e0b48a;
-  --lz-muted: #9aa3b2;
-  --lz-text: #e8eaef;
-  --lz-shadow: 0 10px 32px rgba(0, 0, 0, 0.35);
-  --bs-body-bg: #1a1f2e;
-  --bs-body-color: #e8eaef;
-  --bs-border-color: #343b4f;
-  --bs-secondary-color: #9aa3b2;
-  background: #1a1f2e !important;
+  --lz-muted: #a8b0bf;
+  --lz-text: #eef1f6;
+  --lz-shadow: 0 10px 32px rgba(0, 0, 0, 0.4);
+  --bs-body-bg: #141824;
+  --bs-body-color: #eef1f6;
+  --bs-border-color: #2e364a;
+  --bs-secondary-color: #a8b0bf;
+  --bs-primary: #0d3b34;
+  --bs-primary-rgb: 13, 59, 52;
+  background: #141824 !important;
   color: var(--lz-text) !important;
 }
 
@@ -2456,14 +2460,47 @@ html.dark-style body.luzori-admin .content-wrapper,
 html.dark-style body.luzori-admin .container-p-y,
 html.dark-style body.luzori-admin .luzori-page,
 html.dark-style body.luzori-admin .luzori-dashboard {
-  background: #1a1f2e !important;
+  background: #141824 !important;
   color: var(--lz-text) !important;
 }
 
 html.dark-style body.luzori-admin .luzori-page::before,
 html.dark-style body.luzori-admin .luzori-dashboard::before {
-  opacity: 0.08 !important;
+  opacity: 0.06 !important;
   filter: invert(1) hue-rotate(180deg);
+}
+
+/* Sidebar stays brand forest — never gold */
+html.dark-style body.luzori-admin .layout-menu,
+html.dark-style body.luzori-admin .layout-menu.bg-menu-theme,
+html.dark-style body.luzori-admin .bg-menu-theme,
+html.dark-style body.luzori-admin #layout-menu {
+  background: #002b26 !important;
+  background-color: #002b26 !important;
+}
+
+html.dark-style body.luzori-admin .layout-menu .menu-link,
+html.dark-style body.luzori-admin .layout-menu .menu-horizontal-prev,
+html.dark-style body.luzori-admin .layout-menu .menu-horizontal-next {
+  color: rgba(255, 228, 196, 0.92) !important;
+}
+
+html.dark-style body.luzori-admin .layout-menu .menu-icon,
+html.dark-style body.luzori-admin .layout-menu .menu-link > i {
+  color: rgba(255, 214, 168, 0.95) !important;
+}
+
+html.dark-style body.luzori-admin .layout-menu .menu-item.active > .menu-link,
+html.dark-style body.luzori-admin .layout-menu .menu-item.open > .menu-link {
+  background: linear-gradient(160deg, #d4b483 0%, #e8d5b5 100%) !important;
+  color: #002b26 !important;
+}
+
+html.dark-style body.luzori-admin .layout-menu .menu-item.active > .menu-link .menu-icon,
+html.dark-style body.luzori-admin .layout-menu .menu-item.active > .menu-link i,
+html.dark-style body.luzori-admin .layout-menu .menu-item.open > .menu-link .menu-icon,
+html.dark-style body.luzori-admin .layout-menu .menu-item.open > .menu-link i {
+  color: #002b26 !important;
 }
 
 html.dark-style body.luzori-admin .layout-navbar,
@@ -2471,8 +2508,8 @@ html.dark-style body.luzori-admin .bg-navbar-theme,
 html.dark-style body.luzori-admin .navbar-detached,
 html.dark-style body.luzori-admin .layout-navbar.navbar-detached,
 html.dark-style body.luzori-admin #layout-navbar {
-  background: #1f2536 !important;
-  background-color: #1f2536 !important;
+  background: #1a2030 !important;
+  background-color: #1a2030 !important;
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06) !important;
   color: var(--lz-text) !important;
 }
@@ -2483,24 +2520,23 @@ html.dark-style body.luzori-admin .navbar-nav .nav-link {
   color: #c9d0dc !important;
 }
 
-html.dark-style body.luzori-admin .breadcrumb,
-html.dark-style body.luzori-admin .breadcrumb-item,
-html.dark-style body.luzori-admin .breadcrumb-item a,
-html.dark-style body.luzori-admin .breadcrumb-item.active {
-  color: #c9d0dc !important;
+html.dark-style body.luzori-admin .breadcrumb-item a {
+  color: #d4b483 !important;
 }
 
-html.dark-style body.luzori-admin .breadcrumb-item a {
-  color: var(--lz-gold) !important;
+html.dark-style body.luzori-admin .breadcrumb-item,
+html.dark-style body.luzori-admin .breadcrumb-item.active,
+html.dark-style body.luzori-admin .breadcrumb-item + .breadcrumb-item::before {
+  color: #a8b0bf !important;
 }
 
 html.dark-style body.luzori-admin .card,
 html.dark-style body.luzori-admin .lz-form-card,
 html.dark-style body.luzori-admin .lz-table-card,
 html.dark-style body.luzori-admin .content-wrapper .card {
-  background: #232839 !important;
-  background-color: #232839 !important;
-  border-color: #343b4f !important;
+  background: #1c2233 !important;
+  background-color: #1c2233 !important;
+  border: 1px solid #2e364a !important;
   box-shadow: var(--lz-shadow) !important;
   color: var(--lz-text) !important;
 }
@@ -2511,7 +2547,7 @@ html.dark-style body.luzori-admin .lz-table-card .card-header,
 html.dark-style body.luzori-admin .card > .card-footer,
 html.dark-style body.luzori-admin .lz-form-card > .card-footer {
   background: transparent !important;
-  border-color: #343b4f !important;
+  border-color: #2e364a !important;
   color: var(--lz-text) !important;
 }
 
@@ -2525,7 +2561,7 @@ html.dark-style body.luzori-admin h2,
 html.dark-style body.luzori-admin h3,
 html.dark-style body.luzori-admin h4,
 html.dark-style body.luzori-admin h5 {
-  color: #f0e6d6 !important;
+  color: #e8d5b5 !important;
 }
 
 html.dark-style body.luzori-admin .tab-content,
@@ -2539,9 +2575,12 @@ html.dark-style body.luzori-admin .tab-pane.fade.show {
 
 html.dark-style body.luzori-admin .form-label,
 html.dark-style body.luzori-admin label,
-html.dark-style body.luzori-admin .lz-field-label,
+html.dark-style body.luzori-admin .lz-field-label {
+  color: #d0d6e2 !important;
+}
+
 html.dark-style body.luzori-admin .text-muted {
-  color: #b8c0ce !important;
+  color: #9aa3b2 !important;
 }
 
 html.dark-style body.luzori-admin .form-control,
@@ -2551,10 +2590,10 @@ html.dark-style body.luzori-admin .lz-form-card .form-select,
 html.dark-style body.luzori-admin textarea.form-control,
 html.dark-style body.luzori-admin .dataTables_wrapper .dataTables_length select,
 html.dark-style body.luzori-admin .dataTables_wrapper .dataTables_filter input {
-  background: #1a1f2e !important;
-  background-color: #1a1f2e !important;
-  border-color: #3d465c !important;
-  color: #e8eaef !important;
+  background: #141824 !important;
+  background-color: #141824 !important;
+  border: 1px solid #4a556c !important;
+  color: #eef1f6 !important;
   box-shadow: none !important;
 }
 
@@ -2565,19 +2604,15 @@ html.dark-style body.luzori-admin textarea::placeholder {
 
 html.dark-style body.luzori-admin .form-control:focus,
 html.dark-style body.luzori-admin .form-select:focus {
-  border-color: var(--lz-gold) !important;
-  box-shadow: 0 0 0 3px rgba(197, 160, 112, 0.22) !important;
-  background: #1a1f2e !important;
-  color: #e8eaef !important;
-}
-
-html.dark-style body.luzori-admin .lz-lang-tabs-wrap {
-  margin: 0.25rem 0 1.35rem;
+  border-color: #c5a070 !important;
+  box-shadow: 0 0 0 3px rgba(197, 160, 112, 0.25) !important;
+  background: #141824 !important;
+  color: #eef1f6 !important;
 }
 
 html.dark-style body.luzori-admin .lz-lang-tabs,
 html.dark-style body.luzori-admin .nav-tabs.lz-lang-tabs {
-  background: linear-gradient(180deg, #2a3144 0%, #232839 100%) !important;
+  background: linear-gradient(180deg, #252b3d 0%, #1c2233 100%) !important;
   border-color: #3d465c !important;
 }
 
@@ -2585,672 +2620,176 @@ html.dark-style body.luzori-admin .lz-lang-tabs .nav-link {
   color: #9aa3b2 !important;
 }
 
-html.dark-style body.luzori-admin .lz-lang-tabs .nav-link:hover {
-  color: #f0e6d6 !important;
-  background: rgba(255, 255, 255, 0.06) !important;
-}
-
 html.dark-style body.luzori-admin .lz-lang-tabs .nav-link.active {
-  background: #0d3b34 !important;
-  color: #f0e6d6 !important;
+  background: #002b26 !important;
+  color: #e8d5b5 !important;
   box-shadow: 0 3px 12px rgba(0, 0, 0, 0.35) !important;
 }
 
 html.dark-style body.luzori-admin .nav-tabs.lz-content-tabs .nav-link {
-  background: #2a3144 !important;
+  background: #252b3d !important;
   border-color: #3d465c !important;
   color: #9aa3b2 !important;
 }
 
 html.dark-style body.luzori-admin .nav-tabs.lz-content-tabs .nav-link.active {
-  background: #0d3b34 !important;
-  border-color: #0d3b34 !important;
-  color: #f0e6d6 !important;
-}
-
-html.dark-style body.luzori-admin table.table,
-html.dark-style body.luzori-admin .dataTables_wrapper table.dataTable,
-html.dark-style body.luzori-admin .lz-table-card table {
-  --bs-table-bg: transparent;
-  color: var(--lz-text) !important;
-  border-color: #343b4f !important;
+  background: #002b26 !important;
+  border-color: #002b26 !important;
+  color: #e8d5b5 !important;
 }
 
 html.dark-style body.luzori-admin table.table thead th,
 html.dark-style body.luzori-admin .dataTables_wrapper table.dataTable thead th,
 html.dark-style body.luzori-admin .lz-table-card table thead th {
-  background: #2a3144 !important;
+  background: #252b3d !important;
   color: #d4b483 !important;
-  border-color: #343b4f !important;
+  border-color: #2e364a !important;
 }
 
 html.dark-style body.luzori-admin table.table tbody td,
 html.dark-style body.luzori-admin .dataTables_wrapper table.dataTable tbody td {
-  color: #e8eaef !important;
-  border-color: #2f3648 !important;
+  color: #eef1f6 !important;
+  border-color: #2a3144 !important;
   background: transparent !important;
 }
 
-html.dark-style body.luzori-admin table.table tbody tr:nth-child(even),
-html.dark-style body.luzori-admin .dataTables_wrapper table.dataTable tbody tr:nth-child(even) {
-  background: rgba(255, 255, 255, 0.025) !important;
-}
-
-html.dark-style body.luzori-admin table.table tbody tr:hover,
-html.dark-style body.luzori-admin .dataTables_wrapper table.dataTable tbody tr:hover {
-  background: rgba(197, 160, 112, 0.08) !important;
-}
-
-html.dark-style body.luzori-admin .dataTables_wrapper .dataTables_info,
-html.dark-style body.luzori-admin .dataTables_wrapper .dataTables_length label,
-html.dark-style body.luzori-admin .dataTables_wrapper .dataTables_filter label {
-  color: #9aa3b2 !important;
-}
-
-html.dark-style body.luzori-admin .page-link {
-  background: #2a3144 !important;
-  border-color: #3d465c !important;
-  color: #d4b483 !important;
-}
-
-html.dark-style body.luzori-admin .page-item.active .page-link,
-html.dark-style body.luzori-admin .dataTables_paginate .paginate_button.current {
-  background: #0d3b34 !important;
-  border-color: #0d3b34 !important;
-  color: #fff !important;
+html.dark-style body.luzori-admin table.table tbody tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.03) !important;
 }
 
 html.dark-style body.luzori-admin .lz-action-btn {
-  background: #2a3144 !important;
+  background: #252b3d !important;
   border-color: #3d465c !important;
   color: #d4b483 !important;
 }
 
 html.dark-style body.luzori-admin .lz-action-btn:hover {
-  background: #343b4f !important;
-  color: #f0e6d6 !important;
+  background: #2e364a !important;
+  color: #e8d5b5 !important;
 }
 
 html.dark-style body.luzori-admin .lz-action-btn.lz-action-danger {
-  background: rgba(180, 50, 50, 0.2) !important;
-  border-color: rgba(220, 100, 100, 0.35) !important;
+  background: rgba(180, 50, 50, 0.22) !important;
+  border-color: rgba(220, 100, 100, 0.4) !important;
   color: #f0a0a0 !important;
+}
+
+html.dark-style body.luzori-admin .btn-primary,
+html.dark-style body.luzori-admin .btn-luzori-primary {
+  background: #002b26 !important;
+  border-color: #002b26 !important;
+  color: #e8d5b5 !important;
 }
 
 html.dark-style body.luzori-admin .btn-luzori-beige,
 html.dark-style body.luzori-admin .buttons-colvis {
   background: linear-gradient(90deg, #9a7a4a, #c5a070) !important;
-  color: #1a1f2e !important;
+  color: #002b26 !important;
 }
 
 html.dark-style body.luzori-admin .btn-luzori-muted {
   background: #3d465c !important;
-  color: #e8eaef !important;
-}
-
-html.dark-style body.luzori-admin .btn-primary,
-html.dark-style body.luzori-admin .btn-luzori-primary {
-  background: #0d3b34 !important;
-  border-color: #0d3b34 !important;
-  color: #f0e6d6 !important;
+  color: #eef1f6 !important;
 }
 
 html.dark-style body.luzori-admin .dropdown-menu {
-  background: #232839 !important;
+  background: #1c2233 !important;
   border-color: #3d465c !important;
-  color: var(--lz-text) !important;
 }
 
 html.dark-style body.luzori-admin .dropdown-item {
-  color: #e8eaef !important;
+  color: #eef1f6 !important;
 }
 
-html.dark-style body.luzori-admin .dropdown-item:hover,
-html.dark-style body.luzori-admin .dropdown-item:focus,
-html.dark-style body.luzori-admin .dt-button-collection .dt-button:hover {
-  background: #2a3144 !important;
-  color: #f0e6d6 !important;
+html.dark-style body.luzori-admin .dropdown-item:hover {
+  background: #252b3d !important;
+  color: #e8d5b5 !important;
 }
 
 html.dark-style body.luzori-admin .select2-container--default .select2-selection--single,
 html.dark-style body.luzori-admin .select2-container--default .select2-selection--multiple {
-  background: #1a1f2e !important;
-  border-color: #3d465c !important;
-  color: #e8eaef !important;
+  background: #141824 !important;
+  border-color: #4a556c !important;
+  color: #eef1f6 !important;
 }
 
 html.dark-style body.luzori-admin .select2-dropdown {
-  background: #232839 !important;
+  background: #1c2233 !important;
   border-color: #3d465c !important;
 }
 
 html.dark-style body.luzori-admin .select2-results__option {
-  color: #e8eaef !important;
-}
-
-html.dark-style body.luzori-admin .select2-container--default .select2-results__option--highlighted.select2-results__option--selectable {
-  background: #0d3b34 !important;
-  color: #fff !important;
+  color: #eef1f6 !important;
 }
 
 html.dark-style body.luzori-admin .lz-perm-toolbar,
 html.dark-style body.luzori-admin .lz-perm-group,
 html.dark-style body.luzori-admin .lz-perm-tile {
-  background: #1f2536 !important;
+  background: #1a2030 !important;
   border-color: #3d465c !important;
 }
 
 html.dark-style body.luzori-admin .lz-perm-group-title,
 html.dark-style body.luzori-admin .lz-perm-toolbar-title,
 html.dark-style body.luzori-admin .lz-perm-tile-label {
-  color: #f0e6d6 !important;
+  color: #e8d5b5 !important;
 }
 
 html.dark-style body.luzori-admin .lz-perm-tile.is-checked {
-  background: rgba(13, 59, 52, 0.45) !important;
-  border-color: rgba(197, 160, 112, 0.45) !important;
-}
-
-html.dark-style body.luzori-admin .lz-perm-count-pill,
-html.dark-style body.luzori-admin .lz-perm-group-count,
-html.dark-style body.luzori-admin .lz-perm-count-badge {
-  background: #2a3144 !important;
-  border-color: #3d465c !important;
-  color: #d4b483 !important;
+  background: rgba(0, 43, 38, 0.55) !important;
+  border-color: rgba(197, 160, 112, 0.5) !important;
 }
 
 html.dark-style body.luzori-admin .lz-form-divider,
 html.dark-style body.luzori-admin hr {
-  border-color: #343b4f !important;
-  opacity: 1;
+  border-color: #2e364a !important;
 }
 
 html.dark-style body.luzori-admin .note-editor.note-frame,
-html.dark-style body.luzori-admin .lz-form-card .note-editor.note-frame {
+html.dark-style body.luzori-admin .note-editor .note-editable {
+  background: #141824 !important;
   border-color: #3d465c !important;
-  background: #1a1f2e !important;
+  color: #eef1f6 !important;
 }
 
-html.dark-style body.luzori-admin .note-editor .note-toolbar,
-html.dark-style body.luzori-admin .lz-form-card .note-editor .note-toolbar {
-  background: #2a3144 !important;
+html.dark-style body.luzori-admin .note-editor .note-toolbar {
+  background: #252b3d !important;
   border-color: #3d465c !important;
-}
-
-html.dark-style body.luzori-admin .note-editor .note-editable,
-html.dark-style body.luzori-admin .lz-form-card .note-editor .note-editable {
-  background: #1a1f2e !important;
-  color: #e8eaef !important;
 }
 
 html.dark-style body.luzori-admin .lz-setting-logo-preview {
-  background: #1f2536 !important;
+  background: #1a2030 !important;
   border-color: #3d465c !important;
 }
 
-html.dark-style body.luzori-admin .alert-success {
-  background: rgba(26, 107, 90, 0.25) !important;
-  border-color: rgba(143, 212, 192, 0.35) !important;
-  color: #8fd4c0 !important;
-}
-
-html.dark-style body.luzori-admin .alert-danger {
-  background: rgba(180, 50, 50, 0.2) !important;
-  border-color: rgba(220, 100, 100, 0.35) !important;
-  color: #f0a0a0 !important;
-}
-
-html.dark-style body.luzori-admin .modal-content,
-html.dark-style body.luzori-admin .offcanvas,
-html.dark-style body.luzori-admin #lzAdminPermDrawer.lz-admin-perm-drawer {
-  background: #232839 !important;
+html.dark-style body.luzori-admin #lzAdminPermDrawer.lz-admin-perm-drawer,
+html.dark-style body.luzori-admin .modal-content {
+  background: #1c2233 !important;
   color: var(--lz-text) !important;
-  border-color: #3d465c !important;
 }
 
 html.dark-style body.luzori-admin #lzAdminPermDrawer .lz-admin-perm-header,
 html.dark-style body.luzori-admin #lzAdminPermDrawer .lz-admin-perm-footer {
-  background: #1f2536 !important;
-  border-color: #3d465c !important;
-}
-
-html.dark-style body.luzori-admin #lzAdminPermDrawer .lz-admin-perm-title {
-  color: #f0e6d6 !important;
-}
-
-html.dark-style body.luzori-admin #lzAdminPermDrawer .lz-admin-perm-list li {
-  background: #2a3144 !important;
-  border-color: #3d465c !important;
-  color: #e8eaef !important;
-}
-
-html.dark-style body.luzori-admin .bg-label-primary,
-html.dark-style body.luzori-admin .bg-label-success,
-html.dark-style body.luzori-admin .bg-label-info,
-html.dark-style body.luzori-admin .bg-label-warning,
-html.dark-style body.luzori-admin .bg-label-secondary {
-  filter: brightness(1.05);
-}
-
-@media (max-width: 1199.98px) {
-  html.dark-style.layout-navbar-fixed body.luzori-admin #layout-navbar,
-  html.dark-style.layout-navbar-fixed body.luzori-admin .layout-navbar.navbar-detached {
-    background: #1f2536 !important;
-    background-color: #1f2536 !important;
-  }
-}
-
-/* ==========================================================================
-   Dark theme � html.dark-style (template toggle)
-   ========================================================================== */
-html.dark-style body.luzori-admin {
-  --lz-forest: #d4b483;
-  --lz-forest-soft: #e8d5b5;
-  --lz-cream: #1a1f2e;
-  --lz-cream-card: #232839;
-  --lz-gold: #c5a070;
-  --lz-gold-soft: #9a7a4a;
-  --lz-gold-deep: #e8d5b5;
-  --lz-mint: #1e3d36;
-  --lz-mint-text: #8fd4c0;
-  --lz-peach: #3a2e24;
-  --lz-peach-text: #e0b48a;
-  --lz-muted: #9aa3b2;
-  --lz-text: #e8eaef;
-  --lz-shadow: 0 10px 32px rgba(0, 0, 0, 0.35);
-  --bs-body-bg: #1a1f2e;
-  --bs-body-color: #e8eaef;
-  --bs-border-color: #343b4f;
-  --bs-secondary-color: #9aa3b2;
-  background: #1a1f2e !important;
-  color: var(--lz-text) !important;
-}
-
-html.dark-style body.luzori-admin .layout-page,
-html.dark-style body.luzori-admin .content-wrapper,
-html.dark-style body.luzori-admin .container-p-y,
-html.dark-style body.luzori-admin .luzori-page,
-html.dark-style body.luzori-admin .luzori-dashboard {
-  background: #1a1f2e !important;
-  color: var(--lz-text) !important;
-}
-
-html.dark-style body.luzori-admin .luzori-page::before,
-html.dark-style body.luzori-admin .luzori-dashboard::before {
-  opacity: 0.08 !important;
-  filter: invert(1) hue-rotate(180deg);
-}
-
-html.dark-style body.luzori-admin .layout-navbar,
-html.dark-style body.luzori-admin .bg-navbar-theme,
-html.dark-style body.luzori-admin .navbar-detached,
-html.dark-style body.luzori-admin .layout-navbar.navbar-detached,
-html.dark-style body.luzori-admin #layout-navbar {
-  background: #1f2536 !important;
-  background-color: #1f2536 !important;
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06) !important;
-  color: var(--lz-text) !important;
-}
-
-html.dark-style body.luzori-admin .layout-navbar .nav-link,
-html.dark-style body.luzori-admin .layout-navbar i,
-html.dark-style body.luzori-admin .navbar-nav .nav-link {
-  color: #c9d0dc !important;
-}
-
-html.dark-style body.luzori-admin .breadcrumb,
-html.dark-style body.luzori-admin .breadcrumb-item,
-html.dark-style body.luzori-admin .breadcrumb-item a,
-html.dark-style body.luzori-admin .breadcrumb-item.active {
-  color: #c9d0dc !important;
-}
-
-html.dark-style body.luzori-admin .breadcrumb-item a {
-  color: var(--lz-gold) !important;
-}
-
-html.dark-style body.luzori-admin .card,
-html.dark-style body.luzori-admin .lz-form-card,
-html.dark-style body.luzori-admin .lz-table-card,
-html.dark-style body.luzori-admin .content-wrapper .card {
-  background: #232839 !important;
-  background-color: #232839 !important;
-  border-color: #343b4f !important;
-  box-shadow: var(--lz-shadow) !important;
-  color: var(--lz-text) !important;
-}
-
-html.dark-style body.luzori-admin .card > .card-header,
-html.dark-style body.luzori-admin .lz-form-card > .card-header,
-html.dark-style body.luzori-admin .lz-table-card .card-header,
-html.dark-style body.luzori-admin .card > .card-footer,
-html.dark-style body.luzori-admin .lz-form-card > .card-footer {
-  background: transparent !important;
-  border-color: #343b4f !important;
-  color: var(--lz-text) !important;
-}
-
-html.dark-style body.luzori-admin .card-header h2,
-html.dark-style body.luzori-admin .card-header h4,
-html.dark-style body.luzori-admin .card-header h5,
-html.dark-style body.luzori-admin .lz-page-title,
-html.dark-style body.luzori-admin .lz-form-section-title,
-html.dark-style body.luzori-admin h1,
-html.dark-style body.luzori-admin h2,
-html.dark-style body.luzori-admin h3,
-html.dark-style body.luzori-admin h4,
-html.dark-style body.luzori-admin h5 {
-  color: #f0e6d6 !important;
-}
-
-html.dark-style body.luzori-admin .tab-content,
-html.dark-style body.luzori-admin .tab-pane,
-html.dark-style body.luzori-admin .tab-pane.active,
-html.dark-style body.luzori-admin .tab-pane.fade.show {
-  background: transparent !important;
-  background-color: transparent !important;
-  color: var(--lz-text) !important;
-}
-
-html.dark-style body.luzori-admin .form-label,
-html.dark-style body.luzori-admin label,
-html.dark-style body.luzori-admin .lz-field-label,
-html.dark-style body.luzori-admin .text-muted {
-  color: #b8c0ce !important;
-}
-
-html.dark-style body.luzori-admin .form-control,
-html.dark-style body.luzori-admin .form-select,
-html.dark-style body.luzori-admin .lz-form-card .form-control,
-html.dark-style body.luzori-admin .lz-form-card .form-select,
-html.dark-style body.luzori-admin textarea.form-control,
-html.dark-style body.luzori-admin .dataTables_wrapper .dataTables_length select,
-html.dark-style body.luzori-admin .dataTables_wrapper .dataTables_filter input {
-  background: #1a1f2e !important;
-  background-color: #1a1f2e !important;
-  border-color: #3d465c !important;
-  color: #e8eaef !important;
-  box-shadow: none !important;
-}
-
-html.dark-style body.luzori-admin .form-control::placeholder,
-html.dark-style body.luzori-admin textarea::placeholder {
-  color: #7d8798 !important;
-}
-
-html.dark-style body.luzori-admin .form-control:focus,
-html.dark-style body.luzori-admin .form-select:focus {
-  border-color: var(--lz-gold) !important;
-  box-shadow: 0 0 0 3px rgba(197, 160, 112, 0.22) !important;
-  background: #1a1f2e !important;
-  color: #e8eaef !important;
-}
-
-html.dark-style body.luzori-admin .lz-lang-tabs-wrap {
-  margin: 0.25rem 0 1.35rem;
-}
-
-html.dark-style body.luzori-admin .lz-lang-tabs,
-html.dark-style body.luzori-admin .nav-tabs.lz-lang-tabs {
-  background: linear-gradient(180deg, #2a3144 0%, #232839 100%) !important;
-  border-color: #3d465c !important;
-}
-
-html.dark-style body.luzori-admin .lz-lang-tabs .nav-link {
-  color: #9aa3b2 !important;
-}
-
-html.dark-style body.luzori-admin .lz-lang-tabs .nav-link:hover {
-  color: #f0e6d6 !important;
-  background: rgba(255, 255, 255, 0.06) !important;
-}
-
-html.dark-style body.luzori-admin .lz-lang-tabs .nav-link.active {
-  background: #0d3b34 !important;
-  color: #f0e6d6 !important;
-  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.35) !important;
-}
-
-html.dark-style body.luzori-admin .nav-tabs.lz-content-tabs .nav-link {
-  background: #2a3144 !important;
-  border-color: #3d465c !important;
-  color: #9aa3b2 !important;
-}
-
-html.dark-style body.luzori-admin .nav-tabs.lz-content-tabs .nav-link.active {
-  background: #0d3b34 !important;
-  border-color: #0d3b34 !important;
-  color: #f0e6d6 !important;
-}
-
-html.dark-style body.luzori-admin table.table,
-html.dark-style body.luzori-admin .dataTables_wrapper table.dataTable,
-html.dark-style body.luzori-admin .lz-table-card table {
-  --bs-table-bg: transparent;
-  color: var(--lz-text) !important;
-  border-color: #343b4f !important;
-}
-
-html.dark-style body.luzori-admin table.table thead th,
-html.dark-style body.luzori-admin .dataTables_wrapper table.dataTable thead th,
-html.dark-style body.luzori-admin .lz-table-card table thead th {
-  background: #2a3144 !important;
-  color: #d4b483 !important;
-  border-color: #343b4f !important;
-}
-
-html.dark-style body.luzori-admin table.table tbody td,
-html.dark-style body.luzori-admin .dataTables_wrapper table.dataTable tbody td {
-  color: #e8eaef !important;
-  border-color: #2f3648 !important;
-  background: transparent !important;
-}
-
-html.dark-style body.luzori-admin table.table tbody tr:nth-child(even),
-html.dark-style body.luzori-admin .dataTables_wrapper table.dataTable tbody tr:nth-child(even) {
-  background: rgba(255, 255, 255, 0.025) !important;
-}
-
-html.dark-style body.luzori-admin table.table tbody tr:hover,
-html.dark-style body.luzori-admin .dataTables_wrapper table.dataTable tbody tr:hover {
-  background: rgba(197, 160, 112, 0.08) !important;
-}
-
-html.dark-style body.luzori-admin .dataTables_wrapper .dataTables_info,
-html.dark-style body.luzori-admin .dataTables_wrapper .dataTables_length label,
-html.dark-style body.luzori-admin .dataTables_wrapper .dataTables_filter label {
-  color: #9aa3b2 !important;
+  background: #1a2030 !important;
+  border-color: #2e364a !important;
 }
 
 html.dark-style body.luzori-admin .page-link {
-  background: #2a3144 !important;
+  background: #252b3d !important;
   border-color: #3d465c !important;
   color: #d4b483 !important;
 }
 
-html.dark-style body.luzori-admin .page-item.active .page-link,
-html.dark-style body.luzori-admin .dataTables_paginate .paginate_button.current {
-  background: #0d3b34 !important;
-  border-color: #0d3b34 !important;
-  color: #fff !important;
-}
-
-html.dark-style body.luzori-admin .lz-action-btn {
-  background: #2a3144 !important;
-  border-color: #3d465c !important;
-  color: #d4b483 !important;
-}
-
-html.dark-style body.luzori-admin .lz-action-btn:hover {
-  background: #343b4f !important;
-  color: #f0e6d6 !important;
-}
-
-html.dark-style body.luzori-admin .lz-action-btn.lz-action-danger {
-  background: rgba(180, 50, 50, 0.2) !important;
-  border-color: rgba(220, 100, 100, 0.35) !important;
-  color: #f0a0a0 !important;
-}
-
-html.dark-style body.luzori-admin .btn-luzori-beige,
-html.dark-style body.luzori-admin .buttons-colvis {
-  background: linear-gradient(90deg, #9a7a4a, #c5a070) !important;
-  color: #1a1f2e !important;
-}
-
-html.dark-style body.luzori-admin .btn-luzori-muted {
-  background: #3d465c !important;
-  color: #e8eaef !important;
-}
-
-html.dark-style body.luzori-admin .btn-primary,
-html.dark-style body.luzori-admin .btn-luzori-primary {
-  background: #0d3b34 !important;
-  border-color: #0d3b34 !important;
-  color: #f0e6d6 !important;
-}
-
-html.dark-style body.luzori-admin .dropdown-menu {
-  background: #232839 !important;
-  border-color: #3d465c !important;
-  color: var(--lz-text) !important;
-}
-
-html.dark-style body.luzori-admin .dropdown-item {
-  color: #e8eaef !important;
-}
-
-html.dark-style body.luzori-admin .dropdown-item:hover,
-html.dark-style body.luzori-admin .dropdown-item:focus,
-html.dark-style body.luzori-admin .dt-button-collection .dt-button:hover {
-  background: #2a3144 !important;
-  color: #f0e6d6 !important;
-}
-
-html.dark-style body.luzori-admin .select2-container--default .select2-selection--single,
-html.dark-style body.luzori-admin .select2-container--default .select2-selection--multiple {
-  background: #1a1f2e !important;
-  border-color: #3d465c !important;
-  color: #e8eaef !important;
-}
-
-html.dark-style body.luzori-admin .select2-dropdown {
-  background: #232839 !important;
-  border-color: #3d465c !important;
-}
-
-html.dark-style body.luzori-admin .select2-results__option {
-  color: #e8eaef !important;
-}
-
-html.dark-style body.luzori-admin .select2-container--default .select2-results__option--highlighted.select2-results__option--selectable {
-  background: #0d3b34 !important;
-  color: #fff !important;
-}
-
-html.dark-style body.luzori-admin .lz-perm-toolbar,
-html.dark-style body.luzori-admin .lz-perm-group,
-html.dark-style body.luzori-admin .lz-perm-tile {
-  background: #1f2536 !important;
-  border-color: #3d465c !important;
-}
-
-html.dark-style body.luzori-admin .lz-perm-group-title,
-html.dark-style body.luzori-admin .lz-perm-toolbar-title,
-html.dark-style body.luzori-admin .lz-perm-tile-label {
-  color: #f0e6d6 !important;
-}
-
-html.dark-style body.luzori-admin .lz-perm-tile.is-checked {
-  background: rgba(13, 59, 52, 0.45) !important;
-  border-color: rgba(197, 160, 112, 0.45) !important;
-}
-
-html.dark-style body.luzori-admin .lz-perm-count-pill,
-html.dark-style body.luzori-admin .lz-perm-group-count,
-html.dark-style body.luzori-admin .lz-perm-count-badge {
-  background: #2a3144 !important;
-  border-color: #3d465c !important;
-  color: #d4b483 !important;
-}
-
-html.dark-style body.luzori-admin .lz-form-divider,
-html.dark-style body.luzori-admin hr {
-  border-color: #343b4f !important;
-  opacity: 1;
-}
-
-html.dark-style body.luzori-admin .note-editor.note-frame,
-html.dark-style body.luzori-admin .lz-form-card .note-editor.note-frame {
-  border-color: #3d465c !important;
-  background: #1a1f2e !important;
-}
-
-html.dark-style body.luzori-admin .note-editor .note-toolbar,
-html.dark-style body.luzori-admin .lz-form-card .note-editor .note-toolbar {
-  background: #2a3144 !important;
-  border-color: #3d465c !important;
-}
-
-html.dark-style body.luzori-admin .note-editor .note-editable,
-html.dark-style body.luzori-admin .lz-form-card .note-editor .note-editable {
-  background: #1a1f2e !important;
-  color: #e8eaef !important;
-}
-
-html.dark-style body.luzori-admin .lz-setting-logo-preview {
-  background: #1f2536 !important;
-  border-color: #3d465c !important;
-}
-
-html.dark-style body.luzori-admin .alert-success {
-  background: rgba(26, 107, 90, 0.25) !important;
-  border-color: rgba(143, 212, 192, 0.35) !important;
-  color: #8fd4c0 !important;
-}
-
-html.dark-style body.luzori-admin .alert-danger {
-  background: rgba(180, 50, 50, 0.2) !important;
-  border-color: rgba(220, 100, 100, 0.35) !important;
-  color: #f0a0a0 !important;
-}
-
-html.dark-style body.luzori-admin .modal-content,
-html.dark-style body.luzori-admin .offcanvas,
-html.dark-style body.luzori-admin #lzAdminPermDrawer.lz-admin-perm-drawer {
-  background: #232839 !important;
-  color: var(--lz-text) !important;
-  border-color: #3d465c !important;
-}
-
-html.dark-style body.luzori-admin #lzAdminPermDrawer .lz-admin-perm-header,
-html.dark-style body.luzori-admin #lzAdminPermDrawer .lz-admin-perm-footer {
-  background: #1f2536 !important;
-  border-color: #3d465c !important;
-}
-
-html.dark-style body.luzori-admin #lzAdminPermDrawer .lz-admin-perm-title {
-  color: #f0e6d6 !important;
-}
-
-html.dark-style body.luzori-admin #lzAdminPermDrawer .lz-admin-perm-list li {
-  background: #2a3144 !important;
-  border-color: #3d465c !important;
-  color: #e8eaef !important;
-}
-
-html.dark-style body.luzori-admin .bg-label-primary,
-html.dark-style body.luzori-admin .bg-label-success,
-html.dark-style body.luzori-admin .bg-label-info,
-html.dark-style body.luzori-admin .bg-label-warning,
-html.dark-style body.luzori-admin .bg-label-secondary {
-  filter: brightness(1.05);
+html.dark-style body.luzori-admin .page-item.active .page-link {
+  background: #002b26 !important;
+  border-color: #002b26 !important;
+  color: #e8d5b5 !important;
 }
 
 @media (max-width: 1199.98px) {
   html.dark-style.layout-navbar-fixed body.luzori-admin #layout-navbar,
   html.dark-style.layout-navbar-fixed body.luzori-admin .layout-navbar.navbar-detached {
-    background: #1f2536 !important;
-    background-color: #1f2536 !important;
+    background: #1a2030 !important;
+    background-color: #1a2030 !important;
   }
 }
