@@ -206,7 +206,7 @@ class BookingDataTable extends DataTable
                 >
             ')
             ->buttons([
-                Button::make('colvis')->addClass($buttonClass . ' btn-warning')->text(__('general.column_visibility')),
+                Button::make('colvis')->addClass($buttonClass . ' btn-luzori-beige')->text(__('general.column_visibility')),
                 [
                     'extend' => 'collection',
                     'text' => __('general.export'),  'className' => $buttonClass,
@@ -223,27 +223,30 @@ class BookingDataTable extends DataTable
             ->addTableClass('table table-bordered table-hover')
             ->initComplete('function () {
                 var centers = ' . json_encode(Center::all()->pluck('name', 'id')) . ';
-                var filterHtml = \'<select id="center_filter" class="form-select form-select-sm d-inline-block ms-2" style="width: auto;">\' +
-                    \'<option value="">' . __('general.all_centers') . '</option>\';
-                
+                var filterHtml = \'<div class="lz-admin-filter-item"><label>' . e(__('general.all_centers')) . '</label><select id="center_filter" class="form-select form-select-sm">\' +
+                    \'<option value="">' . e(__('general.all_centers')) . '</option>\';
+
                 $.each(centers, function(id, name) {
                     filterHtml += \'<option value="\' + id + \'">\' + name + \'</option>\';
                 });
-                
-                filterHtml += \'</select>\';
-                
-                var sourceFilterHtml = \'<select id="booking_source_filter" class="form-select form-select-sm d-inline-block ms-2" style="width: auto;">\' +
-                    \'<option value="">' . __('api.booking_source') . '</option>\' +
-                    \'<option value="inside_booking">' . __('api.inside_booking') . '</option>\' +
-                    \'<option value="outside_booking">' . __('api.outside_booking') . '</option>\' +
-                \'</select>\';
 
-                var dateFilterHtml = \'<input type="date" id="date_filter" class="form-control form-control-sm d-inline-block ms-2" style="width: auto;">\';
-                
-                $(".dt-action-buttons").prepend(dateFilterHtml);
-                $(".dt-action-buttons").prepend(sourceFilterHtml);
-                $(".dt-action-buttons").prepend(filterHtml);
-                
+                filterHtml += \'</select></div>\';
+
+                var sourceFilterHtml = \'<div class="lz-admin-filter-item"><label>' . e(__('api.booking_source')) . '</label><select id="booking_source_filter" class="form-select form-select-sm">\' +
+                    \'<option value="">' . e(__('api.booking_source')) . '</option>\' +
+                    \'<option value="inside_booking">' . e(__('api.inside_booking')) . '</option>\' +
+                    \'<option value="outside_booking">' . e(__('api.outside_booking')) . '</option>\' +
+                \'</select></div>\';
+
+                var dateFilterHtml = \'<div class="lz-admin-filter-item"><label>' . e(__('field.date')) . '</label><input type="date" id="date_filter" class="form-control form-control-sm"></div>\';
+
+                var $slot = $("#lzAdminBookingFilters");
+                if ($slot.length) {
+                    $slot.html(filterHtml + sourceFilterHtml + dateFilterHtml);
+                } else {
+                    $(".dt-action-buttons").prepend(dateFilterHtml + sourceFilterHtml + filterHtml);
+                }
+
                 $("#center_filter, #booking_source_filter, #date_filter").on("change", function() {
                     window.LaravelDataTables["bookings-table"].draw();
                 });
@@ -260,23 +263,23 @@ class BookingDataTable extends DataTable
     public function getColumns(): array
     {
         return [
-            Column::computed('booking_number')->title(__('field.id') ?? 'Booking #'),
-            Column::computed('client_name')->title(__('field.client') ?? 'Client'),
-            Column::computed('wallet_balance')->title(__('field.wallet') ?? 'Wallet'),
-            Column::computed('phone')->title(__('field.phone') ?? 'Phone'),
-            Column::computed('email')->title(__('field.email') ?? 'Email'),
-            Column::computed('booking_date')->title(__('field.date') ?? 'Date'),
-            Column::computed('assigned_employee')->title(__('field.employee') ?? 'Employee'),
-            Column::computed('price')->title(__('field.price') ?? 'Price'),
-            Column::computed('services')->title(__('field.services') ?? 'Services'),
-            Column::computed('branch_name')->title(__('field.branch') ?? 'Branch'),
-            Column::computed('center_email')->title(__('field.center_email') ?? 'Center Email'),
-            Column::computed('payment_method')->title(__('field.payment_method') ?? 'Payment'),
-            Column::computed('service_time')->title(__('field.time') ?? 'Time'),
-            Column::computed('purchased_products')->title(__('field.products') ?? 'Products'),
-            Column::computed('booking_status')->title(__('field.status') ?? 'Status'),
-            Column::computed('booking_source')->title(__('api.booking_source') ?? 'Source'),
-            // Column::computed('commission')->title(__('field.commission') ?? 'Commission (%)'),
+            Column::computed('booking_number')->title(__('field.booking_number')),
+            Column::computed('client_name')->title(__('field.client')),
+            Column::computed('wallet_balance')->title(__('field.wallet')),
+            Column::computed('phone')->title(__('field.phone')),
+            Column::computed('email')->title(__('field.email')),
+            Column::computed('booking_date')->title(__('field.date')),
+            Column::computed('assigned_employee')->title(__('field.employee')),
+            Column::computed('price')->title(__('field.price')),
+            Column::computed('services')->title(__('field.services')),
+            Column::computed('branch_name')->title(__('field.branch')),
+            Column::computed('center_email')->title(__('field.center_email')),
+            Column::computed('payment_method')->title(__('field.payment_method')),
+            Column::computed('service_time')->title(__('field.time')),
+            Column::computed('purchased_products')->title(__('field.products')),
+            Column::computed('booking_status')->title(__('field.status')),
+            Column::computed('booking_source')->title(__('api.booking_source')),
+            // Column::computed('commission')->title(__('field.commission')),
             Column::computed('created_at')->title(__('field.created_at') ?? 'created_at '),
             
 

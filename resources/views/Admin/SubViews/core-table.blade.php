@@ -7,8 +7,7 @@
 @endsection
 
 @section('content')
-    <div class="container">
-        
+    <div class="luzori-page container-fluid px-3 px-md-4">
         @if (\Session::has('success'))
             <div class="alert alert-success">
                 <div>{!! \Session::get('success') !!}</div>
@@ -19,11 +18,10 @@
                 <div>{!! \Session::get('error') !!}</div>
             </div>
         @endif
-        
-        <div class="card table-responsive">
-            <div class="card-header d-flex justify-content-between">
-                <h2>{{ __('general.manage') . ' ' . $title }}</h2>
-            </div>
+
+        @include('Admin.Components.datatable-toolbar', ['title' => $title])
+
+        <div class="card lz-table-card">
             <div class="card-body">
                 {{ $dataTable->table() }}
             </div>

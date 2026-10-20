@@ -888,9 +888,10 @@ body.luzori-admin div.dt-button-collection .dt-button:hover {
   background: #f7f2ea !important;
 }
 
-/* Hide leftover DataTables header (causes white box behind Column/Export) */
-body.luzori-admin .lz-table-card .dataTables_wrapper > .card-header,
-body.luzori-admin .lz-table-card .dataTables_wrapper .card-header {
+/* Hide DT header after buttons moved to toolbar */
+body.luzori-admin .lz-table-card .dataTables_wrapper > .card-header.lz-dt-header-moved,
+body.luzori-admin .lz-table-card .dataTables_wrapper .card-header.lz-dt-header-moved,
+body.luzori-admin .lz-table-card .dataTables_wrapper > .card-header:not(:has(.dt-action-buttons)):not(:has(.dt-buttons)) {
   display: none !important;
   visibility: hidden !important;
   height: 0 !important;
@@ -904,9 +905,18 @@ body.luzori-admin .lz-table-card .dataTables_wrapper .card-header {
   box-shadow: none !important;
 }
 
-body.luzori-admin .lz-table-card .dataTables_wrapper > .card-header .dt-action-buttons,
-body.luzori-admin .lz-table-card .dt-action-buttons:empty {
-  display: none !important;
+body.luzori-admin .lz-page-actions .dt-action-buttons,
+body.luzori-admin .lz-page-actions .dt-buttons {
+  display: flex !important;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  visibility: visible !important;
+}
+
+body.luzori-admin .lz-page-actions .btn,
+body.luzori-admin .lz-page-actions a.btn {
+  margin: 0 !important;
 }
 
 body.luzori-admin .btn-luzori-beige {
@@ -1811,4 +1821,434 @@ body.luzori-admin .breadcrumb-item .lz-crumb-plain {
 
 body.luzori-admin .breadcrumb-item + .breadcrumb-item::before {
   color: var(--lz-gold) !important;
+}
+
+/* ---------- Admin pages: cards, tables, forms, chips ---------- */
+body.luzori-admin .luzori-page {
+  position: relative;
+  z-index: 1;
+}
+
+body.luzori-admin .content-wrapper .card,
+body.luzori-admin .luzori-page .card,
+body.luzori-admin .lz-table-card,
+body.luzori-admin .lz-form-card {
+  border: 0 !important;
+  border-radius: var(--lz-radius) !important;
+  background: var(--lz-cream-card) !important;
+  box-shadow: var(--lz-shadow) !important;
+  overflow: hidden;
+}
+
+body.luzori-admin .content-wrapper .card > .card-header,
+body.luzori-admin .lz-form-card > .card-header {
+  background: transparent !important;
+  border-bottom: 1px solid #efe6d8 !important;
+  padding: 1.15rem 1.35rem 0.85rem !important;
+}
+
+body.luzori-admin .content-wrapper .card > .card-header h2,
+body.luzori-admin .content-wrapper .card > .card-header h5,
+body.luzori-admin .lz-form-card > .card-header h2 {
+  color: var(--lz-forest) !important;
+  font-family: var(--lz-font-display);
+  font-weight: 600;
+  margin: 0;
+  font-size: 1.35rem;
+}
+
+body.luzori-admin .content-wrapper .card > .card-body,
+body.luzori-admin .lz-form-card > .card-body {
+  padding: 1.25rem 1.35rem 1.5rem !important;
+}
+
+body.luzori-admin .form-label {
+  color: var(--lz-forest);
+  font-weight: 600;
+  font-size: 0.84rem;
+  margin-bottom: 0.4rem;
+}
+
+body.luzori-admin .form-control,
+body.luzori-admin .form-select,
+body.luzori-admin .select2-container--default .select2-selection--single {
+  border-radius: 10px !important;
+  border-color: #e5ddd2 !important;
+  min-height: 42px;
+  background: #fff !important;
+  color: var(--lz-text);
+}
+
+body.luzori-admin .form-control::placeholder {
+  color: #9aa3a0;
+}
+
+body.luzori-admin table.table,
+body.luzori-admin .dataTables_wrapper table.table {
+  --bs-table-bg: transparent;
+  border-color: #efe6d8 !important;
+}
+
+body.luzori-admin table.table thead th,
+body.luzori-admin .dataTables_wrapper table.dataTable thead th {
+  background: #faf7f2 !important;
+  color: var(--lz-muted) !important;
+  font-size: 0.72rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-bottom: 1px solid #efe6d8 !important;
+  white-space: nowrap;
+  vertical-align: middle !important;
+  text-align: start !important;
+  padding: 0.85rem 0.9rem !important;
+  background-position: center right 0.55rem !important;
+}
+
+html[dir='rtl'] body.luzori-admin table.table thead th,
+html[dir='rtl'] body.luzori-admin .dataTables_wrapper table.dataTable thead th {
+  background-position: center left 0.55rem !important;
+}
+
+body.luzori-admin table.table tbody td,
+body.luzori-admin .dataTables_wrapper table.dataTable tbody td {
+  color: var(--lz-text);
+  border-color: #efe6d8 !important;
+  vertical-align: middle !important;
+  text-align: start !important;
+  padding: 0.85rem 0.9rem !important;
+  line-height: 1.35;
+}
+
+body.luzori-admin table.table tbody td.dt-center,
+body.luzori-admin table.table thead th.dt-center,
+body.luzori-admin .lz-actions-col {
+  text-align: center !important;
+}
+
+body.luzori-admin table.dataTable thead > tr > th.sorting,
+body.luzori-admin table.dataTable thead > tr > th.sorting_asc,
+body.luzori-admin table.dataTable thead > tr > th.sorting_desc {
+  padding-inline-end: 1.6rem !important;
+}
+
+body.luzori-admin .dataTables_wrapper .dataTables_length label,
+body.luzori-admin .dataTables_wrapper .dataTables_filter label,
+body.luzori-admin .dataTables_wrapper .dataTables_info {
+  color: var(--lz-muted);
+  font-weight: 500;
+}
+
+body.luzori-admin .dataTables_wrapper .dataTables_filter input {
+  border-radius: 10px !important;
+  border: 1px solid #e5ddd2 !important;
+  margin-inline-start: 0.5rem;
+  padding: 0.35rem 0.75rem;
+}
+
+/* Column / Export / Add toolbar buttons */
+body.luzori-admin .dt-buttons .btn-warning,
+body.luzori-admin .btn-warning,
+body.luzori-admin .buttons-colvis {
+  background: linear-gradient(90deg, #d4b483, #e8d5b5) !important;
+  border: none !important;
+  color: var(--lz-forest) !important;
+  border-radius: 10px !important;
+  font-weight: 600 !important;
+  box-shadow: 0 4px 12px rgba(197, 160, 112, 0.25);
+}
+
+body.luzori-admin .dt-buttons .btn-warning:hover,
+body.luzori-admin .btn-warning:hover,
+body.luzori-admin .buttons-colvis:hover {
+  filter: brightness(0.97);
+  color: var(--lz-forest) !important;
+}
+
+body.luzori-admin .dt-buttons .btn-secondary,
+body.luzori-admin .dt-buttons .buttons-collection,
+body.luzori-admin .dt-action-buttons .btn:not(.btn-primary):not(.btn-warning):not(.btn-luzori-beige):not(.btn-luzori-primary) {
+  background: #eef3f2 !important;
+  border: 1px solid #dfe7e5 !important;
+  color: var(--lz-forest) !important;
+  border-radius: 10px !important;
+  font-weight: 600 !important;
+}
+
+body.luzori-admin .dt-action-buttons .btn-primary,
+body.luzori-admin .dt-buttons .btn-primary {
+  background: var(--lz-forest) !important;
+  border-color: var(--lz-forest) !important;
+  color: #fff !important;
+  border-radius: 10px !important;
+  font-weight: 600 !important;
+}
+
+body.luzori-admin .lz-create-supplier-btn {
+  border-radius: 10px !important;
+  font-weight: 600 !important;
+}
+
+/* Permission chips (roles pages) */
+body.luzori-admin .lz-perm-chip,
+body.luzori-admin .badge[style*='background-color:blue'],
+body.luzori-admin .badge[style*='background-color: blue'],
+body.luzori-admin .badge[style*='background-color:#00'],
+body.luzori-admin td .badge:not(.bg-label-success):not(.bg-label-danger):not(.bg-label-warning):not(.bg-label-info):not(.bg-label-secondary):not(.bg-success):not(.bg-danger) {
+  display: inline-flex !important;
+  align-items: center;
+  margin: 0.2rem 0.25rem !important;
+  padding: 0.35rem 0.65rem !important;
+  border-radius: 999px !important;
+  background: rgba(0, 43, 38, 0.08) !important;
+  background-color: rgba(0, 43, 38, 0.08) !important;
+  color: var(--lz-forest) !important;
+  border: 1px solid rgba(197, 160, 112, 0.35) !important;
+  font-size: 0.72rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+body.luzori-admin .bg-label-info {
+  background-color: rgba(197, 160, 112, 0.2) !important;
+  color: var(--lz-gold-deep) !important;
+}
+
+body.luzori-admin .bg-label-success {
+  background-color: var(--lz-mint) !important;
+  color: var(--lz-mint-text) !important;
+}
+
+body.luzori-admin .bg-label-danger {
+  background-color: #fde8e8 !important;
+  color: #b42318 !important;
+}
+
+body.luzori-admin .bg-label-secondary {
+  background-color: #eef3f2 !important;
+  color: #4a5c58 !important;
+}
+
+/* Action menus */
+body.luzori-admin .dropdown-toggle.hide-arrow,
+body.luzori-admin .btn.dropdown-toggle {
+  color: var(--lz-forest);
+}
+
+body.luzori-admin .dropdown-menu {
+  border: 1px solid #efe6d8 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 12px 28px rgba(0, 43, 38, 0.12) !important;
+  padding: 0.35rem !important;
+}
+
+body.luzori-admin .dropdown-item {
+  border-radius: 8px;
+  color: var(--lz-forest) !important;
+  font-weight: 500;
+}
+
+body.luzori-admin .dropdown-item:hover {
+  background: #f7f2ea !important;
+}
+
+/* Submit / save buttons on forms */
+body.luzori-admin form .btn-primary,
+body.luzori-admin form button[type='submit'],
+body.luzori-admin #frmSubmit .btn-primary {
+  border-radius: 10px !important;
+  font-weight: 600 !important;
+  padding: 0.55rem 1.25rem !important;
+}
+
+body.luzori-admin .alert-success {
+  background: var(--lz-mint) !important;
+  border-color: rgba(26, 107, 90, 0.25) !important;
+  color: var(--lz-mint-text) !important;
+  border-radius: 12px !important;
+}
+
+body.luzori-admin .alert-danger {
+  background: #fde8e8 !important;
+  border-color: rgba(180, 35, 24, 0.2) !important;
+  color: #b42318 !important;
+  border-radius: 12px !important;
+}
+
+/* Avatar / image thumbs in tables */
+body.luzori-admin table td img,
+body.luzori-admin table td .avatar img {
+  border-radius: 12px !important;
+  border: 1px solid #efe6d8;
+  object-fit: cover;
+}
+
+body.luzori-admin .lz-page-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.15rem;
+}
+
+/* Admin filter bar (Bookings, etc.) */
+body.luzori-admin .lz-admin-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem;
+  padding: 0.95rem 1.1rem;
+  border-radius: 14px;
+  background: #fff;
+  border: 1px solid #efe6d8;
+  box-shadow: 0 4px 14px rgba(0, 43, 38, 0.04);
+}
+
+body.luzori-admin .lz-admin-filters:empty {
+  display: none;
+}
+
+body.luzori-admin .lz-admin-filter-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 160px;
+}
+
+body.luzori-admin .lz-admin-filter-item label {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--lz-muted);
+}
+
+body.luzori-admin .lz-admin-filter-item .form-select,
+body.luzori-admin .lz-admin-filter-item .form-control {
+  min-height: 38px !important;
+  height: 38px !important;
+  border-radius: 10px !important;
+}
+
+body.luzori-admin .lz-admin-modal .modal-content {
+  border: 0;
+  border-radius: 16px;
+  background: var(--lz-cream-card);
+}
+
+body.luzori-admin .lz-admin-modal .modal-header,
+body.luzori-admin .lz-admin-modal .modal-footer {
+  border-color: #efe6d8;
+  background: #fdfaf6;
+}
+
+body.luzori-admin .lz-admin-modal .modal-title {
+  color: var(--lz-forest);
+  font-weight: 700;
+}
+
+/* Force Luzori button colors even if theme injects warning/secondary */
+body.luzori-admin .btn-luzori-beige,
+body.luzori-admin .buttons-colvis,
+body.luzori-admin .dt-buttons .buttons-colvis,
+body.luzori-admin .lz-page-actions .buttons-colvis,
+body.luzori-admin .lz-page-actions .btn.btn-warning {
+  background: linear-gradient(90deg, #d4b483, #e8d5b5) !important;
+  background-color: #d4b483 !important;
+  border: none !important;
+  color: #002b26 !important;
+  border-radius: 10px !important;
+  font-weight: 600 !important;
+  box-shadow: 0 4px 12px rgba(197, 160, 112, 0.25) !important;
+}
+
+body.luzori-admin .lz-page-actions .buttons-collection,
+body.luzori-admin .dt-buttons .buttons-collection {
+  background: #eef3f2 !important;
+  border: 1px solid #dfe7e5 !important;
+  color: #002b26 !important;
+  border-radius: 10px !important;
+  font-weight: 600 !important;
+}
+
+body.luzori-admin .lz-page-actions .btn-primary,
+body.luzori-admin .lz-page-actions a.btn-primary {
+  background: #002b26 !important;
+  border-color: #002b26 !important;
+  color: #fff !important;
+  border-radius: 10px !important;
+  font-weight: 600 !important;
+}
+
+/* Content tabs (Notifications / Firebase, etc.) */
+body.luzori-admin .nav-tabs.lz-content-tabs {
+  border: none !important;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+body.luzori-admin .nav-tabs.lz-content-tabs .nav-link {
+  border: 1px solid #efe6d8 !important;
+  border-radius: 12px !important;
+  background: #fdfaf6 !important;
+  color: #5c6966 !important;
+  font-weight: 600 !important;
+  padding: 0.55rem 1.1rem !important;
+}
+
+body.luzori-admin .nav-tabs.lz-content-tabs .nav-link.active {
+  background: var(--lz-forest) !important;
+  border-color: var(--lz-forest) !important;
+  color: #fff !important;
+  box-shadow: 0 6px 14px rgba(0, 43, 38, 0.18);
+}
+
+body.luzori-admin .lz-form-divider {
+  border: 0;
+  border-top: 1px solid #efe6d8;
+  opacity: 1;
+  margin: 1.25rem 0;
+}
+
+body.luzori-admin .lz-form-section-title {
+  color: var(--lz-forest);
+  font-weight: 700;
+  font-size: 1rem;
+  margin: 0 0 1rem;
+}
+
+body.luzori-admin .lz-setting-logo-preview {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem;
+  border-radius: 14px;
+  background: #fdfaf6;
+  border: 1px solid #efe6d8;
+}
+
+body.luzori-admin .lz-setting-logo-preview img {
+  width: 160px;
+  height: 160px;
+  object-fit: contain;
+  border-radius: 10px;
+}
+
+body.luzori-admin .lz-form-card .note-editor.note-frame {
+  border: 1px solid #e5ddd2 !important;
+  border-radius: 12px !important;
+  overflow: hidden;
+}
+
+body.luzori-admin .lz-form-card .note-editor .note-toolbar {
+  background: #fdfaf6 !important;
+  border-bottom: 1px solid #efe6d8 !important;
+}
+
+body.luzori-admin .lz-form-card .note-editor .note-editable {
+  background: #fff !important;
 }

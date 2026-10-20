@@ -7,13 +7,13 @@
 @section('title', $title)
 
 @section('content')
-    <div class="container">
+    <div class="luzori-page container-fluid px-3 px-md-4">
         @include('Admin.Components.breadcrumbs')
 
         <div class="row">
             <form class="pt-0" id="frmSubmit">
                 @csrf
-                <div class="card">
+                <div class="card lz-form-card">
                     <div class="card-header">
                         <h2>{{ $title }}</h2>
                     </div>

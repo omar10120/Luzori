@@ -89,7 +89,7 @@ class AdminDataTable extends DataTable
             ->selectStyleSingle()
             ->addAction(['printable' => false, 'exportable' => false, 'className' => 'dt-center lz-actions-col all', 'title' => __('general.actions')])
             ->buttons([
-                Button::make('colvis')->addClass($buttonClass . ' btn-warning')->text(__('general.column_visibility')),
+                Button::make('colvis')->addClass($buttonClass . ' btn-luzori-beige')->text(__('general.column_visibility')),
                 [
                     'extend' => 'collection',
                     'text' => __('general.export'),

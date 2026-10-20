@@ -716,10 +716,27 @@ JS;
             // keep defaults
         }
 
+        $bookingBy = '-';
+        try {
+            foreach ($row->bookings ?? [] as $booking) {
+                $name = $this->resolveActorName((int) ($booking->created_by ?? 0));
+                if ($name !== '-') {
+                    $bookingBy = $name;
+                    break;
+                }
+            }
+            if ($bookingBy === '-') {
+                $bookingBy = $this->resolveActorName((int) ($row->created_by ?? 0));
+            }
+        } catch (\Throwable $e) {
+            $bookingBy = '-';
+        }
+
         return [
             'currency' => $currency,
             'payment' => empty($paymentMethods) ? '-' : implode(', ', $paymentMethods),
             'worker' => $workerName,
+            'booking_by' => $bookingBy,
             'booking_employees' => $bookingEmployees,
             'tip_amount' => $tipAmount,
             'tip' => $tipAmount > 0 ? number_format($tipAmount, 2) . ' ' . $currency : '-',
@@ -733,6 +750,33 @@ JS;
             'tax' => number_format((float) ($row->tax ?? 0), 2) . ' ' . $currency,
             'total' => number_format((float) ($row->total ?? 0), 2) . ' ' . $currency,
         ];
+    }
+
+    /**
+     * Resolve display name for a creator id (center user or app user).
+     */
+    protected function resolveActorName(int $id): string
+    {
+        if ($id <= 0) {
+            return '-';
+        }
+
+        static $cache = [];
+        if (array_key_exists($id, $cache)) {
+            return $cache[$id];
+        }
+
+        try {
+            $name = \App\Models\CenterUser::query()->whereKey($id)->value('name');
+            if (!$name) {
+                $user = \App\Models\User::query()->whereKey($id)->first();
+                $name = $user?->name
+                    ?? trim((string) (($user->first_name ?? '') . ' ' . ($user->last_name ?? '')));
+            }
+            return $cache[$id] = ($name !== null && trim((string) $name) !== '') ? (string) $name : '-';
+        } catch (\Throwable $e) {
+            return $cache[$id] = '-';
+        }
     }
 
     protected function collectProductDetails($row): array
@@ -834,6 +878,7 @@ JS;
         $meta = [
             'payment' => '-',
             'worker' => '-',
+            'booking_by' => '-',
             'booking_employees' => [],
             'tip' => '-',
             'tip_label' => (string) __('field.tip'),
@@ -898,6 +943,7 @@ JS;
             'phone' => (string) ($row->client?->full_phone ?? $row->client?->phone ?? '-'),
             'payment' => $meta['payment'],
             'worker' => $meta['worker'],
+            'booking_by' => $meta['booking_by'] ?? '-',
             'booking_employees' => $meta['booking_employees'],
             'created_at' => $row->created_at ? $row->created_at->format('Y-m-d H:i') : '-',
             'status_label' => $meta['status_label'],

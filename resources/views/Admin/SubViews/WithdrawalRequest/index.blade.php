@@ -1,26 +1,32 @@
 @extends('layouts/layoutMaster')
+
 @section('title', $title)
+
 @section('vendor-style')
     @include('Admin.Components.datatable-css')
 @endsection
+
 @section('vendor-script')
     @include('Admin.Components.datatable-js')
 @endsection
+
 @section('content')
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-datatable text-nowrap">
-                    {!! $dataTable->table() !!}
-                </div>
+    <div class="luzori-page container-fluid px-3 px-md-4">
+        @include('Admin.Components.datatable-toolbar', [
+            'title' => $title,
+            'icon' => 'ti-cash',
+        ])
+
+        <div class="card lz-table-card">
+            <div class="card-body">
+                {!! $dataTable->table() !!}
             </div>
-        </div> 
+        </div>
     </div>
 
-    <!-- Reject Modal -->
     <div class="modal fade" id="rejectModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content">
+            <div class="modal-content lz-admin-modal">
                 <div class="modal-header">
                     <h5 class="modal-title" id="rejectModalTitle">{{ __('general.reject') }}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -28,16 +34,14 @@
                 <div class="modal-body">
                     <form id="rejectForm">
                         <input type="hidden" id="reject_request_id">
-                        <div class="row">
-                            <div class="col mb-3">
-                                <label for="admin_notes" class="form-label">{{ __('field.admin_notes') ?? 'Admin Notes (Reason for Rejection)' }}</label>
-                                <textarea id="admin_notes" class="form-control" placeholder="Please provide a reason..." required></textarea>
-                            </div>
+                        <div class="mb-0">
+                            <label for="admin_notes" class="form-label">{{ __('field.admin_notes') ?? 'Admin Notes (Reason for Rejection)' }}</label>
+                            <textarea id="admin_notes" class="form-control" placeholder="Please provide a reason..." required></textarea>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">{{ __('general.close') }}</button>
+                    <button type="button" class="btn btn-luzori-muted" data-bs-dismiss="modal">{{ __('general.close') }}</button>
                     <button type="button" class="btn btn-danger" onclick="submitReject()">{{ __('general.reject') }}</button>
                 </div>
             </div>
@@ -45,8 +49,8 @@
     </div>
 @endsection
 
-@push('scripts')
-    {!! $dataTable->scripts() !!}
+@section('page-script')
+    {!! $dataTable->scripts(attributes: ['type' => 'module']) !!}
     <script>
         function approveRequest(url) {
             Swal.fire({
@@ -54,8 +58,8 @@
                 text: '{{ __("api.confirm_withdrawal_approval") ?? "Are you sure you want to approve this request? This means you have sent the money." }}',
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#28c76f',
-                cancelButtonColor: '#d33',
+                confirmButtonColor: '#002b26',
+                cancelButtonColor: '#b42318',
                 confirmButtonText: '{{ __("general.yes") }}',
                 cancelButtonText: '{{ __("general.cancel") }}'
             }).then((result) => {
@@ -97,7 +101,7 @@
         function submitReject() {
             let id = $('#reject_request_id').val();
             let notes = $('#admin_notes').val();
-            
+
             if (!notes) {
                 Swal.fire('Error', 'Please provide a reason for rejection', 'error');
                 return;
@@ -131,4 +135,4 @@
             });
         }
     </script>
-@endpush
+@endsection

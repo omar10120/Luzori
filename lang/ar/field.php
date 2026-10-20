@@ -117,6 +117,7 @@ return [
     'overview'                      => 'عرض',
     'date_time'                     => 'الوقت والتاريخ',
     'created_by'                    => 'انشئت عن طريق',
+    'booking_by'                    => 'تم الحجز بواسطة',
     'booking_date_time'             => 'تاريخ ووقت الحجز',
     'between_0_800'                 => 'بين 0 و 800',
     'country_code'                  => 'رمز الدولة',
@@ -476,13 +477,19 @@ return [
     'expire_date'                     => 'فترة صلاحية',
     'available'                       => 'متاح', 
     'received_hint_main_stock'        => ' المستودع يحتوي على المنتجات للطلبات',
-    
-
-    
-    
-    
-    
-    
-    
-    
+    'firebase_settings'               => 'إعدادات Firebase',
+    'firebase_settings_hint'          => 'أدخل البيانات التالية لإعداد Firebase حتى تعمل إشعارات النظام بشكل صحيح.',
+    'push_notifications'              => 'إشعارات الدفع',
+    'new_notification'                => 'إشعار جديد',
+    'send_notification'               => 'إرسال الإشعار',
+    'target_type'                     => 'نوع المستلم',
+    'all_centers'                     => 'كل المراكز',
+    'service_account_content'         => 'محتوى حساب الخدمة (JSON)',
+    'api_key'                         => 'مفتاح API',
+    'auth_domain'                     => 'نطاق المصادقة',
+    'project_id'                      => 'معرّف المشروع',
+    'storage_bucket'                  => 'حاوية التخزين',
+    'messaging_sender_id'             => 'معرّف مرسل الرسائل',
+    'app_id'                          => 'معرّف التطبيق',
+    'measurement_id'                  => 'معرّف القياس',
 ];

@@ -12,16 +12,22 @@
 @endsection
 
 @section('content')
-    <div class="container">
+    <div class="luzori-page container-fluid px-3 px-md-4">
         @include('Admin.Components.breadcrumbs')
+
+        <div class="lz-page-toolbar">
+            <div class="lz-page-title-wrap">
+                <div class="lz-page-icon">
+                    <i class="ti ti-building-store"></i>
+                </div>
+                <h1 class="lz-page-title">{{ $title }}</h1>
+            </div>
+        </div>
 
         <div class="row">
             <form class="pt-0" id="frmSubmit">
                 @csrf
-                <div class="card">
-                    <div class="card-header">
-                        <h2>{{ $title }}</h2>
-                    </div>
+                <div class="card lz-form-card">
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-6">
