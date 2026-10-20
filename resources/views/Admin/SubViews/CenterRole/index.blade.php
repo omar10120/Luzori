@@ -6,50 +6,47 @@
     <div class="luzori-page container-fluid px-3 px-md-4">
         @include('Admin.Components.breadcrumbs')
 
-        <div class="row">
-            <form class="pt-0" id="frmSubmit">
-                @csrf
-                <input type="hidden" name="guard_name" value="center">
-                <div class="card lz-form-card">
-                    <div class="card-header">
-                        <h2>{{ $title }}</h2>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="mb-4">
-                                <label class="form-label">{{__('field.name')}} ( {{__('field.permissions_name')}}) <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" name="name" placeholder="{{__('field.name')}}"
-                                    value="{{ $item ? $item->name : '' }}" />
-                            </div>
-                        </div>
-                        <div class="row">
-                            @foreach ($permissions as $group => $permission)
-                                <hr>
-                                <h2 class="mb-2">{{ $group }}</h2>
-                                @foreach ($permission as $perm)
-                                    <div class="col-md-4 col-sm-6">
-                                        <div class="form-check form-check-custom form-check-solid mb-2">
-                                            <input class="form-check-input" type="checkbox" value="{{ $perm->name }}"
-                                                name="permissions[]"
-                                                {{ $item ? (in_array($perm->id, array_column($item->permissions->toArray(), 'id')) ? 'checked' : null) : null }} />
-                                            <label class="form-check-label" for="flexCheckDefault">
-                                                {{ app()->getLocale() == 'ar' ? ($perm->name_ar ?? $perm->name) : $perm->name }}
-                                            </label>
-                                        </div>
-                                    </div>
-                                @endforeach
-                            @endforeach
-                        </div>
-                    </div>
-                    <div class="card-footer">
-                        <button type="submit" class="btn btn-primary submitFrom">
-                            <i class="menu-icon tf-icons ti ti-check"></i>
-                            <span>{{ __('general.save') }}</span>
-                        </button>
-                    </div>
+        <form class="pt-0" id="frmSubmit">
+            @csrf
+            <input type="hidden" name="guard_name" value="center">
+            <div class="card lz-form-card">
+                <div class="card-header">
+                    <h2>{{ $title }}</h2>
                 </div>
-            </form>
-        </div>
+                <div class="card-body">
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label" for="role_name">
+                                {{ __('field.name') }}
+                                <span class="text-muted">({{ __('field.permissions_name') }})</span>
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="role_name" name="name"
+                                placeholder="{{ __('field.name') }}"
+                                value="{{ $item ? $item->name : '' }}" required />
+                        </div>
+                    </div>
+
+                    @php
+                        $selectedKeys = $item
+                            ? array_map('strval', array_column($item->permissions->toArray(), 'id'))
+                            : [];
+                    @endphp
+                    @include('Admin.Components.permissions-form', [
+                        'permissionGroups' => $permissions,
+                        'selectedKeys' => $selectedKeys,
+                        'checkBy' => 'id',
+                        'valueBy' => 'name',
+                    ])
+                </div>
+                <div class="card-footer d-flex justify-content-end">
+                    <button type="submit" class="btn btn-primary submitFrom">
+                        <i class="ti ti-check me-1"></i>
+                        <span>{{ __('general.save') }}</span>
+                    </button>
+                </div>
+            </div>
+        </form>
     </div>
 @endsection
 

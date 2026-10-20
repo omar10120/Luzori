@@ -86,7 +86,7 @@ class CenterDataTable extends DataTable
                     ? \Carbon\Carbon::parse($row->expire_date)->format('Y-m-d')
                     : '---';
             })
-            ->rawColumns(['status', 'name', 'approval_status', 'primary_image', 'is_supplier'], true)
+            ->rawColumns(['action', 'status', 'name', 'approval_status', 'primary_image', 'is_supplier'], true)
             ->setRowId('id');
     }
 
@@ -106,7 +106,7 @@ class CenterDataTable extends DataTable
             ->columns($this->getColumns())
             ->minifiedAjax()
             ->orderBy(1)
-            ->responsive(true)
+            ->responsive(false)
             ->dom('
                 <"card-header border-bottom p-3 d-flex justify-content-between align-items-center"
                     <"head-label"><"dt-action-buttons"B>
@@ -120,9 +120,14 @@ class CenterDataTable extends DataTable
                 >
             ')
             ->selectStyleSingle()
-            ->addAction(['printable' => false, 'exportable' => false, 'className' => 'dt-center lz-actions-col all', 'title' => __('general.actions')])
+            ->addAction(['printable' => false, 'exportable' => false, 'className' => 'dt-center lz-actions-col all noVis', 'title' => __('general.actions')])
             ->buttons([
-                Button::make('colvis')->addClass($buttonClass . ' btn-luzori-beige')->text(__('general.column_visibility')),
+                [
+                    'extend' => 'colvis',
+                    'className' => $buttonClass . ' btn-luzori-beige',
+                    'text' => __('general.column_visibility'),
+                    'columns' => ':not(.noVis)',
+                ],
                 [
                     'extend' => 'collection',
                     'text' => __('general.export'),  'className' => $buttonClass,
@@ -154,27 +159,29 @@ class CenterDataTable extends DataTable
     public function getColumns(): array
     {
         return [
-            Column::make('id')->title('#'),
-            Column::computed('primary_image')->title(__('field.image')),
-            Column::make('name')->title(__('field.name')),
-            Column::make('domain')->title(__('field.domain')),
-            Column::make('email')->title(__('field.email')),
-            Column::make('phone')->title(__('field.phone')),
-            Column::make('wallet')->title(__('field.wallet')),
-            Column::make('admin_discount')->title(__('field.admin_discount')),
-            Column::make('bank_name')->title(__('field.bank_name')),
-            Column::make('iban')->title(__('field.iban')),
-            Column::make('BankAccountHolderName')->title(__('field.BankAccountHolderName')),
-            Column::make('BusinessName')->title(__('field.BusinessName')),
-            Column::make('BankAccount')->title(__('field.BankAccount')),
-            Column::make('BankId')->title(__('field.BankId')),
-            Column::computed('role')->title(__('field.role')),
-            Column::computed('approval_status')->title(__('field.status')),
-            Column::computed('is_supplier')->title('Supplier'),
-            Column::make('rate')->title(__('field.rate')),
-            Column::make('expire_date')->title(__('field.expire_date')),
-            Column::computed('status')->title(__('field.active')),
-            Column::make('created_at')->title(__('field.created_at')),
+            // Default visible — ColVis checkmarks match these
+            Column::make('id')->title('#')->addClass('all'),
+            Column::computed('primary_image')->title(__('field.image'))->addClass('all'),
+            Column::make('name')->title(__('field.name'))->addClass('all'),
+            Column::make('domain')->title(__('field.domain'))->addClass('all'),
+            Column::make('email')->title(__('field.email'))->addClass('all'),
+            Column::make('phone')->title(__('field.phone'))->addClass('all'),
+            Column::computed('approval_status')->title(__('field.status'))->addClass('all'),
+            Column::computed('status')->title(__('field.active'))->addClass('all'),
+            // Hidden by default — enable via Column button (visible=false so ColVis is unchecked)
+            Column::make('wallet')->title(__('field.wallet'))->visible(false),
+            Column::make('admin_discount')->title(__('field.admin_discount'))->visible(false),
+            Column::make('bank_name')->title(__('field.bank_name'))->visible(false),
+            Column::make('iban')->title(__('field.iban'))->visible(false),
+            Column::make('BankAccountHolderName')->title(__('field.BankAccountHolderName'))->visible(false),
+            Column::make('BusinessName')->title(__('field.BusinessName'))->visible(false),
+            Column::make('BankAccount')->title(__('field.BankAccount'))->visible(false),
+            Column::make('BankId')->title(__('field.BankId'))->visible(false),
+            Column::computed('role')->title(__('field.role'))->visible(false),
+            Column::computed('is_supplier')->title('Supplier')->visible(false),
+            Column::make('rate')->title(__('field.rate'))->visible(false),
+            Column::make('expire_date')->title(__('field.expire_date'))->visible(false),
+            Column::make('created_at')->title(__('field.created_at'))->visible(false),
         ];
     }
 

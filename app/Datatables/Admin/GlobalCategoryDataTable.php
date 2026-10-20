@@ -69,7 +69,7 @@ class GlobalCategoryDataTable extends DataTable
             ->columns($this->getColumns())
             ->minifiedAjax()
             ->orderBy(1)
-            ->responsive(true)
+            ->responsive(false)
             ->dom('
                 <"card-header border-bottom p-3 d-flex justify-content-between align-items-center"
                     <"head-label"><"dt-action-buttons"B>
@@ -83,9 +83,14 @@ class GlobalCategoryDataTable extends DataTable
                 >
             ')
             ->selectStyleSingle()
-            ->addAction(['printable' => false, 'exportable' => false, 'className' => 'dt-center lz-actions-col all', 'title' => __('general.actions')])
+            ->addAction(['printable' => false, 'exportable' => false, 'className' => 'dt-center lz-actions-col all noVis', 'title' => __('general.actions')])
             ->buttons([
-                Button::make('colvis')->addClass($buttonClass . ' btn-luzori-beige')->text(__('general.column_visibility')),
+                [
+                    'extend' => 'colvis',
+                    'className' => $buttonClass . ' btn-luzori-beige',
+                    'text' => __('general.column_visibility'),
+                    'columns' => ':not(.noVis)',
+                ],
                 [
                     'extend' => 'collection',
                     'text' => __('general.export'),
@@ -116,13 +121,13 @@ class GlobalCategoryDataTable extends DataTable
     public function getColumns(): array
     {
         return [
-            Column::make('id')->title('#'),
-            Column::computed('image')->searchable(false)->title(__('field.image')),
-            Column::make('name')->title(__('field.name')),
-            Column::make('nameAr')->title(__('field.nameAr')),
-            Column::make('slug')->title(__('field.slug')),
-            Column::computed('status')->title(__('field.status')),
-            Column::make('created_at')->title(__('field.created_at')),
+            Column::make('id')->title('#')->addClass('all'),
+            Column::computed('image')->searchable(false)->title(__('field.image'))->addClass('all'),
+            Column::make('name')->title(__('field.name'))->addClass('all'),
+            Column::make('nameAr')->title(__('field.nameAr'))->addClass('all'),
+            Column::computed('status')->title(__('field.status'))->addClass('all'),
+            Column::make('slug')->title(__('field.slug'))->visible(false),
+            Column::make('created_at')->title(__('field.created_at'))->visible(false),
         ];
     }
 

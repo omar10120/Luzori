@@ -66,7 +66,7 @@
 @endif
 
 @if (str_contains(url()->current(), 'admin'))
-<link rel="stylesheet" href="{{ asset('assets/css/luzori-admin.css') }}?v=6">
+<link rel="stylesheet" href="{{ asset('assets/css/luzori-admin.css') }}?v=7">
 <style>
   body.luzori-admin .luzori-page::before,
   body.luzori-admin .luzori-dashboard::before {

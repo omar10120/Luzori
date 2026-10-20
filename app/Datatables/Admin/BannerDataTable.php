@@ -73,7 +73,7 @@ class BannerDataTable extends DataTable
             ->columns($this->getColumns())
             ->minifiedAjax()
             ->orderBy(0, 'desc')
-            ->responsive(true)
+            ->responsive(false)
             ->dom('
                 <"card-header border-bottom p-3 d-flex justify-content-between align-items-center"
                     <"head-label"><"dt-action-buttons"B>
@@ -87,9 +87,14 @@ class BannerDataTable extends DataTable
                 >
             ')
             ->selectStyleSingle()
-            ->addAction(['printable' => false, 'exportable' => false, 'className' => 'dt-center lz-actions-col all', 'title' => __('general.actions')])
+            ->addAction(['printable' => false, 'exportable' => false, 'className' => 'dt-center lz-actions-col all noVis', 'title' => __('general.actions')])
             ->buttons([
-                Button::make('colvis')->addClass($buttonClass . ' btn-luzori-beige')->text(__('general.column_visibility')),
+                [
+                    'extend' => 'colvis',
+                    'className' => $buttonClass . ' btn-luzori-beige',
+                    'text' => __('general.column_visibility'),
+                    'columns' => ':not(.noVis)',
+                ],
                 [
                     'extend' => 'collection',
                     'text' => __('general.export'),
@@ -115,15 +120,15 @@ class BannerDataTable extends DataTable
     public function getColumns(): array
     {
         return [
-            Column::make('id')->title('#'),
-            Column::computed('image')->searchable(false)->title(__('field.image')),
-            Column::make('title')->title(__('field.title')),
-            Column::computed('placement_type')->searchable(false)->title(__('field.placement')),
-            Column::computed('link_type')->searchable(false)->title(__('field.link_type')),
-            Column::computed('target')->searchable(false)->title(__('field.target')),
-            Column::make('sort_order')->title(__('field.sort_order')),
-            Column::computed('is_active')->searchable(false)->title(__('field.status')),
-            Column::make('created_at')->title(__('field.created_at')),
+            Column::make('id')->title('#')->addClass('all'),
+            Column::computed('image')->searchable(false)->title(__('field.image'))->addClass('all'),
+            Column::make('title')->title(__('field.title'))->addClass('all'),
+            Column::computed('placement_type')->searchable(false)->title(__('field.placement'))->addClass('all'),
+            Column::computed('link_type')->searchable(false)->title(__('field.link_type'))->addClass('all'),
+            Column::make('sort_order')->title(__('field.sort_order'))->addClass('all'),
+            Column::computed('is_active')->searchable(false)->title(__('field.status'))->addClass('all'),
+            Column::computed('target')->searchable(false)->title(__('field.target'))->visible(false),
+            Column::make('created_at')->title(__('field.created_at'))->visible(false),
         ];
     }
 

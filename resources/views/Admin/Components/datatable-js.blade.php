@@ -40,6 +40,16 @@
             jQuery(document).on('init.dt draw.dt', function () {
                 setTimeout(relocateAdminDtButtons, 0);
             });
+            // ColVis: keep layout in sync when toggling visible(false) columns
+            jQuery(document).on('column-visibility.dt', function (e, settings) {
+                try {
+                    var api = new jQuery.fn.dataTable.Api(settings);
+                    setTimeout(function () {
+                        api.columns.adjust();
+                        api.draw(false);
+                    }, 0);
+                } catch (err) {}
+            });
         }
     });
 })();

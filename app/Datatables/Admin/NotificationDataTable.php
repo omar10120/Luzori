@@ -61,7 +61,7 @@ class NotificationDataTable extends DataTable
             ->columns($this->getColumns())
             ->minifiedAjax()
             ->orderBy(0)
-            ->responsive(true)
+            ->responsive(false)
             ->dom('
                 <"d-flex justify-content-between align-items-center mx-0 row mb-2"
                     <"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"fr>

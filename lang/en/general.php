@@ -36,6 +36,7 @@ return [
     'export'                    => 'Export',
     'actions'                   => 'Actions',
     'permissions'               => 'Permissions',
+    'select_all'                => 'Select all',
     'print'                     => 'Print',
     'sales_history'             => 'Sales history',
     'all_users_sales_history'   => 'All users sales history',

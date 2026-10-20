@@ -192,7 +192,7 @@ class BookingDataTable extends DataTable
                 }',
             ])
             ->orderBy(1)
-            ->responsive(true)
+            ->responsive(false)
             ->dom('
                 <"card-header border-bottom p-3 d-flex justify-content-between align-items-center"
                     <"head-label"><"dt-action-buttons"B>
@@ -206,7 +206,12 @@ class BookingDataTable extends DataTable
                 >
             ')
             ->buttons([
-                Button::make('colvis')->addClass($buttonClass . ' btn-luzori-beige')->text(__('general.column_visibility')),
+                [
+                    'extend' => 'colvis',
+                    'className' => $buttonClass . ' btn-luzori-beige',
+                    'text' => __('general.column_visibility'),
+                    'columns' => ':not(.noVis)',
+                ],
                 [
                     'extend' => 'collection',
                     'text' => __('general.export'),  'className' => $buttonClass,
@@ -263,26 +268,23 @@ class BookingDataTable extends DataTable
     public function getColumns(): array
     {
         return [
-            Column::computed('booking_number')->title(__('field.booking_number')),
-            Column::computed('client_name')->title(__('field.client')),
-            Column::computed('wallet_balance')->title(__('field.wallet')),
-            Column::computed('phone')->title(__('field.phone')),
-            Column::computed('email')->title(__('field.email')),
-            Column::computed('booking_date')->title(__('field.date')),
-            Column::computed('assigned_employee')->title(__('field.employee')),
-            Column::computed('price')->title(__('field.price')),
-            Column::computed('services')->title(__('field.services')),
-            Column::computed('branch_name')->title(__('field.branch')),
-            Column::computed('center_email')->title(__('field.center_email')),
-            Column::computed('payment_method')->title(__('field.payment_method')),
-            Column::computed('service_time')->title(__('field.time')),
-            Column::computed('purchased_products')->title(__('field.products')),
-            Column::computed('booking_status')->title(__('field.status')),
-            Column::computed('booking_source')->title(__('api.booking_source')),
-            // Column::computed('commission')->title(__('field.commission')),
-            Column::computed('created_at')->title(__('field.created_at') ?? 'created_at '),
-            
-
+            Column::computed('booking_number')->title(__('field.booking_number'))->addClass('all'),
+            Column::computed('client_name')->title(__('field.client'))->addClass('all'),
+            Column::computed('phone')->title(__('field.phone'))->addClass('all'),
+            Column::computed('booking_date')->title(__('field.date'))->addClass('all'),
+            Column::computed('price')->title(__('field.price'))->addClass('all'),
+            Column::computed('booking_status')->title(__('field.status'))->addClass('all'),
+            Column::computed('booking_source')->title(__('api.booking_source'))->addClass('all'),
+            Column::computed('wallet_balance')->title(__('field.wallet'))->visible(false),
+            Column::computed('email')->title(__('field.email'))->visible(false),
+            Column::computed('assigned_employee')->title(__('field.employee'))->visible(false),
+            Column::computed('services')->title(__('field.services'))->visible(false),
+            Column::computed('branch_name')->title(__('field.branch'))->visible(false),
+            Column::computed('center_email')->title(__('field.center_email'))->visible(false),
+            Column::computed('payment_method')->title(__('field.payment_method'))->visible(false),
+            Column::computed('service_time')->title(__('field.time'))->visible(false),
+            Column::computed('purchased_products')->title(__('field.products'))->visible(false),
+            Column::computed('created_at')->title(__('field.created_at') ?? 'created_at')->visible(false),
         ];
     }
 
