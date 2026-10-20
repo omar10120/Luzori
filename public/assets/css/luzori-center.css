@@ -1969,3 +1969,34 @@ html.dark-style body.luzori-center .dropdown-item {
     background-color: #1a2030 !important;
   }
 }
+
+/* Dark text contrast — forest green only on solid BG, not body text */
+html.dark-style body.luzori-center .lz-page-title,
+html.dark-style body.luzori-center .lz-stat-value,
+html.dark-style body.luzori-center .card-header h2,
+html.dark-style body.luzori-center .card-header h4,
+html.dark-style body.luzori-center a:not(.btn):not(.menu-link):not(.dropdown-item):not(.page-link):not(.nav-link),
+html.dark-style body.luzori-center .breadcrumb-item a,
+html.dark-style body.luzori-center .footer,
+html.dark-style body.luzori-center .footer a,
+html.dark-style body.luzori-center .dataTables_wrapper .dataTables_info,
+html.dark-style body.luzori-center .lz-action-btn,
+html.dark-style body.luzori-center .text-primary {
+  color: #e8d5b5 !important;
+}
+
+html.dark-style body.luzori-center .form-label,
+html.dark-style body.luzori-center label:not(.btn):not(.switch),
+html.dark-style body.luzori-center .text-muted,
+html.dark-style body.luzori-center .breadcrumb-item.active {
+  color: #c5ccd8 !important;
+}
+
+html.dark-style body.luzori-center .btn-luzori-beige,
+html.dark-style body.luzori-center .layout-menu .menu-item.active > .menu-link {
+  color: #002b26 !important;
+}
+
+html.dark-style body.luzori-center .layout-menu .menu-link {
+  color: rgba(255, 228, 196, 0.92) !important;
+}

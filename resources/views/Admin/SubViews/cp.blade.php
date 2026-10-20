@@ -151,6 +151,23 @@
         }
         .lz-admin-dash .lz-panel-head i { color: var(--lz-gold-deep); }
         .lz-admin-dash .lz-panel-body { padding: 0.65rem 1.35rem 1.35rem; }
+
+        /* Dark: forest numbers/labels → gold (readable on navy) */
+        html.dark-style .lz-admin-dash .lz-stat-value,
+        html.dark-style .lz-admin-dash .lz-panel-head {
+            color: #e8d5b5 !important;
+        }
+        html.dark-style .lz-admin-dash .lz-stat-label {
+            color: #a8b0bf !important;
+        }
+        html.dark-style .lz-admin-dash .lz-stat-card.is-users .lz-stat-icon {
+            background: #252b3d !important;
+            color: #e8d5b5 !important;
+        }
+        html.dark-style .lz-admin-dash .lz-stat-card.is-services .lz-stat-icon {
+            background: #1e3d36 !important;
+            color: #8fd4c0 !important;
+        }
     </style>
 @endsection
 

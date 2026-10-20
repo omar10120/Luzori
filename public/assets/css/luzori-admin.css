@@ -1,4 +1,4 @@
-﻿/* Luzori Admin Dashboard Theme â€” matches brand mockup */
+﻿ï»¿/* Luzori Admin Dashboard Theme Ã¢â¬â matches brand mockup */
 
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Cairo:wght@300;400;500;600;700&display=swap');
 
@@ -21,7 +21,7 @@ body.luzori-admin {
   --lz-font-display: 'Cormorant Garamond', Georgia, serif;
   --lz-font-body: 'DM Sans', 'Cairo', sans-serif;
 
-  /* Remap theme / Bootstrap primary (blue/purple) â†’ Luzori forest */
+  /* Remap theme / Bootstrap primary (blue/purple) Ã¢â â Luzori forest */
   --bs-primary: #002b26;
   --bs-primary-rgb: 0, 43, 38;
   --bs-link-color: #0a3a34;
@@ -51,7 +51,7 @@ body.luzori-admin .bg-navbar-theme {
   -webkit-backdrop-filter: none !important;
 }
 
-/* Solid navbar â€” remove outer margin/gutter only (keep theme width vs sidebar) */
+/* Solid navbar Ã¢â¬â remove outer margin/gutter only (keep theme width vs sidebar) */
 body.luzori-admin .navbar-detached,
 body.luzori-admin .layout-navbar.navbar-detached,
 body.luzori-admin #layout-navbar {
@@ -72,7 +72,7 @@ body.luzori-admin .layout-wrapper:not(.layout-navbar-full) .layout-navbar.navbar
   max-width: none !important;
 }
 
-/* Fixed: keep sidebar offset â€” only drop the theme side padding from width */
+/* Fixed: keep sidebar offset Ã¢â¬â only drop the theme side padding from width */
 html.layout-navbar-fixed:not(.layout-menu-collapsed) body.luzori-admin .layout-content-navbar:not(.layout-without-menu) .layout-navbar.navbar-detached {
   width: calc(100% - 16.25rem) !important;
   max-width: none !important;
@@ -85,8 +85,8 @@ html.layout-navbar-fixed.layout-menu-collapsed body.luzori-admin .layout-content
 
 /*
  * Mobile navbar fix:
- * - Theme uses position:fixed + margin-top:$spacer â†’ gap above bar
- * - Helpers.js injects .layout-page{padding-top:navbarHeight} â†’ extra empty band
+ * - Theme uses position:fixed + margin-top:$spacer Ã¢â â gap above bar
+ * - Helpers.js injects .layout-page{padding-top:navbarHeight} Ã¢â â extra empty band
  * Keep navbar FIXED (does not scroll), flush to top, solid white.
  * Move the reserved space to .content-wrapper only.
  */
@@ -150,7 +150,7 @@ body.luzori-admin .bg-menu-theme {
   background: var(--lz-forest) !important;
   box-shadow: none !important;
   border: none !important;
-  /* Keep theme fixed positioning â€” do not force position:relative (causes content gap) */
+  /* Keep theme fixed positioning Ã¢â¬â do not force position:relative (causes content gap) */
 }
 
 html.layout-menu-fixed body.luzori-admin .layout-menu,
@@ -364,7 +364,7 @@ html.layout-menu-collapsed:not(.layout-menu-hover) body.luzori-admin .layout-men
   display: none !important;
 }
 
-/* Theme sets opacity:0 on all divs when collapsed â€” keep icon wraps visible */
+/* Theme sets opacity:0 on all divs when collapsed Ã¢â¬â keep icon wraps visible */
 html.layout-menu-collapsed:not(.layout-menu-hover) body.luzori-admin .layout-menu .menu-inner > .menu-item div.lz-menu-icon-wrap,
 html.layout-menu-collapsed:not(.layout-menu-hover) body.luzori-admin .layout-menu .menu-inner > .menu-item > .menu-link > .lz-menu-icon-wrap {
   opacity: 1 !important;
@@ -580,7 +580,7 @@ body.luzori-admin .layout-menu .menu-item.active > .menu-link:not(.menu-toggle) 
   opacity: 0.85;
 }
 
-/* Submenu panel â€” vertical tree line linking children to parent */
+/* Submenu panel Ã¢â¬â vertical tree line linking children to parent */
 body.luzori-admin .layout-menu .menu-item.open > .menu-sub,
 body.luzori-admin .layout-menu .menu-sub {
   position: relative !important;
@@ -599,7 +599,7 @@ body.luzori-admin .layout-menu .menu-sub > .menu-item {
   position: relative;
 }
 
-/* No horizontal connectors â€” vertical line only */
+/* No horizontal connectors Ã¢â¬â vertical line only */
 body.luzori-admin .bg-menu-theme.menu-vertical .menu-sub > .menu-item > .menu-link::before,
 body.luzori-admin .layout-menu .menu-sub > .menu-item > .menu-link::before {
   content: none !important;
@@ -1313,7 +1313,7 @@ body.luzori-admin table.dataTable td.all.lz-actions-col {
   display: table-cell !important;
 }
 
-/* Hide DataTables expand arrows â€” details open via eye dialog */
+/* Hide DataTables expand arrows Ã¢â¬â details open via eye dialog */
 body.luzori-admin table.dataTable.dtr-column > tbody > tr > td.dtr-control,
 body.luzori-admin table.dataTable.dtr-inline.collapsed > tbody > tr > td.dtr-control {
   cursor: default;
@@ -1432,7 +1432,7 @@ body.luzori-admin table.dataTable > tbody > tr.child span.dtr-title {
   min-width: 140px;
 }
 
-/* Expanded / selected DataTable rows â€” no theme blue */
+/* Expanded / selected DataTable rows Ã¢â¬â no theme blue */
 body.luzori-admin table.dataTable > tbody > tr.parent,
 body.luzori-admin table.dataTable > tbody > tr.parent > *,
 body.luzori-admin table.dataTable > tbody > tr.selected,
@@ -1565,7 +1565,7 @@ body.luzori-admin .progress-bar {
   background-color: var(--lz-forest) !important;
 }
 
-/* Luzori loaders â€” dual ring (forest + gold) */
+/* Luzori loaders Ã¢â¬â dual ring (forest + gold) */
 @keyframes lz-spin {
   to {
     transform: rotate(360deg);
@@ -1643,7 +1643,7 @@ body.luzori-admin .spinner-grow.text-primary {
   border-radius: 50% !important;
 }
 
-/* DataTables processing â€” square loader; must hide when DT finishes */
+/* DataTables processing Ã¢â¬â square loader; must hide when DT finishes */
 body.luzori-admin div.dataTables_processing,
 body.luzori-admin div.dt-processing {
   top: 50% !important;
@@ -1668,7 +1668,7 @@ body.luzori-admin div.dt-processing {
   justify-content: center !important;
 }
 
-/* Default hidden â€” only show when DataTables sets display:block inline */
+/* Default hidden Ã¢â¬â only show when DataTables sets display:block inline */
 body.luzori-admin div.dataTables_processing:not([style*='display: block']):not([style*='display:block']),
 body.luzori-admin div.dt-processing:not([style*='display: block']):not([style*='display:block']) {
   display: none !important;
@@ -2427,7 +2427,7 @@ body.luzori-admin .lz-form-card .note-editor .note-editable {
 
 
 /* ==========================================================================
-   Dark theme — html.dark-style
+   Dark theme â html.dark-style
    Keep forest green for sidebar; gold only for accents.
    ========================================================================== */
 html.dark-style body.luzori-admin {
@@ -2470,7 +2470,7 @@ html.dark-style body.luzori-admin .luzori-dashboard::before {
   filter: invert(1) hue-rotate(180deg);
 }
 
-/* Sidebar stays brand forest — never gold */
+/* Sidebar stays brand forest â never gold */
 html.dark-style body.luzori-admin .layout-menu,
 html.dark-style body.luzori-admin .layout-menu.bg-menu-theme,
 html.dark-style body.luzori-admin .bg-menu-theme,
@@ -2792,4 +2792,91 @@ html.dark-style body.luzori-admin .page-item.active .page-link {
     background: #1a2030 !important;
     background-color: #1a2030 !important;
   }
+}
+
+/* --------------------------------------------------------------------------
+   Dark text contrast: forest green (#002b26) is for BG only — never body text
+   -------------------------------------------------------------------------- */
+html.dark-style body.luzori-admin .content-wrapper,
+html.dark-style body.luzori-admin .luzori-page,
+html.dark-style body.luzori-admin .luzori-dashboard,
+html.dark-style body.luzori-admin .card,
+html.dark-style body.luzori-admin .lz-form-card,
+html.dark-style body.luzori-admin .lz-table-card {
+  --lz-forest-text: #e8d5b5;
+}
+
+html.dark-style body.luzori-admin .lz-stat-value,
+html.dark-style body.luzori-admin .lz-panel-head,
+html.dark-style body.luzori-admin .lz-page-title,
+html.dark-style body.luzori-admin .lz-field-label,
+html.dark-style body.luzori-admin .lz-form-section-title,
+html.dark-style body.luzori-admin .card-header h2,
+html.dark-style body.luzori-admin .card-header h4,
+html.dark-style body.luzori-admin .card-header h5,
+html.dark-style body.luzori-admin .lz-page-toolbar .lz-page-title,
+html.dark-style body.luzori-admin a:not(.btn):not(.menu-link):not(.dropdown-item):not(.page-link):not(.nav-link),
+html.dark-style body.luzori-admin .breadcrumb-item a,
+html.dark-style body.luzori-admin .footer,
+html.dark-style body.luzori-admin .footer a,
+html.dark-style body.luzori-admin .content-footer,
+html.dark-style body.luzori-admin .content-footer a,
+html.dark-style body.luzori-admin .dataTables_wrapper .dataTables_info,
+html.dark-style body.luzori-admin .dataTables_wrapper .dataTables_length label,
+html.dark-style body.luzori-admin .dataTables_wrapper .dataTables_filter label,
+html.dark-style body.luzori-admin .paginate_button:not(.current):not(.disabled),
+html.dark-style body.luzori-admin table.dataTable thead th,
+html.dark-style body.luzori-admin .lz-action-btn,
+html.dark-style body.luzori-admin .lz-perm-eye-btn,
+html.dark-style body.luzori-admin .lz-perm-count-badge,
+html.dark-style body.luzori-admin .text-primary {
+  color: #e8d5b5 !important;
+}
+
+html.dark-style body.luzori-admin .breadcrumb-item.active,
+html.dark-style body.luzori-admin .breadcrumb-item .lz-crumb-plain,
+html.dark-style body.luzori-admin .lz-stat-label,
+html.dark-style body.luzori-admin .text-muted,
+html.dark-style body.luzori-admin .form-label,
+html.dark-style body.luzori-admin label:not(.btn):not(.switch) {
+  color: #c5ccd8 !important;
+}
+
+/* Keep real forest only on solid green surfaces (buttons / active page / sidebar) */
+html.dark-style body.luzori-admin .btn-primary,
+html.dark-style body.luzori-admin .btn-luzori-primary,
+html.dark-style body.luzori-admin .page-item.active .page-link,
+html.dark-style body.luzori-admin .dataTables_paginate .paginate_button.current {
+  color: #e8d5b5 !important;
+}
+
+html.dark-style body.luzori-admin .btn-luzori-beige,
+html.dark-style body.luzori-admin .buttons-colvis,
+html.dark-style body.luzori-admin .layout-menu .menu-item.active > .menu-link,
+html.dark-style body.luzori-admin .layout-menu .menu-item.open > .menu-link {
+  color: #002b26 !important;
+}
+
+html.dark-style body.luzori-admin .layout-menu .menu-link {
+  color: rgba(255, 228, 196, 0.92) !important;
+}
+
+html.dark-style body.luzori-admin table.dataTable > tbody > tr.parent,
+html.dark-style body.luzori-admin table.dataTable > tbody > tr.selected,
+html.dark-style body.luzori-admin table.dataTable > tbody > tr.parent > *,
+html.dark-style body.luzori-admin table.dataTable > tbody > tr.selected > * {
+  background: #2a3144 !important;
+  color: #e8d5b5 !important;
+  --bs-table-color: #e8d5b5;
+  --bs-table-bg: #2a3144;
+}
+
+html.dark-style body.luzori-admin .dataTables_wrapper .dataTables_paginate .paginate_button {
+  color: #d4b483 !important;
+}
+
+html.dark-style body.luzori-admin .lz-perm-eye-btn,
+html.dark-style body.luzori-admin .lz-action-btn {
+  background: #252b3d !important;
+  border-color: #3d465c !important;
 }
