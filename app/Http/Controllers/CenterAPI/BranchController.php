@@ -10,6 +10,8 @@ use App\Http\Requests\CenterAPI\Branch\CheckBranchIdRequest;
 use App\Http\Resources\BranchResource;
 use App\Http\Resources\BranchDetailsResource;
 use App\Http\Resources\PaginateDateResource;
+use App\Models\Center;
+use App\Services\AppNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
@@ -70,6 +72,15 @@ class BranchController extends Controller
         );
         $item = $this->crudService->updateOrCreate($this->model, $newRequest, true);
         if ($item) {
+            try {
+                $center = Center::where('database', config('database.connections.mysql.database'))->first();
+                if ($center) {
+                    app(AppNotificationService::class)->notifyNewBranch($center, $item);
+                }
+            } catch (\Throwable $e) {
+                \Log::error('New branch welcome notification failed: ' . $e->getMessage());
+            }
+
             $item = BranchResource::make($item);
             return MyHelper::responseJSON(__('api.addSuccessfully'), Response::HTTP_CREATED, $item);
         } else {
