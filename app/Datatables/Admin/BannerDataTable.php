@@ -98,7 +98,7 @@ class BannerDataTable extends DataTable
                 ],
             ])
             ->language($this->getDataTableLanguageUrl())
-            ->addTableClass('table table-bordered table-hover')
+            ->addTableClass('table table-hover')
             ->initComplete('function () {
                 $(".dt-action-buttons").append("<a href=\'' . $addRoute . '\' class=\"btn btn-primary mx-2\">' . __('general.add_new') . '<i class=\"ti ti-plus\"></i></a>");
             }')

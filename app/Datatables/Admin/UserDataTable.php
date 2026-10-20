@@ -102,7 +102,7 @@ class UserDataTable extends DataTable
                 ],
             ])
         ->language($this->getDataTableLanguageUrl())
-            ->addTableClass('table table-bordered table-hover')
+            ->addTableClass('table table-hover')
             ->parameters([]);
     }
 

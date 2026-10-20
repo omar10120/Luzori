@@ -53,11 +53,12 @@ class WithdrawalRequestDataTable extends DataTable
             ->editColumn('action', function ($row) {
                 if ($row->status === 'pending') {
                     $approveRoute = route("admin.withdrawal_requests.approve", $row->id);
-                    $html = '<button onclick="approveRequest(\'' . $approveRoute . '\')" class="btn btn-sm btn-success me-1" title="Approve"><i class="ti ti-check"></i></button>';
-                    $html .= '<button onclick="rejectRequest(' . $row->id . ')" class="btn btn-sm btn-danger" title="Reject"><i class="ti ti-x"></i></button>';
-                    return $html;
+                    return '<div class="lz-action-icons" onclick="event.stopPropagation()">'
+                        . '<a href="javascript:void(0)" class="lz-action-btn" title="Approve" onclick="approveRequest(\'' . $approveRoute . '\')"><i class="ti ti-check"></i></a>'
+                        . '<a href="javascript:void(0)" class="lz-action-btn lz-action-danger" title="Reject" onclick="rejectRequest(' . $row->id . ')"><i class="ti ti-x"></i></a>'
+                        . '</div>';
                 }
-                return '---';
+                return '—';
             })
             ->rawColumns(['status', 'action'])
             ->setRowId('id');
@@ -109,7 +110,7 @@ class WithdrawalRequestDataTable extends DataTable
                 ],
             ])
             ->language($this->getDataTableLanguageUrl())
-            ->addTableClass('table table-bordered table-hover')
+            ->addTableClass('table table-hover')
             ->parameters([]);
     }
 

@@ -1884,24 +1884,34 @@ body.luzori-admin .form-control::placeholder {
 }
 
 body.luzori-admin table.table,
-body.luzori-admin .dataTables_wrapper table.table {
+body.luzori-admin .dataTables_wrapper table.table,
+body.luzori-admin table.dataTable {
   --bs-table-bg: transparent;
-  border-color: #efe6d8 !important;
+  border: none !important;
+  border-color: transparent !important;
+}
+
+body.luzori-admin table.table > :not(caption) > * > *,
+body.luzori-admin .dataTables_wrapper table.dataTable > :not(caption) > * > * {
+  border-left: none !important;
+  border-right: none !important;
+  box-shadow: none !important;
 }
 
 body.luzori-admin table.table thead th,
 body.luzori-admin .dataTables_wrapper table.dataTable thead th {
-  background: #faf7f2 !important;
-  color: var(--lz-muted) !important;
-  font-size: 0.72rem !important;
+  background: #f7f2ea !important;
+  color: var(--lz-forest) !important;
+  font-size: 0.75rem !important;
   font-weight: 700 !important;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.03em;
   text-transform: uppercase;
+  border: none !important;
   border-bottom: 1px solid #efe6d8 !important;
   white-space: nowrap;
   vertical-align: middle !important;
   text-align: start !important;
-  padding: 0.85rem 0.9rem !important;
+  padding: 0.9rem 0.85rem !important;
   background-position: center right 0.55rem !important;
 }
 
@@ -1913,11 +1923,23 @@ html[dir='rtl'] body.luzori-admin .dataTables_wrapper table.dataTable thead th {
 body.luzori-admin table.table tbody td,
 body.luzori-admin .dataTables_wrapper table.dataTable tbody td {
   color: var(--lz-text);
-  border-color: #efe6d8 !important;
+  border: none !important;
+  border-bottom: 1px solid #f1ebe3 !important;
   vertical-align: middle !important;
   text-align: start !important;
-  padding: 0.85rem 0.9rem !important;
+  padding: 0.85rem !important;
   line-height: 1.35;
+  font-size: 0.86rem;
+}
+
+body.luzori-admin table.table tbody tr:nth-child(even),
+body.luzori-admin .dataTables_wrapper table.dataTable tbody tr:nth-child(even) {
+  background: #fcfaf7;
+}
+
+/* Hide legacy dropdown action trigger if any leftover markup */
+body.luzori-admin .lz-actions-col .dropdown > .dropdown-toggle {
+  display: none !important;
 }
 
 body.luzori-admin table.table tbody td.dt-center,

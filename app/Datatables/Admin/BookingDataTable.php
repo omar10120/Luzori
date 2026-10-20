@@ -220,7 +220,7 @@ class BookingDataTable extends DataTable
                 ],
             ])
             ->language($this->getDataTableLanguageUrl())
-            ->addTableClass('table table-bordered table-hover')
+            ->addTableClass('table table-hover')
             ->initComplete('function () {
                 var centers = ' . json_encode(Center::all()->pluck('name', 'id')) . ';
                 var filterHtml = \'<div class="lz-admin-filter-item"><label>' . e(__('general.all_centers')) . '</label><select id="center_filter" class="form-select form-select-sm">\' +

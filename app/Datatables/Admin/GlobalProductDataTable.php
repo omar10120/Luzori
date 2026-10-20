@@ -124,7 +124,7 @@ class GlobalProductDataTable extends DataTable
             ->language(app()->getLocale() === 'ar'
                 ? asset('js/lang/ar_custom.json')
                 : 'https://cdn.datatables.net/plug-ins/2.0.7/i18n/en-GB.json')
-            ->addTableClass('table table-bordered table-hover')
+            ->addTableClass('table table-hover')
             ->initComplete('function () { $(".dt-action-buttons").append("<a href=\'' . $addRoute . '\' class=\"btn btn-primary mx-2\">' . e(__('general.add_new')) . ' <i class=\"ti ti-plus\"></i></a>"); }')
             ->parameters([]);
     }

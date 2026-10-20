@@ -33,20 +33,11 @@ class CenterDataTable extends DataTable
                     'operation' => DeleteActionEnum::FORCE_DELETE->value,
                     'with_trashed' => 1,
                 ];
-                $html = view()->make('_partials.actions', compact('id', 'route', 'options', 'model'))->render();
-
-                // "Create Supplier" button — only shown when not yet registered on MyFatoorah
+                // Icon next to Edit/Delete — only when not yet registered on MyFatoorah
                 if (!$item->is_supplier) {
-                    $supplierUrl = route('admin.centers.create-supplier', ['id' => $item->id]);
-                    $html .= '<button type="button"
-                                class="btn btn-sm btn-luzori-beige mt-1 w-100 lz-create-supplier-btn"
-                                onclick="createCenterSupplier(' . $item->id . ', \'' . $supplierUrl . '\')"
-                                title="Register as MyFatoorah supplier">
-                                <i class="ti ti-building-store me-1"></i>Create Supplier
-                              </button>';
+                    $options['create_supplier_url'] = route('admin.centers.create-supplier', ['id' => $item->id]);
                 }
-
-                return $html;
+                return view()->make('_partials.actions', compact('id', 'route', 'options', 'model'))->render();
             })
             ->editColumn('status', function ($row) {
                 $checked = $row->deleted_at ? '' : 'checked';
@@ -146,7 +137,7 @@ class CenterDataTable extends DataTable
             ])
             ->language($this->getDataTableLanguageUrl())
             
-            ->addTableClass('table table-bordered table-hover')
+            ->addTableClass('table table-hover')
             ->initComplete('function () {
              $(".dt-action-buttons").append("<a href=' . $addRoute . ' class=\"btn btn-primary btn-sm mx-1 mx-md-2 px-2 px-md-3 py-1 py-md-2\">' . __('general.add_new') . '<i class=\"ti ti-plus\"></i></a>");
             }')
