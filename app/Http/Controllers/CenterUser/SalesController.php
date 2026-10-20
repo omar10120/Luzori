@@ -1018,70 +1018,84 @@ if ($request->action === 'delete') {
     ]);
 
     return MyHelper::responseJSON(__('admin.done_delete_successfully'), Response::HTTP_OK);
-}
-
-        // =================================================================
-        // EDIT BRANCH
-        // =================================================================
-
-        // Resolve the date to apply. Chain:
-        //   pending (from OTP session or bypass) → request → error
-        $newDateRaw = $pending['new_date'] ?? $request->input('new_date');
-
-        if (empty($newDateRaw)) {
-            return MyHelper::responseJSON(
-                __('general.date_required'),
-                Response::HTTP_UNPROCESSABLE_ENTITY
-            );
-        }
-
-        try {
-            $newDate = Carbon::parse($newDateRaw);
-        } catch (\Throwable $e) {
-            return MyHelper::responseJSON(
-                __('general.invalid_date'),
-                Response::HTTP_UNPROCESSABLE_ENTITY
-            );
-        }
-
-        $sale->load(['bookings.details']);
-        $sale->created_at = $newDate->copy()->setTimeFrom(Carbon::parse($sale->created_at));
-        $sale->save();
-
-        foreach ($sale->bookings as $booking) {
-            $booking->booking_date = $newDate->toDateString();
-            $booking->save();
-            foreach ($booking->details as $detail) {
-                $detail->_date = $newDate->toDateString();
-                $detail->save();
-            }
-        }
-
-        $saleOtpService->clear();
-        Log::info('Sale date updated after OTP', [
-            'sale_id'  => $request->sale_id,
-            'new_date' => $newDate->toDateString(),
-            'reason'   => $pending['reason'] ?? null,
-            'by'       => auth('center_user')->id(),
-        ]);
-
-        return MyHelper::responseJSON(__('admin.operation_done_successfully'), Response::HTTP_OK, [
-            'created_at' => $sale->created_at
-    ? Carbon::parse($sale->created_at)->format('Y-m-d H:i')
-    : null,
-        ]);
-
-    } catch (\Throwable $e) {
-        Log::error('Sale OTP action failed', [
-            'sale_id' => $request->sale_id,
-            'action'  => $request->action,
-            'error'   => $e->getMessage(),
-            'trace'   => $e->getTraceAsString(),
-        ]);
-
-        return MyHelper::responseJSON(__('admin.an_error_occurred'), Response::HTTP_INTERNAL_SERVER_ERROR);
     }
-}
+
+        
+            //   pending (from OTP session or bypass) → request → error
+            $newDateRaw = $pending['new_date'] ?? $request->input('new_date');
+
+            if (empty($newDateRaw)) {
+                return MyHelper::responseJSON(
+                    __('general.date_required'),
+                    Response::HTTP_UNPROCESSABLE_ENTITY
+                );
+            }
+
+            try {
+                $newDate = Carbon::parse($newDateRaw);
+            } catch (\Throwable $e) {
+                return MyHelper::responseJSON(
+                    __('general.invalid_date'),
+                    Response::HTTP_UNPROCESSABLE_ENTITY
+                );
+            }
+
+            // ---- Capture state BEFORE the edit so we can diff & notify ----
+            $oldDateRaw    = $sale->getRawOriginal('created_at'); // untouched value
+            $oldDatePretty = $oldDateRaw ? Carbon::parse($oldDateRaw) : null;
+            $oldBookingIds = $sale->bookings()->pluck('id')->values()->all();
+
+            $sale->load(['bookings.details']);
+            $sale->created_at = $newDate->copy()->setTimeFrom(Carbon::parse($sale->created_at));
+            $sale->save();
+
+            foreach ($sale->bookings as $booking) {
+                $booking->booking_date = $newDate->toDateString();
+                $booking->save();
+                foreach ($booking->details as $detail) {
+                    $detail->_date = $newDate->toDateString();
+                    $detail->save();
+                }
+            }
+
+            $saleOtpService->clear();
+
+            // ---- Notify the center (after successful save) ----
+            $this->notifySaleDateEdited(
+                (int) $sale->id,
+                $oldDatePretty ? $oldDatePretty->format('Y-m-d') : null,
+                $newDate->toDateString(),
+                (int) $sale->bookings->count(),
+                $oldBookingIds,
+                (string) ($pending['reason'] ?? '')
+            );
+
+            Log::info('Sale date updated after OTP', [
+                'sale_id'        => $request->sale_id,
+                'old_date'       => $oldDatePretty?->format('Y-m-d'),
+                'new_date'       => $newDate->toDateString(),
+                'reason'         => $pending['reason'] ?? null,
+                'bookings_count' => $sale->bookings->count(),
+                'by'             => auth('center_user')->id(),
+            ]);
+
+            return MyHelper::responseJSON(__('admin.operation_done_successfully'), Response::HTTP_OK, [
+                'created_at' => $sale->created_at
+                    ? Carbon::parse($sale->created_at)->format('Y-m-d H:i')
+                    : null,
+            ]);
+
+        } catch (\Throwable $e) {
+            Log::error('Sale OTP action failed', [
+                'sale_id' => $request->sale_id,
+                'action'  => $request->action,
+                'error'   => $e->getMessage(),
+                'trace'   => $e->getTraceAsString(),
+            ]);
+
+            return MyHelper::responseJSON(__('admin.an_error_occurred'), Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
 
 
 /**
@@ -1152,5 +1166,69 @@ if ($request->action === 'delete') {
             ]);
         }
     }
+    /**
+ * Notify the active center that a sale's date was edited (via OTP flow).
+ *
+ * Called AFTER the edit is persisted. Uses captured primitives so the
+ * notification doesn't depend on the sale still being mutable.
+ *
+ * Best-effort: the NotifiesCenter trait swallows + logs every error.
+ */
+private function notifySaleDateEdited(
+    int $saleId,
+    ?string $oldDate,
+    string $newDate,
+    int $bookingsCount,
+    array $bookingIds,
+    string $reason = ''
+): void {
+    try {
+        $oldDisplay = $oldDate ?: '—';
+
+        $textEn = sprintf(
+            'Sale #%d date changed from %s to %s%s.',
+            $saleId,
+            $oldDisplay,
+            $newDate,
+            $bookingsCount > 0 ? ' (' . $bookingsCount . ' booking(s) rescheduled)' : ''
+        );
+        if ($reason !== '') {
+            $textEn .= ' Reason: ' . $reason;
+        }
+
+        $textAr = sprintf(
+            'تم تعديل تاريخ عملية البيع رقم %d من %s إلى %s%s.',
+            $saleId,
+            $oldDisplay,
+            $newDate,
+            $bookingsCount > 0 ? ' (إعادة جدولة ' . $bookingsCount . ' حجز)' : ''
+        );
+        if ($reason !== '') {
+            $textAr .= ' السبب: ' . $reason;
+        }
+
+        $this->notifyCenter(
+            'sale',
+            [
+                'en' => ['title' => 'Sale Date Edited',     'text' => $textEn],
+                'ar' => ['title' => 'تم تعديل تاريخ عملية بيع', 'text' => $textAr],
+            ],
+            [
+                'action'         => 'sale_date_edited',
+                'sale_id'        => (string) $saleId,
+                'old_date'       => (string) ($oldDate ?? ''),
+                'new_date'       => $newDate,
+                'bookings_count' => (string) $bookingsCount,
+                'bookings'       => implode(',', array_map('strval', $bookingIds)),
+                'reason'         => $reason,
+            ]
+        );
+    } catch (\Throwable $e) {
+        Log::warning('notifySaleDateEdited failed', [
+            'sale_id' => $saleId,
+            'error'   => $e->getMessage(),
+        ]);
+    }
+}
 }
 
