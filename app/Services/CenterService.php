@@ -1152,17 +1152,33 @@ class CenterService
         }
     }
 
+
     public function edit($request)
     {
         DB::beginTransaction();
         try {
             $center = Center::withTrashed()->find($request['id']);
-
+    
+            // === Snapshot BEFORE any mutation ===
+            // Captured so we can diff after commit (inside the transaction, the
+            // notification path would purge/reconnect the connection and silently
+            // break the transaction, so we deliberately defer it to after commit).
+            $oldSnapshot = [
+                'name'         => (string) ($center->name ?? ''),
+                'email'        => (string) ($center->email ?? ''),
+                'phone'        => (string) ($center->phone ?? ''),
+                'country_code' => (string) ($center->country_code ?? ''),
+                'currency'     => (string) ($center->currency ?? ''),
+                'bank_name'    => (string) ($center->bank_name ?? ''),
+                'status'       => (string) ($center->status ?? ''),
+                'is_setup'     => (bool) $center->is_setup,
+            ];
+    
             if (isset($request['image'])) {
                 $center->clearMediaCollection('Center');
                 $center->addMedia($request['image'])->toMediaCollection('Center');
             }
-
+    
             if (!empty($request['delete_primary_images'])) {
                 $mediaIds = array_filter(explode(',', $request['delete_primary_images']));
                 foreach ($mediaIds as $mediaId) {
@@ -1172,7 +1188,7 @@ class CenterService
                     }
                 }
             }
-
+    
             if (isset($request['primary_image'])) {
                 $images = is_array($request['primary_image'])
                     ? $request['primary_image']
@@ -1181,26 +1197,30 @@ class CenterService
                     $center->addMedia($img)->toMediaCollection('PrimaryImage');
                 }
             }
-
+    
             if (isset($request['password']) && empty($request['password'])) {
                 unset($request['password']);
             }
-
+    
             $oldEmail = $center->email;
             $center->update($request);
-            
+    
             if (isset($request['role'])) {
                 $center->roles()->detach();
                 $center->assignRole($request['role']);
             }
-
+    
             if ($center->status == 'approve' && !$center->is_setup) {
                 $this->setupCenterDatabase($center);
             }
-
+    
             $this->syncTenantCenterUser($center, $oldEmail, $request);
-
+    
             DB::commit();
+    
+            // === Notify AFTER commit (best-effort, never blocks the response) ===
+            $this->notifyCenterEdited($center->fresh(), $oldSnapshot);
+    
             return $center;
         } catch (Exception $e) {
             DB::rollBack();
@@ -1638,6 +1658,106 @@ class CenterService
         } catch (\Throwable $e) {
             // The notification must never break center creation.
             Log::warning('notifyNewCenterWelcome failed', [
+                'center_id' => $center->id ?? null,
+                'error'     => $e->getMessage(),
+            ]);
+        }
+    }
+
+    
+    private function notifyCenterEdited(Center $center, array $old): void
+    {
+        try {
+            // Fields whose change is worth a notification.
+            $infoFields = ['name', 'email', 'phone', 'country_code', 'currency', 'bank_name'];
+
+            $infoChanges = [];
+            foreach ($infoFields as $field) {
+                $oldVal = (string) ($old[$field] ?? '');
+                $newVal = (string) ($center->{$field} ?? '');
+                if ($oldVal !== $newVal) {
+                    $infoChanges[$field] = ['old' => $oldVal, 'new' => $newVal];
+                }
+            }
+
+            $oldStatus  = (string) ($old['status'] ?? '');
+            $newStatus  = (string) ($center->status ?? '');
+            $wasSetup   = (bool) ($old['is_setup'] ?? false);
+            $isSetup    = (bool) $center->is_setup;
+            $statusJustApproved = ($newStatus === 'approve' && $oldStatus !== 'approve' && $isSetup);
+            $statusLeftApprove  = ($oldStatus === 'approve' && $newStatus !== 'approve');
+
+            if (empty($infoChanges) && !$statusJustApproved && !$statusLeftApprove) {
+                return; // nothing meaningful changed — don't spam
+            }
+
+            $name = trim((string) ($center->name ?? 'Center')) ?: 'Center';
+
+            // ---------- Build message parts ----------
+            $enParts = [];
+            $arParts = [];
+            $action  = 'center_edited';
+            $titleEn = 'Center Information Updated';
+            $titleAr = 'تم تحديث معلومات المركز';
+
+            if ($statusJustApproved) {
+                $action  = 'center_approved';
+                $titleEn = 'Your Center is Approved';
+                $titleAr = 'تمت الموافقة على مركزك';
+
+                $enParts[] = 'Welcome to your center "' . $name . '". Your account has been approved and is now active.';
+                $arParts[] = 'مرحباً بك في مركزك "' . $name . '". تمت الموافقة على حسابك وأصبح نشطاً.';
+            } elseif ($statusLeftApprove) {
+                $action  = 'center_status_changed';
+                $titleEn = 'Center Status Changed';
+                $titleAr = 'تم تغيير حالة المركز';
+
+                $enParts[] = 'Your center status has been changed from "' . $oldStatus . '" to "' . $newStatus . '".';
+                $arParts[] = 'تم تغيير حالة مركزك من "' . $oldStatus . '" إلى "' . $newStatus . '".';
+            }
+
+            // Info field changes (independent of status)
+            $fieldLabels = [
+                'name'         => ['en' => 'name',      'ar' => 'الاسم'],
+                'email'        => ['en' => 'email',     'ar' => 'البريد الإلكتروني'],
+                'phone'        => ['en' => 'phone',     'ar' => 'الهاتف'],
+                'country_code' => ['en' => 'country',   'ar' => 'الدولة'],
+                'currency'     => ['en' => 'currency',  'ar' => 'العملة'],
+                'bank_name'    => ['en' => 'bank name', 'ar' => 'اسم البنك'],
+            ];
+
+            foreach ($infoChanges as $field => $vals) {
+                $enLabel = $fieldLabels[$field]['en'];
+                $arLabel = $fieldLabels[$field]['ar'];
+
+                // Hide the actual values for phone/email from push — show only the field name.
+                $enParts[] = ucfirst($enLabel) . ' has been updated.';
+                $arParts[] = 'تم تحديث ' . $arLabel . '.';
+            }
+
+            if (empty($enParts)) {
+                return;
+            }
+
+            // ---------- Send ----------
+            app(AppNotificationService::class)->notifyCenterEvent(
+                $center,
+                'system',
+                [
+                    'en' => ['title' => $titleEn, 'text' => implode(' ', $enParts)],
+                    'ar' => ['title' => $titleAr, 'text' => implode(' ', $arParts)],
+                ],
+                [
+                    'action'         => $action,
+                    'center_id'      => (string) $center->id,
+                    'old_status'     => $oldStatus,
+                    'new_status'     => $newStatus,
+                    'changed_fields' => implode(',', array_keys($infoChanges)),
+                ]
+            );
+        } catch (\Throwable $e) {
+            // Never break the edit response because of a notification issue.
+            Log::warning('notifyCenterEdited failed', [
                 'center_id' => $center->id ?? null,
                 'error'     => $e->getMessage(),
             ]);
