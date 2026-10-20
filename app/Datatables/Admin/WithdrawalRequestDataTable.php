@@ -53,11 +53,12 @@ class WithdrawalRequestDataTable extends DataTable
             ->editColumn('action', function ($row) {
                 if ($row->status === 'pending') {
                     $approveRoute = route("admin.withdrawal_requests.approve", $row->id);
-                    $html = '<button onclick="approveRequest(\'' . $approveRoute . '\')" class="btn btn-sm btn-success me-1" title="Approve"><i class="ti ti-check"></i></button>';
-                    $html .= '<button onclick="rejectRequest(' . $row->id . ')" class="btn btn-sm btn-danger" title="Reject"><i class="ti ti-x"></i></button>';
-                    return $html;
+                    return '<div class="lz-action-icons" onclick="event.stopPropagation()">'
+                        . '<a href="javascript:void(0)" class="lz-action-btn" title="Approve" onclick="approveRequest(\'' . $approveRoute . '\')"><i class="ti ti-check"></i></a>'
+                        . '<a href="javascript:void(0)" class="lz-action-btn lz-action-danger" title="Reject" onclick="rejectRequest(' . $row->id . ')"><i class="ti ti-x"></i></a>'
+                        . '</div>';
                 }
-                return '---';
+                return '—';
             })
             ->rawColumns(['status', 'action'])
             ->setRowId('id');
@@ -78,7 +79,7 @@ class WithdrawalRequestDataTable extends DataTable
             ->columns($this->getColumns())
             ->minifiedAjax()
             ->orderBy(0, 'desc')
-            ->responsive(true)
+            ->responsive(false)
             ->dom('
                 <"card-header border-bottom p-3 d-flex justify-content-between align-items-center"
                     <"head-label"><"dt-action-buttons"B>
@@ -92,9 +93,14 @@ class WithdrawalRequestDataTable extends DataTable
                 >
             ')
             ->selectStyleSingle()
-            ->addAction(['printable' => false, 'exportable' => false, 'className' => 'dt-center lz-actions-col all'])
+            ->addAction(['printable' => false, 'exportable' => false, 'className' => 'dt-center lz-actions-col all noVis'])
             ->buttons([
-                Button::make('colvis')->addClass($buttonClass . ' btn-warning')->text(__('general.column_visibility')),
+                [
+                    'extend' => 'colvis',
+                    'className' => $buttonClass . ' btn-luzori-beige',
+                    'text' => __('general.column_visibility'),
+                    'columns' => ':not(.noVis)',
+                ],
                 [
                     'extend' => 'collection',
                     'text' => __('general.export'),
@@ -109,7 +115,7 @@ class WithdrawalRequestDataTable extends DataTable
                 ],
             ])
             ->language($this->getDataTableLanguageUrl())
-            ->addTableClass('table table-bordered table-hover')
+            ->addTableClass('table table-hover')
             ->parameters([]);
     }
 
@@ -123,16 +129,16 @@ class WithdrawalRequestDataTable extends DataTable
     public function getColumns(): array
     {
         return [
-            Column::make('id')->searchable(true)->title('#'),
-            Column::make('center_id')->searchable(true)->title(__('field.center') ?? 'Center'),
-            Column::make('phone')->searchable(false)->title(__('field.phone') ?? 'Phone'),
-            Column::make('email')->searchable(false)->title(__('field.email') ?? 'Email'),
-            Column::make('bank_name')->searchable(false)->title(__('field.bank_name') ?? 'Bank Name'),
-            Column::make('wallet')->searchable(false)->title(__('field.wallet_balance') ?? 'Wallet'),
-            Column::make('amount')->searchable(true)->title(__('field.amount') ?? 'Amount'),
-            Column::make('status')->searchable(true)->title(__('field.status') ?? 'Status'),
-            Column::make('created_at')->searchable(true)->title(__('field.date') ?? 'Date'),
-            Column::make('updated_at')->searchable(true)->title(__('field.updated_at') ?? 'Updated At'),
+            Column::make('id')->searchable(true)->title('#')->addClass('all'),
+            Column::make('center_id')->searchable(true)->title(__('field.center') ?? 'Center')->addClass('all'),
+            Column::make('amount')->searchable(true)->title(__('field.amount') ?? 'Amount')->addClass('all'),
+            Column::make('status')->searchable(true)->title(__('field.status') ?? 'Status')->addClass('all'),
+            Column::make('created_at')->searchable(true)->title(__('field.date') ?? 'Date')->addClass('all'),
+            Column::make('phone')->searchable(false)->title(__('field.phone') ?? 'Phone')->visible(false),
+            Column::make('email')->searchable(false)->title(__('field.email') ?? 'Email')->visible(false),
+            Column::make('bank_name')->searchable(false)->title(__('field.bank_name') ?? 'Bank Name')->visible(false),
+            Column::make('wallet')->searchable(false)->title(__('field.wallet_balance') ?? 'Wallet')->visible(false),
+            Column::make('updated_at')->searchable(true)->title(__('field.updated_at') ?? 'Updated At')->visible(false),
         ];
     }
 

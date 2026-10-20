@@ -260,6 +260,125 @@
         .lz-sales-cart-page #booking-service-container .row > [class*="col-"] {
             margin-bottom: 0.75rem;
         }
+
+        /* Discount codes picker */
+        .lz-sales-cart-page .lz-discount-panel {
+            border: 1px solid #efe6d8;
+            border-radius: 16px;
+            background: #fbfaf7;
+            padding: 1rem 1.1rem 1.15rem;
+            margin-bottom: 1.25rem;
+        }
+        .lz-sales-cart-page .lz-discount-panel-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            margin-bottom: 0.9rem;
+        }
+        .lz-sales-cart-page .lz-discount-panel-head h5 {
+            margin: 0;
+            color: #002b26;
+            font-weight: 700;
+            font-size: 1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+        }
+        .lz-sales-cart-page .lz-discount-panel-head h5 i {
+            color: #9a6923;
+        }
+        .lz-sales-cart-page #clear-discount-selection {
+            border-radius: 10px !important;
+            border-color: #e5ddd2 !important;
+            color: #002b26 !important;
+            font-weight: 600;
+            background: #fff !important;
+        }
+        .lz-sales-cart-page #clear-discount-selection:hover {
+            background: #f3ebe0 !important;
+            border-color: #c5a070 !important;
+        }
+        .lz-sales-cart-page .lz-discount-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 0.7rem;
+        }
+        @media (max-width: 991.98px) {
+            .lz-sales-cart-page .lz-discount-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+        }
+        @media (max-width: 767.98px) {
+            .lz-sales-cart-page .lz-discount-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+        @media (max-width: 420px) {
+            .lz-sales-cart-page .lz-discount-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .lz-sales-cart-page .lz-discount-card {
+            position: relative;
+            margin: 0;
+            min-height: 76px;
+            border: 1.5px solid #efe6d8;
+            border-radius: 14px;
+            background: #fff;
+            padding: 0.85rem 2.4rem 0.85rem 0.95rem;
+            cursor: pointer;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 0.25rem;
+        }
+        .lz-sales-cart-page .lz-discount-card:hover {
+            border-color: #c5a070;
+            box-shadow: 0 6px 16px rgba(0, 43, 38, 0.06);
+        }
+        .lz-sales-cart-page .lz-discount-card:has(.booking-discount-radio:checked),
+        .lz-sales-cart-page .lz-discount-card.is-selected {
+            border-color: #002b26;
+            background: linear-gradient(135deg, #f7f1e8 0%, #eef5f3 100%);
+            box-shadow: 0 0 0 1px rgba(0, 43, 38, 0.12), 0 8px 18px rgba(0, 43, 38, 0.08);
+        }
+        .lz-sales-cart-page .lz-discount-card .lz-discount-code {
+            color: #002b26;
+            font-weight: 700;
+            font-size: 0.9rem;
+            letter-spacing: 0.02em;
+            word-break: break-all;
+            line-height: 1.25;
+        }
+        .lz-sales-cart-page .lz-discount-card .lz-discount-amount {
+            display: inline-flex;
+            align-items: center;
+            width: fit-content;
+            padding: 0.15rem 0.55rem;
+            border-radius: 999px;
+            background: rgba(197, 160, 112, 0.22);
+            color: #9a6923;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+        .lz-sales-cart-page .lz-discount-card .booking-discount-radio {
+            position: absolute;
+            top: 0.7rem;
+            inset-inline-end: 0.75rem;
+            margin: 0;
+            width: 1.05rem;
+            height: 1.05rem;
+            cursor: pointer;
+            accent-color: #002b26;
+            flex-shrink: 0;
+        }
+        .lz-sales-cart-page .lz-discount-empty {
+            color: #7a8582;
+            font-size: 0.9rem;
+            padding: 0.5rem 0;
+        }
         .lz-sales-cart-page .form-check-input:checked {
             background-color: #002b26 !important;
             border-color: #002b26 !important;
@@ -667,26 +786,46 @@
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <div>
-                                                        <hr />
-                                                        <div class="d-flex justify-content-between align-items-center mb-2">
-                                                            <h5 class="mb-0">{{ __('field.discount_codes') }}</h5>
-                                                            <button type="button" class="btn btn-sm btn-outline-secondary" id="clear-discount-selection" style="display: none;">
+                                                    <div class="lz-discount-panel">
+                                                        <div class="lz-discount-panel-head">
+                                                            <h5>
+                                                                <i class="ti ti-discount-2"></i>
+                                                                {{ __('field.discount_codes') }}
+                                                            </h5>
+                                                            <button type="button" class="btn btn-sm" id="clear-discount-selection" style="display: none;">
                                                                 <i class="ti ti-x me-1"></i>{{ __('general.clear') }}
                                                             </button>
                                                         </div>
-                                                        <div class="row g-2 mb-4">
-                                                            @foreach ($discounts as $discount)
-                                                                <div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-2">
-                                                                    <div class="form-check discount-item" style="padding: 10px;color: #fff;background-color: #428bca;border-color: #357ebd;border-radius: 4px;min-height: 50px;display: flex;align-items: center;gap: 10px;font-size: 14px;width: 100%;">
-                                                                        <label class="form-check-label flex-grow-1 text-start" for="booking-discounts{{ $discount->id }}" style="word-break: break-word;white-space: normal;overflow: hidden;min-width: 0;margin: 0;">
-                                                                            {{ $discount->code . ' [' . $discount->amount . '%]' }}
-                                                                        </label>
-                                                                        <input class="form-check-input flex-shrink-0 booking-discount-radio" type="radio" name="discount_id" data-name="discount_id" value="{{ $discount->id }}" id="booking-discounts{{ $discount->id }}" data-discount-amount="{{ $discount->amount }}" data-discount-type="{{ $discount->type }}" style="margin-top: 0;width: 18px;height: 18px;flex-shrink: 0;">
-                                                                    </div>
-                                                                </div>
-                                                            @endforeach
-                                                        </div>
+                                                        @if($discounts->isEmpty())
+                                                            <div class="lz-discount-empty">{{ __('field.no_data_found') }}</div>
+                                                        @else
+                                                            <div class="lz-discount-grid">
+                                                                @foreach ($discounts as $discount)
+                                                                    @php
+                                                                        $isPercent = ($discount->type ?? 'percentage') === 'percentage'
+                                                                            || ($discount->type ?? '') === 'percent'
+                                                                            || str_contains((string) ($discount->type ?? ''), '%');
+                                                                        $amountLabel = $isPercent
+                                                                            ? rtrim(rtrim(number_format((float) $discount->amount, 2, '.', ''), '0'), '.') . '%'
+                                                                            : number_format((float) $discount->amount, 2) . ' ' . trim((string) get_currency());
+                                                                    @endphp
+                                                                    <label class="lz-discount-card discount-item" for="booking-discounts{{ $discount->id }}">
+                                                                        <span class="lz-discount-code">{{ $discount->code }}</span>
+                                                                        <span class="lz-discount-amount">{{ $amountLabel }}</span>
+                                                                        <input
+                                                                            class="form-check-input booking-discount-radio"
+                                                                            type="radio"
+                                                                            name="discount_id"
+                                                                            data-name="discount_id"
+                                                                            value="{{ $discount->id }}"
+                                                                            id="booking-discounts{{ $discount->id }}"
+                                                                            data-discount-amount="{{ $discount->amount }}"
+                                                                            data-discount-type="{{ $discount->type }}"
+                                                                        >
+                                                                    </label>
+                                                                @endforeach
+                                                            </div>
+                                                        @endif
                                                     </div>
                                                     <div id="booking-walletsElement"></div>
                                                     <!-- ✅ ADDED: wallet balance validation error display -->
@@ -2660,7 +2799,12 @@
                 
                 // Store discount code info if selected
                 if (selectedDiscount.length > 0) {
-                    var discountLabel = selectedDiscount.closest('.discount-item').find('label').text().trim();
+                    var $card = selectedDiscount.closest('.discount-item');
+                    var codeText = ($card.find('.lz-discount-code').text() || '').trim();
+                    var amountText = ($card.find('.lz-discount-amount').text() || '').trim();
+                    var discountLabel = codeText
+                        ? (amountText ? (codeText + ' [' + amountText + ']') : codeText)
+                        : $card.clone().children('input').remove().end().text().replace(/\s+/g, ' ').trim();
                     bookingWizardData.discount_code = discountLabel;
                     bookingWizardData.discount_id = selectedDiscount.val();
                 } else {
@@ -3781,9 +3925,19 @@
                     $('.clear-membership-selection').toggle(hasMembershipSelected);
                 }
 
+                // Keep selected card style in sync
+                $(document).off('change.lzDiscountCard', 'input[name="discount_id"].booking-discount-radio')
+                    .on('change.lzDiscountCard', 'input[name="discount_id"].booking-discount-radio', function () {
+                        $('.lz-discount-card').removeClass('is-selected');
+                        $('input[name="discount_id"].booking-discount-radio:checked')
+                            .closest('.lz-discount-card')
+                            .addClass('is-selected');
+                    });
+
                 // Clear discount codes selection
                 $(document).off('click', '#clear-discount-selection').on('click', '#clear-discount-selection', function() {
                     $('input[name="discount_id"].booking-discount-radio').prop('checked', false);
+                    $('.lz-discount-card').removeClass('is-selected');
                     toggleClearButtons();
                     if (typeof window.togglePaymentMethodVisibility === 'function') {
                         window.togglePaymentMethodVisibility();

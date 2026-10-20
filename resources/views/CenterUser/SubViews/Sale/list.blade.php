@@ -117,7 +117,8 @@
             transform: translateX(-100%) !important;
             box-shadow: 8px 0 28px rgba(0, 43, 38, 0.18);
         }
-        #saleDetailsOffcanvas.lz-sale-drawer.show {
+        #saleDetailsOffcanvas.lz-sale-drawer.show,
+        html[dir="rtl"] #saleDetailsOffcanvas.lz-sale-drawer.show {
             transform: translateX(0) !important;
         }
         .lz-sale-drawer-backdrop {
@@ -501,6 +502,7 @@
                 tax: @json(__('field.tax')),
                 total: @json(__('field.total')),
                 worker: @json(__('field.worker')),
+                bookingBy: @json(__('field.booking_by')),
                 status: @json(__('field.status')),
                 finance: @json(__('field.financial_summary'))
             };
@@ -714,6 +716,7 @@
                 html += metaRow('ti-user', labels.client, data.client);
                 html += metaRow('ti-phone', labels.phone, data.phone);
                 html += metaRow('ti-user-star', labels.worker, data.worker);
+                html += metaRow('ti-user-check', labels.bookingBy, data.booking_by);
                 html += metaRow('ti-credit-card', labels.payment, data.payment);
                 html += metaRow('ti-clock', labels.createdAt, data.created_at);
                 if (data.status_label && data.status_label !== '-') {

@@ -98,7 +98,7 @@ class GlobalProductDataTable extends DataTable
             ->columns($this->getColumns())
             ->minifiedAjax()
             ->orderBy(0)
-            ->responsive(true)
+            ->responsive(false)
             ->dom('
                 <"card-header border-bottom p-3 d-flex justify-content-between align-items-center"
                     <"head-label"><"dt-action-buttons"B>
@@ -112,9 +112,14 @@ class GlobalProductDataTable extends DataTable
                 >
             ')
             ->selectStyleSingle()
-            ->addAction(['printable' => false, 'exportable' => false, 'className' => 'dt-center lz-actions-col all', 'title' => __('general.actions')])
+            ->addAction(['printable' => false, 'exportable' => false, 'className' => 'dt-center lz-actions-col all noVis', 'title' => __('general.actions')])
             ->buttons([
-                Button::make('colvis')->addClass($buttonClass . ' btn-warning')->text(__('general.column_visibility')),
+                [
+                    'extend' => 'colvis',
+                    'className' => $buttonClass . ' btn-luzori-beige',
+                    'text' => __('general.column_visibility'),
+                    'columns' => ':not(.noVis)',
+                ],
                 [
                     'extend' => 'collection',
                     'text' => __('general.export'),
@@ -124,7 +129,7 @@ class GlobalProductDataTable extends DataTable
             ->language(app()->getLocale() === 'ar'
                 ? asset('js/lang/ar_custom.json')
                 : 'https://cdn.datatables.net/plug-ins/2.0.7/i18n/en-GB.json')
-            ->addTableClass('table table-bordered table-hover')
+            ->addTableClass('table table-hover')
             ->initComplete('function () { $(".dt-action-buttons").append("<a href=\'' . $addRoute . '\' class=\"btn btn-primary mx-2\">' . e(__('general.add_new')) . ' <i class=\"ti ti-plus\"></i></a>"); }')
             ->parameters([]);
     }
@@ -132,20 +137,19 @@ class GlobalProductDataTable extends DataTable
     public function getColumns(): array
     {
         return [
-            Column::make('id')->title('#'),
-            Column::computed('center_name')->title(__('field.center'))->searchable(false)->orderable(false),
-            Column::computed('product_name')->title(__('field.product_name'))->searchable(false)->orderable(false),
-            Column::make('product_id')->title(__('field.product_id')),
-            Column::computed('barcode')->title(__('field.barcode'))->searchable(false)->orderable(false),
-            Column::computed('primary_sku')->title(__('field.sku'))->searchable(false)->orderable(false),
-            Column::computed('category')->title(__('field.category'))->searchable(false)->orderable(false),
-            Column::computed('brand')->title(__('field.brand'))->searchable(false)->orderable(false),
-            Column::computed('supply_price')->title(__('field.supply_price'))->searchable(false)->orderable(false),
-            Column::computed('retail_price')->title(__('field.retail_price'))->searchable(false)->orderable(false),
-            Column::make('sort_order')->title(__('field.sort_order')),
-            // 4. Add the status column definition here
-            Column::computed('status')->title(__('field.status'))->searchable(false)->orderable(false),
-            Column::make('created_at')->title(__('field.created_at')),
+            Column::make('id')->title('#')->addClass('all'),
+            Column::computed('center_name')->title(__('field.center'))->searchable(false)->orderable(false)->addClass('all'),
+            Column::computed('product_name')->title(__('field.product_name'))->searchable(false)->orderable(false)->addClass('all'),
+            Column::computed('primary_sku')->title(__('field.sku'))->searchable(false)->orderable(false)->addClass('all'),
+            Column::make('sort_order')->title(__('field.sort_order'))->addClass('all'),
+            Column::computed('status')->title(__('field.status'))->searchable(false)->orderable(false)->addClass('all'),
+            Column::make('product_id')->title(__('field.product_id'))->visible(false),
+            Column::computed('barcode')->title(__('field.barcode'))->searchable(false)->orderable(false)->visible(false),
+            Column::computed('category')->title(__('field.category'))->searchable(false)->orderable(false)->visible(false),
+            Column::computed('brand')->title(__('field.brand'))->searchable(false)->orderable(false)->visible(false),
+            Column::computed('supply_price')->title(__('field.supply_price'))->searchable(false)->orderable(false)->visible(false),
+            Column::computed('retail_price')->title(__('field.retail_price'))->searchable(false)->orderable(false)->visible(false),
+            Column::make('created_at')->title(__('field.created_at'))->visible(false),
         ];
     }
 

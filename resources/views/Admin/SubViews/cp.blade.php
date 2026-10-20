@@ -89,6 +89,7 @@
         .lz-admin-dash .lz-stat-card.is-products::before { background: #c5a070; }
         .lz-admin-dash .lz-stat-card.is-services::before { background: #1a6b5a; }
         .lz-admin-dash .lz-stat-card.is-users::before { background: #0a3a34; }
+        .lz-admin-dash .lz-stat-card.is-centers::before { background: #9a6923; }
 
         .lz-admin-dash .lz-stat-body {
             padding: 1.35rem 1.4rem;
@@ -117,6 +118,10 @@
         .lz-admin-dash .lz-stat-card.is-users .lz-stat-icon {
             background: #eef3f2;
             color: var(--lz-forest);
+        }
+        .lz-admin-dash .lz-stat-card.is-centers .lz-stat-icon {
+            background: #f3ebe0;
+            color: var(--lz-gold-deep);
         }
         .lz-admin-dash .lz-stat-label {
             margin: 0;
@@ -151,6 +156,34 @@
         }
         .lz-admin-dash .lz-panel-head i { color: var(--lz-gold-deep); }
         .lz-admin-dash .lz-panel-body { padding: 0.65rem 1.35rem 1.35rem; }
+
+        .lz-admin-dash .lz-chart-box {
+            min-height: 300px;
+        }
+
+        html.dark-style .lz-admin-dash .lz-stat-value,
+        html.dark-style .lz-admin-dash .lz-panel-head {
+            color: #e8d5b5 !important;
+        }
+        html.dark-style .lz-admin-dash .lz-stat-label {
+            color: #a8b0bf !important;
+        }
+        html.dark-style .lz-admin-dash .lz-stat-card.is-users .lz-stat-icon {
+            background: #252b3d !important;
+            color: #e8d5b5 !important;
+        }
+        html.dark-style .lz-admin-dash .lz-stat-card.is-services .lz-stat-icon {
+            background: #1e3d36 !important;
+            color: #8fd4c0 !important;
+        }
+        html.dark-style .lz-admin-dash .lz-stat-card.is-centers .lz-stat-icon {
+            background: #2a3144 !important;
+            color: #d4b483 !important;
+        }
+        html.dark-style .lz-admin-dash .lz-panel,
+        html.dark-style .lz-admin-dash .lz-stat-card {
+            background: #1c2233 !important;
+        }
     </style>
 @endsection
 
@@ -174,41 +207,54 @@
             </div>
             <div class="lz-panel-body">
                 <div class="row g-3">
-                    <div class="col-md-4">
+                    <div class="col-sm-6 col-xl-3">
                         <div class="card lz-stat-card is-products">
                             <div class="lz-stat-body">
                                 <div class="lz-stat-icon">
-                                    <i class="ti ti-trending-up"></i>
+                                    <i class="ti ti-package"></i>
                                 </div>
                                 <div>
-                                    <p class="lz-stat-label">المنتجات</p>
-                                    <p class="lz-stat-value">10</p>
+                                    <p class="lz-stat-label">{{ __('locale.products') }}</p>
+                                    <p class="lz-stat-value">{{ number_format($productsCount) }}</p>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-sm-6 col-xl-3">
                         <div class="card lz-stat-card is-services">
                             <div class="lz-stat-body">
                                 <div class="lz-stat-icon">
                                     <i class="ti ti-scissors"></i>
                                 </div>
                                 <div>
-                                    <p class="lz-stat-label">الخدمات</p>
-                                    <p class="lz-stat-value">20</p>
+                                    <p class="lz-stat-label">{{ __('locale.services') }}</p>
+                                    <p class="lz-stat-value">{{ number_format($servicesCount) }}</p>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-sm-6 col-xl-3">
                         <div class="card lz-stat-card is-users">
                             <div class="lz-stat-body">
                                 <div class="lz-stat-icon">
                                     <i class="ti ti-users"></i>
                                 </div>
                                 <div>
-                                    <p class="lz-stat-label">المستخدمين</p>
-                                    <p class="lz-stat-value">{{ $usersCount }}</p>
+                                    <p class="lz-stat-label">{{ __('locale.users') }}</p>
+                                    <p class="lz-stat-value">{{ number_format($usersCount) }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-xl-3">
+                        <div class="card lz-stat-card is-centers">
+                            <div class="lz-stat-body">
+                                <div class="lz-stat-icon">
+                                    <i class="ti ti-building-store"></i>
+                                </div>
+                                <div>
+                                    <p class="lz-stat-label">{{ __('locale.centers') }}</p>
+                                    <p class="lz-stat-value">{{ number_format($centersCount) }}</p>
                                 </div>
                             </div>
                         </div>
@@ -216,5 +262,157 @@
                 </div>
             </div>
         </div>
+
+        <div class="row g-3">
+            <div class="col-lg-5">
+                <div class="card lz-panel h-100">
+                    <div class="lz-panel-head">
+                        <i class="ti ti-chart-donut-3"></i>
+                        <span>{{ __('locale.statistics') }} — {{ __('general.overview') }}</span>
+                    </div>
+                    <div class="lz-panel-body">
+                        <div id="lzAdminOverviewDonut" class="lz-chart-box"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-7">
+                <div class="card lz-panel h-100">
+                    <div class="lz-panel-head">
+                        <i class="ti ti-chart-area-line"></i>
+                        <span>{{ __('locale.users') }} / {{ __('locale.centers') }}</span>
+                    </div>
+                    <div class="lz-panel-body">
+                        <div id="lzAdminGrowthChart" class="lz-chart-box"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+@endsection
+
+@section('page-script')
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <script>
+        (function () {
+            const isDark = document.documentElement.classList.contains('dark-style');
+            const labelColor = isDark ? '#e8d5b5' : '#002b26';
+            const mutedColor = isDark ? '#a8b0bf' : '#7a8582';
+            const gridColor = isDark ? '#2e364a' : '#efe6d8';
+
+            const labels = {
+                products: @json(__('locale.products')),
+                services: @json(__('locale.services')),
+                users: @json(__('locale.users')),
+                centers: @json(__('locale.centers')),
+            };
+
+            const counts = {
+                products: {{ (int) $productsCount }},
+                services: {{ (int) $servicesCount }},
+                users: {{ (int) $usersCount }},
+                centers: {{ (int) $centersCount }},
+            };
+
+            const months = @json($chartMonths);
+            const usersTrend = @json($usersTrend);
+            const centersTrend = @json($centersTrend);
+
+            const donutEl = document.querySelector('#lzAdminOverviewDonut');
+            if (donutEl && typeof ApexCharts !== 'undefined') {
+                new ApexCharts(donutEl, {
+                    chart: {
+                        type: 'donut',
+                        height: 300,
+                        fontFamily: 'inherit',
+                        toolbar: { show: false },
+                    },
+                    labels: [labels.products, labels.services, labels.users, labels.centers],
+                    series: [counts.products, counts.services, counts.users, counts.centers],
+                    colors: ['#c5a070', '#1a6b5a', '#0a3a34', '#9a6923'],
+                    legend: {
+                        position: 'bottom',
+                        labels: { colors: mutedColor },
+                    },
+                    dataLabels: {
+                        enabled: true,
+                        style: { colors: ['#fff'] },
+                    },
+                    stroke: { width: 2, colors: [isDark ? '#1c2233' : '#fdfaf6'] },
+                    plotOptions: {
+                        pie: {
+                            donut: {
+                                size: '62%',
+                                labels: {
+                                    show: true,
+                                    name: { color: mutedColor },
+                                    value: {
+                                        color: labelColor,
+                                        fontWeight: 700,
+                                    },
+                                    total: {
+                                        show: true,
+                                        label: @json(__('locale.statistics')),
+                                        color: mutedColor,
+                                        formatter: function (w) {
+                                            return w.globals.seriesTotals.reduce((a, b) => a + b, 0);
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                }).render();
+            }
+
+            const growthEl = document.querySelector('#lzAdminGrowthChart');
+            if (growthEl && typeof ApexCharts !== 'undefined') {
+                new ApexCharts(growthEl, {
+                    chart: {
+                        type: 'area',
+                        height: 300,
+                        fontFamily: 'inherit',
+                        toolbar: { show: false },
+                        zoom: { enabled: false },
+                    },
+                    series: [
+                        { name: labels.users, data: usersTrend },
+                        { name: labels.centers, data: centersTrend },
+                    ],
+                    colors: ['#c5a070', '#1a6b5a'],
+                    dataLabels: { enabled: false },
+                    stroke: { curve: 'smooth', width: 3 },
+                    fill: {
+                        type: 'gradient',
+                        gradient: {
+                            shadeIntensity: 1,
+                            opacityFrom: 0.35,
+                            opacityTo: 0.05,
+                            stops: [0, 90, 100],
+                        },
+                    },
+                    xaxis: {
+                        categories: months,
+                        labels: { style: { colors: mutedColor } },
+                        axisBorder: { color: gridColor },
+                        axisTicks: { color: gridColor },
+                    },
+                    yaxis: {
+                        labels: { style: { colors: mutedColor } },
+                        min: 0,
+                        forceNiceScale: true,
+                    },
+                    grid: {
+                        borderColor: gridColor,
+                        strokeDashArray: 4,
+                    },
+                    legend: {
+                        position: 'top',
+                        horizontalAlign: 'end',
+                        labels: { colors: mutedColor },
+                    },
+                    tooltip: { theme: isDark ? 'dark' : 'light' },
+                }).render();
+            }
+        })();
+    </script>
 @endsection

@@ -72,7 +72,7 @@ class UserDataTable extends DataTable
             ->columns($this->getColumns())
             ->minifiedAjax()
             ->orderBy(1)
-            ->responsive(true)
+            ->responsive(false)
             ->dom('
                 <"card-header border-bottom p-3 d-flex justify-content-between align-items-center"
                     <"head-label"><"dt-action-buttons"B>
@@ -86,9 +86,14 @@ class UserDataTable extends DataTable
                 >
             ')
             ->selectStyleSingle()
-            ->addAction(['printable' => false, 'exportable' => false, 'className' => 'dt-center lz-actions-col all', 'title' => __('general.actions')])
+            ->addAction(['printable' => false, 'exportable' => false, 'className' => 'dt-center lz-actions-col all noVis', 'title' => __('general.actions')])
             ->buttons([
-                Button::make('colvis')->addClass($buttonClass . ' btn-warning')->text(__('general.column_visibility')),
+                [
+                    'extend' => 'colvis',
+                    'className' => $buttonClass . ' btn-luzori-beige',
+                    'text' => __('general.column_visibility'),
+                    'columns' => ':not(.noVis)',
+                ],
                 [
                     'extend' => 'collection',
                     'text' => __('general.export'),  'className' => $buttonClass,
@@ -102,7 +107,7 @@ class UserDataTable extends DataTable
                 ],
             ])
         ->language($this->getDataTableLanguageUrl())
-            ->addTableClass('table table-bordered table-hover')
+            ->addTableClass('table table-hover')
             ->parameters([]);
     }
 
@@ -116,14 +121,14 @@ class UserDataTable extends DataTable
     public function getColumns(): array
     {
         return [
-            Column::make('id')->title('#'),
-            Column::computed('primary_image')->title(__('field.image')),
-            Column::computed('name')->title(__('field.name')),
-            Column::make('email')->title(__('field.email')),
-            Column::make('phone')->title(__('field.phone')),
-            Column::computed('status')->title(__('field.active')),
-            Column::make('wallet')->title(__('field.wallet')),
-            Column::make('created_at')->title(__('field.created_at')),
+            Column::make('id')->title('#')->addClass('all'),
+            Column::computed('primary_image')->title(__('field.image'))->addClass('all'),
+            Column::computed('name')->title(__('field.name'))->addClass('all'),
+            Column::make('email')->title(__('field.email'))->addClass('all'),
+            Column::make('phone')->title(__('field.phone'))->addClass('all'),
+            Column::computed('status')->title(__('field.active'))->addClass('all'),
+            Column::make('wallet')->title(__('field.wallet'))->visible(false),
+            Column::make('created_at')->title(__('field.created_at'))->visible(false),
         ];
     }
 

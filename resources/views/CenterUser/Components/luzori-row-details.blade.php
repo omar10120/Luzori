@@ -24,7 +24,8 @@
         transform: translateX(-100%) !important;
         box-shadow: 8px 0 28px rgba(0, 43, 38, 0.18);
     }
-    #lzRowDetailsDrawer.lz-row-drawer.show {
+    #lzRowDetailsDrawer.lz-row-drawer.show,
+    html[dir="rtl"] #lzRowDetailsDrawer.lz-row-drawer.show {
         transform: translateX(0) !important;
     }
     .lz-row-drawer-backdrop {
@@ -119,7 +120,11 @@
     const detailsTitle = @json(__('general.view_details'));
     const detailsBtnTitle = @json(__('general.view_details'));
     const emptyLabel = '—';
-    const actionsLabels = ['actions', 'action', 'الإجراءات', 'اجراءات'];
+    const actionsLabels = [
+        'actions', 'action',
+        @json(__('general.actions')),
+        'الإجراءات', 'اجراءات', 'العمليات', 'عمليات'
+    ].map(function (s) { return String(s || '').toLowerCase().trim(); });
 
     function detailsButtonHtml() {
         return '<a href="javascript:void(0)" class="lz-action-btn lz-open-row-details lz-view-side-details" title="' +

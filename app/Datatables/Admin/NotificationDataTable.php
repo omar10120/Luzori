@@ -38,9 +38,9 @@ class NotificationDataTable extends DataTable
                 </div>';
             })
             ->addColumn('resend', function ($row) {
-                return '<button type="button" class="btn btn-sm btn-success resend-notification" data-id="' . $row->id . '" title="' . __('field.resend') . '">
-                    <i class="ti ti-refresh"></i>
-                </button>';
+                return '<div class="lz-action-icons">'
+                    . '<button type="button" class="lz-action-btn resend-notification" data-id="' . $row->id . '" title="' . e(__('field.resend')) . '">'
+                    . '<i class="ti ti-refresh"></i></button></div>';
             })
             ->rawColumns(['translation.text', 'image', 'status', 'resend'])
             ->setRowId('id');
@@ -57,11 +57,11 @@ class NotificationDataTable extends DataTable
     {
         return $this->builder()
             ->setTableId('notifications-table')
-            ->addTableClass('dt-responsive table table-bordered table-hover')
+            ->addTableClass('dt-responsive table table-hover')
             ->columns($this->getColumns())
             ->minifiedAjax()
             ->orderBy(0)
-            ->responsive(true)
+            ->responsive(false)
             ->dom('
                 <"d-flex justify-content-between align-items-center mx-0 row mb-2"
                     <"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"fr>

@@ -8,16 +8,16 @@
 @endsection
 
 @section('content')
-    <div class="container">
+    <div class="luzori-page container-fluid px-3 px-md-4">
         @include('Admin.Components.show-response-messages')
 
-        <ul class="nav nav-tabs mb-3" role="tablist">
-            <li class="nav-item">
+        <ul class="nav nav-tabs lz-content-tabs mb-3" role="tablist">
+            <li class="nav-item" role="presentation">
                 <button type="button" class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-notifications" role="tab">
                     {{ __('field.push_notifications') }}
                 </button>
             </li>
-            <li class="nav-item">
+            <li class="nav-item" role="presentation">
                 <button type="button" class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-firebase" role="tab">
                     {{ __('field.firebase_settings') }}
                 </button>
@@ -26,24 +26,24 @@
 
         <div class="tab-content">
             <div class="tab-pane fade show active" id="tab-notifications" role="tabpanel">
-                <div class="card mb-4">
+                <div class="card lz-form-card mb-4">
                     <div class="card-header">
-                        <h4 class="mb-0">{{ __('field.new_notification') }}</h4>
+                        <h2 class="mb-0">{{ __('field.new_notification') }}</h2>
                     </div>
                     <div class="card-body">
                         <form id="frmSendNotification" enctype="multipart/form-data">
                             @csrf
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
                                     <label class="form-label">{{ __('field.target_type') }}</label>
                                     <select class="form-select" name="target_type" id="target_type">
                                         <option value="users">{{ __('field.users') }}</option>
                                         <option value="centers">{{ __('field.centers') }}</option>
                                     </select>
                                 </div>
-                                <div class="col-md-6 mb-3">
+                                <div class="col-md-6">
                                     <label class="form-label">{{ __('field.users') }} / {{ __('field.centers') }}</label>
-                                    <select class="select2 form-control" name="recipients[]" id="recipients" multiple>
+                                    <select class="select2 form-select" name="recipients[]" id="recipients" multiple>
                                         <option value="all" selected>{{ __('field.all_users') }}</option>
                                         @foreach ($users as $user)
                                             <option value="{{ $user->id }}" data-type="users">{{ $user->name }} ({{ $user->email ?? $user->phone }})</option>
@@ -56,7 +56,7 @@
                             </div>
 
                             @include('Admin.Components.languages-tabs')
-                            <div class="tab-content mb-3">
+                            <div class="tab-content mb-3 mt-3">
                                 @foreach (Config::get('translatable.locales') as $locale)
                                     <div class="tab-pane {{ $loop->first ? 'active' : null }}" id="{{ $locale }}-add"
                                         aria-labelledby="{{ $locale }}-tab-add" role="tabpanel">
@@ -65,7 +65,7 @@
                                             <input type="text" class="form-control" name="{{ $locale }}[title]"
                                                 placeholder="{{ __('field.new_notification') }}" />
                                         </div>
-                                        <div class="mb-3">
+                                        <div class="mb-0">
                                             <label class="form-label">{{ __('field.description') }} ({{ strtoupper($locale) }})</label>
                                             <textarea class="form-control" name="{{ $locale }}[text]" rows="4"
                                                 placeholder="{{ __('field.description') }}"></textarea>
@@ -74,24 +74,23 @@
                                 @endforeach
                             </div>
 
-                            <div class="mb-3">
+                            <div class="mb-0">
                                 <label class="form-label">{{ __('field.image') }} (1:1 — JPEG, PNG, JPG, WEBP — max 50MB)</label>
                                 <input type="file" class="form-control" name="image" accept=".jpeg,.jpg,.png,.webp,image/*" />
                             </div>
-
-                            <div class="d-flex justify-content-end gap-2">
-                                <button type="reset" class="btn btn-label-secondary">{{ __('general.reset') }}</button>
-                                <button type="submit" class="btn btn-primary" id="btnSendNotification">
-                                    <i class="ti ti-send me-1"></i>{{ __('field.send_notification') }}
-                                </button>
-                            </div>
                         </form>
+                    </div>
+                    <div class="card-footer d-flex justify-content-end gap-2">
+                        <button type="reset" form="frmSendNotification" class="btn btn-luzori-muted">{{ __('general.reset') }}</button>
+                        <button type="submit" form="frmSendNotification" class="btn btn-primary" id="btnSendNotification">
+                            <i class="ti ti-send me-1"></i>{{ __('field.send_notification') }}
+                        </button>
                     </div>
                 </div>
 
-                <div class="card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h4 class="mb-0">{{ __('locale.notifications') }}</h4>
+                <div class="card lz-form-card lz-table-card">
+                    <div class="card-header">
+                        <h2 class="mb-0">{{ __('locale.notifications') }}</h2>
                     </div>
                     <div class="card-body">
                         {{ $dataTable->table() }}
@@ -100,11 +99,11 @@
             </div>
 
             <div class="tab-pane fade" id="tab-firebase" role="tabpanel">
-                <div class="card">
+                <div class="card lz-form-card">
                     <div class="card-header">
-                        <h4 class="mb-0">{{ __('field.firebase_settings') }}</h4>
-                        <p class="text-muted mb-0 mt-1">
-                            Here fill up the following data &amp; setup the firebase to work properly the notifications of your system.
+                        <h2 class="mb-0">{{ __('field.firebase_settings') }}</h2>
+                        <p class="text-muted mb-0 mt-1 small">
+                            {{ __('field.firebase_settings_hint') }}
                         </p>
                     </div>
                     <div class="card-body">
@@ -115,43 +114,43 @@
                                 <textarea class="form-control" name="service_account_json" rows="10"
                                     placeholder='{"type":"service_account","project_id":"..."}'>{{ old('service_account_json', $firebase->service_account_json) }}</textarea>
                             </div>
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
+                            <div class="row g-3">
+                                <div class="col-md-6">
                                     <label class="form-label">{{ __('field.api_key') }}</label>
                                     <input type="text" class="form-control" name="api_key" value="{{ old('api_key', $firebase->api_key) }}" />
                                 </div>
-                                <div class="col-md-6 mb-3">
+                                <div class="col-md-6">
                                     <label class="form-label">{{ __('field.auth_domain') }}</label>
                                     <input type="text" class="form-control" name="auth_domain" value="{{ old('auth_domain', $firebase->auth_domain) }}" />
                                 </div>
-                                <div class="col-md-6 mb-3">
+                                <div class="col-md-6">
                                     <label class="form-label">{{ __('field.project_id') }}</label>
                                     <input type="text" class="form-control" name="project_id" value="{{ old('project_id', $firebase->project_id) }}" />
                                 </div>
-                                <div class="col-md-6 mb-3">
+                                <div class="col-md-6">
                                     <label class="form-label">{{ __('field.storage_bucket') }}</label>
                                     <input type="text" class="form-control" name="storage_bucket" value="{{ old('storage_bucket', $firebase->storage_bucket) }}" />
                                 </div>
-                                <div class="col-md-6 mb-3">
+                                <div class="col-md-6">
                                     <label class="form-label">{{ __('field.messaging_sender_id') }}</label>
                                     <input type="text" class="form-control" name="messaging_sender_id" value="{{ old('messaging_sender_id', $firebase->messaging_sender_id) }}" />
                                 </div>
-                                <div class="col-md-6 mb-3">
+                                <div class="col-md-6">
                                     <label class="form-label">{{ __('field.app_id') }}</label>
                                     <input type="text" class="form-control" name="app_id" value="{{ old('app_id', $firebase->app_id) }}" />
                                 </div>
-                                <div class="col-md-6 mb-3">
+                                <div class="col-md-6">
                                     <label class="form-label">{{ __('field.measurement_id') }}</label>
                                     <input type="text" class="form-control" name="measurement_id" value="{{ old('measurement_id', $firebase->measurement_id) }}" />
                                 </div>
                             </div>
-                            <div class="d-flex justify-content-end gap-2">
-                                <button type="reset" class="btn btn-label-secondary">{{ __('general.reset') }}</button>
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="ti ti-device-floppy me-1"></i>{{ __('general.save') }}
-                                </button>
-                            </div>
                         </form>
+                    </div>
+                    <div class="card-footer d-flex justify-content-end gap-2">
+                        <button type="reset" form="frmFirebaseSettings" class="btn btn-luzori-muted">{{ __('general.reset') }}</button>
+                        <button type="submit" form="frmFirebaseSettings" class="btn btn-primary">
+                            <i class="ti ti-device-floppy me-1"></i>{{ __('general.save') }}
+                        </button>
                     </div>
                 </div>
             </div>

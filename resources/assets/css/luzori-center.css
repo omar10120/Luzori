@@ -1,4 +1,4 @@
-/* Luzori Center Dashboard Theme — matches brand mockup */
+/* Luzori Center Dashboard Theme â€” matches brand mockup */
 
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Cairo:wght@300;400;500;600;700&display=swap');
 
@@ -21,7 +21,7 @@ body.luzori-center {
   --lz-font-display: 'Cormorant Garamond', Georgia, serif;
   --lz-font-body: 'DM Sans', 'Cairo', sans-serif;
 
-  /* Remap theme / Bootstrap primary (blue/purple) → Luzori forest */
+  /* Remap theme / Bootstrap primary (blue/purple) â†’ Luzori forest */
   --bs-primary: #002b26;
   --bs-primary-rgb: 0, 43, 38;
   --bs-link-color: #0a3a34;
@@ -51,7 +51,7 @@ body.luzori-center .bg-navbar-theme {
   -webkit-backdrop-filter: none !important;
 }
 
-/* Solid navbar — remove outer margin/gutter only (keep theme width vs sidebar) */
+/* Solid navbar â€” remove outer margin/gutter only (keep theme width vs sidebar) */
 body.luzori-center .navbar-detached,
 body.luzori-center .layout-navbar.navbar-detached,
 body.luzori-center #layout-navbar {
@@ -72,7 +72,7 @@ body.luzori-center .layout-wrapper:not(.layout-navbar-full) .layout-navbar.navba
   max-width: none !important;
 }
 
-/* Fixed: keep sidebar offset — only drop the theme side padding from width */
+/* Fixed: keep sidebar offset â€” only drop the theme side padding from width */
 html.layout-navbar-fixed:not(.layout-menu-collapsed) body.luzori-center .layout-content-navbar:not(.layout-without-menu) .layout-navbar.navbar-detached {
   width: calc(100% - 16.25rem) !important;
   max-width: none !important;
@@ -85,8 +85,8 @@ html.layout-navbar-fixed.layout-menu-collapsed body.luzori-center .layout-conten
 
 /*
  * Mobile navbar fix:
- * - Theme uses position:fixed + margin-top:$spacer → gap above bar
- * - Helpers.js injects .layout-page{padding-top:navbarHeight} → extra empty band
+ * - Theme uses position:fixed + margin-top:$spacer â†’ gap above bar
+ * - Helpers.js injects .layout-page{padding-top:navbarHeight} â†’ extra empty band
  * Keep navbar FIXED (does not scroll), flush to top, solid white.
  * Move the reserved space to .content-wrapper only.
  */
@@ -150,7 +150,7 @@ body.luzori-center .bg-menu-theme {
   background: var(--lz-forest) !important;
   box-shadow: none !important;
   border: none !important;
-  /* Keep theme fixed positioning — do not force position:relative (causes content gap) */
+  /* Keep theme fixed positioning â€” do not force position:relative (causes content gap) */
 }
 
 html.layout-menu-fixed body.luzori-center .layout-menu,
@@ -364,7 +364,7 @@ html.layout-menu-collapsed:not(.layout-menu-hover) body.luzori-center .layout-me
   display: none !important;
 }
 
-/* Theme sets opacity:0 on all divs when collapsed — keep icon wraps visible */
+/* Theme sets opacity:0 on all divs when collapsed â€” keep icon wraps visible */
 html.layout-menu-collapsed:not(.layout-menu-hover) body.luzori-center .layout-menu .menu-inner > .menu-item div.lz-menu-icon-wrap,
 html.layout-menu-collapsed:not(.layout-menu-hover) body.luzori-center .layout-menu .menu-inner > .menu-item > .menu-link > .lz-menu-icon-wrap {
   opacity: 1 !important;
@@ -580,7 +580,7 @@ body.luzori-center .layout-menu .menu-item.active > .menu-link:not(.menu-toggle)
   opacity: 0.85;
 }
 
-/* Submenu panel — vertical tree line linking children to parent */
+/* Submenu panel â€” vertical tree line linking children to parent */
 body.luzori-center .layout-menu .menu-item.open > .menu-sub,
 body.luzori-center .layout-menu .menu-sub {
   position: relative !important;
@@ -599,7 +599,7 @@ body.luzori-center .layout-menu .menu-sub > .menu-item {
   position: relative;
 }
 
-/* No horizontal connectors — vertical line only */
+/* No horizontal connectors â€” vertical line only */
 body.luzori-center .bg-menu-theme.menu-vertical .menu-sub > .menu-item > .menu-link::before,
 body.luzori-center .layout-menu .menu-sub > .menu-item > .menu-link::before {
   content: none !important;
@@ -1303,7 +1303,7 @@ body.luzori-center table.dataTable td.all.lz-actions-col {
   display: table-cell !important;
 }
 
-/* Hide DataTables expand arrows — details open via eye dialog */
+/* Hide DataTables expand arrows â€” details open via eye dialog */
 body.luzori-center table.dataTable.dtr-column > tbody > tr > td.dtr-control,
 body.luzori-center table.dataTable.dtr-inline.collapsed > tbody > tr > td.dtr-control {
   cursor: default;
@@ -1429,7 +1429,7 @@ body.luzori-center table.dataTable > tbody > tr.child span.dtr-title {
   min-width: 140px;
 }
 
-/* Expanded / selected DataTable rows — no theme blue */
+/* Expanded / selected DataTable rows â€” no theme blue */
 body.luzori-center table.dataTable > tbody > tr.parent,
 body.luzori-center table.dataTable > tbody > tr.parent > *,
 body.luzori-center table.dataTable > tbody > tr.selected,
@@ -1562,7 +1562,7 @@ body.luzori-center .progress-bar {
   background-color: var(--lz-forest) !important;
 }
 
-/* Luzori loaders — dual ring (forest + gold) */
+/* Luzori loaders â€” dual ring (forest + gold) */
 @keyframes lz-spin {
   to {
     transform: rotate(360deg);
@@ -1640,7 +1640,7 @@ body.luzori-center .spinner-grow.text-primary {
   border-radius: 50% !important;
 }
 
-/* DataTables processing — square loader; must hide when DT finishes */
+/* DataTables processing â€” square loader; must hide when DT finishes */
 body.luzori-center div.dataTables_processing,
 body.luzori-center div.dt-processing {
   top: 50% !important;
@@ -1665,7 +1665,7 @@ body.luzori-center div.dt-processing {
   justify-content: center !important;
 }
 
-/* Default hidden — only show when DataTables sets display:block inline */
+/* Default hidden â€” only show when DataTables sets display:block inline */
 body.luzori-center div.dataTables_processing:not([style*='display: block']):not([style*='display:block']),
 body.luzori-center div.dt-processing:not([style*='display: block']):not([style*='display:block']) {
   display: none !important;
@@ -1818,4 +1818,234 @@ body.luzori-center .breadcrumb-item .lz-crumb-plain {
 
 body.luzori-center .breadcrumb-item + .breadcrumb-item::before {
   color: var(--lz-gold) !important;
+}
+
+/* ==========================================================================
+
+/* ==========================================================================
+   Dark theme — html.dark-style
+   Keep forest green for sidebar; gold only for accents.
+   ========================================================================== */
+html.dark-style body.luzori-center {
+  --lz-forest: #002b26;
+  --lz-forest-soft: #0a3a34;
+  --lz-cream: #141824;
+  --lz-cream-card: #1c2233;
+  --lz-gold: #c5a070;
+  --lz-gold-soft: #d4b483;
+  --lz-gold-deep: #e8d5b5;
+  --lz-muted: #a8b0bf;
+  --lz-text: #eef1f6;
+  --lz-shadow: 0 10px 32px rgba(0, 0, 0, 0.4);
+  background: #141824 !important;
+  color: var(--lz-text) !important;
+}
+
+html.dark-style body.luzori-center .layout-page,
+html.dark-style body.luzori-center .content-wrapper,
+html.dark-style body.luzori-center .luzori-page,
+html.dark-style body.luzori-center .luzori-dashboard {
+  background: #141824 !important;
+  color: var(--lz-text) !important;
+}
+
+html.dark-style body.luzori-center .layout-menu,
+html.dark-style body.luzori-center .layout-menu.bg-menu-theme,
+html.dark-style body.luzori-center .bg-menu-theme,
+html.dark-style body.luzori-center #layout-menu {
+  background: #002b26 !important;
+  background-color: #002b26 !important;
+}
+
+html.dark-style body.luzori-center .layout-menu .menu-link {
+  color: rgba(255, 228, 196, 0.92) !important;
+}
+
+html.dark-style body.luzori-center .layout-menu .menu-item.active > .menu-link,
+html.dark-style body.luzori-center .layout-menu .menu-item.open > .menu-link {
+  background: linear-gradient(160deg, #d4b483 0%, #e8d5b5 100%) !important;
+  color: #002b26 !important;
+}
+
+html.dark-style body.luzori-center .layout-navbar,
+html.dark-style body.luzori-center .navbar-detached,
+html.dark-style body.luzori-center #layout-navbar {
+  background: #1a2030 !important;
+  background-color: #1a2030 !important;
+}
+
+html.dark-style body.luzori-center .card,
+html.dark-style body.luzori-center .lz-form-card,
+html.dark-style body.luzori-center .lz-table-card {
+  background: #1c2233 !important;
+  border-color: #2e364a !important;
+  color: var(--lz-text) !important;
+}
+
+html.dark-style body.luzori-center h1,
+html.dark-style body.luzori-center h2,
+html.dark-style body.luzori-center h3,
+html.dark-style body.luzori-center h4,
+html.dark-style body.luzori-center .lz-page-title {
+  color: #e8d5b5 !important;
+}
+
+html.dark-style body.luzori-center .form-label,
+html.dark-style body.luzori-center label {
+  color: #d0d6e2 !important;
+}
+
+html.dark-style body.luzori-center .form-control,
+html.dark-style body.luzori-center .form-select,
+html.dark-style body.luzori-center textarea.form-control {
+  background: #141824 !important;
+  border: 1px solid #4a556c !important;
+  color: #eef1f6 !important;
+}
+
+html.dark-style body.luzori-center .form-control:focus,
+html.dark-style body.luzori-center .form-select:focus {
+  border-color: #c5a070 !important;
+  box-shadow: 0 0 0 3px rgba(197, 160, 112, 0.25) !important;
+}
+
+html.dark-style body.luzori-center .tab-content,
+html.dark-style body.luzori-center .tab-pane {
+  background: transparent !important;
+  color: var(--lz-text) !important;
+}
+
+html.dark-style body.luzori-center .lz-lang-tabs {
+  background: linear-gradient(180deg, #252b3d 0%, #1c2233 100%) !important;
+  border-color: #3d465c !important;
+}
+
+html.dark-style body.luzori-center .lz-lang-tabs .nav-link.active {
+  background: #002b26 !important;
+  color: #e8d5b5 !important;
+}
+
+html.dark-style body.luzori-center table.table thead th {
+  background: #252b3d !important;
+  color: #d4b483 !important;
+}
+
+html.dark-style body.luzori-center table.table tbody td {
+  color: #eef1f6 !important;
+  border-color: #2a3144 !important;
+}
+
+html.dark-style body.luzori-center .lz-action-btn {
+  background: #252b3d !important;
+  border-color: #3d465c !important;
+  color: #d4b483 !important;
+}
+
+html.dark-style body.luzori-center .btn-primary,
+html.dark-style body.luzori-center .btn-luzori-primary {
+  background: #002b26 !important;
+  border-color: #002b26 !important;
+  color: #e8d5b5 !important;
+}
+
+html.dark-style body.luzori-center .btn-luzori-beige {
+  background: linear-gradient(90deg, #9a7a4a, #c5a070) !important;
+  color: #002b26 !important;
+}
+
+html.dark-style body.luzori-center .dropdown-menu {
+  background: #1c2233 !important;
+  border-color: #3d465c !important;
+}
+
+html.dark-style body.luzori-center .dropdown-item {
+  color: #eef1f6 !important;
+}
+
+@media (max-width: 1199.98px) {
+  html.dark-style.layout-navbar-fixed body.luzori-center #layout-navbar,
+  html.dark-style.layout-navbar-fixed body.luzori-center .layout-navbar.navbar-detached {
+    background: #1a2030 !important;
+    background-color: #1a2030 !important;
+  }
+}
+
+/* Dark text contrast — forest green only on solid BG, not body text */
+html.dark-style body.luzori-center .lz-page-title,
+html.dark-style body.luzori-center .lz-stat-value,
+html.dark-style body.luzori-center .card-header h2,
+html.dark-style body.luzori-center .card-header h4,
+html.dark-style body.luzori-center a:not(.btn):not(.menu-link):not(.dropdown-item):not(.page-link):not(.nav-link),
+html.dark-style body.luzori-center .breadcrumb-item a,
+html.dark-style body.luzori-center .footer,
+html.dark-style body.luzori-center .footer a,
+html.dark-style body.luzori-center .dataTables_wrapper .dataTables_info,
+html.dark-style body.luzori-center .lz-action-btn,
+html.dark-style body.luzori-center .text-primary {
+  color: #e8d5b5 !important;
+}
+
+html.dark-style body.luzori-center .form-label,
+html.dark-style body.luzori-center label:not(.btn):not(.switch),
+html.dark-style body.luzori-center .text-muted,
+html.dark-style body.luzori-center .breadcrumb-item.active {
+  color: #c5ccd8 !important;
+}
+
+html.dark-style body.luzori-center .btn-luzori-beige,
+html.dark-style body.luzori-center .layout-menu .menu-item.active > .menu-link {
+  color: #002b26 !important;
+}
+
+html.dark-style body.luzori-center .layout-menu .menu-link {
+  color: rgba(255, 228, 196, 0.92) !important;
+}
+
+
+/* LIGHT MODE LOCK */
+html:not(.dark-style) body.luzori-center {
+  --lz-forest: #002b26;
+  --lz-cream: #f9f6f1;
+  --lz-text: #1a2a27;
+  background: #f9f6f1 !important;
+  color: #1a2a27 !important;
+}
+html:not(.dark-style) body.luzori-center .layout-menu,
+html:not(.dark-style) body.luzori-center .bg-menu-theme,
+html:not(.dark-style) body.luzori-center #layout-menu {
+  background: #002b26 !important;
+  background-color: #002b26 !important;
+}
+html:not(.dark-style) body.luzori-center .layout-menu .menu-link {
+  color: rgba(255, 228, 196, 0.92) !important;
+}
+html:not(.dark-style) body.luzori-center .layout-menu .menu-item.active > .menu-link {
+  color: #002b26 !important;
+}
+html:not(.dark-style) body.luzori-center .card,
+html:not(.dark-style) body.luzori-center .lz-table-card,
+html:not(.dark-style) body.luzori-center .lz-form-card {
+  background: #fff !important;
+  color: #1a2a27 !important;
+}
+html:not(.dark-style) body.luzori-center .lz-page-title,
+html:not(.dark-style) body.luzori-center .breadcrumb-item a {
+  color: #002b26 !important;
+}
+html:not(.dark-style) body.luzori-center table.table thead th {
+  background: #f7f2ea !important;
+  color: #002b26 !important;
+}
+html:not(.dark-style) body.luzori-center table.table tbody td {
+  color: #1a2a27 !important;
+}
+html:not(.dark-style) body.luzori-center .form-control,
+html:not(.dark-style) body.luzori-center .form-select {
+  background: #fff !important;
+  color: #1a2a27 !important;
+  border-color: #e5ddd2 !important;
+}
+html:not(.dark-style) body.luzori-center .btn-primary {
+  background: #002b26 !important;
+  color: #fff !important;
 }

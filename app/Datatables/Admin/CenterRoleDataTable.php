@@ -32,14 +32,7 @@ class CenterRoleDataTable extends DataTable
                 return $html;
             })
             ->editColumn('permission', function ($row) {
-                $locale = app()->getLocale();
-                $permissions = '';
-                foreach ($row->permissions as $permission) {
-                    $name = ($locale == 'ar') ? ($permission->name_ar ?? $permission->name) : $permission->name;
-                    $permissions .= '<span class="badge"
-                        style="border-radius:10px;background-color:blue;margin:5px;padding:7px;">' . htmlspecialchars($name) . '</span>';
-                }
-                return $permissions;
+                return $this->permissionCountCell($row);
             })
             ->editColumn('created_at', function ($row) {
                 return $row->created_at->diffForHumans();
@@ -47,13 +40,44 @@ class CenterRoleDataTable extends DataTable
             ->editColumn('name', function ($row) {
                 return \App\Helpers\MyHelper::truncateWithReadMore($row->name ?? '');
             })
-            ->rawColumns(['permission', 'name'], true)
+            ->rawColumns(['permission', 'name', 'action'], true)
             ->setRowId('id');
+    }
+
+    protected function permissionCountCell($row): string
+    {
+        $locale = app()->getLocale();
+        $names = [];
+        foreach ($row->permissions as $permission) {
+            $name = ($locale === 'ar')
+                ? ($permission->name_ar ?? $permission->name)
+                : $permission->name;
+            if ($name !== null && $name !== '') {
+                $names[] = (string) $name;
+            }
+        }
+        $count = count($names);
+        $b64 = base64_encode(json_encode(array_values($names)) ?: '[]');
+        $roleName = e($row->name ?? '');
+
+        return '<span class="lz-perm-count-wrap">'
+            . '<span class="lz-perm-count-badge">' . $count . '</span>'
+            . '<button type="button" class="lz-perm-eye-btn lz-view-permissions"'
+            . ' title="' . e(__('general.permissions')) . '"'
+            . ' data-role-name="' . $roleName . '"'
+            . ' data-perm-count="' . $count . '"'
+            . ' data-perms-b64="' . e($b64) . '"'
+            . ' onclick="event.preventDefault();event.stopPropagation();if(window.lzOpenAdminPermissions){window.lzOpenAdminPermissions(this);}return false;">'
+            . '<i class="ti ti-eye"></i></button>'
+            . '</span>';
     }
 
     public function query(Role $model): QueryBuilder
     {
-        return $model->query()->where('guard_name', 'center')->orderBy('roles.id', 'DESC');
+        return $model->query()
+            ->with('permissions')
+            ->where('guard_name', 'center')
+            ->orderBy('roles.id', 'DESC');
     }
 
     public function html(): HtmlBuilder
@@ -67,7 +91,7 @@ class CenterRoleDataTable extends DataTable
             ->columns($this->getColumns())
             ->minifiedAjax()
             ->orderBy(1)
-            ->responsive(true)
+            ->responsive(false)
             ->dom('
                 <"card-header border-bottom p-3 d-flex justify-content-between align-items-center"
                     <"head-label"><"dt-action-buttons"B>
@@ -81,9 +105,14 @@ class CenterRoleDataTable extends DataTable
                 >
             ')
             ->selectStyleSingle()
-            ->addAction(['printable' => false, 'exportable' => false, 'className' => 'dt-center lz-actions-col all', 'title' => __('general.actions')])
+            ->addAction(['printable' => false, 'exportable' => false, 'className' => 'dt-center lz-actions-col all noVis', 'title' => __('general.actions')])
             ->buttons([
-                Button::make('colvis')->addClass($buttonClass . ' btn-warning')->text(__('general.column_visibility')),
+                [
+                    'extend' => 'colvis',
+                    'className' => $buttonClass . ' btn-luzori-beige',
+                    'text' => __('general.column_visibility'),
+                    'columns' => ':not(.noVis)',
+                ],
                 [
                     'extend' => 'collection',
                     'text' => __('general.export'),  'className' => $buttonClass,
@@ -97,7 +126,7 @@ class CenterRoleDataTable extends DataTable
                 ],
             ])
             ->language($this->getDataTableLanguageUrl())
-            ->addTableClass('table table-bordered table-hover')
+            ->addTableClass('table table-hover')
             ->initComplete('function () {
              $(".dt-action-buttons").append("<a href=' . $addRoute . ' class=\"btn btn-primary btn-sm mx-1 mx-md-2 px-2 px-md-3 py-1 py-md-2\">' . __('general.add_new') . '<i class=\"ti ti-plus\"></i></a>");
             }')

@@ -7,13 +7,19 @@
 @endsection
 
 @section('content')
-    <div class="container">
+    <div class="luzori-page container-fluid px-3 px-md-4">
         @include('Admin.Components.breadcrumbs')
 
-        <div class="card">
-            <div class="card-header">
-                <h2 class="mb-0">{{ $title }}</h2>
+        <div class="lz-page-toolbar">
+            <div class="lz-page-title-wrap">
+                <div class="lz-page-icon">
+                    <i class="ti ti-package"></i>
+                </div>
+                <h1 class="lz-page-title">{{ $title }}</h1>
             </div>
+        </div>
+
+        <div class="card lz-form-card">
             <div class="card-body">
                 <div id="global-product-error" class="alertcenters alert-danger d-none" role="alert"></div>
                 <div class="row g-3">

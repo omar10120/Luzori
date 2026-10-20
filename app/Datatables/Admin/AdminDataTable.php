@@ -73,7 +73,7 @@ class AdminDataTable extends DataTable
             ->columns($this->getColumns())
             ->minifiedAjax()
             ->orderBy(1)
-            ->responsive(true)
+            ->responsive(false)
             ->dom('
                 <"card-header border-bottom p-3 d-flex justify-content-between align-items-center"
                     <"head-label"><"dt-action-buttons"B>
@@ -87,9 +87,14 @@ class AdminDataTable extends DataTable
                 >
             ')
             ->selectStyleSingle()
-            ->addAction(['printable' => false, 'exportable' => false, 'className' => 'dt-center lz-actions-col all', 'title' => __('general.actions')])
+            ->addAction(['printable' => false, 'exportable' => false, 'className' => 'dt-center lz-actions-col all noVis', 'title' => __('general.actions')])
             ->buttons([
-                Button::make('colvis')->addClass($buttonClass . ' btn-warning')->text(__('general.column_visibility')),
+                [
+                    'extend' => 'colvis',
+                    'className' => $buttonClass . ' btn-luzori-beige',
+                    'text' => __('general.column_visibility'),
+                    'columns' => ':not(.noVis)',
+                ],
                 [
                     'extend' => 'collection',
                     'text' => __('general.export'),
@@ -103,7 +108,7 @@ class AdminDataTable extends DataTable
                 ],
             ])
             ->language($this->getDataTableLanguageUrl())
-            ->addTableClass('table table-bordered table-hover')
+            ->addTableClass('table table-hover')
             ->initComplete('function () {
                 $(".dt-action-buttons").append("<a href=' . $addRoute . ' class=\"btn btn-primary mx-2\">' . __('general.add_new') . '<i class=\"ti ti-plus\"></i></a>");
             }')

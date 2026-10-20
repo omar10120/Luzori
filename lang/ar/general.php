@@ -35,6 +35,8 @@ return [
     'export'                    => 'تصدير',
     'actions'                   => 'العمليات',
     'permissions'               => 'الصلاحيات',
+    'select_all'                => 'تحديد الكل',
+    'overview'                  => 'نظرة عامة',
     'print'                     => 'طباعة',
     'sales_history'             => 'سجل المبيعات',
     'all_users_sales_history'   => 'سجل مبيعات جميع المستخدمين',

@@ -3,7 +3,7 @@
 @section('title', $title)
 
 @section('content')
-    <div class="container">
+    <div class="luzori-page container-fluid px-3 px-md-4">
         @include('Admin.Components.breadcrumbs')
 
         <div class="row">
@@ -13,7 +13,7 @@
                     <input type="hidden" name="id" value="{{ $item->id }}">
                 @endif
 
-                <div class="card">
+                <div class="card lz-form-card">
                     <div class="card-header">
                         <h2>{{ $title }}</h2>
                     </div>
