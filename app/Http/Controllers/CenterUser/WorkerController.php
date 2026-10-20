@@ -5,6 +5,7 @@ namespace App\Http\Controllers\CenterUser;
 use App\Datatables\CenterUser\WorkerDataTable;
 use App\Helpers\MyHelper;
 use App\Http\Controllers\Controller;
+use App\Services\NotifiesCenter;
 use App\Http\Requests\CenterUser\WorkerRequest;
 use App\Services\CRUDService;
 use App\Services\WorkerService;
@@ -18,6 +19,8 @@ use App\Models\Worker;
 
 class WorkerController extends Controller
 {
+    use NotifiesCenter;
+
     private CRUDService $crudService;
     private $model = 'Worker';
     private $plural = 'workers';
@@ -40,7 +43,7 @@ class WorkerController extends Controller
         if (!auth('center_user')->user()->can($can, 'center_api')) {
             return abort(403);
         }
-        
+
         $title = __('locale.' . $this->plural);
         return $dataTable->render('CenterUser.SubViews.Worker.list', compact('title'));
     }
@@ -98,7 +101,6 @@ class WorkerController extends Controller
         if (isset($request->id)) {
             $can = 'UPDATE_' . Str::upper($this->plural);
         } else {
-            $responseCode = Response::HTTP_CREATED;
             $can = 'CREATE_' . Str::upper($this->plural);
         }
         if (!auth('center_user')->user()->can($can, 'center_api')) {
@@ -113,9 +115,33 @@ class WorkerController extends Controller
         $item = $this->crudService->updateOrCreate($this->model, $data, true);
         if ($item) {
             return MyHelper::responseJSON('redirect_to_home', Response::HTTP_CREATED, route('center_user.workers.index'));
-        } else {
-            return MyHelper::responseJSON(__('admin.an_error_occurred'), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
+
+        return MyHelper::responseJSON(__('admin.an_error_occurred'), Response::HTTP_INTERNAL_SERVER_ERROR);
+    }
+
+    /**
+     * Delete a worker and notify the center.
+     */
+    public function destroy(Request $request)
+    {
+        $can = 'DELETE_' . Str::upper($this->plural);
+        if (!auth('center_user')->user()->can($can, 'center_api')) {
+            return abort(403);
+        }
+
+        $worker = Worker::findOrFail($request->id);
+
+        $nameEn = $worker->translate('en')?->name ?: ($worker->name ?? '');
+        $nameAr = $worker->translate('ar')?->name ?: ($worker->name ?? '');
+
+        // If your CRUDService exposes delete, swap this line for it.
+        // e.g. $this->crudService->delete($this->model, $worker->id);
+        $worker->delete();
+
+        $this->sendWorkerDeletedNotification($worker->id, $nameEn, $nameAr);
+
+        return MyHelper::responseJSON('redirect_to_home', Response::HTTP_OK, route('center_user.workers.index'));
     }
 
     public function info(Request $request)
@@ -150,5 +176,24 @@ class WorkerController extends Controller
             ->get(['id', 'name', 'phone', 'is_center_user', 'branch_id']);
 
         return response()->json($workers);
+    }
+
+    /**
+     * Notify the active center that a worker has been deleted.
+     */
+    private function sendWorkerDeletedNotification(int $workerId, string $nameEn, string $nameAr): void
+    {
+        $this->notifyCenter('system', [
+            'en' => [
+                'title' => 'Worker deleted',
+                'text'  => 'Worker "' . $nameEn . '" has been deleted.',
+            ],
+            'ar' => [
+                'title' => 'تم حذف الموظف',
+                'text'  => 'تم حذف الموظف "' . $nameAr . '".',
+            ],
+        ], [
+            'worker_id' => (string) $workerId,
+        ]);
     }
 }
