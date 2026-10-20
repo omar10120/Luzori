@@ -37,6 +37,7 @@ return [
     'actions'                   => 'Actions',
     'permissions'               => 'Permissions',
     'select_all'                => 'Select all',
+    'overview'                  => 'Overview',
     'print'                     => 'Print',
     'sales_history'             => 'Sales history',
     'all_users_sales_history'   => 'All users sales history',
