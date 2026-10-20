@@ -11,6 +11,7 @@ use App\Services\NotifiesCenter;
 
 class CenterController extends Controller
 {
+    use NotifiesCenter;      
     private function resolveActiveCenter(): ?Center
     {
         $host = request()->getHost();
@@ -55,12 +56,12 @@ class CenterController extends Controller
         if (!auth('center_user')->user()->can('UPDATE_SETTINGS', 'center_api')) {
             return abort(403);
         }
-
+    
         $center = $this->resolveActiveCenter();
         if (!$center) {
             return MyHelper::responseJSON('Center not found.', Response::HTTP_NOT_FOUND);
         }
-
+    
         $validated = $request->validate([
             'iban'                  => 'required|string|max:100',
             'BankAccountHolderName' => 'required|string|max:100',
@@ -68,15 +69,92 @@ class CenterController extends Controller
             'BankAccount'           => 'required|string|max:100',
             'bank_name'             => 'required|string|max:100',
             'BankId'                => 'required|string|max:100',
-            
         ]);
-
+    
+        // ---- Snapshot BEFORE update so we can diff & notify ----
+        $oldValues = [];
+        foreach (array_keys($validated) as $field) {
+            $oldValues[$field] = (string) ($center->{$field} ?? '');
+        }
+    
         $center->update($validated);
-
+    
+        // ---- Compute which fields actually changed ----
+        $changedFields = [];
+        foreach ($validated as $field => $newValue) {
+            if ($oldValues[$field] !== (string) $newValue) {
+                $changedFields[] = $field;
+            }
+        }
+    
+        // ---- Notify the center (best-effort, never blocks the response) ----
+        if (!empty($changedFields)) {
+            $this->notifyCenterBankInfoUpdated($center->fresh(), $changedFields);
+        }
+    
         return MyHelper::responseJSON(
             __('admin.operation_done_successfully'),
             Response::HTTP_OK,
             route('center_user.center.index')
         );
+    }
+
+    private function notifyCenterBankInfoUpdated(Center $center, array $changedFields): void
+    {
+        try {
+            if (empty($changedFields)) {
+                return;
+            }
+
+            // Human-readable labels (used in the message, never the values).
+            $labels = [
+                'iban'                  => ['en' => 'IBAN',              'ar' => 'رقم الآيبان'],
+                'BankAccountHolderName' => ['en' => 'account holder',    'ar' => 'اسم صاحب الحساب'],
+                'BusinessName'          => ['en' => 'business name',     'ar' => 'اسم النشاط التجاري'],
+                'BankAccount'           => ['en' => 'bank account',      'ar' => 'رقم الحساب البنكي'],
+                'bank_name'             => ['en' => 'bank name',         'ar' => 'اسم البنك'],
+                'BankId'                => ['en' => 'bank ID',           'ar' => 'معرف البنك'],
+            ];
+
+            $enParts = [];
+            $arParts = [];
+            foreach ($changedFields as $field) {
+                if (isset($labels[$field])) {
+                    $enParts[] = $labels[$field]['en'];
+                    $arParts[] = $labels[$field]['ar'];
+                }
+            }
+
+            if (empty($enParts)) {
+                return;
+            }
+
+            $enList = implode(', ', $enParts);
+            $arList = implode('، ', $arParts);
+
+            $this->notifyCenter(
+                'settings',
+                [
+                    'en' => [
+                        'title' => 'Center Bank Information Updated',
+                        'text'  => 'Your center bank information was updated (fields: ' . $enList . ').',
+                    ],
+                    'ar' => [
+                        'title' => 'تم تحديث بيانات البنك للمركز',
+                        'text'  => 'تم تحديث بيانات البنك الخاصة بمركزك (الحقول: ' . $arList . ').',
+                    ],
+                ],
+                [
+                    'action'         => 'center_bank_info_updated',
+                    'center_id'      => (string) $center->id,
+                    'changed_fields' => implode(',', $changedFields),
+                ]
+            );
+        } catch (\Throwable $e) {
+            Log::warning('notifyCenterBankInfoUpdated failed', [
+                'center_id' => $center->id ?? null,
+                'error'     => $e->getMessage(),
+            ]);
+        }
     }
 }
