@@ -13,6 +13,7 @@ use App\Models\FavoriteCenter;
 use App\Models\CenterReview;
 use App\Services\PageService;
 use App\Models\product;
+use App\Services\AppNotificationService;   
 use Exception;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Config;
@@ -1010,6 +1011,14 @@ class CenterService
 
             if ($center->status == 'approve') {
                 $this->setupCenterDatabase($center);
+
+                // setupCenterDatabase() silently skips setting is_setup on failure,
+                // so only notify if the tenant DB was actually provisioned.
+                $center->refresh();
+
+                if ($center->is_setup) {
+                    $this->notifyNewCenterWelcome($center);
+                }
             }
 
             return $center;
@@ -1594,6 +1603,44 @@ class CenterService
             return null;
         } finally {
             $this->restoreMainDatabase($originalDb);
+        }
+    }
+  
+    private function notifyNewCenterWelcome(Center $center): void
+    {
+        try {
+            $name = trim((string) ($center->name ?? 'Center'));
+            if ($name === '') {
+                $name = 'Center';
+            }
+
+            app(AppNotificationService::class)->notifyCenterEvent(
+                $center,
+                'system',
+                [
+                    'en' => [
+                        'title' => 'Welcome!',
+                        'text'  => 'Welcome to your center "' . $name . '". '
+                                . 'Your account has been set up and is ready to use.',
+                    ],
+                    'ar' => [
+                        'title' => 'مرحباً بك!',
+                        'text'  => 'مرحباً بك في مركزك "' . $name . '". '
+                                . 'تم إعداد حسابك وهو جاهز للاستخدام.',
+                    ],
+                ],
+                [
+                    'action'    => 'center_created',
+                    'center_id' => (string) $center->id,
+                    'domain'    => (string) ($center->domain ?? ''),
+                ]
+            );
+        } catch (\Throwable $e) {
+            // The notification must never break center creation.
+            Log::warning('notifyNewCenterWelcome failed', [
+                'center_id' => $center->id ?? null,
+                'error'     => $e->getMessage(),
+            ]);
         }
     }
 }
