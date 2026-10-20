@@ -53,15 +53,18 @@ class StaffReportController extends Controller
             if (!empty($branch_id)) {
                 $temp_users->where('branch_id', $branch_id);
             }
-            $firstusers = $temp_users->skip(0)->take(16)->get();
+            // Clone the builder for each group so skip/take don't leak between them.
+            $firstusers  = (clone $temp_users)->skip(0)->take(16)->get();                // workers 0–15
             $firstusers_last_total = [];
             $firstusers_last_total_price = [];
             $firstusers_last_total_tips = [];
-            $secondusers = $temp_users->skip(16)->take(33)->get();
+            $secondusers = (clone $temp_users)->skip(16)->take(33)->get();               // workers 16–48
             $secondusers_last_total = [];
             $secondusers_last_total_price = [];
             $secondusers_last_total_tips = [];
-            $restusers = $temp_users->skip(33)->get();
+            // "Rest" starts at 49 (16 + 33). A limit is required so MySQL/MariaDB
+            // accepts the OFFSET (bare `OFFSET n` without `LIMIT` is a syntax error).
+            $restusers   = (clone $temp_users)->skip(49)->take(PHP_INT_MAX)->get();      // workers 49+
             $restusers_last_total = [];
             $restusers_last_total_price = [];
             $restusers_last_total_tips = [];
@@ -164,8 +167,8 @@ class StaffReportController extends Controller
             ));
             if (isset($request->is_pdf)) {
                 $options = [
-                    'format' => 'A4', // Custom paper size (width, height) in points
-                    'orientation' => 'landscape', // or 'landscape'
+                    'format' => 'A4',
+                    'orientation' => 'landscape',
                     'margin_top' => 1,
                     'margin_bottom' => 1,
                     'margin_left' => 1,
