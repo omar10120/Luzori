@@ -26,7 +26,7 @@
 @stack('styles')
 
 @if (!str_contains(url()->current(), 'admin') && (str_contains(url()->current(), 'center_user') || auth('center_user')->check()))
-<link rel="stylesheet" href="{{ asset('assets/css/luzori-center.css') }}?v=37">
+<link rel="stylesheet" href="{{ asset('assets/css/luzori-center.css') }}?v=38">
 <style>
   body.luzori-center .luzori-page::before,
   body.luzori-center .luzori-dashboard::before {
@@ -61,12 +61,17 @@
       background-color: #fff !important;
       z-index: 1085 !important;
     }
+    html.dark-style.layout-navbar-fixed body.luzori-center #layout-navbar,
+    html.dark-style.layout-navbar-fixed body.luzori-center .layout-navbar.navbar-detached {
+      background: #1f2536 !important;
+      background-color: #1f2536 !important;
+    }
   }
 </style>
 @endif
 
 @if (str_contains(url()->current(), 'admin'))
-<link rel="stylesheet" href="{{ asset('assets/css/luzori-admin.css') }}?v=7">
+<link rel="stylesheet" href="{{ asset('assets/css/luzori-admin.css') }}?v=8">
 <style>
   body.luzori-admin .luzori-page::before,
   body.luzori-admin .luzori-dashboard::before {
@@ -95,6 +100,11 @@
       background: #fff !important;
       background-color: #fff !important;
       z-index: 1085 !important;
+    }
+    html.dark-style.layout-navbar-fixed body.luzori-admin #layout-navbar,
+    html.dark-style.layout-navbar-fixed body.luzori-admin .layout-navbar.navbar-detached {
+      background: #1f2536 !important;
+      background-color: #1f2536 !important;
     }
   }
 </style>
