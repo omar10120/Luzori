@@ -26,7 +26,7 @@
 @stack('styles')
 
 @if (!str_contains(url()->current(), 'admin') && (str_contains(url()->current(), 'center_user') || auth('center_user')->check()))
-<link rel="stylesheet" href="{{ asset('assets/css/luzori-center.css') }}?v=40">
+<link rel="stylesheet" href="{{ asset('assets/css/luzori-center.css') }}?v=41">
 <style>
   body.luzori-center .luzori-page::before,
   body.luzori-center .luzori-dashboard::before {
@@ -71,7 +71,7 @@
 @endif
 
 @if (str_contains(url()->current(), 'admin'))
-<link rel="stylesheet" href="{{ asset('assets/css/luzori-admin.css') }}?v=10">
+<link rel="stylesheet" href="{{ asset('assets/css/luzori-admin.css') }}?v=11">
 <style>
   body.luzori-admin .luzori-page::before,
   body.luzori-admin .luzori-dashboard::before {

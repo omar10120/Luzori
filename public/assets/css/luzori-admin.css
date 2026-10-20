@@ -1,4 +1,4 @@
-﻿ï»¿/* Luzori Admin Dashboard Theme Ã¢â¬â matches brand mockup */
+/* Luzori Admin Dashboard Theme Ã¢â¬â matches brand mockup */
 
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Cairo:wght@300;400;500;600;700&display=swap');
 
@@ -2879,4 +2879,149 @@ html.dark-style body.luzori-admin .lz-perm-eye-btn,
 html.dark-style body.luzori-admin .lz-action-btn {
   background: #252b3d !important;
   border-color: #3d465c !important;
+}
+
+
+/* ==========================================================================
+   LIGHT MODE LOCK — never let dark overrides leak into light
+   ========================================================================== */
+html:not(.dark-style) body.luzori-admin {
+  --lz-forest: #002b26;
+  --lz-forest-soft: #0a3a34;
+  --lz-cream: #f9f6f1;
+  --lz-cream-card: #fdfaf6;
+  --lz-gold: #c5a070;
+  --lz-gold-soft: #e8d5b5;
+  --lz-gold-deep: #9a6923;
+  --lz-muted: #7a8582;
+  --lz-text: #1a2a27;
+  background: #f9f6f1 !important;
+  color: #1a2a27 !important;
+}
+
+html:not(.dark-style) body.luzori-admin .layout-page,
+html:not(.dark-style) body.luzori-admin .content-wrapper,
+html:not(.dark-style) body.luzori-admin .luzori-page,
+html:not(.dark-style) body.luzori-admin .luzori-dashboard {
+  background: #f9f6f1 !important;
+  color: #1a2a27 !important;
+}
+
+html:not(.dark-style) body.luzori-admin .layout-menu,
+html:not(.dark-style) body.luzori-admin .layout-menu.bg-menu-theme,
+html:not(.dark-style) body.luzori-admin .bg-menu-theme,
+html:not(.dark-style) body.luzori-admin #layout-menu {
+  background: #002b26 !important;
+  background-color: #002b26 !important;
+}
+
+html:not(.dark-style) body.luzori-admin .layout-menu .menu-link {
+  color: rgba(255, 228, 196, 0.92) !important;
+}
+
+html:not(.dark-style) body.luzori-admin .layout-menu .menu-icon,
+html:not(.dark-style) body.luzori-admin .layout-menu .menu-link > i {
+  color: rgba(255, 214, 168, 0.95) !important;
+}
+
+html:not(.dark-style) body.luzori-admin .layout-menu .menu-item.active > .menu-link,
+html:not(.dark-style) body.luzori-admin .layout-menu .menu-item.open > .menu-link {
+  background: linear-gradient(160deg, #d4b483 0%, #e8d5b5 100%) !important;
+  color: #002b26 !important;
+}
+
+html:not(.dark-style) body.luzori-admin .layout-menu .menu-item.active > .menu-link .menu-icon,
+html:not(.dark-style) body.luzori-admin .layout-menu .menu-item.active > .menu-link i,
+html:not(.dark-style) body.luzori-admin .layout-menu .menu-item.open > .menu-link .menu-icon,
+html:not(.dark-style) body.luzori-admin .layout-menu .menu-item.open > .menu-link i {
+  color: #002b26 !important;
+}
+
+html:not(.dark-style) body.luzori-admin .layout-navbar,
+html:not(.dark-style) body.luzori-admin .navbar-detached,
+html:not(.dark-style) body.luzori-admin #layout-navbar {
+  background: #f9f6f1 !important;
+  background-color: #f9f6f1 !important;
+  color: #1a2a27 !important;
+}
+
+html:not(.dark-style) body.luzori-admin .card,
+html:not(.dark-style) body.luzori-admin .lz-form-card,
+html:not(.dark-style) body.luzori-admin .lz-table-card {
+  background: #fff !important;
+  color: #1a2a27 !important;
+  border-color: #efe6d8 !important;
+}
+
+html:not(.dark-style) body.luzori-admin .lz-page-title,
+html:not(.dark-style) body.luzori-admin .card-header h2,
+html:not(.dark-style) body.luzori-admin .card-header h4,
+html:not(.dark-style) body.luzori-admin .lz-form-section-title,
+html:not(.dark-style) body.luzori-admin .breadcrumb-item a,
+html:not(.dark-style) body.luzori-admin .form-label,
+html:not(.dark-style) body.luzori-admin .lz-field-label {
+  color: #002b26 !important;
+}
+
+html:not(.dark-style) body.luzori-admin .text-muted,
+html:not(.dark-style) body.luzori-admin .breadcrumb-item.active,
+html:not(.dark-style) body.luzori-admin .dataTables_info,
+html:not(.dark-style) body.luzori-admin .footer {
+  color: #7a8582 !important;
+}
+
+html:not(.dark-style) body.luzori-admin table.table thead th,
+html:not(.dark-style) body.luzori-admin .dataTables_wrapper table.dataTable thead th,
+html:not(.dark-style) body.luzori-admin .lz-table-card table thead th {
+  background: #f7f2ea !important;
+  color: #002b26 !important;
+  border-color: #efe6d8 !important;
+}
+
+html:not(.dark-style) body.luzori-admin table.table tbody td,
+html:not(.dark-style) body.luzori-admin .dataTables_wrapper table.dataTable tbody td {
+  color: #1a2a27 !important;
+  border-color: #f1ebe3 !important;
+  background: transparent !important;
+}
+
+html:not(.dark-style) body.luzori-admin .form-control,
+html:not(.dark-style) body.luzori-admin .form-select,
+html:not(.dark-style) body.luzori-admin textarea.form-control {
+  background: #fff !important;
+  border-color: #e5ddd2 !important;
+  color: #1a2a27 !important;
+}
+
+html:not(.dark-style) body.luzori-admin .btn-primary,
+html:not(.dark-style) body.luzori-admin .btn-luzori-primary {
+  background: #002b26 !important;
+  border-color: #002b26 !important;
+  color: #fff !important;
+}
+
+html:not(.dark-style) body.luzori-admin .lz-action-btn {
+  background: #f3ebe0 !important;
+  border-color: #e8dccb !important;
+  color: #002b26 !important;
+}
+
+html:not(.dark-style) body.luzori-admin .lz-lang-tabs {
+  background: linear-gradient(180deg, #fbf7f1 0%, #f3ebe0 100%) !important;
+  border-color: #e8dccb !important;
+}
+
+html:not(.dark-style) body.luzori-admin .lz-lang-tabs .nav-link {
+  color: #6d7875 !important;
+}
+
+html:not(.dark-style) body.luzori-admin .lz-lang-tabs .nav-link.active {
+  background: #002b26 !important;
+  color: #fff !important;
+}
+
+html:not(.dark-style) body.luzori-admin .tab-content,
+html:not(.dark-style) body.luzori-admin .tab-pane {
+  background: transparent !important;
+  color: #1a2a27 !important;
 }
