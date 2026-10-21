@@ -3,10 +3,16 @@
 namespace App\Services;
 
 use App\Models\Center;
+use App\Models\InvoiceSetting;
 use Illuminate\Support\Facades\Log;
 
 trait NotifiesCenter
 {
+    /**
+     * Cached result so we don't hit the DB on every notification in the same request.
+     */
+    private ?bool $allowNotificationCache = null;
+
     /**
      * Resolve the center for the currently active tenant.
      */
@@ -22,7 +28,28 @@ trait NotifiesCenter
     }
 
     /**
-     * Fire a notification to the active center.
+     * Whether the current tenant has notifications enabled.
+     * Reads invoice_settings.allow_notification (one row per tenant database).
+     */
+    protected function notificationsAllowed(): bool
+    {
+        if ($this->allowNotificationCache !== null) {
+            return $this->allowNotificationCache;
+        }
+
+        try {
+            $settings = InvoiceSetting::query()->first();
+            $this->allowNotificationCache = (bool) ($settings?->allow_notification ?? false);
+        } catch (\Throwable $e) {
+            Log::error('Failed to read allow_notification setting: ' . $e->getMessage());
+            $this->allowNotificationCache = false;
+        }
+
+        return $this->allowNotificationCache;
+    }
+
+    /**
+     * Fire a notification to the active center — only if notifications are enabled.
      *
      * @param string $type          short tag e.g. 'system', 'worker', 'branch'
      * @param array  $translations  ['en' => ['title' => ..., 'text' => ...], 'ar' => [...]]
@@ -36,6 +63,11 @@ trait NotifiesCenter
         bool $sendPush = true
     ): void {
         try {
+            // Short-circuit: skip everything if the tenant disabled notifications.
+            if (!$this->notificationsAllowed()) {
+                return;
+            }
+
             $center = $this->resolveCurrentCenter();
             if (!$center) {
                 return;

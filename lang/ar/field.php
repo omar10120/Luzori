@@ -460,6 +460,8 @@ return [
     'expire_date'                     => 'فترة صلاحية',
     'available'                       => 'متاح', 
     'received_hint_main_stock'        => ' المستودع يحتوي على المنتجات للطلبات',
+    'allow_notification'              => ' سماح للاشعارات',
+    
     
 
     

@@ -123,10 +123,25 @@
                                 </label>
                             </div>
 
+                            {{-- Section: Allow Notification (simple active/inactive toggle) --}}
+                            <div class="d-flex align-items-center gap-2 mb-3 mt-4">
+                                <i class="ti ti-bell fs-4 text-primary"></i>
+                                <h5 class="mb-0 fw-semibold">{{ __('field.allow_notification') ?? 'Allow Notification' }}</h5>
+                            </div>
+                            <div class="form-check form-switch mb-3">
+                                <input type="hidden" name="allow_notification" value="0">
+                                <input class="form-check-input" type="checkbox" role="switch" id="allow_notification"
+                                    name="allow_notification" value="1" @checked($item->allow_notification)>
+                                <label class="form-check-label" for="allow_notification">
+                                    {{ __('general.allow_notification') ?? 'Enable notifications' }}
+                                </label>
+                            </div>
+
                             <div class="d-flex align-items-center gap-2 mb-3 mt-4">
                                 <i class="ti ti-mail fs-4 text-primary"></i>
                                 <h5 class="mb-0 fw-semibold">{{ __('field.sms_allow') ?? 'Automatic sale printing' }}</h5>
                             </div>
+
                             <div class="form-check form-switch mb-3">
                                 <input type="hidden" name="sms_allow" value="0">
                                 <input class="form-check-input" type="checkbox" role="switch" id="sms_allow"
@@ -135,8 +150,6 @@
                                     {{ __('general.allow_sms') ?? 'Allow SMS notifications' }}
                                 </label>
                                 <div class="form-text">
-                                    <!-- {{ __('general.sms_package') ?? 'SMS package' }}: 50, 150, 500, 1000 {{ __('general.requests') ?? 'SMS requests' }} / AED 50, 150, 500, 1000 -->
-                                    <!-- <span class="mx-1">|</span> -->
                                     {{ __('general.sms_package_balance') ?? 'SMS package balance' }}: {{ number_format($smsPackageAmount) }}
                                 </div>
                             </div>
