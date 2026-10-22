@@ -477,6 +477,7 @@ return [
     'expire_date'                     => 'فترة صلاحية',
     'available'                       => 'متاح', 
     'received_hint_main_stock'        => ' المستودع يحتوي على المنتجات للطلبات',
+<<<<<<< HEAD
     'firebase_settings'               => 'إعدادات Firebase',
     'firebase_settings_hint'          => 'أدخل البيانات التالية لإعداد Firebase حتى تعمل إشعارات النظام بشكل صحيح.',
     'push_notifications'              => 'إشعارات الدفع',
@@ -510,4 +511,17 @@ return [
     'normal'                          => 'عادية',
     'high'                            => 'عالية',
     'urgent'                          => 'عاجلة',
+=======
+    'allow_notification'              => ' سماح للاشعارات',
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+>>>>>>> master
 ];

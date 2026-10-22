@@ -119,6 +119,7 @@
 
                     <hr class="my-2" />
 
+<<<<<<< HEAD
                     <div class="lz-section-label mt-3">
                         <i class="ti ti-printer"></i>
                         <span>{{ __('field.auto_print_sale') ?? 'Automatic sale printing' }}</span>
@@ -131,6 +132,87 @@
                             {{ __('general.auto_print_sale_after_payment') ?? 'Print the sale invoice automatically after payment' }}
                         </label>
                     </div>
+=======
+                            {{-- Section: Address & Tax --}}
+                            <div class="d-flex align-items-center gap-2 mb-3 mt-4">
+                                <i class="ti ti-file-invoice fs-4 text-primary"></i>
+                                <h5 class="mb-0 fw-semibold">{{ __('field.invoice_details') ?? 'Invoice Details' }}</h5>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label" for="emirate">
+                                        {{ __('field.emirate') }}
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="ti ti-map-pin"></i>
+                                        </span>
+                                        <input type="text" class="form-control" id="emirate" name="emirate"
+                                            placeholder="{{ __('field.emirate') }}"
+                                            value="{{ $item->emirate }}" />
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label" for="tax_number">
+                                        {{ __('field.tax_number') }}
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="ti ti-receipt-tax"></i>
+                                        </span>
+                                        <input type="text" class="form-control" id="tax_number" name="tax_number"
+                                            placeholder="{{ __('field.tax_number') }}"
+                                            value="{{ $item->tax_number }}" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr class="my-2" />
+
+                            <div class="d-flex align-items-center gap-2 mb-3 mt-4">
+                                <i class="ti ti-printer fs-4 text-primary"></i>
+                                <h5 class="mb-0 fw-semibold">{{ __('field.auto_print_sale') ?? 'Automatic sale printing' }}</h5>
+                            </div>
+                            <div class="form-check form-switch mb-3">
+                                <input type="hidden" name="auto_print_sale" value="0">
+                                <input class="form-check-input" type="checkbox" role="switch" id="auto_print_sale"
+                                    name="auto_print_sale" value="1" @checked($item->auto_print_sale)>
+                                <label class="form-check-label" for="auto_print_sale">
+                                    {{ __('general.auto_print_sale_after_payment') ?? 'Print the sale invoice automatically after payment' }}
+                                </label>
+                            </div>
+
+                            {{-- Section: Allow Notification (simple active/inactive toggle) --}}
+                            <div class="d-flex align-items-center gap-2 mb-3 mt-4">
+                                <i class="ti ti-bell fs-4 text-primary"></i>
+                                <h5 class="mb-0 fw-semibold">{{ __('field.allow_notification') ?? 'Allow Notification' }}</h5>
+                            </div>
+                            <div class="form-check form-switch mb-3">
+                                <input type="hidden" name="allow_notification" value="0">
+                                <input class="form-check-input" type="checkbox" role="switch" id="allow_notification"
+                                    name="allow_notification" value="1" @checked($item->allow_notification)>
+                                <label class="form-check-label" for="allow_notification">
+                                    {{ __('general.allow_notification') ?? 'Enable notifications' }}
+                                </label>
+                            </div>
+
+                            <div class="d-flex align-items-center gap-2 mb-3 mt-4">
+                                <i class="ti ti-mail fs-4 text-primary"></i>
+                                <h5 class="mb-0 fw-semibold">{{ __('field.sms_allow') ?? 'Automatic sale printing' }}</h5>
+                            </div>
+
+                            <div class="form-check form-switch mb-3">
+                                <input type="hidden" name="sms_allow" value="0">
+                                <input class="form-check-input" type="checkbox" role="switch" id="sms_allow"
+                                    name="sms_allow" value="1" @checked($item->sms_allow)>
+                                <label class="form-check-label" for="sms_allow">
+                                    {{ __('general.allow_sms') ?? 'Allow SMS notifications' }}
+                                </label>
+                                <div class="form-text">
+                                    {{ __('general.sms_package_balance') ?? 'SMS package balance' }}: {{ number_format($smsPackageAmount) }}
+                                </div>
+                            </div>
+>>>>>>> master
 
                     <div class="lz-section-label mt-3">
                         <i class="ti ti-mail"></i>

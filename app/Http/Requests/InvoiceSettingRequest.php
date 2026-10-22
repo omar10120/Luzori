@@ -21,6 +21,8 @@ class InvoiceSettingRequest extends FormRequest
             'tax_number'     => 'nullable|string|max:255',
             'auto_print_sale'=> 'boolean',
             'sms_allow'      => 'boolean',
+            'allow_notification'      => 'boolean',
+
         ];
     }
 

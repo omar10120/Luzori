@@ -3,26 +3,58 @@
 namespace App\Services;
 
 use App\Models\Center;
+
+use App\Models\Invoice_Settings;   
 use Illuminate\Support\Facades\Log;
 
 trait NotifiesCenter
 {
     /**
+     * Cached result so we don't hit the DB on every notification in the same request.
+     */
+    private ?bool $allowNotificationCache = null;
+
+    /**
      * Resolve the center for the currently active tenant.
      */
     protected function resolveCurrentCenter(): ?Center
     {
+        if (method_exists($this, 'resolveActiveCenter')) {
+            $center = $this->resolveActiveCenter();
+            if ($center) return $center;
+        }
+    
         $center = Center::where('database', config('database.connections.mysql.database'))->first();
-
         if (!$center && session()->has('active_center_domain')) {
             $center = Center::where('domain', session('active_center_domain'))->first();
         }
-
         return $center;
     }
 
     /**
-     * Fire a notification to the active center.
+     * Whether the current tenant has notifications enabled.
+     * Reads invoice_settings.allow_notification (one row per tenant database).
+     */
+    protected function notificationsAllowed(): bool
+    {
+        if ($this->allowNotificationCache !== null) {
+            return $this->allowNotificationCache;
+        }
+
+        try {
+            // invoice_settings has exactly one row per tenant DB.
+            $settings = Invoice_Settings::query()->first();
+            $this->allowNotificationCache = (bool) ($settings?->allow_notification ?? false);
+        } catch (\Throwable $e) {
+            Log::error('Failed to read allow_notification setting: ' . $e->getMessage());
+            $this->allowNotificationCache = false;
+        }
+
+        return $this->allowNotificationCache;
+    }
+
+    /**
+     * Fire a notification to the active center — only if notifications are enabled.
      *
      * @param string $type          short tag e.g. 'system', 'worker', 'branch'
      * @param array  $translations  ['en' => ['title' => ..., 'text' => ...], 'ar' => [...]]
@@ -36,6 +68,11 @@ trait NotifiesCenter
         bool $sendPush = true
     ): void {
         try {
+            // Short-circuit: skip everything if the tenant disabled notifications.
+            if (!$this->notificationsAllowed()) {
+                return;
+            }
+
             $center = $this->resolveCurrentCenter();
             if (!$center) {
                 return;

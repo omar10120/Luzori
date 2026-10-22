@@ -189,4 +189,8 @@ return [
 
 
     'sale_otp_bypass' => env('SALE_OTP_BYPASS', true),
+    'skip_self_edit' => env('NOTIFICATIONS_SKIP_SELF_EDIT', false),
+
+
+    
 ];
