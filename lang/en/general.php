@@ -232,8 +232,9 @@ return [
     'sms_package_required' => 'SMS package is required.',
     'choose_sms_package' => 'Choose SMS Package',
     'enter_the_price_of_the_product' => 'Enter the price of the product',
+    'not_available' => 'Not available',
+    'user_information' => 'User Information',
     'allow_notification' => 'allow notification'
     
 
->>>>>>> master
 ];

@@ -477,6 +477,39 @@ return [
     'expire_date'                     => 'فترة صلاحية',
     'available'                       => 'متاح', 
     'received_hint_main_stock'        => ' المستودع يحتوي على المنتجات للطلبات',
+    'firebase_settings'               => 'إعدادات Firebase',
+    'firebase_settings_hint'          => 'أدخل البيانات التالية لإعداد Firebase حتى تعمل إشعارات النظام بشكل صحيح.',
+    'push_notifications'              => 'إشعارات الدفع',
+    'new_notification'                => 'إشعار جديد',
+    'send_notification'               => 'إرسال الإشعار',
+    'target_type'                     => 'نوع المستلم',
+    'all_centers'                     => 'كل المراكز',
+    'service_account_content'         => 'محتوى حساب الخدمة (JSON)',
+    'api_key'                         => 'مفتاح API',
+    'auth_domain'                     => 'نطاق المصادقة',
+    'project_id'                      => 'معرّف المشروع',
+    'storage_bucket'                  => 'حاوية التخزين',
+    'messaging_sender_id'             => 'معرّف مرسل الرسائل',
+    'app_id'                          => 'معرّف التطبيق',
+    'measurement_id'                  => 'معرّف القياس',
+    'support_chat_admin_hint'         => 'اختر مركزاً لفتح المحادثة المباشرة',
+    'support_chat_center_hint'        => 'تحدث مباشرة مع دعم إدارة Luzori',
+    'support_chat_empty'              => 'لا توجد رسائل بعد — ابدأ المحادثة!',
+    'support_chat_pick_center'        => 'اختر مركزاً من القائمة',
+    'select_conversation'             => 'اختر محادثة',
+    'type_a_message'                  => 'اكتب رسالة…',
+    'subject'                         => 'الموضوع',
+    'priority'                        => 'الأولوية',
+    'opened_by'                       => 'فُتحت بواسطة',
+    'reply'                           => 'رد',
+    'open'                            => 'مفتوحة',
+    'in_progress'                     => 'قيد المعالجة',
+    'resolved'                        => 'تم الحل',
+    'closed'                          => 'مغلقة',
+    'low'                             => 'منخفضة',
+    'normal'                          => 'عادية',
+    'high'                            => 'عالية',
+    'urgent'                          => 'عاجلة',
     'allow_notification'              => ' سماح للاشعارات',
     
     
@@ -488,5 +521,4 @@ return [
     
     
     
->>>>>>> master
 ];

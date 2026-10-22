@@ -119,7 +119,6 @@
 
                     <hr class="my-2" />
 
-<<<<<<< HEAD
                     <div class="lz-section-label mt-3">
                         <i class="ti ti-printer"></i>
                         <span>{{ __('field.auto_print_sale') ?? 'Automatic sale printing' }}</span>
@@ -132,7 +131,6 @@
                             {{ __('general.auto_print_sale_after_payment') ?? 'Print the sale invoice automatically after payment' }}
                         </label>
                     </div>
-=======
                             {{-- Section: Address & Tax --}}
                             <div class="d-flex align-items-center gap-2 mb-3 mt-4">
                                 <i class="ti ti-file-invoice fs-4 text-primary"></i>
@@ -212,7 +210,6 @@
                                     {{ __('general.sms_package_balance') ?? 'SMS package balance' }}: {{ number_format($smsPackageAmount) }}
                                 </div>
                             </div>
->>>>>>> master
 
                     <div class="lz-section-label mt-3">
                         <i class="ti ti-mail"></i>
