@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Services\NotifiesCenter; 
 use App\Models\Booking;
 use App\Models\BookingDetail;
 use App\Models\Branch;
@@ -38,6 +39,7 @@ use App\Models\Center;
 
 class SalesService
 {
+    use NotifiesCenter;
     public function getCartData($cart, $centerUser, bool $isAdmin = false)
     {
         $services = Service::with('translation')
@@ -1143,32 +1145,61 @@ class SalesService
     {
         $center = $this->resolveActiveCenter();
         if (!$center) {
-            Log::warning('SMS sent but center could not be resolved for package usage.', [
-                'sale_id' => $saleId,
-            ]);
+            Log::warning('SMS sent but center could not be resolved for package usage.', ['sale_id' => $saleId]);
             return;
         }
 
+        $centerId = $center->getKey();
+
         $updated = Center::query()
-            ->whereKey($center->getKey())
+            ->whereKey($centerId)
             ->where('sms_request_package', '>', 0)
             ->decrement('sms_request_package');
 
         if (!$updated) {
-            Log::warning('SMS sent but package balance could not be decremented.', [
-                'sale_id' => $saleId,
-                'center_id' => $center->getKey(),
-            ]);
+            Log::warning('SMS sent but package balance could not be decremented.', ['sale_id' => $saleId, 'center_id' => $centerId]);
             return;
         }
 
-        $remaining = (int) Center::query()
-            ->whereKey($center->getKey())
-            ->value('sms_request_package');
+        // Re-read the actual balance
+        $remaining = (int) Center::query()->whereKey($centerId)->value('sms_request_package');
 
-        if ($remaining === 0) {
+        // Hard stop: nothing left → turn SMS off + notify once
+        if ($remaining <= 0) {
             Invoice_Settings::query()->update(['sms_allow' => false]);
+            $this->notifySmsBalance(0, exhausted: true);
+            return;
         }
+
+        // Soft warnings at fixed thresholds — triggers at 50, 20, 10, 5, 1
+        $thresholds = [50, 20, 10, 5, 1];
+        if (in_array($remaining, $thresholds, true)) {
+            $this->notifySmsBalance($remaining);
+        }
+    }
+
+    private function notifySmsBalance(int $remaining, bool $exhausted = false): void
+    {
+        if ($exhausted) {
+            $this->notifyCenter(
+                'sms_balance_exhausted',
+                [
+                    'en' => ['title' => 'SMS package exhausted', 'text' => 'Your SMS package balance is zero. SMS sending has been disabled.'],
+                    'ar' => ['title' => 'انتهت حزمة الرسائل النصية', 'text' => 'تم استهلاك رصيد حزمة الرسائل النصية بالكامل. تم إيقاف إرسال الرسائل.'],
+                ],
+                ['remaining' => 0, 'action' => 'sms_package_exhausted']
+            );
+            return;
+        }
+
+        $this->notifyCenter(
+            'sms_balance_low',
+            [
+                'en' => ['title' => 'SMS balance is running low', 'text' => "Your SMS package balance is about to run out — only {$remaining} SMS remaining."],
+                'ar' => ['title' => 'رصيد الرسائل النصية على وشك الانتهاء', 'text' => "رصيد حزمة الرسائل النصية على وشك الانتهاء — متبقٍ فقط {$remaining} رسالة."],
+            ],
+            ['remaining' => $remaining, 'action' => 'sms_package_low']
+        );
     }
 
     private function resolveActiveCenter(): ?Center

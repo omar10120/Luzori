@@ -3,7 +3,8 @@
 namespace App\Services;
 
 use App\Models\Center;
-use App\Models\InvoiceSetting;
+
+use App\Models\Invoice_Settings;   
 use Illuminate\Support\Facades\Log;
 
 trait NotifiesCenter
@@ -18,12 +19,15 @@ trait NotifiesCenter
      */
     protected function resolveCurrentCenter(): ?Center
     {
+        if (method_exists($this, 'resolveActiveCenter')) {
+            $center = $this->resolveActiveCenter();
+            if ($center) return $center;
+        }
+    
         $center = Center::where('database', config('database.connections.mysql.database'))->first();
-
         if (!$center && session()->has('active_center_domain')) {
             $center = Center::where('domain', session('active_center_domain'))->first();
         }
-
         return $center;
     }
 
@@ -38,7 +42,8 @@ trait NotifiesCenter
         }
 
         try {
-            $settings = InvoiceSetting::query()->first();
+            // invoice_settings has exactly one row per tenant DB.
+            $settings = Invoice_Settings::query()->first();
             $this->allowNotificationCache = (bool) ($settings?->allow_notification ?? false);
         } catch (\Throwable $e) {
             Log::error('Failed to read allow_notification setting: ' . $e->getMessage());
