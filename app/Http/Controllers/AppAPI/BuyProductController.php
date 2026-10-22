@@ -324,13 +324,6 @@ class BuyProductController extends Controller
                     'payment_type'    => $validated['payment_type'],
                     'commission'      => $validated['commission'] ?? null,
                     'discount'        => $validated['discount'] ?? null,
-<<<<<<< HEAD
-                    // 'sales_worker_id' => $validated['sales_worker_id'],
-                    // 'worker_id'       => $validated['worker_id'] ?? null,
-                    // 'worker_id'       => 1,
-                    'sales_worker_id' => $this->resolveDefaultWorkerId($validated['sales_worker_id'] ?? null),
-                    'worker_id'       => $this->resolveDefaultWorkerId($validated['worker_id'] ?? null),
-=======
                     'sales_worker_id' => $validated['sales_worker_id'],
                     'worker_id'       => 1,
 >>>>>>> master
@@ -582,17 +575,6 @@ class BuyProductController extends Controller
             'wallet' => 0,
         ]);
     }
-<<<<<<< HEAD
-    
-
-    private function resolveDefaultWorkerId(?int $fallback = null): ?int
-    {
-        $firstId = \App\Models\Worker::query()
-            ->orderBy('id')
-            ->value('id');
-
-        return $firstId ?? $fallback;
-=======
 
     
     /**
@@ -655,6 +637,5 @@ class BuyProductController extends Controller
                 'error'          => $e->getMessage(),
             ]);
         }
->>>>>>> master
     }
 }

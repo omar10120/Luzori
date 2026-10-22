@@ -502,26 +502,6 @@ return [
     'expire_date'                     => 'ُExpire date',
     'available'                       => 'Available',
     'received_hint_main_stock'        => 'Hint: Available in warehouse for transfer orders',
-<<<<<<< HEAD
-    'support_chat_admin_hint'         => 'Select a center to open the live conversation',
-    'support_chat_center_hint'        => 'Chat live with Luzori admin support',
-    'support_chat_empty'              => 'No messages yet — say hello!',
-    'support_chat_pick_center'        => 'Pick a center from the list',
-    'select_conversation'             => 'Select a conversation',
-    'type_a_message'                  => 'Type a message…',
-    'subject'                         => 'Subject',
-    'priority'                        => 'Priority',
-    'opened_by'                       => 'Opened by',
-    'reply'                           => 'Reply',
-    'open'                            => 'Open',
-    'in_progress'                     => 'In progress',
-    'resolved'                        => 'Resolved',
-    'closed'                          => 'Closed',
-    'low'                             => 'Low',
-    'normal'                          => 'Normal',
-    'high'                            => 'High',
-    'urgent'                          => 'Urgent',
-=======
     'allow_notification'              => 'allow notification'
     
 >>>>>>> master

@@ -231,10 +231,6 @@ return [
     'sms_package_required' => 'حزمة الرسائل النصية مطلوبة.',
     'choose_sms_package' => 'ختر الحزمة الرسائل النصية',
     'enter_the_stock_quantity_of_the_product' => 'أدخل كمية المخزون للمنتج',
-<<<<<<< HEAD
-    'not_available' => 'غير متوفر',
-    'user_information' => 'معلومات المستخدم',
-=======
     'allow_notification' => 'سماح للاشعارات'
     
 >>>>>>> master
