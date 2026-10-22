@@ -5,7 +5,7 @@
         top: 0 !important;
         right: 0 !important;
         left: auto !important;
-        width: min(420px, 94vw) !important;
+        width: min(420px, 96vw) !important;
         height: 100vh !important;
         max-width: 100vw !important;
         border: 0 !important;
@@ -18,15 +18,36 @@
         display: flex;
         flex-direction: column;
     }
-    html[dir="rtl"] #lzAdminPermDrawer.lz-admin-perm-drawer {
+    html[dir="rtl"] #lzAdminPermDrawer.lz-admin-perm-drawer,
+    html[dir=rtl] #lzAdminPermDrawer.lz-admin-perm-drawer {
         right: auto !important;
         left: 0 !important;
         transform: translateX(-100%) !important;
         box-shadow: 8px 0 28px rgba(0, 43, 38, 0.18);
     }
     #lzAdminPermDrawer.lz-admin-perm-drawer.show,
-    html[dir="rtl"] #lzAdminPermDrawer.lz-admin-perm-drawer.show {
+    html[dir="rtl"] #lzAdminPermDrawer.lz-admin-perm-drawer.show,
+    html[dir=rtl] #lzAdminPermDrawer.lz-admin-perm-drawer.show {
         transform: translateX(0) !important;
+    }
+    html.dark-style #lzAdminPermDrawer.lz-admin-perm-drawer {
+        background: #1c2233 !important;
+    }
+    html.dark-style #lzAdminPermDrawer .lz-admin-perm-header,
+    html.dark-style #lzAdminPermDrawer .lz-admin-perm-footer {
+        background: #1a2030 !important;
+        border-color: #2e364a !important;
+    }
+    html.dark-style #lzAdminPermDrawer .lz-admin-perm-body {
+        background: #1c2233 !important;
+    }
+    html.dark-style #lzAdminPermDrawer .lz-admin-perm-title {
+        color: #e8d5b5 !important;
+    }
+    html.dark-style #lzAdminPermDrawer .lz-admin-perm-list li {
+        background: #252b3d !important;
+        border-color: #3d465c !important;
+        color: #eef1f6 !important;
     }
     .lz-admin-perm-backdrop {
         position: fixed !important;

@@ -51,14 +51,18 @@ class WithdrawalRequestDataTable extends DataTable
                 return $row->updated_at ? $row->updated_at->format('Y-m-d H:i') : '---';
             })
             ->editColumn('action', function ($row) {
+                $eye = '<a href="javascript:void(0)" class="lz-action-btn lz-open-admin-row-details lz-admin-view-details" title="' . e(__('general.view_details')) . '"'
+                    . ' onclick="event.preventDefault();event.stopPropagation();if(window.lzOpenAdminRowDetails){window.lzOpenAdminRowDetails(this);}return false;">'
+                    . '<i class="ti ti-eye"></i></a>';
                 if ($row->status === 'pending') {
                     $approveRoute = route("admin.withdrawal_requests.approve", $row->id);
                     return '<div class="lz-action-icons" onclick="event.stopPropagation()">'
+                        . $eye
                         . '<a href="javascript:void(0)" class="lz-action-btn" title="Approve" onclick="approveRequest(\'' . $approveRoute . '\')"><i class="ti ti-check"></i></a>'
                         . '<a href="javascript:void(0)" class="lz-action-btn lz-action-danger" title="Reject" onclick="rejectRequest(' . $row->id . ')"><i class="ti ti-x"></i></a>'
                         . '</div>';
                 }
-                return '—';
+                return '<div class="lz-action-icons" onclick="event.stopPropagation()">' . $eye . '</div>';
             })
             ->rawColumns(['status', 'action'])
             ->setRowId('id');

@@ -78,5 +78,9 @@ return [
     'mainsettings'                      => 'الإعدادات العامة',
     'firebase_settings'                 => 'إعدادات Firebase',
     'received_notifications'            => 'الإشعارات الواردة',
-
+    'support_chat'                      => 'شات الدعم',
+    'support_tickets'                   => 'تذاكر الدعم',
+    'support_ticket'                    => 'تذكرة دعم',
+    'new_support_ticket'                => 'تذكرة دعم جديدة',
+    'luzori_support'                    => 'دعم Luzori',
 ];

@@ -7,7 +7,7 @@
 @endsection
 
 @section('content')
-    <div class="luzori-page container-fluid px-3 px-md-4">
+    <div class="luzori-page container-fluid px-1 px-sm-2 px-md-4">
         @if (\Session::has('success'))
             <div class="alert alert-success">
                 <div>{!! \Session::get('success') !!}</div>

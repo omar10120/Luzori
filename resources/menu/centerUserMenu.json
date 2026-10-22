@@ -477,6 +477,17 @@
       "icon": "bell-ringing"
     },
     {
+      "url": "center_user/support-tickets/index",
+      "name": "support_tickets",
+      "icon": "ticket",
+      "slug": [
+        "support-tickets"
+      ],
+      "permissions": [
+        "VIEW_SUPPORT_TICKETS"
+      ]
+    },
+    {
       "name": "reports",
       "slug": [
         "daily-report",

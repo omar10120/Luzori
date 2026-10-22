@@ -253,6 +253,28 @@
         </li>
         <!-- Quick links -->
 
+        <!-- Support Chat -->
+        @if (str_contains(url()->current(), 'admin'))
+            <li class="nav-item me-2 me-xl-0">
+                <a class="nav-link hide-arrow position-relative" href="{{ route('admin.support-chat.index') }}"
+                    title="{{ __('locale.support_chat') }}">
+                    <i class="ti ti-messages ti-md"></i>
+                    <span class="badge bg-danger rounded-pill badge-notifications lz-support-chat-badge d-none"
+                        id="lzSupportChatBadge">0</span>
+                </a>
+            </li>
+        @elseif (auth('center_user')->check())
+            <li class="nav-item me-2 me-xl-0">
+                <a class="nav-link hide-arrow position-relative" href="{{ route('center_user.support-chat.index') }}"
+                    title="{{ __('locale.support_chat') }}">
+                    <i class="ti ti-messages ti-md"></i>
+                    <span class="badge bg-danger rounded-pill badge-notifications lz-support-chat-badge d-none"
+                        id="lzSupportChatBadge">0</span>
+                </a>
+            </li>
+        @endif
+        <!-- /Support Chat -->
+
         <!-- Notification -->
         <li class="nav-item dropdown-notifications navbar-dropdown dropdown me-3 me-xl-1">
             <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown"

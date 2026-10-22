@@ -29,10 +29,19 @@
             <i class="ti ti-user-plus"></i>
         </a>
     @endif
-    @if(!empty($options['show']))
+    {{-- Side drawer details (all Admin tables) — RTL handled by drawer CSS --}}
+    @if(empty($options['hide_view_details']))
+        <a href="javascript:void(0)"
+            class="lz-action-btn lz-open-admin-row-details lz-admin-view-details"
+            title="{{ __('general.view_details') }}"
+            onclick="event.preventDefault();event.stopPropagation();if(window.lzOpenAdminRowDetails){window.lzOpenAdminRowDetails(this);}return false;">
+            <i class="ti ti-eye"></i>
+        </a>
+    @endif
+    @if(!empty($options['show_full_page']))
         <a class="lz-action-btn" href="{{ route($route . '.show', ['id' => $id]) }}"
             title="{{ __('general.show') }}">
-            <i class="ti ti-eye"></i>
+            <i class="ti ti-file-info"></i>
         </a>
     @endif
     @if(!empty($options['edit']))

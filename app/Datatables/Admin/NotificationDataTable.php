@@ -39,6 +39,9 @@ class NotificationDataTable extends DataTable
             })
             ->addColumn('resend', function ($row) {
                 return '<div class="lz-action-icons">'
+                    . '<a href="javascript:void(0)" class="lz-action-btn lz-open-admin-row-details lz-admin-view-details" title="' . e(__('general.view_details')) . '"'
+                    . ' onclick="event.preventDefault();event.stopPropagation();if(window.lzOpenAdminRowDetails){window.lzOpenAdminRowDetails(this);}return false;">'
+                    . '<i class="ti ti-eye"></i></a>'
                     . '<button type="button" class="lz-action-btn resend-notification" data-id="' . $row->id . '" title="' . e(__('field.resend')) . '">'
                     . '<i class="ti ti-refresh"></i></button></div>';
             })

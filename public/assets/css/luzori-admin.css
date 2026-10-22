@@ -3025,3 +3025,126 @@ html:not(.dark-style) body.luzori-admin .tab-pane {
   background: transparent !important;
   color: #1a2a27 !important;
 }
+
+/* ==========================================================================
+   Mobile: slash page / card / table edge margins (Admin)
+   ========================================================================== */
+@media (max-width: 767.98px) {
+  body.luzori-admin .container-p-y {
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.65rem !important;
+    padding-left: 0.2rem !important;
+    padding-right: 0.2rem !important;
+  }
+
+  body.luzori-admin .content-wrapper .container-xxl,
+  body.luzori-admin .content-wrapper .container-fluid,
+  body.luzori-admin .luzori-page.container-fluid,
+  body.luzori-admin .luzori-page {
+    padding-left: 0.15rem !important;
+    padding-right: 0.15rem !important;
+    --bs-gutter-x: 0.15rem;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  body.luzori-admin .lz-page-toolbar {
+    margin-bottom: 0.5rem !important;
+    gap: 0.4rem !important;
+    padding-left: 0.1rem !important;
+    padding-right: 0.1rem !important;
+  }
+
+  body.luzori-admin .lz-page-title {
+    font-size: 1.2rem !important;
+  }
+
+  body.luzori-admin .lz-table-card,
+  body.luzori-admin .lz-form-card,
+  body.luzori-admin .content-wrapper .card {
+    border-radius: 10px !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  body.luzori-admin .lz-table-card .card-body,
+  body.luzori-admin .lz-form-card .card-body,
+  body.luzori-admin .content-wrapper .card > .card-body {
+    padding: 0.35rem 0.25rem 0.55rem !important;
+  }
+
+  body.luzori-admin .lz-table-card .card-header,
+  body.luzori-admin .lz-form-card .card-header {
+    padding: 0.5rem 0.35rem 0.15rem !important;
+  }
+
+  body.luzori-admin .lz-table-card table thead th,
+  body.luzori-admin .lz-table-card table tbody td,
+  body.luzori-admin .dataTables_wrapper table.dataTable thead th,
+  body.luzori-admin .dataTables_wrapper table.dataTable tbody td {
+    padding: 0.45rem 0.28rem !important;
+  }
+
+  body.luzori-admin .dataTables_wrapper .dataTables_length,
+  body.luzori-admin .dataTables_wrapper .dataTables_filter,
+  body.luzori-admin .dataTables_wrapper .dataTables_info,
+  body.luzori-admin .dataTables_wrapper .dataTables_paginate {
+    padding-left: 0.1rem !important;
+    padding-right: 0.1rem !important;
+  }
+
+  body.luzori-admin .lz-page-actions .btn,
+  body.luzori-admin .dt-buttons .btn {
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+  }
+
+  body.luzori-admin .lz-inline-row-details .lz-action-btn {
+    display: inline-flex;
+    vertical-align: middle;
+  }
+}
+
+/* ==========================================================================
+   Select2: never clip dropdowns inside cards (mobile + desktop)
+   ========================================================================== */
+body.luzori-admin .lz-form-card,
+body.luzori-admin .content-wrapper .card.lz-form-card {
+  overflow: visible;
+}
+
+body.luzori-admin .select2-container {
+  z-index: 1;
+}
+
+body.luzori-admin .select2-container--open {
+  z-index: 12050 !important;
+}
+
+body.luzori-admin .select2-container--open .select2-dropdown,
+.select2-container--open .select2-dropdown {
+  z-index: 12050 !important;
+  min-width: min(100vw - 1rem, 320px);
+  max-height: min(55vh, 320px);
+  overflow: hidden;
+  border-radius: 12px !important;
+  border: 1px solid #e5ddd2 !important;
+  box-shadow: 0 12px 28px rgba(0, 43, 38, 0.16) !important;
+}
+
+body.luzori-admin .select2-container--open .select2-results__options,
+.select2-container--open .select2-results__options {
+  max-height: min(50vh, 280px) !important;
+}
+
+@media (max-width: 767.98px) {
+  body.luzori-admin .select2-container--open .select2-dropdown,
+  .select2-container--open .select2-dropdown {
+    max-height: min(50vh, 280px);
+  }
+
+  body.luzori-admin .select2-container--open .select2-results__options,
+  .select2-container--open .select2-results__options {
+    max-height: min(45vh, 240px) !important;
+  }
+}

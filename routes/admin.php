@@ -20,6 +20,8 @@ use App\Http\Controllers\Admin\WithdrawalRequestController;
 use App\Http\Controllers\Admin\BookingController;
 use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Admin\BannerController;
+use App\Http\Controllers\Admin\SupportChatController;
+use App\Http\Controllers\Admin\SupportTicketController;
 
 /*
 |--------------------------------------------------------------------------
@@ -163,6 +165,24 @@ Route::group(['middleware' => 'auth:admin'], function () {
             Route::post('resend', 'resend')->name('resend')->can('CREATE_NOTIFICATIONS');
             Route::post('toggleStatus', 'toggleStatus')->name('toggleStatus')->can('UPDATE_NOTIFICATIONS');
             Route::post('firebase/save', 'saveFirebase')->name('firebase.save')->can('UPDATE_FIREBASE_SETTINGS');
+        });
+    });
+
+    Route::group(['prefix' => 'support-chat', 'as' => 'support-chat.'], function () {
+        Route::controller(SupportChatController::class)->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('unread', 'unread')->name('unread');
+            Route::get('{centerId}/messages', 'messages')->name('messages')->whereNumber('centerId');
+            Route::post('{centerId}/send', 'send')->name('send')->whereNumber('centerId');
+        });
+    });
+
+    Route::group(['prefix' => 'support-tickets', 'as' => 'support-tickets.'], function () {
+        Route::controller(SupportTicketController::class)->group(function () {
+            Route::get('index', 'index')->name('index');
+            Route::get('{id}', 'show')->name('show')->whereNumber('id');
+            Route::post('{id}/reply', 'reply')->name('reply')->whereNumber('id');
+            Route::post('{id}/status', 'updateStatus')->name('status')->whereNumber('id');
         });
     });
 });

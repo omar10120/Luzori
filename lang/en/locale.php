@@ -78,5 +78,9 @@ return [
     'mainsettings'                      => 'Main Settings',
     'firebase_settings'                 => 'Firebase Settings',
     'received_notifications'            => 'Received Notifications',
-    
+    'support_chat'                      => 'Support Chat',
+    'support_tickets'                   => 'Support Tickets',
+    'support_ticket'                    => 'Support Ticket',
+    'new_support_ticket'                => 'New Support Ticket',
+    'luzori_support'                    => 'Luzori Support',
 ];

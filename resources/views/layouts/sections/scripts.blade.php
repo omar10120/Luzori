@@ -153,3 +153,36 @@
     })();
 </script>
 @endif
+
+@php
+    $lzSupportChatUnreadUrl = null;
+    if (str_contains(url()->current(), 'admin') && auth('admin')->check()) {
+        $lzSupportChatUnreadUrl = route('admin.support-chat.unread');
+    } elseif (auth('center_user')->check() && !str_contains(url()->current(), 'admin')) {
+        $lzSupportChatUnreadUrl = route('center_user.support-chat.unread');
+    }
+@endphp
+@if($lzSupportChatUnreadUrl)
+<script>
+(function () {
+    var url = @json($lzSupportChatUnreadUrl);
+    function setBadge(n) {
+        n = parseInt(n, 10) || 0;
+        document.querySelectorAll('.lz-support-chat-badge').forEach(function (el) {
+            el.textContent = n > 99 ? '99+' : String(n);
+            el.classList.toggle('d-none', n <= 0);
+        });
+    }
+    function tick() {
+        fetch(url, {
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            credentials: 'same-origin'
+        }).then(function (r) { return r.json(); }).then(function (data) {
+            if (data && typeof data.unread !== 'undefined') setBadge(data.unread);
+        }).catch(function () {});
+    }
+    tick();
+    setInterval(tick, 25000);
+})();
+</script>
+@endif

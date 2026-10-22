@@ -8,7 +8,7 @@
 @endsection
 
 @section('content')
-    <div class="luzori-page container-fluid px-3 px-md-4">
+    <div class="luzori-page container-fluid px-1 px-sm-2 px-md-4">
         @include('Admin.Components.show-response-messages')
 
         <ul class="nav nav-tabs lz-content-tabs mb-3" role="tablist">

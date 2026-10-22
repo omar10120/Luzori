@@ -12,6 +12,7 @@
 <script type="module" src="https://cdn.datatables.net/plug-ins/2.0.3/dataRender/ellipsis.js"></script>
 
 @include('Admin.Components.luzori-permissions-drawer')
+@include('Admin.Components.luzori-row-details')
 
 <script>
 (function () {

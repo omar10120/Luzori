@@ -162,6 +162,17 @@
             ]
         },
         {
+            "url": "admin/support-tickets/index",
+            "name": "support_tickets",
+            "icon": "ticket",
+            "slug": [
+                "support-tickets"
+            ],
+            "permissions": [
+                "VIEW_SUPPORT_TICKETS"
+            ]
+        },
+        {
             "menuHeader": "settings",
             "slug": [],
             "permissions": [

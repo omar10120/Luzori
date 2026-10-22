@@ -15,6 +15,8 @@ use App\Http\Controllers\CenterUser\LoginController;
 use App\Http\Controllers\CenterUser\MembershipController;
 use App\Http\Controllers\CenterUser\NotificationController;
 use App\Http\Controllers\CenterUser\InboxNotificationController;
+use App\Http\Controllers\CenterUser\SupportChatController;
+use App\Http\Controllers\CenterUser\SupportTicketController;
 use App\Http\Controllers\CenterUser\PackageController;
 use App\Http\Controllers\CenterUser\BookingController;
 use App\Http\Controllers\CenterUser\BookingWithTipsController;
@@ -130,6 +132,25 @@ Route::group(['middleware' => 'auth_center_user:center_user'], function () {
         Route::controller(InboxNotificationController::class)->group(function () {
             Route::get('inbox', 'inbox')->name('inbox');
             Route::post('markSeen', 'markSeen')->name('markSeen');
+        });
+    });
+
+    Route::group(['prefix' => 'support-chat', 'as' => 'support-chat.'], function () {
+        Route::controller(SupportChatController::class)->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('messages', 'messages')->name('messages');
+            Route::post('send', 'send')->name('send');
+            Route::get('unread', 'unread')->name('unread');
+        });
+    });
+
+    Route::group(['prefix' => 'support-tickets', 'as' => 'support-tickets.'], function () {
+        Route::controller(SupportTicketController::class)->group(function () {
+            Route::get('index', 'index')->name('index');
+            Route::get('create', 'create')->name('create');
+            Route::post('store', 'store')->name('store');
+            Route::get('{id}', 'show')->name('show')->whereNumber('id');
+            Route::post('{id}/reply', 'reply')->name('reply')->whereNumber('id');
         });
     });
 

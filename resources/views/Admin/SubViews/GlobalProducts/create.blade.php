@@ -7,7 +7,7 @@
 @endsection
 
 @section('content')
-    <div class="luzori-page container-fluid px-3 px-md-4">
+    <div class="luzori-page container-fluid px-1 px-sm-2 px-md-4">
         @include('Admin.Components.breadcrumbs')
 
         <div class="lz-page-toolbar">
@@ -66,7 +66,8 @@ $(function () {
     const centerPlaceholder = @json(__('field.select_center_first'));
     const productPlaceholder = @json(__('field.select_product'));
     const emptyProductsText = @json(__('field.no_data_found'));
-    const dropdownParent = $('#center_id').closest('.card-body');
+    // Attach dropdown to body so it is not clipped by .card { overflow: hidden }
+    const dropdownParent = $(document.body);
     let request = null;
 
     // --- Select2 init helper ---
@@ -79,6 +80,7 @@ $(function () {
             allowClear: true,
             width: '100%',
             dropdownParent: dropdownParent,
+            dropdownAutoWidth: false,
         });
     }
 
