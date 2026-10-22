@@ -85,7 +85,9 @@ class AppNotificationService
                     }
                 }
                 if ($sendPush) {
-                    $this->pushToAppUsers($ids, $translations, $notification);
+                    // $this->pushToAppUsers($ids, $translations, $notification);
+                    $this->pushToAppUsers($ids, $translations, $notification, $data['extra'] ?? []);
+
                 }
             } else {
                 foreach ($ids as $id) {
@@ -95,7 +97,9 @@ class AppNotificationService
                     }
                 }
                 if ($sendPush) {
-                    $this->pushToCenters($ids, $translations, $notification);
+                    // $this->pushToCenters($ids, $translations, $notification);
+                    $this->pushToCenters($ids, $translations, $notification, $data['extra'] ?? []);
+
                 }
             }
 
@@ -143,8 +147,48 @@ class AppNotificationService
     }
 
     /**
-     * Instant notification for a single AppUser (e.g. booking status).
+     * Center inbox + optional FCM. Used by NotifiesCenter for branch, worker, etc.
      */
+    public function notifyCenterEvent(
+        Center $center,
+        string $type,
+        array $translations,
+        array $extra = [],
+        bool $sendPush = true
+    ): ?AppNotification {
+        $payload = array_merge($translations, [
+            'target_type' => 'centers',
+            'type' => $type,
+            'send_push' => $sendPush,
+            'recipients' => [(string) $center->id],
+            'extra' => $extra,
+        ]);
+
+        return $this->sendAdminNotification($payload);
+    }
+
+    /**
+     * Welcome notification on the center inbox when a new branch is created.
+     */
+    public function notifyNewBranch(Center $center, $branch): ?AppNotification
+    {
+        $nameEn = $branch->translate('en')?->name ?: ($branch->name ?? '');
+        $nameAr = $branch->translate('ar')?->name ?: ($branch->name ?? '');
+
+        return $this->notifyCenterEvent($center, 'system', [
+            'en' => [
+                'title' => 'Welcome to the new branch',
+                'text' => 'Welcome! A new branch "' . $nameEn . '" has been added.',
+            ],
+            'ar' => [
+                'title' => 'مرحباً بالفرع الجديد',
+                'text' => 'مرحباً! تم إضافة فرع جديد "' . $nameAr . '".',
+            ],
+        ], [
+            'branch_id' => (string) $branch->id,
+        ]);
+    }
+
     public function notifyAppUser(AppUser $user, array $translations, string $type = 'system', array $extra = []): ?AppNotification
     {
         DB::connection('central')->beginTransaction();
@@ -281,51 +325,54 @@ class AppNotificationService
         ], $extra));
     }
 
-    protected function pushToCenters(array $centerIds, array $translations, AppNotification $notification): void
-    {
+    protected function pushToCenters(
+        array $centerIds,
+        array $translations,
+        AppNotification $notification,
+        array $extra = []
+    ): void {
         $title = $translations['ar']['title'] ?? ($translations['en']['title'] ?? '');
-        $body = $translations['ar']['text'] ?? ($translations['en']['text'] ?? '');
-
+        $body  = $translations['ar']['text']  ?? ($translations['en']['text']  ?? '');
+    
         $allTokens = [];
         $previousDb = config('database.connections.mysql.database');
-
+    
         foreach (Center::whereIn('id', $centerIds)->get() as $center) {
-            // Center-level tokens on central DB
             $allTokens = array_merge($allTokens, $center->fcmTokens()->pluck('token')->all());
-
+    
             if (empty($center->database)) {
                 continue;
             }
-
+    
             try {
                 Config::set('database.connections.mysql.database', $center->database);
                 DB::purge('mysql');
                 DB::reconnect('mysql');
-
+    
                 $staffTokens = CenterUser::query()
                     ->with('fcmTokens')
                     ->get()
                     ->flatMap(fn ($cu) => $cu->fcmTokens->pluck('token'))
                     ->filter()
                     ->all();
-
+    
                 $allTokens = array_merge($allTokens, $staffTokens);
             } catch (\Throwable $e) {
                 Log::warning("FCM tokens for center {$center->id}: " . $e->getMessage());
             }
         }
-
+    
         Config::set('database.connections.mysql.database', $previousDb);
         DB::purge('mysql');
         DB::reconnect('mysql');
-
+    
         $allTokens = array_values(array_unique(array_filter($allTokens)));
-
-        $this->sendMulticast($title, $body, $allTokens, [
-            'action' => $notification->type ?? 'info',
+    
+        $this->sendMulticast($title, $body, $allTokens, array_merge([
+            'action'          => $notification->type ?? 'info',
             'notification_id' => (string) $notification->id,
-            'image' => $notification->image_url ?? '',
-        ]);
+            'image'           => $notification->image_url ?? '',
+        ], $extra));
     }
 
     public function sendMulticast(string $title, string $body, array $tokens, array $data = []): bool
