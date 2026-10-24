@@ -510,6 +510,7 @@ return [
     'normal'                          => 'عادية',
     'high'                            => 'عالية',
     'urgent'                          => 'عاجلة',
+
     'enabled'                         => 'مفعّل',
     'support_chat_disabled'           => 'شات الدعم غير مفعّل',
     'support_chat_disabled_hint'      => 'تم إيقاف الميزة من الإدارة أو لفرعك.',
@@ -521,4 +522,16 @@ return [
     'unsupported_attachment'          => 'نوع الملف غير مدعوم. استخدم صورة أو فيديو.',
     'attachment_too_large'            => 'حجم الملف كبير جداً',
     'message_or_attachment_required'  => 'اكتب رسالة أو أرفق ملفاً',
+
+    'allow_notification'              => ' سماح للاشعارات',
+    
+    
+
+    
+    
+    
+    
+    
+    
+
 ];

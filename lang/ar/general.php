@@ -233,6 +233,8 @@ return [
     'enter_the_stock_quantity_of_the_product' => 'أدخل كمية المخزون للمنتج',
     'not_available' => 'غير متوفر',
     'user_information' => 'معلومات المستخدم',
+    'allow_notification' => 'سماح للاشعارات'
+    
 ];
 
 

@@ -20,6 +20,7 @@ use App\Models\CartItem;
 use App\Services\CartService;
 use App\Services\CRUDService;
 use App\Services\InventoryMovementService;
+use App\Services\NotifiesCenter;          
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -30,6 +31,7 @@ use Illuminate\Support\Facades\Log;
 
 class BuyProductController extends Controller
 {
+    use NotifiesCenter;    
     private CRUDService $crudService;
     private string $model = 'BuyProduct';
 
@@ -206,23 +208,23 @@ class BuyProductController extends Controller
     }
 
     public function add(Request $request)
-    {   
+    {
         $request->validate([
             'center_id' => 'required|integer|exists:central.centers,id',
         ]);
-    
+
         $appUser = auth('sanctum')->user();
         if (!$appUser) {
             return MyHelper::responseJSON('Unauthorized', Response::HTTP_UNAUTHORIZED);
         }
-    
+
         $switched = $this->switchToCenter((int) $request->center_id);
         if ($switched instanceof \Illuminate\Http\JsonResponse) {
             return $switched;
         }
-    
+
         $allowedPayments = array_unique(array_merge(get_payment_method_names(), ['wallet']));
-    
+
         $validated = $request->validate([
             'branch_id' => 'required|integer|exists:branches,id,deleted_at,NULL',
             'products' => 'required|array|min:1',
@@ -237,65 +239,65 @@ class BuyProductController extends Controller
             'cart_item_ids' => 'nullable|array',
             'cart_item_ids.*' => 'integer',
         ]);
-    
+
         $branchId         = (int) $validated['branch_id'];
         $centerId         = (int) $request->center_id;
         $isPaidFromWallet = ($validated['payment_type'] === 'wallet');
         $totalPrice       = 0.0;
         $totalQty         = 0;
         $walletDeducted   = false;
-    
+
         try {
-            // ── 1. Validate stock + build priced lines before creating anything ──
+            // ── 1. Validate stock + build priced lines ──
             $pricedLines = [];
             foreach ($validated['products'] as $line) {
                 $productId = (int) $line['id'];
                 $qty       = (int) $line['qty'];
-    
+
                 $this->validateProductStock($productId, $qty, $branchId);
-    
+
                 $product = Product::select(['id', 'retail_price', 'supply_price'])
                     ->with('primarySku')
                     ->findOrFail($productId);
-    
+
                 $unitPrice = ($product->retail_price && $product->retail_price > 0)
                     ? (float) $product->retail_price
                     : (float) ($product->supply_price ?? 0);
-    
+
                 if (!empty($validated['discount'])) {
                     $unitPrice -= ($unitPrice * (float) $validated['discount']) / 100;
                 }
-    
+
                 $totalPrice += $unitPrice * $qty;
                 $totalQty   += $qty;
-    
+
                 $pricedLines[] = [
                     'product'    => $product,
                     'qty'        => $qty,
                     'unit_price' => $unitPrice,
                 ];
             }
-    
-            // ── 2. Deduct wallet (central DB) before the tenant transaction ──
+
+            // ── 2. Deduct wallet (central DB) ──
             if ($isPaidFromWallet) {
                 $centralUser = DB::connection('central')->table('users')->where('id', $appUser->id)->first();
-    
+
                 if (!$centralUser || (float) $centralUser->wallet < $totalPrice) {
                     return MyHelper::responseJSON(
                         __('api.insufficient_balance') ?? 'Insufficient wallet balance',
                         Response::HTTP_BAD_REQUEST
                     );
                 }
-    
+
                 DB::connection('central')->table('users')
                     ->where('id', $appUser->id)
                     ->decrement('wallet', $totalPrice);
-    
+
                 $walletDeducted = true;
             }
-    
+
             $tenantUser = $this->resolveTenantUser($appUser);
-    
+
             // ── 3. Sale + BuyProduct + BuyProductDetail + SaleItem, all atomic ──
             $item = DB::transaction(function () use (
                 $appUser,
@@ -305,9 +307,7 @@ class BuyProductController extends Controller
                 $pricedLines,
                 $totalPrice,
                 $totalQty,
-                
             ) {
-                // 3a. Sale record (mirrors SalesService::processSale)
                 $sale = Sale::create([
                     'subtotal'   => $totalPrice,
                     'tax'        => 0,
@@ -319,8 +319,7 @@ class BuyProductController extends Controller
                     'branch_id'  => $branchId,
                     'created_by' => $tenantUser->id,
                 ]);
-    
-                // 3b. BuyProduct linked to the sale
+
                 $buyProduct = BuyProduct::create([
                     'payment_type'    => $validated['payment_type'],
                     'commission'      => $validated['commission'] ?? null,
@@ -330,20 +329,21 @@ class BuyProductController extends Controller
                     // 'worker_id'       => 1,
                     'sales_worker_id' => $this->resolveDefaultWorkerId($validated['sales_worker_id'] ?? null),
                     'worker_id'       => $this->resolveDefaultWorkerId($validated['worker_id'] ?? null),
+                    'sales_worker_id' => $validated['sales_worker_id'],
+                    'worker_id'       => 1,
                     'global_user_id'  => $appUser->id,
                     'created_by'      => $tenantUser->id,
-                    'sale_id'         => $sale->id, // ← link it back
+                    'sale_id'         => $sale->id,
                 ]);
-    
-                // 3c. BuyProductDetail rows + stock decrement
+
                 foreach ($pricedLines as $line) {
                     $product = $line['product'];
                     $qty     = $line['qty'];
-    
+
                     $detailPrice = ($product->retail_price && $product->retail_price > 0)
                         ? $product->retail_price
                         : ($product->supply_price ?? 0);
-    
+
                     for ($i = 0; $i < $qty; $i++) {
                         BuyProductDetail::create([
                             'buy_product_id' => $buyProduct->id,
@@ -351,11 +351,10 @@ class BuyProductController extends Controller
                             'price'          => $detailPrice,
                         ]);
                     }
-    
+
                     $this->decrementProductStock($product, $qty, $branchId, $buyProduct);
                 }
-    
-                // 3d. SaleItem (mirrors SalesService::processSale)
+
                 SaleItem::create([
                     'sale_id'       => $sale->id,
                     'item_type'     => 'buy_product',
@@ -365,12 +364,12 @@ class BuyProductController extends Controller
                     'price'         => $totalQty > 0 ? $totalPrice / $totalQty : 0,
                     'subtotal'      => $totalPrice,
                 ]);
-    
+
                 return $buyProduct;
             });
-    
+
             $item->load(['worker', 'sales_worker', 'details.product.translation']);
-    
+
             // ── 4. Clear matching central cart product lines after success ──
             if (!empty($validated['clear_cart'])) {
                 if (!empty($validated['cart_item_ids'])) {
@@ -388,20 +387,22 @@ class BuyProductController extends Controller
                     );
                 }
             }
-    
+
+            // ── 4b. Notify the center about the new product order (best-effort) ──
+            $this->notifyBuyProductCreated($item, $tenantUser, $appUser, $totalPrice, $totalQty);
+
             return MyHelper::responseJSON(
                 __('api.addSuccessfully'),
                 Response::HTTP_CREATED,
                 BuyProductResource::make($item)
             );
         } catch (\Exception $e) {
-            // Roll back the wallet charge if anything blew up after we took the money
             if ($walletDeducted) {
                 DB::connection('central')->table('users')
                     ->where('id', $appUser->id)
                     ->increment('wallet', $totalPrice);
             }
-    
+
             Log::error('AppAPI BuyProduct add: ' . $e->getMessage());
             $message = strtolower($e->getMessage());
             $status = str_contains($message, 'stock')
@@ -410,10 +411,11 @@ class BuyProductController extends Controller
                 || str_contains($message, 'balance')
                 ? Response::HTTP_UNPROCESSABLE_ENTITY
                 : Response::HTTP_INTERNAL_SERVER_ERROR;
-    
+
             return MyHelper::responseJSON($e->getMessage(), $status);
         }
     }
+
 
     public function delete(Request $request)
     {
@@ -577,14 +579,67 @@ class BuyProductController extends Controller
             'wallet' => 0,
         ]);
     }
+
     
+    /**
+     * Send a "new product order" notification to the center that owns the tenant DB.
+     * Best-effort: the NotifiesCenter trait already catches + logs every error internally.
+     */
+    private function notifyBuyProductCreated(
+        BuyProduct $buyProduct,
+        TenantUser $tenantUser,
+        $appUser,
+        float $totalPrice,
+        int $totalQty
+    ): void {
+        try {
+            $customerName = trim(
+                (string) ($tenantUser->first_name ?? '') . ' ' . (string) ($tenantUser->last_name ?? '')
+            );
+            if ($customerName === '') {
+                $customerName = (string) ($appUser->first_name ?? '');
+            }
+            if ($customerName === '') {
+                $customerName = (string) ($tenantUser->phone ?? 'Customer');
+            }
 
-    private function resolveDefaultWorkerId(?int $fallback = null): ?int
-    {
-        $firstId = \App\Models\Worker::query()
-            ->orderBy('id')
-            ->value('id');
+            $priceFormatted = number_format($totalPrice, 2);
 
-        return $firstId ?? $fallback;
+            $textEn = sprintf(
+                'New product order from %s — %d item(s), total %s.',
+                $customerName,
+                $totalQty,
+                $priceFormatted
+            );
+
+            $textAr = sprintf(
+                'طلب منتجات جديد من %s — عدد القطع %d، الإجمالي %s.',
+                $customerName,
+                $totalQty,
+                $priceFormatted
+            );
+
+            $this->notifyCenter(
+                'buy_product',
+                [
+                    'en' => ['title' => 'New Product Order', 'text' => $textEn],
+                    'ar' => ['title' => 'طلب منتجات جديد',  'text' => $textAr],
+                ],
+                [
+                    'action'         => 'buy_product_created',
+                    'buy_product_id' => (string) $buyProduct->id,
+                    'sale_id'        => (string) ($buyProduct->sale_id ?? ''),
+                    'branch_id'      => (string) ($buyProduct->branch_id ?? ''),
+                    'items_count'    => (string) $totalQty,
+                    'total'          => $priceFormatted,
+                ]
+            );
+        } catch (\Throwable $e) {
+            // Extra safety net — the trait itself already catches errors.
+            Log::warning('notifyBuyProductCreated failed', [
+                'buy_product_id' => $buyProduct->id ?? null,
+                'error'          => $e->getMessage(),
+            ]);
+        }
     }
 }

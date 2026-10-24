@@ -468,16 +468,16 @@ return [
     'tip_already_added'               => 'Tip already added for this sale',
     'no_bookings_for_tip'             => 'This sale has no bookings to add a tip',
     'stock_order_flow_hint'           => 'Select supplier → products → one or more branches',
-        'stock_order_source'              => 'Source',
-        'main_stock'                      => 'Main Stock',
-        'invalid_stock_order_source'      => 'Select a valid stock order source.',
-        'available_quantity'              => 'Available quantity',
-        'reserved_quantity'                => 'Reserved quantity',
-        'reorder_level'                     => 'Reorder level',
-        'order_qty_per_selected_branch'   => 'The order quantity is transferred to each selected branch.',
-        'stock_order_supplier_flow_hint'  => 'Supplier → Main Stock. Receiving this order adds stock to the warehouse.',
-        'stock_order_transfer_flow_hint'  => 'Main Stock → selected branches. Available warehouse stock is reserved when the order is saved.',
-        'stock_order_main_stock_insufficient' => 'Not enough available main stock for the selected branches',
+    'stock_order_source'              => 'Source',
+    'main_stock'                      => 'Main Stock',
+    'invalid_stock_order_source'      => 'Select a valid stock order source.',
+    'available_quantity'              => 'Available quantity',
+    'reserved_quantity'               => 'Reserved quantity',
+    'reorder_level'                   => 'Reorder level',
+    'order_qty_per_selected_branch'   => 'The order quantity is transferred to each selected branch.',
+    'stock_order_supplier_flow_hint'  => 'Supplier → Main Stock. Receiving this order adds stock to the warehouse.',
+    'stock_order_transfer_flow_hint'  => 'Main Stock → selected branches. Available warehouse stock is reserved when the order is saved.',
+    'stock_order_main_stock_insufficient' => 'Not enough available main stock for the selected branches',
     'select_all_branches'             => 'Select all branches',
     'select_one_or_more_branches'     => 'Select one or more destination branches',
     'select_supplier_first'           => 'Select a supplier first',
@@ -520,6 +520,7 @@ return [
     'normal'                          => 'Normal',
     'high'                            => 'High',
     'urgent'                          => 'Urgent',
+
     'enabled'                         => 'Enabled',
     'support_chat_disabled'           => 'Support chat is disabled',
     'support_chat_disabled_hint'      => 'This feature was turned off by admin or for your branch.',
@@ -531,4 +532,8 @@ return [
     'unsupported_attachment'          => 'Unsupported file type. Use an image or video.',
     'attachment_too_large'            => 'File is too large',
     'message_or_attachment_required'  => 'Write a message or attach a file',
+
+    'allow_notification'              => 'allow notification'
+    
+
 ];

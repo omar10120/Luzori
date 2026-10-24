@@ -28,9 +28,11 @@ use Illuminate\Support\Str;
 use niklasravnsborg\LaravelPdf\Facades\Pdf;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
+use App\Services\NotifiesCenter; 
 class SalesController extends Controller
 {
     use CategoryTreeTrait;
+    use NotifiesCenter;
 
     private $model = 'Sale';
     private $plural = 'sales';
@@ -41,6 +43,7 @@ class SalesController extends Controller
     {
         $this->salesService = $salesService;
         $this->indexRoute = 'center_user.' . $this->plural . '.index';
+        
     }
 
     /**
@@ -876,7 +879,7 @@ class SalesController extends Controller
         $host = request()->getHost();
 
         if (in_array($host, ['127.0.0.1', 'localhost'], true)) {
-            return Center::with('media')->where('domain', 'center')->first();
+            return Center::with('media')->where('domain', 'center35')->first();
         }
 
         $domain = session('active_center_domain');
@@ -992,165 +995,349 @@ class SalesController extends Controller
         // =================================================================
         // DELETE BRANCH
         // =================================================================
-        if ($request->action === 'delete') {
+      // =================================================================
+// DELETE BRANCH
+// =================================================================
+if ($request->action === 'delete') {
 
-            // BuyProduct uses SoftDeletes → load withTrashed + details.
-            // Booking uses SoftDeletes → load withTrashed + details + user.
-            // BookingDetail has NO SoftDeletes → do not call withTrashed on it.
-            $sale->load([
-                'branch',
-                'buyProducts' => function ($q) {
-                    $q->withTrashed()->with('details');
-                },
-                'bookings' => function ($q) {
-                    $q->withTrashed()->with(['details', 'user']);
-                },
-            ]);
+    // BuyProduct uses SoftDeletes → load withTrashed + details.
+    // Booking uses SoftDeletes → load withTrashed + details + user.
+    // BookingDetail has NO SoftDeletes → do not call withTrashed on it.
+    // client + saleItems loaded so we can include them in the notification
+    // before the sale is forceDeleted.
+    $sale->load([
+        'client',
+        'saleItems',
+        'branch',
+        'buyProducts' => function ($q) {
+            $q->withTrashed()->with('details');
+        },
+        'bookings' => function ($q) {
+            $q->withTrashed()->with(['details', 'user']);
+        },
+    ]);
 
-            $branchId        = (int) ($sale->branch_id ?? 0);
-            $movementService = app(\App\Services\InventoryMovementService::class);
+    // Capture everything we need BEFORE forceDelete.
+    $deletedSaleId    = (int) $sale->id;
+    $deletedTotal     = (float) ($sale->total ?? 0);
+    $deletedCustomer  = trim(
+        (string) ($sale->client?->first_name ?? '') . ' ' .
+        (string) ($sale->client?->last_name ?? '')
+    );
+    if ($deletedCustomer === '') {
+        $deletedCustomer = (string) ($sale->client?->name ?? '');
+    }
+    if ($deletedCustomer === '') {
+        $deletedCustomer = (string) ($sale->client?->phone ?? 'Unknown customer');
+    }
+    $deletedItemsCount = (int) $sale->saleItems->count();
+    $deletedBookings   = $sale->bookings->pluck('id')->values()->all();
+    $deletedBuyProds   = $sale->buyProducts->pluck('id')->values()->all();
 
-            \Illuminate\Support\Facades\DB::transaction(function () use ($sale, $branchId, $movementService) {
+    $branchId        = (int) ($sale->branch_id ?? 0);
+    $movementService = app(\App\Services\InventoryMovementService::class);
 
-                // ---- 1. Restore product stock ----
-                if ($branchId) {
-                    foreach ($sale->buyProducts as $buyProduct) {
-                        $qtyByProduct = $buyProduct->details->groupBy('product_id')->map->count();
+    \Illuminate\Support\Facades\DB::transaction(function () use ($sale, $branchId, $movementService) {
 
-                        foreach ($qtyByProduct as $productId => $qty) {
-                            $productBranch = \App\Models\ProductBranch::where('product_id', $productId)
-                                ->where('branch_id', $branchId)
-                                ->first();
+        // ---- 1. Restore product stock ----
+        if ($branchId) {
+            foreach ($sale->buyProducts as $buyProduct) {
+                $qtyByProduct = $buyProduct->details->groupBy('product_id')->map->count();
 
-                            if ($productBranch) {
-                                $productBranch->increment('stock_quantity', (int) $qty);
-                            }
+                foreach ($qtyByProduct as $productId => $qty) {
+                    $productBranch = \App\Models\ProductBranch::where('product_id', $productId)
+                        ->where('branch_id', $branchId)
+                        ->first();
 
-                            $movementService->record(
-                                (int) $productId,
-                                $branchId,
-                                (int) $qty,
-                                \App\Models\InventoryMovement::TYPE_SALE_DELETED,
-                                $sale,
-                                null,
-                                'Sale deleted #' . $sale->id . ' — stock restored'
-                            );
-                        }
+                    if ($productBranch) {
+                        $productBranch->increment('stock_quantity', (int) $qty);
                     }
-                }
 
-                // ---- 2. Cascade-delete buy products + their details ----
-                foreach ($sale->buyProducts as $buyProduct) {
-                    $detailModel = $buyProduct->details()->getRelated();
-                    $detailUsesSoftDeletes = in_array(
-                        \Illuminate\Database\Eloquent\SoftDeletes::class,
-                        class_uses_recursive($detailModel),
-                        true
+                    $movementService->record(
+                        (int) $productId,
+                        $branchId,
+                        (int) $qty,
+                        \App\Models\InventoryMovement::TYPE_SALE_DELETED,
+                        $sale,
+                        null,
+                        'Sale deleted #' . $sale->id . ' — stock restored'
                     );
-
-                    if ($detailUsesSoftDeletes) {
-                        $buyProduct->details()->withTrashed()->forceDelete();
-                    } else {
-                        $buyProduct->details()->delete();
-                    }
-
-                    $buyProduct->forceDelete();
                 }
-
-                // ---- 3. Cascade-delete associated bookings ----
-                foreach ($sale->bookings as $booking) {
-
-                    try {
-                        app(\App\Services\BookingNotificationService::class)
-                            ->notifyStatusChange($booking->fresh(['user', 'details']), 'cancelled');
-                    } catch (\Throwable $e) {
-                        Log::warning('Booking cancel notification failed on sale delete', [
-                            'sale_id'    => $sale->id,
-                            'booking_id' => $booking->id,
-                            'error'      => $e->getMessage(),
-                        ]);
-                    }
-
-                    $booking->details()->delete();   // BookingDetail has no SoftDeletes
-                    $booking->forceDelete();         // Booking has SoftDeletes
-                }
-
-                // ---- 4. Delete the sale (saleItems cascade via FK) ----
-                $sale->forceDelete();
-            });
-
-            $saleOtpService->clear();
-            Log::info('Sale deleted after OTP', [
-                'sale_id'              => $request->sale_id,
-                'reason'               => $pending['reason'] ?? null,
-                'bookings_deleted'     => $sale->bookings->pluck('id')->all(),
-                'buy_products_deleted' => $sale->buyProducts->pluck('id')->all(),
-                'by'                   => auth('center_user')->id(),
-            ]);
-
-            return MyHelper::responseJSON(__('admin.done_delete_successfully'), Response::HTTP_OK);
-        }
-
-        // =================================================================
-        // EDIT BRANCH
-        // =================================================================
-
-        // Resolve the date to apply. Chain:
-        //   pending (from OTP session or bypass) → request → error
-        $newDateRaw = $pending['new_date'] ?? $request->input('new_date');
-
-        if (empty($newDateRaw)) {
-            return MyHelper::responseJSON(
-                __('general.date_required'),
-                Response::HTTP_UNPROCESSABLE_ENTITY
-            );
-        }
-
-        try {
-            $newDate = Carbon::parse($newDateRaw);
-        } catch (\Throwable $e) {
-            return MyHelper::responseJSON(
-                __('general.invalid_date'),
-                Response::HTTP_UNPROCESSABLE_ENTITY
-            );
-        }
-
-        $sale->load(['bookings.details']);
-        $sale->created_at = $newDate->copy()->setTimeFrom(Carbon::parse($sale->created_at));
-        $sale->save();
-
-        foreach ($sale->bookings as $booking) {
-            $booking->booking_date = $newDate->toDateString();
-            $booking->save();
-            foreach ($booking->details as $detail) {
-                $detail->_date = $newDate->toDateString();
-                $detail->save();
             }
         }
 
-        $saleOtpService->clear();
-        Log::info('Sale date updated after OTP', [
-            'sale_id'  => $request->sale_id,
-            'new_date' => $newDate->toDateString(),
-            'reason'   => $pending['reason'] ?? null,
-            'by'       => auth('center_user')->id(),
-        ]);
+        // ---- 2. Cascade-delete buy products + their details ----
+        foreach ($sale->buyProducts as $buyProduct) {
+            $detailModel = $buyProduct->details()->getRelated();
+            $detailUsesSoftDeletes = in_array(
+                \Illuminate\Database\Eloquent\SoftDeletes::class,
+                class_uses_recursive($detailModel),
+                true
+            );
 
-        return MyHelper::responseJSON(__('admin.operation_done_successfully'), Response::HTTP_OK, [
-            'created_at' => $sale->created_at
-    ? Carbon::parse($sale->created_at)->format('Y-m-d H:i')
-    : null,
-        ]);
+            if ($detailUsesSoftDeletes) {
+                $buyProduct->details()->withTrashed()->forceDelete();
+            } else {
+                $buyProduct->details()->delete();
+            }
 
+            $buyProduct->forceDelete();
+        }
+
+        // ---- 3. Cascade-delete associated bookings ----
+        foreach ($sale->bookings as $booking) {
+
+            try {
+                app(\App\Services\BookingNotificationService::class)
+                    ->notifyStatusChange($booking->fresh(['user', 'details']), 'cancelled');
+            } catch (\Throwable $e) {
+                Log::warning('Booking cancel notification failed on sale delete', [
+                    'sale_id'    => $sale->id,
+                    'booking_id' => $booking->id,
+                    'error'      => $e->getMessage(),
+                ]);
+            }
+
+            $booking->details()->delete();   // BookingDetail has no SoftDeletes
+            $booking->forceDelete();         // Booking has SoftDeletes
+        }
+
+        // ---- 4. Delete the sale (saleItems cascade via FK) ----
+        $sale->forceDelete();
+    });
+
+    $saleOtpService->clear();
+
+    // ---- 5. Notify the center (OUTSIDE the transaction) ----
+    $this->notifySaleDeleted(
+        $deletedSaleId,
+        $deletedTotal,
+        $deletedCustomer,
+        $deletedItemsCount,
+        $deletedBookings,
+        $deletedBuyProds,
+        (string) ($pending['reason'] ?? '')
+    );
+
+    Log::info('Sale deleted after OTP', [
+        'sale_id'              => $deletedSaleId,
+        'reason'               => $pending['reason'] ?? null,
+        'bookings_deleted'     => $deletedBookings,
+        'buy_products_deleted' => $deletedBuyProds,
+        'by'                   => auth('center_user')->id(),
+    ]);
+
+    return MyHelper::responseJSON(__('admin.done_delete_successfully'), Response::HTTP_OK);
+    }
+
+        
+            //   pending (from OTP session or bypass) → request → error
+            $newDateRaw = $pending['new_date'] ?? $request->input('new_date');
+
+            if (empty($newDateRaw)) {
+                return MyHelper::responseJSON(
+                    __('general.date_required'),
+                    Response::HTTP_UNPROCESSABLE_ENTITY
+                );
+            }
+
+            try {
+                $newDate = Carbon::parse($newDateRaw);
+            } catch (\Throwable $e) {
+                return MyHelper::responseJSON(
+                    __('general.invalid_date'),
+                    Response::HTTP_UNPROCESSABLE_ENTITY
+                );
+            }
+
+            // ---- Capture state BEFORE the edit so we can diff & notify ----
+            $oldDateRaw    = $sale->getRawOriginal('created_at'); // untouched value
+            $oldDatePretty = $oldDateRaw ? Carbon::parse($oldDateRaw) : null;
+            $oldBookingIds = $sale->bookings()->pluck('id')->values()->all();
+
+            $sale->load(['bookings.details']);
+            $sale->created_at = $newDate->copy()->setTimeFrom(Carbon::parse($sale->created_at));
+            $sale->save();
+
+            foreach ($sale->bookings as $booking) {
+                $booking->booking_date = $newDate->toDateString();
+                $booking->save();
+                foreach ($booking->details as $detail) {
+                    $detail->_date = $newDate->toDateString();
+                    $detail->save();
+                }
+            }
+
+            $saleOtpService->clear();
+
+            // ---- Notify the center (after successful save) ----
+            $this->notifySaleDateEdited(
+                (int) $sale->id,
+                $oldDatePretty ? $oldDatePretty->format('Y-m-d') : null,
+                $newDate->toDateString(),
+                (int) $sale->bookings->count(),
+                $oldBookingIds,
+                (string) ($pending['reason'] ?? '')
+            );
+
+            Log::info('Sale date updated after OTP', [
+                'sale_id'        => $request->sale_id,
+                'old_date'       => $oldDatePretty?->format('Y-m-d'),
+                'new_date'       => $newDate->toDateString(),
+                'reason'         => $pending['reason'] ?? null,
+                'bookings_count' => $sale->bookings->count(),
+                'by'             => auth('center_user')->id(),
+            ]);
+
+            return MyHelper::responseJSON(__('admin.operation_done_successfully'), Response::HTTP_OK, [
+                'created_at' => $sale->created_at
+                    ? Carbon::parse($sale->created_at)->format('Y-m-d H:i')
+                    : null,
+            ]);
+
+        } catch (\Throwable $e) {
+            Log::error('Sale OTP action failed', [
+                'sale_id' => $request->sale_id,
+                'action'  => $request->action,
+                'error'   => $e->getMessage(),
+                'trace'   => $e->getTraceAsString(),
+            ]);
+
+            return MyHelper::responseJSON(__('admin.an_error_occurred'), Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+
+/**
+ * Notify the active center that a sale was deleted (via OTP flow).
+ *
+ * Called AFTER the tenant transaction commits and AFTER $sale->forceDelete(),
+ * so it works on captured primitives, not on the (now-gone) Eloquent model.
+ *
+ * Best-effort: the NotifiesCenter trait swallows + logs every error internally,
+ * so a push/notification failure can never affect the OTP response.
+ */
+    private function notifySaleDeleted(
+        int $saleId,
+        float $total,
+        string $customerName,
+        int $itemsCount,
+        array $bookingIds,
+        array $buyProductIds,
+        string $reason = ''
+    ): void {
+        try {
+            $customerName = $customerName !== '' ? $customerName : 'Unknown customer';
+            $priceFormatted = number_format($total, 2);
+
+            $textEn = sprintf(
+                'Sale #%d (customer: %s, %d item(s), total %s) was deleted.',
+                $saleId,
+                $customerName,
+                $itemsCount,
+                $priceFormatted
+            );
+            if ($reason !== '') {
+                $textEn .= ' Reason: ' . $reason;
+            }
+
+            $textAr = sprintf(
+                'تم حذف عملية البيع رقم %d (العميل: %s، عدد العناصر: %d، الإجمالي: %s).',
+                $saleId,
+                $customerName,
+                $itemsCount,
+                $priceFormatted
+            );
+            if ($reason !== '') {
+                $textAr .= ' السبب: ' . $reason;
+            }
+
+            $this->notifyCenter(
+                'sale',
+                [
+                    'en' => ['title' => 'Sale Deleted',     'text' => $textEn],
+                    'ar' => ['title' => 'تم حذف عملية بيع', 'text' => $textAr],
+                ],
+                [
+                    'action'        => 'sale_deleted',
+                    'sale_id'       => (string) $saleId,
+                    'total'         => $priceFormatted,
+                    'items_count'   => (string) $itemsCount,
+                    'bookings'      => implode(',', array_map('strval', $bookingIds)),
+                    'buy_products'  => implode(',', array_map('strval', $buyProductIds)),
+                    'reason'        => $reason,
+                ]
+            );
+        } catch (\Throwable $e) {
+            // The trait already catches its own errors — this is a final safety net.
+            Log::warning('notifySaleDeleted failed', [
+                'sale_id' => $saleId,
+                'error'   => $e->getMessage(),
+            ]);
+        }
+    }
+    /**
+ * Notify the active center that a sale's date was edited (via OTP flow).
+ *
+ * Called AFTER the edit is persisted. Uses captured primitives so the
+ * notification doesn't depend on the sale still being mutable.
+ *
+ * Best-effort: the NotifiesCenter trait swallows + logs every error.
+ */
+private function notifySaleDateEdited(
+    int $saleId,
+    ?string $oldDate,
+    string $newDate,
+    int $bookingsCount,
+    array $bookingIds,
+    string $reason = ''
+): void {
+    try {
+        $oldDisplay = $oldDate ?: '—';
+
+        $textEn = sprintf(
+            'Sale #%d date changed from %s to %s%s.',
+            $saleId,
+            $oldDisplay,
+            $newDate,
+            $bookingsCount > 0 ? ' (' . $bookingsCount . ' booking(s) rescheduled)' : ''
+        );
+        if ($reason !== '') {
+            $textEn .= ' Reason: ' . $reason;
+        }
+
+        $textAr = sprintf(
+            'تم تعديل تاريخ عملية البيع رقم %d من %s إلى %s%s.',
+            $saleId,
+            $oldDisplay,
+            $newDate,
+            $bookingsCount > 0 ? ' (إعادة جدولة ' . $bookingsCount . ' حجز)' : ''
+        );
+        if ($reason !== '') {
+            $textAr .= ' السبب: ' . $reason;
+        }
+
+        $this->notifyCenter(
+            'sale',
+            [
+                'en' => ['title' => 'Sale Date Edited',     'text' => $textEn],
+                'ar' => ['title' => 'تم تعديل تاريخ عملية بيع', 'text' => $textAr],
+            ],
+            [
+                'action'         => 'sale_date_edited',
+                'sale_id'        => (string) $saleId,
+                'old_date'       => (string) ($oldDate ?? ''),
+                'new_date'       => $newDate,
+                'bookings_count' => (string) $bookingsCount,
+                'bookings'       => implode(',', array_map('strval', $bookingIds)),
+                'reason'         => $reason,
+            ]
+        );
     } catch (\Throwable $e) {
-        Log::error('Sale OTP action failed', [
-            'sale_id' => $request->sale_id,
-            'action'  => $request->action,
+        Log::warning('notifySaleDateEdited failed', [
+            'sale_id' => $saleId,
             'error'   => $e->getMessage(),
-            'trace'   => $e->getTraceAsString(),
         ]);
-
-        return MyHelper::responseJSON(__('admin.an_error_occurred'), Response::HTTP_INTERNAL_SERVER_ERROR);
     }
 }
 }
