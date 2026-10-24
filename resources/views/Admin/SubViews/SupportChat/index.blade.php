@@ -3,7 +3,7 @@
 @section('title', $title)
 
 @section('vendor-style')
-    <link rel="stylesheet" href="{{ asset('assets/css/luzori-support.css') }}?v=3">
+    <link rel="stylesheet" href="{{ asset('assets/css/luzori-support.css') }}?v=4">
 @endsection
 
 @section('content')
@@ -45,24 +45,6 @@
                                     @endif
                                 </span>
                                 <span class="lz-chat-item-typing">{{ __('field.typing_now') }}</span>
-                                <span class="lz-center-toggle-wrap" onclick="event.stopPropagation()">
-                                    <span class="form-check form-switch">
-                                        <input type="checkbox" class="form-check-input lz-center-toggle"
-                                            data-center-id="{{ $row['center_id'] }}"
-                                            data-field="support_chat_enabled"
-                                            @checked($row['support_chat_enabled'] ?? true)
-                                            title="{{ __('locale.support_chat') }}">
-                                        <label class="form-check-label">{{ __('locale.support_chat') }}</label>
-                                    </span>
-                                    <span class="form-check form-switch">
-                                        <input type="checkbox" class="form-check-input lz-center-toggle"
-                                            data-center-id="{{ $row['center_id'] }}"
-                                            data-field="support_tickets_enabled"
-                                            @checked($row['support_tickets_enabled'] ?? true)
-                                            title="{{ __('locale.support_tickets') }}">
-                                        <label class="form-check-label">{{ __('locale.support_tickets') }}</label>
-                                    </span>
-                                </span>
                             </span>
                         </button>
                     @empty
@@ -116,7 +98,7 @@
         <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
         <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
     @endif
-    <script src="{{ asset('assets/js/luzori-support-chat.js') }}?v=5"></script>
+    <script src="{{ asset('assets/js/luzori-support-chat.js') }}?v=6"></script>
     <script>
     window.__lzSupportSoundUrl = @json(asset('sumsung_galaxy_s4.mp3'));
     (function () {
@@ -137,7 +119,6 @@
                 messages: @json(url('admin/support-chat/__CENTER__/messages')),
                 send: @json(url('admin/support-chat/__CENTER__/send')),
                 typing: @json(url('admin/support-chat/__CENTER__/typing')),
-                toggle: @json(url('admin/support-chat/__CENTER__/toggle')),
                 unread: @json(route('admin.support-chat.unread')),
             }
         });

@@ -107,15 +107,9 @@
       this.$contacts.addEventListener('click', function (e) {
         var btn = e.target.closest('.lz-chat-item');
         if (!btn) return;
-        if (e.target.closest('.lz-center-toggle')) return;
         var id = parseInt(btn.getAttribute('data-center-id'), 10);
         if (!id) return;
         self.openConversation(id, btn.getAttribute('data-name'), btn.getAttribute('data-domain'));
-      });
-      this.$contacts.addEventListener('change', function (e) {
-        var tog = e.target.closest('.lz-center-toggle');
-        if (!tog) return;
-        self.toggleCenter(tog);
       });
     }
 
@@ -202,28 +196,6 @@
 
     this.bindFirebaseCenter(centerId);
     this.fetchMessages(true).then(function () { self.scrollBottom(); });
-  };
-
-  SupportChat.prototype.toggleCenter = function (el) {
-    var id = el.getAttribute('data-center-id');
-    var field = el.getAttribute('data-field');
-    if (!id || !this.routes.toggle) return;
-    var url = this.routes.toggle.replace('__CENTER__', id);
-    var payload = {};
-    payload[field] = el.checked ? 1 : 0;
-    fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'X-CSRF-TOKEN': this.csrf,
-        'X-Requested-With': 'XMLHttpRequest'
-      },
-      credentials: 'same-origin',
-      body: JSON.stringify(payload)
-    }).then(function (r) { return r.json(); }).then(function (data) {
-      if (!data || !data.success) el.checked = !el.checked;
-    }).catch(function () { el.checked = !el.checked; });
   };
 
   SupportChat.prototype.fetchMessages = function (replace) {

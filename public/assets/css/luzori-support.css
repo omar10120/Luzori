@@ -585,20 +585,6 @@ html.dark-style .lz-typing-dot {
   color: var(--lz-chat-forest);
 }
 .lz-chat-file-preview.d-none { display: none !important; }
-.lz-center-toggle-wrap {
-  display: flex;
-  gap: 0.35rem;
-  align-items: center;
-  margin-top: 0.25rem;
-}
-.lz-center-toggle-wrap .form-check {
-  margin: 0;
-  min-height: 0;
-}
-.lz-center-toggle-wrap .form-check-label {
-  font-size: 0.65rem;
-  color: var(--lz-chat-muted);
-}
 
 /* RTL: Arabic chat direction */
 html[dir="rtl"] .lz-chat-shell,
