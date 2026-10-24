@@ -111,8 +111,9 @@
   SupportChat.prototype.hideThread = function (fromHistory) {
     if (this.$shell) this.$shell.classList.remove('lz-chat-thread-open');
     document.body.classList.remove('lz-chat-thread-open');
+    // Clear history flag without navigating away from the page
     if (!fromHistory && this.mode === 'admin' && history.state && history.state.lzChat) {
-      try { history.back(); } catch (e) {}
+      try { history.replaceState(null, ''); } catch (e) {}
     }
   };
 
@@ -121,11 +122,18 @@
     document.body.classList.add('lz-chat-active');
     if (this.mode === 'center') this.showThread(true);
 
-    if (this.$back) {
-      this.$back.addEventListener('click', function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-        self.hideThread();
+    var onBack = function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      self.hideThread();
+    };
+    if (this.$back) this.$back.addEventListener('click', onBack);
+    // Delegation fallback (icon / delayed DOM)
+    if (this.$shell) {
+      this.$shell.addEventListener('click', function (e) {
+        var btn = e.target.closest('#lzChatBack, .lz-chat-back');
+        if (!btn) return;
+        onBack(e);
       });
     }
     window.addEventListener('popstate', function () {

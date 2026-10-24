@@ -773,8 +773,12 @@ html[dir="rtl"] .lz-chat-back i {
   }
 
   .lz-chat-back {
-    display: inline-flex;
+    display: inline-flex !important;
     color: #f8f1e6;
+    position: relative;
+    z-index: 6;
+    pointer-events: auto;
+    -webkit-tap-highlight-color: rgba(255, 255, 255, 0.2);
   }
   .lz-chat-main-head {
     flex: 0 0 auto;
@@ -786,6 +790,8 @@ html[dir="rtl"] .lz-chat-back i {
     gap: 0.45rem;
     min-height: 56px;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+    position: relative;
+    z-index: 5;
   }
   .lz-chat-main-head .lz-chat-avatar {
     width: 40px;
