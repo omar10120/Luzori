@@ -92,11 +92,48 @@
     this.$file = document.getElementById('lzChatFile');
     this.$filePreview = document.getElementById('lzChatFilePreview');
     this.$shell = document.getElementById('lzChatShell') || document.querySelector('.lz-chat-shell');
-  }
+    this.$back = document.getElementById('lzChatBack');
+  };
+
+  SupportChat.prototype.isMobileChat = function () {
+    return window.matchMedia && window.matchMedia('(max-width: 991.98px)').matches;
+  };
+
+  SupportChat.prototype.showThread = function (fromHistory) {
+    var alreadyOpen = this.$shell && this.$shell.classList.contains('lz-chat-thread-open');
+    if (this.$shell) this.$shell.classList.add('lz-chat-thread-open');
+    document.body.classList.add('lz-chat-thread-open');
+    if (!fromHistory && !alreadyOpen && this.mode === 'admin' && this.isMobileChat()) {
+      try { history.pushState({ lzChat: 1 }, ''); } catch (e) {}
+    }
+  };
+
+  SupportChat.prototype.hideThread = function (fromHistory) {
+    if (this.$shell) this.$shell.classList.remove('lz-chat-thread-open');
+    document.body.classList.remove('lz-chat-thread-open');
+    if (!fromHistory && this.mode === 'admin' && history.state && history.state.lzChat) {
+      try { history.back(); } catch (e) {}
+    }
+  };
 
   SupportChat.prototype.init = function () {
     var self = this;
     document.body.classList.add('lz-chat-active');
+    if (this.mode === 'center') this.showThread(true);
+
+    if (this.$back) {
+      this.$back.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        self.hideThread();
+      });
+    }
+    window.addEventListener('popstate', function () {
+      if (self.mode !== 'admin') return;
+      if (self.$shell && self.$shell.classList.contains('lz-chat-thread-open')) {
+        self.hideThread(true);
+      }
+    });
 
     if (this.$composer) {
       this.$composer.addEventListener('submit', function (e) {
@@ -166,12 +203,22 @@
   SupportChat.prototype.setupMobileComposer = function () {
     var self = this;
     if (!window.visualViewport) return;
+    var page = document.querySelector('.lz-chat-page');
     var apply = function () {
-      if (!self.$shell) return;
       var vv = window.visualViewport;
       var offset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
-      self.$shell.style.setProperty('--lz-kb-offset', offset + 'px');
-      document.documentElement.style.setProperty('--lz-vv-height', vv.height + 'px');
+      var h = Math.round(vv.height) + 'px';
+      document.documentElement.style.setProperty('--lz-vv-height', h);
+      document.documentElement.style.setProperty('--lz-kb-offset', offset + 'px');
+      if (self.$shell) {
+        self.$shell.style.setProperty('--lz-kb-offset', offset + 'px');
+        self.$shell.style.setProperty('--lz-vv-height', h);
+      }
+      if (page) {
+        page.style.height = h;
+        page.style.maxHeight = h;
+        page.style.top = Math.round(vv.offsetTop) + 'px';
+      }
       if (self.$list) self.scrollBottom();
     };
     window.visualViewport.addEventListener('resize', apply);
@@ -227,6 +274,8 @@
     if (this.$input) this.$input.disabled = false;
     var sendBtn = this.$composer && this.$composer.querySelector('.btn-send');
     if (sendBtn) sendBtn.disabled = false;
+
+    if (this.mode === 'admin') this.showThread();
 
     this.bindFirebaseCenter(centerId);
     this.fetchMessages(true).then(function () { self.scrollBottom(); });

@@ -3,7 +3,7 @@
 @section('title', $title)
 
 @section('vendor-style')
-    <link rel="stylesheet" href="{{ asset('assets/css/luzori-support.css') }}?v=4">
+    <link rel="stylesheet" href="{{ asset('assets/css/luzori-support.css') }}?v=8">
 @endsection
 
 @section('content')
@@ -55,6 +55,9 @@
 
             <section class="lz-chat-main">
                 <div class="lz-chat-main-head">
+                    <button type="button" class="lz-chat-back" id="lzChatBack" aria-label="{{ __('general.back') }}">
+                        <i class="ti ti-arrow-left"></i>
+                    </button>
                     <span class="lz-chat-avatar" id="lzChatHeadAvatar"><i class="ti ti-building-store"></i></span>
                     <div class="lz-chat-head-text">
                         <h3 id="lzChatTitle">{{ __('field.select_conversation') }}</h3>
@@ -98,7 +101,7 @@
         <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
         <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
     @endif
-    <script src="{{ asset('assets/js/luzori-support-chat.js') }}?v=7"></script>
+    <script src="{{ asset('assets/js/luzori-support-chat.js') }}?v=8"></script>
     <script>
     window.__lzSupportSoundUrl = @json(asset('sumsung_galaxy_s4.mp3'));
     (function () {
