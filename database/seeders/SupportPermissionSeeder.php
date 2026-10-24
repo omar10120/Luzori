@@ -49,5 +49,19 @@ class SupportPermissionSeeder extends Seeder
                 );
             }
         }
+
+        // Attach support permissions to every center_api role (menu uses this guard)
+        $centerApiPerms = Permission::query()
+            ->where('guard_name', 'center_api')
+            ->whereIn('name', array_column($centerPerms, 'name'))
+            ->get();
+
+        if ($centerApiPerms->isNotEmpty()) {
+            Role::query()
+                ->where('guard_name', 'center_api')
+                ->each(function (Role $role) use ($centerApiPerms) {
+                    $role->givePermissionTo($centerApiPerms);
+                });
+        }
     }
 }

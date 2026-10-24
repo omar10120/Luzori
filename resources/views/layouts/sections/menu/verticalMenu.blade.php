@@ -47,6 +47,20 @@
     <div class="menu-inner-shadow"></div>
 
     <ul class="menu-inner py-1">
+        @php
+            $lzSupportTicketsMenuVisible = true;
+            if (!str_contains(url()->current(), 'admin') && auth('center_user')->check()) {
+                try {
+                    $lzSupportCenter = \App\Services\SupportChatService::resolveActiveCenter();
+                    $lzSupportAccess = app(\App\Services\SupportAccessService::class);
+                    $lzSupportTicketsMenuVisible = $lzSupportCenter
+                        ? $lzSupportAccess->canCenterUserUseTickets($lzSupportCenter, auth('center_user')->user())
+                        : false;
+                } catch (\Throwable $e) {
+                    $lzSupportTicketsMenuVisible = true;
+                }
+            }
+        @endphp
         @foreach ($menuData[0]->menu as $menu)
             {{-- Menu Header --}}
             @if (isset($menu->menuHeader))
@@ -55,6 +69,9 @@
                 </li>
             @else
                 @php
+                    // Hide whole Support Tickets group when the feature is disabled for this center/branch
+                    $skipSupportTicketsMenu = (!$lzSupportTicketsMenuVisible)
+                        && (($menu->name ?? '') === 'support_tickets');
                     // Parents with submenu stay open (not gold-active); only the leaf child is marked active.
                     $activeClass = '';
                     $hasSubmenu = isset($menu->submenu);
@@ -63,6 +80,10 @@
                         $activeClass = $hasSubmenu ? 'open' : 'active';
                     }
                 @endphp
+
+                @if ($skipSupportTicketsMenu)
+                    @continue
+                @endif
 
                 <li class="menu-item {{ $activeClass }}">
                     <a href="{{ isset($menu->url) ? url('/' . ltrim($menu->url, '/')) : 'javascript:void(0);' }}"

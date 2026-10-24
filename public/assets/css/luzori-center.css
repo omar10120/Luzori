@@ -588,15 +588,29 @@ body.luzori-center .layout-menu .menu-item.active > .menu-link:not(.menu-toggle)
   opacity: 0.85;
 }
 
-/* Submenu panel â€” vertical tree line linking children to parent */
-body.luzori-center .layout-menu .menu-item.open > .menu-sub,
-body.luzori-center .layout-menu .menu-sub {
+/* Submenu panel — vertical tree line linking children to parent */
+body.luzori-center .layout-menu .menu-item:not(.open) > .menu-sub {
+  display: none !important;
+  height: 0 !important;
+  overflow: hidden !important;
+}
+body.luzori-center .layout-menu .menu-item.open > .menu-sub {
+  display: block !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+  visibility: visible !important;
+  opacity: 1 !important;
   position: relative !important;
   background: transparent !important;
   margin: 0.15rem 0 0.35rem 1.15rem !important;
   padding: 0.2rem 0 0.25rem 0.95rem !important;
   box-shadow: none !important;
   border-inline-start: 2px solid rgba(197, 160, 112, 0.4) !important;
+}
+body.luzori-center .layout-menu .menu-sub {
+  position: relative !important;
+  background: transparent !important;
 }
 
 html[dir='rtl'] body.luzori-center .layout-menu .menu-sub {

@@ -483,9 +483,6 @@
         "support-tickets",
         "support-chat"
       ],
-      "permissions": [
-        "VIEW_SUPPORT_TICKETS"
-      ],
       "submenu": [
         {
           "url": "center_user/support-tickets/index",
@@ -493,19 +490,21 @@
           "slug": [
             "support-tickets"
           ],
-          "permissions": [
-            "VIEW_SUPPORT_TICKETS"
-          ],
           "icon": "ticket"
+        },
+        {
+          "url": "center_user/support-chat",
+          "name": "support_chat",
+          "slug": [
+            "support-chat"
+          ],
+          "icon": "messages"
         },
         {
           "url": "center_user/support-chat/settings",
           "name": "support_settings",
           "slug": [
             "support-chat"
-          ],
-          "permissions": [
-            "VIEW_SUPPORT_TICKETS"
           ],
           "icon": "settings"
         }
