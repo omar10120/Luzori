@@ -22,6 +22,7 @@ use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Admin\BannerController;
 use App\Http\Controllers\Admin\SupportChatController;
 use App\Http\Controllers\Admin\SupportTicketController;
+use App\Http\Controllers\Admin\SupportAlertController;
 
 /*
 |--------------------------------------------------------------------------
@@ -178,6 +179,8 @@ Route::group(['middleware' => 'auth:admin'], function () {
             Route::post('{centerId}/toggle', 'toggleCenter')->name('toggle')->whereNumber('centerId');
         });
     });
+
+    Route::get('support-alerts/poll', [SupportAlertController::class, 'poll'])->name('support-alerts.poll');
 
     Route::group(['prefix' => 'support-tickets', 'as' => 'support-tickets.'], function () {
         Route::controller(SupportTicketController::class)->group(function () {

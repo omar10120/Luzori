@@ -519,6 +519,7 @@ return [
     'support_branch_settings_hint'    => 'فعّل أو أوقف شات الدعم والتذاكر لكل فرع.',
     'attach_file'                     => 'إرفاق صورة أو فيديو',
     'is_typing'                       => ':name يكتب…',
+    'typing_now'                      => 'جاري الكتابة…',
     'unsupported_attachment'          => 'نوع الملف غير مدعوم. استخدم صورة أو فيديو.',
     'attachment_too_large'            => 'حجم الملف كبير جداً',
     'message_or_attachment_required'  => 'اكتب رسالة أو أرفق ملفاً',

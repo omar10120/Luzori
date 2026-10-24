@@ -14,23 +14,17 @@
 
   function playNotifySound() {
     try {
-      var Ctx = window.AudioContext || window.webkitAudioContext;
-      if (!Ctx) return;
-      if (!window.__lzAudioCtx) window.__lzAudioCtx = new Ctx();
-      var ctx = window.__lzAudioCtx;
-      if (ctx.state === 'suspended') ctx.resume();
-      var o = ctx.createOscillator();
-      var g = ctx.createGain();
-      o.type = 'sine';
-      o.frequency.setValueAtTime(880, ctx.currentTime);
-      o.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.18);
-      g.gain.setValueAtTime(0.0001, ctx.currentTime);
-      g.gain.exponentialRampToValueAtTime(0.22, ctx.currentTime + 0.02);
-      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.35);
-      o.connect(g);
-      g.connect(ctx.destination);
-      o.start();
-      o.stop(ctx.currentTime + 0.36);
+      var src = window.__lzSupportSoundUrl || '/sumsung_galaxy_s4.mp3';
+      if (!window.__lzSupportAudio) {
+        window.__lzSupportAudio = new Audio(src);
+        window.__lzSupportAudio.preload = 'auto';
+        window.__lzSupportAudio.volume = 0.9;
+      }
+      var audio = window.__lzSupportAudio;
+      audio.pause();
+      audio.currentTime = 0;
+      var p = audio.play();
+      if (p && typeof p.catch === 'function') p.catch(function () {});
     } catch (e) {}
   }
 
@@ -62,6 +56,7 @@
     this.$contacts = document.getElementById('lzChatContacts');
     this.$search = document.getElementById('lzChatSearch');
     this.$typing = document.getElementById('lzChatTyping');
+    this.$subtitle = document.getElementById('lzChatSubtitle');
     this.$file = document.getElementById('lzChatFile');
     this.$filePreview = document.getElementById('lzChatFilePreview');
     this.$shell = document.getElementById('lzChatShell') || document.querySelector('.lz-chat-shell');
@@ -412,12 +407,35 @@
 
   SupportChat.prototype.setTypingLabel = function (name) {
     if (!this.$typing) return;
+    var textEl = this.$typing.querySelector('.lz-typing-text');
+    var label = this.i18n.typingNow || this.i18n.typing || 'Typing…';
+    // Prefer short green status under the name (not ":name is typing")
+    if (name && label.indexOf(':name') !== -1) {
+      label = label.replace(':name', name);
+    } else if (name && this.i18n.typingNow) {
+      label = this.i18n.typingNow;
+    } else if (name) {
+      label = name + ' — ' + (this.i18n.typingNow || 'Typing…');
+    }
+
     if (name) {
-      this.$typing.textContent = (this.i18n.typing || ':name is typing…').replace(':name', name);
+      if (textEl) textEl.textContent = this.i18n.typingNow || 'Typing…';
+      else this.$typing.textContent = label;
       this.$typing.classList.remove('d-none');
+      if (this.$subtitle) this.$subtitle.classList.add('d-none');
     } else {
       this.$typing.classList.add('d-none');
-      this.$typing.textContent = '';
+      if (textEl) textEl.textContent = '';
+      else this.$typing.textContent = '';
+      if (this.$subtitle) this.$subtitle.classList.remove('d-none');
+    }
+
+    // Admin contact list: show under active conversation name
+    if (this.$contacts && this.activeCenterId) {
+      this.$contacts.querySelectorAll('.lz-chat-item').forEach(function (el) {
+        var on = name && parseInt(el.getAttribute('data-center-id'), 10) === parseInt(this.activeCenterId, 10);
+        el.classList.toggle('is-typing', !!on);
+      }.bind(this));
     }
   };
 
@@ -437,12 +455,33 @@
   SupportChat.prototype.toastNew = function (message, isMine) {
     if (isMine) return;
     playNotifySound();
+    var title = message.sender_name || 'Support';
+    var body = (message.body || message.attachment_type || '').toString().slice(0, 120);
     try {
-      if (window.toastr) {
-        toastr.info((message.sender_name || '') + ': ' + (message.body || message.attachment_type || '').toString().slice(0, 80), undefined, { timeOut: 4000 });
+      // In-dashboard local toast (not Chrome-only)
+      var host = document.getElementById('lzLocalToasts');
+      if (host) {
+        var el = document.createElement('div');
+        el.className = 'lz-local-toast';
+        el.innerHTML =
+          '<span class="lz-lt-icon"><i class="ti ti-messages"></i></span>' +
+          '<div style="min-width:0;flex:1"><p class="lz-lt-title"></p><p class="lz-lt-body"></p></div>' +
+          '<button type="button" class="lz-lt-close">&times;</button>';
+        el.querySelector('.lz-lt-title').textContent = title;
+        el.querySelector('.lz-lt-body').textContent = body;
+        el.querySelector('.lz-lt-close').addEventListener('click', function (e) {
+          e.stopPropagation();
+          el.remove();
+        });
+        host.prepend(el);
+        setTimeout(function () { if (el.parentNode) el.remove(); }, 7000);
       }
+      if (window.toastr) {
+        toastr.info(body, title, { timeOut: 5000 });
+      }
+      // Optional browser notification (secondary)
       if (window.Notification && Notification.permission === 'granted') {
-        new Notification(message.sender_name || 'Support', { body: (message.body || message.attachment_type || '').toString().slice(0, 120) });
+        new Notification(title, { body: body });
       }
     } catch (e) {}
   };

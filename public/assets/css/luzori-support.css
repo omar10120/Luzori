@@ -181,9 +181,16 @@
   font-weight: 700;
 }
 
-.lz-chat-main-head span {
+.lz-chat-main-head .lz-chat-subtitle {
   color: var(--lz-chat-muted);
   font-size: 0.78rem;
+}
+
+.lz-chat-main-head .lz-chat-typing,
+.lz-chat-main-head .lz-chat-typing .lz-typing-text {
+  color: #1a9b6c !important;
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .lz-chat-messages {
@@ -470,12 +477,75 @@ html.dark-style .lz-chat-composer textarea {
 .lz-msg.mine .lz-msg-seen { color: #f3e7d3; }
 .lz-msg-seen.is-seen { opacity: 1; color: #7dd3c0 !important; }
 
+.lz-chat-head-text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
 .lz-chat-typing {
-  min-height: 1.25rem;
-  padding: 0 1.15rem 0.35rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
   font-size: 0.78rem;
-  color: var(--lz-chat-muted);
-  font-style: italic;
+  font-weight: 600;
+  font-style: normal;
+  color: #1a9b6c !important;
+  line-height: 1.2;
+}
+
+.lz-chat-typing.d-none {
+  display: none !important;
+}
+
+.lz-chat-typing .lz-typing-text {
+  color: #1a9b6c !important;
+}
+
+.lz-typing-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #1a9b6c;
+  box-shadow: 0 0 0 0 rgba(26, 155, 108, 0.55);
+  animation: lzTypingPulse 1.2s ease-out infinite;
+  flex: 0 0 auto;
+}
+
+@keyframes lzTypingPulse {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(26, 155, 108, 0.55); }
+  70% { transform: scale(1.15); box-shadow: 0 0 0 8px rgba(26, 155, 108, 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(26, 155, 108, 0); }
+}
+
+html.dark-style .lz-chat-typing,
+html.dark-style .lz-chat-typing .lz-typing-text {
+  color: #3dd68c !important;
+}
+html.dark-style .lz-typing-dot {
+  background: #3dd68c;
+}
+
+/* When typing is visible, soften the subtitle */
+.lz-chat-main-head:has(.lz-chat-typing:not(.d-none)) .lz-chat-subtitle {
+  display: none;
+}
+
+.lz-chat-item-typing {
+  display: none;
+  color: #1a9b6c !important;
+  font-size: 0.72rem;
+  font-weight: 600;
+  margin-top: 0.1rem;
+}
+.lz-chat-item.is-typing .lz-chat-item-typing {
+  display: block;
+}
+.lz-chat-item.is-typing .lz-chat-item-preview {
+  display: none;
 }
 
 .lz-chat-composer {

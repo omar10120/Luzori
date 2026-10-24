@@ -3,7 +3,7 @@
 @section('title', $title)
 
 @section('vendor-style')
-    <link rel="stylesheet" href="{{ asset('assets/css/luzori-support.css') }}?v=2">
+    <link rel="stylesheet" href="{{ asset('assets/css/luzori-support.css') }}?v=3">
 @endsection
 
 @section('content')
@@ -44,6 +44,7 @@
                                         <span class="lz-chat-badge">{{ $row['unread'] }}</span>
                                     @endif
                                 </span>
+                                <span class="lz-chat-item-typing">{{ __('field.typing_now') }}</span>
                                 <span class="lz-center-toggle-wrap" onclick="event.stopPropagation()">
                                     <span class="form-check form-switch">
                                         <input type="checkbox" class="form-check-input lz-center-toggle"
@@ -73,9 +74,13 @@
             <section class="lz-chat-main">
                 <div class="lz-chat-main-head">
                     <span class="lz-chat-avatar" id="lzChatHeadAvatar"><i class="ti ti-building-store"></i></span>
-                    <div>
+                    <div class="lz-chat-head-text">
                         <h3 id="lzChatTitle">{{ __('field.select_conversation') }}</h3>
-                        <span id="lzChatSubtitle">{{ __('field.support_chat_pick_center') }}</span>
+                        <div class="lz-chat-typing d-none" id="lzChatTyping" aria-live="polite">
+                            <span class="lz-typing-dot"></span>
+                            <span class="lz-typing-text"></span>
+                        </div>
+                        <span id="lzChatSubtitle" class="lz-chat-subtitle">{{ __('field.support_chat_pick_center') }}</span>
                     </div>
                 </div>
                 <div class="lz-chat-messages" id="lzChatMessages"></div>
@@ -83,7 +88,6 @@
                     <i class="ti ti-message-circle"></i>
                     {{ __('field.support_chat_empty') }}
                 </div>
-                <div class="lz-chat-typing d-none" id="lzChatTyping"></div>
                 <form class="lz-chat-composer" id="lzChatComposer" autocomplete="off">
                     <div class="lz-chat-file-preview d-none" id="lzChatFilePreview">
                         <span class="lz-file-name"></span>
@@ -112,8 +116,9 @@
         <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
         <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
     @endif
-    <script src="{{ asset('assets/js/luzori-support-chat.js') }}?v=2"></script>
+    <script src="{{ asset('assets/js/luzori-support-chat.js') }}?v=5"></script>
     <script>
+    window.__lzSupportSoundUrl = @json(asset('sumsung_galaxy_s4.mp3'));
     (function () {
         var chat = new LuzoriSupportChat({
             mode: 'admin',
@@ -124,6 +129,7 @@
             limits: @json($limits),
             i18n: {
                 typing: @json(__('field.is_typing')),
+                typingNow: @json(__('field.typing_now')),
                 unsupported: @json(__('field.unsupported_attachment')),
                 tooLarge: @json(__('field.attachment_too_large')),
             },

@@ -529,6 +529,7 @@ return [
     'support_branch_settings_hint'    => 'Enable or disable support chat and tickets per branch.',
     'attach_file'                     => 'Attach image or video',
     'is_typing'                       => ':name is typing…',
+    'typing_now'                      => 'Typing…',
     'unsupported_attachment'          => 'Unsupported file type. Use an image or video.',
     'attachment_too_large'            => 'File is too large',
     'message_or_attachment_required'  => 'Write a message or attach a file',

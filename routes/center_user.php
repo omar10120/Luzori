@@ -17,6 +17,7 @@ use App\Http\Controllers\CenterUser\NotificationController;
 use App\Http\Controllers\CenterUser\InboxNotificationController;
 use App\Http\Controllers\CenterUser\SupportChatController;
 use App\Http\Controllers\CenterUser\SupportTicketController;
+use App\Http\Controllers\CenterUser\SupportAlertController;
 use App\Http\Controllers\CenterUser\PackageController;
 use App\Http\Controllers\CenterUser\BookingController;
 use App\Http\Controllers\CenterUser\BookingWithTipsController;
@@ -146,6 +147,8 @@ Route::group(['middleware' => 'auth_center_user:center_user'], function () {
             Route::post('branches/{branchId}/toggle', 'toggleBranch')->name('branch.toggle')->whereNumber('branchId');
         });
     });
+
+    Route::get('support-alerts/poll', [SupportAlertController::class, 'poll'])->name('support-alerts.poll');
 
     Route::group(['prefix' => 'support-tickets', 'as' => 'support-tickets.'], function () {
         Route::controller(SupportTicketController::class)->group(function () {
