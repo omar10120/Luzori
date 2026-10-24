@@ -276,15 +276,16 @@
         <!-- /Support Chat -->
 
         <!-- Notification -->
-        <li class="nav-item dropdown-notifications navbar-dropdown dropdown me-3 me-xl-1">
-            <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown"
-                data-bs-auto-close="outside" aria-expanded="false">
+        <li class="nav-item dropdown-notifications navbar-dropdown dropdown me-3 me-xl-1 lz-notif-dropdown"
+            data-mark-all-url="{{ $notifications_mark_all_url ?? '' }}">
+            <a class="nav-link dropdown-toggle hide-arrow lz-notif-toggle" href="javascript:void(0);"
+                data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
                 <i class="ti ti-bell ti-md"></i>
                 @if (($number_notifications ?? 0) > 0)
-                    <span class="badge bg-danger rounded-pill badge-notifications">{{ $number_notifications }}</span>
+                    <span class="badge bg-danger rounded-pill badge-notifications lz-notif-badge">{{ $number_notifications }}</span>
                 @endif
             </a>
-            <ul class="dropdown-menu dropdown-menu-end py-0" style="min-width: 350px;">
+            <ul class="dropdown-menu dropdown-menu-end py-0 lz-notif-menu">
                 <li class="dropdown-menu-header border-bottom">
                     <div class="dropdown-header d-flex align-items-center py-3">
                         <h5 class="text-body mb-0 me-auto">{{ __('locale.notifications') }}</h5>
@@ -298,7 +299,7 @@
                         @endif
                     </div>
                 </li>
-                <li class="dropdown-notifications-list scrollable-container">
+                <li class="dropdown-notifications-list scrollable-container lz-notif-list">
                     <ul class="list-group list-group-flush">
                         @forelse (($notis ?? collect()) as $noti)
                             @php
@@ -459,26 +460,70 @@
 </nav>
 <!-- / Navbar -->
 
-@if (!empty($notifications_mark_all_url) || !empty($notifications_mark_one_url))
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const csrf = @json(csrf_token());
+    const markAllUrl = @json($notifications_mark_all_url ?? null);
+    const markOneUrl = @json($notifications_mark_one_url ?? null);
 
-    function markSeen(url, id) {
+    function clearNotifBadge(root) {
+        (root || document).querySelectorAll('.lz-notif-badge, .dropdown-notifications > .nav-link .badge-notifications').forEach(function (b) {
+            b.remove();
+        });
+    }
+
+    function markItemsRead(root) {
+        (root || document).querySelectorAll('.dropdown-notifications-item').forEach(function (item) {
+            item.classList.add('marked-as-read');
+        });
+    }
+
+    function markSeen(url, id, opts) {
+        opts = opts || {};
         if (!url) return Promise.resolve();
         const body = new FormData();
         body.append('_token', csrf);
         if (id) body.append('id', id);
         return fetch(url, { method: 'POST', body: body, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
             .then(function (r) { return r.json(); })
-            .then(function () { window.location.reload(); })
+            .then(function () {
+                if (opts.reload) window.location.reload();
+            })
             .catch(function () {});
     }
+
+    function enableNativeNotifScroll(list) {
+        if (!list) return;
+        if (list._psInstance && typeof list._psInstance.destroy === 'function') {
+            try { list._psInstance.destroy(); } catch (e) {}
+            list._psInstance = null;
+        }
+        list.classList.remove('ps', 'ps--active-y');
+        list.querySelectorAll('.ps__rail-x, .ps__rail-y').forEach(function (r) { r.remove(); });
+        list.style.overflowY = 'auto';
+        list.style.webkitOverflowScrolling = 'touch';
+    }
+
+    document.querySelectorAll('.lz-notif-dropdown').forEach(function (dd) {
+        var list = dd.querySelector('.lz-notif-list');
+        enableNativeNotifScroll(list);
+
+        dd.addEventListener('show.bs.dropdown', function () {
+            enableNativeNotifScroll(list);
+            clearNotifBadge(dd);
+            markItemsRead(dd);
+            var url = dd.getAttribute('data-mark-all-url') || markAllUrl;
+            if (url) markSeen(url, null, { reload: false });
+        });
+    });
 
     document.querySelectorAll('.dropdown-notifications-all').forEach(function (el) {
         el.addEventListener('click', function (e) {
             e.preventDefault();
-            markSeen(el.getAttribute('data-mark-all-url'), null);
+            var dd = el.closest('.lz-notif-dropdown');
+            clearNotifBadge(dd);
+            markItemsRead(dd);
+            markSeen(el.getAttribute('data-mark-all-url') || markAllUrl, null, { reload: false });
         });
     });
 
@@ -486,9 +531,12 @@ document.addEventListener('DOMContentLoaded', function () {
         el.addEventListener('click', function (e) {
             e.preventDefault();
             e.stopPropagation();
-            markSeen(el.getAttribute('data-mark-url'), el.getAttribute('data-id'));
+            var item = el.closest('.dropdown-notifications-item');
+            if (item) item.classList.add('marked-as-read');
+            markSeen(el.getAttribute('data-mark-url') || markOneUrl, el.getAttribute('data-id'), { reload: false });
+            var unreadLeft = document.querySelectorAll('.dropdown-notifications-item:not(.marked-as-read)').length;
+            if (!unreadLeft) clearNotifBadge();
         });
     });
 });
 </script>
-@endif

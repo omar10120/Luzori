@@ -119,7 +119,12 @@
 
   SupportChat.prototype.init = function () {
     var self = this;
+    document.documentElement.classList.add('lz-chat-lock');
     document.body.classList.add('lz-chat-active');
+    // Freeze body scroll position (prevents outer rubber-band on iOS)
+    this._lockScrollY = window.scrollY || 0;
+    document.body.style.top = '-' + this._lockScrollY + 'px';
+    this.lockOuterScroll();
     if (this.mode === 'center') this.showThread(true);
 
     var onBack = function (e) {
@@ -208,29 +213,86 @@
     }, { once: true });
   };
 
+  SupportChat.prototype.lockOuterScroll = function () {
+    var self = this;
+    if (this._outerScrollLocked) return;
+    this._outerScrollLocked = true;
+    this._onTouchMove = function (e) {
+      var t = e.target;
+      if (!t || !t.closest) {
+        e.preventDefault();
+        return;
+      }
+      var scroller = t.closest('.lz-chat-messages, .lz-chat-list, textarea, .lz-chat-composer');
+      if (!scroller) {
+        e.preventDefault();
+        return;
+      }
+      // At edges of inner scroller: block chaining to body
+      if (scroller.classList && (scroller.classList.contains('lz-chat-messages')
+          || scroller.classList.contains('lz-chat-list'))) {
+        var top = scroller.scrollTop;
+        var max = scroller.scrollHeight - scroller.clientHeight;
+        var touch = e.touches && e.touches[0];
+        if (!touch) return;
+        var dy = touch.clientY - (self._lastTouchY || touch.clientY);
+        self._lastTouchY = touch.clientY;
+        // scrolling up at top, or down at bottom → prevent
+        if ((top <= 0 && dy > 0) || (top >= max - 1 && dy < 0)) {
+          e.preventDefault();
+        }
+      }
+    };
+    this._onTouchStart = function (e) {
+      var touch = e.touches && e.touches[0];
+      self._lastTouchY = touch ? touch.clientY : 0;
+    };
+    document.addEventListener('touchstart', this._onTouchStart, { passive: true });
+    document.addEventListener('touchmove', this._onTouchMove, { passive: false });
+  };
+
   SupportChat.prototype.setupMobileComposer = function () {
     var self = this;
-    if (!window.visualViewport) return;
     var page = document.querySelector('.lz-chat-page');
+    var navEl = document.getElementById('layout-navbar')
+      || document.querySelector('.layout-navbar');
+    var getNavH = function () {
+      if (navEl) return Math.round(navEl.getBoundingClientRect().height) || 62;
+      return 62;
+    };
     var apply = function () {
-      var vv = window.visualViewport;
-      var offset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
-      var h = Math.round(vv.height) + 'px';
-      document.documentElement.style.setProperty('--lz-vv-height', h);
-      document.documentElement.style.setProperty('--lz-kb-offset', offset + 'px');
-      if (self.$shell) {
-        self.$shell.style.setProperty('--lz-kb-offset', offset + 'px');
-        self.$shell.style.setProperty('--lz-vv-height', h);
+      var navH = getNavH();
+      document.documentElement.style.setProperty('--lz-nav-h', navH + 'px');
+      if (page) page.style.setProperty('--lz-nav-h', navH + 'px');
+
+      if (!window.visualViewport) {
+        if (page) {
+          page.style.top = navH + 'px';
+          page.style.bottom = '0px';
+          page.style.height = '';
+        }
+        return;
       }
+      var vv = window.visualViewport;
+      var kb = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+      // Sit flush under navbar; only shrink from bottom when keyboard opens
+      var top = navH;
+      var bottom = kb;
+      document.documentElement.style.setProperty('--lz-kb-offset', kb + 'px');
+      if (self.$shell) self.$shell.style.setProperty('--lz-kb-offset', kb + 'px');
       if (page) {
-        page.style.height = h;
-        page.style.maxHeight = h;
-        page.style.top = Math.round(vv.offsetTop) + 'px';
+        page.style.top = top + 'px';
+        page.style.bottom = bottom + 'px';
+        page.style.height = '';
+        page.style.maxHeight = '';
       }
       if (self.$list) self.scrollBottom();
     };
-    window.visualViewport.addEventListener('resize', apply);
-    window.visualViewport.addEventListener('scroll', apply);
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', apply);
+      window.visualViewport.addEventListener('scroll', apply);
+    }
+    window.addEventListener('resize', apply);
     apply();
   };
 

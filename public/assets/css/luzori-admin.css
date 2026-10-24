@@ -3173,16 +3173,108 @@ body.luzori-admin .luzori-page {
 }
 
 @media (max-width: 1199.98px) {
-  html:has(body.luzori-admin),
-  body.luzori-admin {
+  /* Page shell: fixed navbar + scroll only inside content area */
+  html:has(body.luzori-admin:not(.lz-chat-active)),
+  body.luzori-admin:not(.lz-chat-active) {
+    height: 100% !important;
+    height: 100dvh !important;
+    overflow: hidden !important;
     position: relative;
     width: 100%;
     touch-action: pan-y;
   }
 
-  body.luzori-admin .layout-page,
-  body.luzori-admin .content-wrapper {
+  body.luzori-admin:not(.lz-chat-active) .layout-wrapper,
+  body.luzori-admin:not(.lz-chat-active) .layout-container {
+    height: 100% !important;
+    max-height: 100dvh !important;
+    overflow: hidden !important;
     width: 100% !important;
     max-width: 100vw !important;
+  }
+
+  body.luzori-admin:not(.lz-chat-active) .layout-page {
+    height: 100% !important;
+    max-height: 100dvh !important;
+    overflow: hidden !important;
+    display: flex;
+    flex-direction: column;
+    width: 100% !important;
+    max-width: 100vw !important;
+  }
+
+  body.luzori-admin:not(.lz-chat-active) .layout-page > .content-wrapper {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
+    padding-top: 3.875rem !important;
+  }
+
+  /* Notifications dropdown — mobile panel under navbar */
+  body.luzori-admin .lz-notif-dropdown {
+    position: static !important;
+  }
+  body.luzori-admin .lz-notif-menu.dropdown-menu {
+    position: fixed !important;
+    top: 3.875rem !important;
+    left: 0.5rem !important;
+    right: 0.5rem !important;
+    inset-inline: 0.5rem !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    max-height: calc(100dvh - 4.5rem) !important;
+    margin: 0 !important;
+    border-radius: 14px !important;
+    border: 1px solid #e8dccb !important;
+    box-shadow: 0 12px 32px rgba(0, 43, 38, 0.18) !important;
+    overflow: hidden !important;
+    flex-direction: column !important;
+    z-index: 1090 !important;
+    padding: 0 !important;
+  }
+  body.luzori-admin .lz-notif-menu.dropdown-menu.show {
+    display: flex !important;
+  }
+  body.luzori-admin .lz-notif-menu .dropdown-menu-header,
+  body.luzori-admin .lz-notif-menu .dropdown-menu-footer {
+    flex: 0 0 auto;
+  }
+  body.luzori-admin .lz-notif-list.dropdown-notifications-list,
+  body.luzori-admin .lz-notif-list.scrollable-container {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    max-height: calc(100dvh - 11rem) !important;
+    height: auto !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior: contain !important;
+    touch-action: pan-y !important;
+  }
+  body.luzori-admin .lz-notif-list.ps {
+    overflow-y: auto !important;
+  }
+  body.luzori-admin .lz-notif-list .ps__rail-x,
+  body.luzori-admin .lz-notif-list .ps__rail-y {
+    display: none !important;
+  }
+  body.luzori-admin .lz-notif-menu .dropdown-notifications-item {
+    padding: 0.85rem 1rem !important;
+  }
+  body.luzori-admin .lz-notif-menu .dropdown-notifications-item h6 {
+    font-size: 0.9rem;
+    margin-bottom: 0.2rem !important;
+  }
+  body.luzori-admin .lz-notif-menu .dropdown-notifications-item p {
+    font-size: 0.8rem;
+    color: #6b7280;
+    margin-bottom: 0.15rem !important;
   }
 }

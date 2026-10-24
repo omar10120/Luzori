@@ -3,7 +3,7 @@
 @section('title', $title)
 
 @section('vendor-style')
-    <link rel="stylesheet" href="{{ asset('assets/css/luzori-support.css') }}?v=9">
+    <link rel="stylesheet" href="{{ asset('assets/css/luzori-support.css') }}?v=10">
 @endsection
 
 @section('content')
@@ -63,7 +63,7 @@
         <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
         <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
     @endif
-    <script src="{{ asset('assets/js/luzori-support-chat.js') }}?v=9"></script>
+    <script src="{{ asset('assets/js/luzori-support-chat.js') }}?v=10"></script>
     <script>
     window.__lzSupportSoundUrl = @json(asset('sumsung_galaxy_s4.mp3'));
     (function () {
