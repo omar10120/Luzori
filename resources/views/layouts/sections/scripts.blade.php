@@ -235,10 +235,41 @@ html[dir="rtl"] .lz-local-toasts { inset-inline-end: auto; inset-inline-start: 1
                 window.__lzSupportAudio.volume = 0.9;
             }
             var audio = window.__lzSupportAudio;
+            audio.muted = false;
+            audio.volume = 0.9;
             audio.pause();
             audio.currentTime = 0;
             var p = audio.play();
             if (p && typeof p.catch === 'function') p.catch(function () {});
+        } catch (e) {}
+    }
+
+    function unlockBeep() {
+        try {
+            var src = window.__lzSupportSoundUrl || @json(asset('sumsung_galaxy_s4.mp3'));
+            if (!window.__lzSupportAudio) {
+                window.__lzSupportAudio = new Audio(src);
+                window.__lzSupportAudio.preload = 'auto';
+            }
+            var audio = window.__lzSupportAudio;
+            audio.muted = true;
+            audio.volume = 0;
+            var p = audio.play();
+            if (p && typeof p.then === 'function') {
+                p.then(function () {
+                    audio.pause();
+                    audio.currentTime = 0;
+                    audio.muted = false;
+                    audio.volume = 0.9;
+                }).catch(function () {
+                    audio.muted = false;
+                    audio.volume = 0.9;
+                });
+            } else {
+                audio.pause();
+                audio.muted = false;
+                audio.volume = 0.9;
+            }
         } catch (e) {}
     }
 
@@ -305,7 +336,9 @@ html[dir="rtl"] .lz-local-toasts { inset-inline-end: auto; inset-inline-start: 1
             var ticketChanged = data.ticket_fp && data.ticket_fp !== lastTicketFp;
             var unreadUp = (data.chat_unread || 0) > (lastChatUnread || 0);
 
-            if (chatChanged || unreadUp) {
+            // Skip chat alert while the same conversation is open and focused
+            var viewingChat = document.body.classList.contains('lz-chat-active') && !document.hidden;
+            if ((chatChanged || unreadUp) && !viewingChat) {
                 playBeep();
                 showLocalToast(data.latest_chat, 'chat');
             }
@@ -320,9 +353,9 @@ html[dir="rtl"] .lz-local-toasts { inset-inline-end: auto; inset-inline-start: 1
         }).catch(function () {});
     }
 
-    // Unlock audio after first tap
+    // Unlock audio after first tap (silent — no beep on click)
     document.addEventListener('click', function once() {
-        playBeep();
+        unlockBeep();
         document.removeEventListener('click', once);
     }, { once: true });
 

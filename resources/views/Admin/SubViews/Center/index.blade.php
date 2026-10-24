@@ -179,10 +179,10 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="row mt-2">
+                        <div class="row my-3 py-3">
                             <div class="col-12">
-                                <label class="form-label d-block mb-2">{{ __('locale.support_settings') }}</label>
-                                <div class="d-flex flex-wrap align-items-center gap-4">
+                                <label class="form-label d-block mb-3">{{ __('locale.support_settings') }}</label>
+                                <div class="d-flex flex-wrap align-items-center gap-4 pb-1">
                                     <div class="form-check form-switch mb-0">
                                         <input type="hidden" name="support_chat_enabled" value="0">
                                         <input class="form-check-input" type="checkbox" id="support_chat_enabled" name="support_chat_enabled" value="1"

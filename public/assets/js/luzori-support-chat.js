@@ -21,10 +21,42 @@
         window.__lzSupportAudio.volume = 0.9;
       }
       var audio = window.__lzSupportAudio;
+      audio.muted = false;
+      audio.volume = 0.9;
       audio.pause();
       audio.currentTime = 0;
       var p = audio.play();
       if (p && typeof p.catch === 'function') p.catch(function () {});
+    } catch (e) {}
+  }
+
+  /** Unlock autoplay without an audible beep */
+  function unlockNotifySound() {
+    try {
+      var src = window.__lzSupportSoundUrl || '/sumsung_galaxy_s4.mp3';
+      if (!window.__lzSupportAudio) {
+        window.__lzSupportAudio = new Audio(src);
+        window.__lzSupportAudio.preload = 'auto';
+      }
+      var audio = window.__lzSupportAudio;
+      audio.muted = true;
+      audio.volume = 0;
+      var p = audio.play();
+      if (p && typeof p.then === 'function') {
+        p.then(function () {
+          audio.pause();
+          audio.currentTime = 0;
+          audio.muted = false;
+          audio.volume = 0.9;
+        }).catch(function () {
+          audio.muted = false;
+          audio.volume = 0.9;
+        });
+      } else {
+        audio.pause();
+        audio.muted = false;
+        audio.volume = 0.9;
+      }
     } catch (e) {}
   }
 
@@ -124,9 +156,9 @@
     this.startPolling();
     this.pollUnread();
 
-    // Unlock audio on first user gesture
+    // Unlock audio on first user gesture (silent — no beep)
     document.addEventListener('click', function unlock() {
-      playNotifySound();
+      unlockNotifySound();
       document.removeEventListener('click', unlock);
     }, { once: true });
   };
@@ -179,8 +211,10 @@
   SupportChat.prototype.openConversation = function (centerId, name, domain) {
     var self = this;
     this.activeCenterId = centerId;
+    window.__lzSupportActiveCenterId = centerId;
     this.lastMessageId = 0;
     this.knownIds = {};
+    this.fbNotifyReady = false;
     if (this.$title) this.$title.textContent = name || ('#' + centerId);
     if (this.$subtitle) this.$subtitle.textContent = domain || '';
     if (this.$contacts) {
@@ -426,11 +460,15 @@
 
   SupportChat.prototype.toastNew = function (message, isMine) {
     if (isMine) return;
+    // Already viewing this thread with the tab focused — no toast/sound
+    if (!document.hidden && this.activeCenterId && message.center_id
+        && parseInt(message.center_id, 10) === parseInt(this.activeCenterId, 10)) {
+      return;
+    }
     playNotifySound();
     var title = message.sender_name || 'Support';
     var body = (message.body || message.attachment_type || '').toString().slice(0, 120);
     try {
-      // In-dashboard local toast (not Chrome-only)
       var host = document.getElementById('lzLocalToasts');
       if (host) {
         var el = document.createElement('div');
@@ -451,8 +489,8 @@
       if (window.toastr) {
         toastr.info(body, title, { timeOut: 5000 });
       }
-      // Optional browser notification (secondary)
-      if (window.Notification && Notification.permission === 'granted') {
+      // Browser notification only when tab is in background
+      if (document.hidden && window.Notification && Notification.permission === 'granted') {
         new Notification(title, { body: body });
       }
     } catch (e) {}
@@ -508,19 +546,28 @@
       if (this.fbSeenUnsub) { this.fbSeenUnsub(); this.fbSeenUnsub = null; }
 
       var msgRef = firebase.database().ref('support_chats/' + centerId + '/messages').limitToLast(80);
+      // child_added replays history on subscribe — suppress alerts until hydrate finishes
+      self.fbNotifyReady = false;
       var childHandler = function (snap) {
         var m = snap.val();
         if (!m) return;
         if (!m.id) m.id = snap.key;
+        if (!m.center_id) m.center_id = centerId;
         var wasKnown = !!self.knownIds[m.id];
         self.renderMessages([m], false);
-        if (!wasKnown) {
+        if (!wasKnown && self.fbNotifyReady) {
           self.toastNew(m, self.isMine(m));
           self.pollUnread();
         }
       };
       msgRef.on('child_added', childHandler);
-      this.fbUnsub = function () { msgRef.off('child_added', childHandler); };
+      msgRef.once('value', function () {
+        self.fbNotifyReady = true;
+      });
+      this.fbUnsub = function () {
+        msgRef.off('child_added', childHandler);
+        self.fbNotifyReady = false;
+      };
 
       var typingRef = firebase.database().ref('support_chats/' + centerId + '/typing');
       var typingHandler = function (snap) {
