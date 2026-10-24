@@ -26,7 +26,14 @@ class Branch extends Model
         'longitude',
         'latitude',
         'open_time',
-        'close_time'
+        'close_time',
+        'support_chat_enabled',
+        'support_tickets_enabled',
+    ];
+
+    protected $casts = [
+        'support_chat_enabled' => 'boolean',
+        'support_tickets_enabled' => 'boolean',
     ];
 
     public function users(): HasMany

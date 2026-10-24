@@ -166,8 +166,25 @@
 <script>
 (function () {
     var url = @json($lzSupportChatUnreadUrl);
+    var last = null;
+    function playBeep() {
+        try {
+            if (window.lzPlaySupportSound) { window.lzPlaySupportSound(); return; }
+            var Ctx = window.AudioContext || window.webkitAudioContext;
+            if (!Ctx) return;
+            var ctx = new Ctx();
+            var o = ctx.createOscillator();
+            var g = ctx.createGain();
+            o.frequency.value = 880;
+            g.gain.value = 0.18;
+            o.connect(g); g.connect(ctx.destination);
+            o.start(); o.stop(ctx.currentTime + 0.25);
+        } catch (e) {}
+    }
     function setBadge(n) {
         n = parseInt(n, 10) || 0;
+        if (last !== null && n > last) playBeep();
+        last = n;
         document.querySelectorAll('.lz-support-chat-badge').forEach(function (el) {
             el.textContent = n > 99 ? '99+' : String(n);
             el.classList.toggle('d-none', n <= 0);
@@ -182,7 +199,7 @@
         }).catch(function () {});
     }
     tick();
-    setInterval(tick, 25000);
+    setInterval(tick, 15000);
 })();
 </script>
 @endif

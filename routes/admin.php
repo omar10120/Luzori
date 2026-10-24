@@ -174,6 +174,8 @@ Route::group(['middleware' => 'auth:admin'], function () {
             Route::get('unread', 'unread')->name('unread');
             Route::get('{centerId}/messages', 'messages')->name('messages')->whereNumber('centerId');
             Route::post('{centerId}/send', 'send')->name('send')->whereNumber('centerId');
+            Route::post('{centerId}/typing', 'typing')->name('typing')->whereNumber('centerId');
+            Route::post('{centerId}/toggle', 'toggleCenter')->name('toggle')->whereNumber('centerId');
         });
     });
 

@@ -4,16 +4,25 @@ namespace App\Http\Controllers\CenterUser;
 
 use App\Http\Controllers\Controller;
 use App\Models\SupportTicket;
+use App\Services\SupportAccessService;
 use App\Services\SupportChatService;
 use App\Services\SupportTicketService;
 use Illuminate\Http\Request;
 
 class SupportTicketController extends Controller
 {
-    public function index(Request $request)
+    protected function assertTicketsEnabled(SupportAccessService $access): \App\Models\Center
     {
         $center = SupportChatService::resolveActiveCenter();
         abort_unless($center, 404);
+        $user = auth('center_user')->user();
+        abort_unless($access->canCenterUserUseTickets($center, $user), 403, __('field.support_tickets_disabled'));
+        return $center;
+    }
+
+    public function index(Request $request, SupportAccessService $access)
+    {
+        $center = $this->assertTicketsEnabled($access);
 
         $status = $request->query('status');
         $q = SupportTicket::query()
@@ -31,10 +40,9 @@ class SupportTicketController extends Controller
         ]);
     }
 
-    public function create()
+    public function create(SupportAccessService $access)
     {
-        $center = SupportChatService::resolveActiveCenter();
-        abort_unless($center, 404);
+        $center = $this->assertTicketsEnabled($access);
 
         return view('CenterUser.SubViews.SupportTicket.create', [
             'title' => __('locale.new_support_ticket'),
@@ -42,7 +50,7 @@ class SupportTicketController extends Controller
         ]);
     }
 
-    public function store(Request $request, SupportTicketService $service)
+    public function store(Request $request, SupportTicketService $service, SupportAccessService $access)
     {
         $request->validate([
             'subject' => 'required|string|max:200',
@@ -50,8 +58,7 @@ class SupportTicketController extends Controller
             'priority' => 'nullable|in:low,normal,high,urgent',
         ]);
 
-        $center = SupportChatService::resolveActiveCenter();
-        abort_unless($center, 404);
+        $center = $this->assertTicketsEnabled($access);
 
         $ticket = $service->createFromCenter(
             $center,
@@ -63,10 +70,9 @@ class SupportTicketController extends Controller
             ->with('success', __('general.success'));
     }
 
-    public function show(int $id)
+    public function show(int $id, SupportAccessService $access)
     {
-        $center = SupportChatService::resolveActiveCenter();
-        abort_unless($center, 404);
+        $center = $this->assertTicketsEnabled($access);
 
         $ticket = SupportTicket::with('replies')
             ->where('center_id', $center->id)
@@ -79,12 +85,11 @@ class SupportTicketController extends Controller
         ]);
     }
 
-    public function reply(Request $request, int $id, SupportTicketService $service)
+    public function reply(Request $request, int $id, SupportTicketService $service, SupportAccessService $access)
     {
         $request->validate(['body' => 'required|string|max:10000']);
 
-        $center = SupportChatService::resolveActiveCenter();
-        abort_unless($center, 404);
+        $center = $this->assertTicketsEnabled($access);
 
         $ticket = SupportTicket::where('center_id', $center->id)->findOrFail($id);
         $service->replyFromCenter($ticket, auth('center_user')->user(), $request->input('body'));

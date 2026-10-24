@@ -138,9 +138,12 @@ Route::group(['middleware' => 'auth_center_user:center_user'], function () {
     Route::group(['prefix' => 'support-chat', 'as' => 'support-chat.'], function () {
         Route::controller(SupportChatController::class)->group(function () {
             Route::get('/', 'index')->name('index');
+            Route::get('settings', 'settings')->name('settings');
             Route::get('messages', 'messages')->name('messages');
             Route::post('send', 'send')->name('send');
+            Route::post('typing', 'typing')->name('typing');
             Route::get('unread', 'unread')->name('unread');
+            Route::post('branches/{branchId}/toggle', 'toggleBranch')->name('branch.toggle')->whereNumber('branchId');
         });
     });
 

@@ -78,6 +78,52 @@ class FirebaseRealtimeService
         }
     }
 
+    public function setTyping(int $centerId, array $payload): void
+    {
+        try {
+            $db = $this->database();
+            if (!$db) {
+                return;
+            }
+            $key = ($payload['sender_type'] ?? 'user') . '_' . ($payload['sender_id'] ?? '0');
+            $db->getReference('support_chats/' . $centerId . '/typing/' . $key)->set([
+                'sender_type' => $payload['sender_type'] ?? null,
+                'sender_id' => $payload['sender_id'] ?? null,
+                'sender_name' => $payload['sender_name'] ?? null,
+                'at' => now()->toIso8601String(),
+            ]);
+        } catch (\Throwable $e) {
+            Log::warning('Firebase typing set failed: ' . $e->getMessage());
+        }
+    }
+
+    public function clearTyping(int $centerId, string $key): void
+    {
+        try {
+            $db = $this->database();
+            if (!$db) {
+                return;
+            }
+            $db->getReference('support_chats/' . $centerId . '/typing/' . $key)->remove();
+        } catch (\Throwable $e) {
+            Log::warning('Firebase typing clear failed: ' . $e->getMessage());
+        }
+    }
+
+    public function pushSeen(int $centerId, array $payload): void
+    {
+        try {
+            $db = $this->database();
+            if (!$db) {
+                return;
+            }
+            $db->getReference('support_chats/' . $centerId . '/seen')->push($payload);
+        } catch (\Throwable $e) {
+            Log::warning('Firebase seen push failed: ' . $e->getMessage());
+        }
+    }
+
+
     protected function factory(): ?Factory
     {
         $setting = FirebaseSetting::current();

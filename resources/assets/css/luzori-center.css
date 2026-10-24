@@ -2049,3 +2049,41 @@ html:not(.dark-style) body.luzori-center .btn-primary {
   background: #002b26 !important;
   color: #fff !important;
 }
+
+/* ==========================================================================
+   Mobile: lock horizontal rubber-band / bounce (Center)
+   ========================================================================== */
+html:has(body.luzori-center),
+html:has(body.luzori-center) body,
+body.luzori-center {
+  overflow-x: hidden !important;
+  overscroll-behavior-x: none !important;
+  overscroll-behavior-y: contain !important;
+  max-width: 100% !important;
+}
+
+body.luzori-center .layout-wrapper,
+body.luzori-center .layout-container,
+body.luzori-center .layout-page,
+body.luzori-center .content-wrapper,
+body.luzori-center .container-p-y,
+body.luzori-center .luzori-page {
+  overflow-x: hidden !important;
+  overscroll-behavior-x: none !important;
+  max-width: 100% !important;
+}
+
+@media (max-width: 1199.98px) {
+  html:has(body.luzori-center),
+  body.luzori-center {
+    position: relative;
+    width: 100%;
+    touch-action: pan-y;
+  }
+
+  body.luzori-center .layout-page,
+  body.luzori-center .content-wrapper {
+    width: 100% !important;
+    max-width: 100vw !important;
+  }
+}

@@ -83,4 +83,5 @@ return [
     'support_ticket'                    => 'تذكرة دعم',
     'new_support_ticket'                => 'تذكرة دعم جديدة',
     'luzori_support'                    => 'دعم Luzori',
+    'support_settings'                  => 'إعدادات الدعم',
 ];

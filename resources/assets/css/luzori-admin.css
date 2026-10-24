@@ -3148,3 +3148,41 @@ body.luzori-admin .select2-container--open .select2-results__options,
     max-height: min(45vh, 240px) !important;
   }
 }
+
+/* ==========================================================================
+   Mobile: lock horizontal rubber-band / bounce (Admin)
+   ========================================================================== */
+html:has(body.luzori-admin),
+html:has(body.luzori-admin) body,
+body.luzori-admin {
+  overflow-x: hidden !important;
+  overscroll-behavior-x: none !important;
+  overscroll-behavior-y: contain !important;
+  max-width: 100% !important;
+}
+
+body.luzori-admin .layout-wrapper,
+body.luzori-admin .layout-container,
+body.luzori-admin .layout-page,
+body.luzori-admin .content-wrapper,
+body.luzori-admin .container-p-y,
+body.luzori-admin .luzori-page {
+  overflow-x: hidden !important;
+  overscroll-behavior-x: none !important;
+  max-width: 100% !important;
+}
+
+@media (max-width: 1199.98px) {
+  html:has(body.luzori-admin),
+  body.luzori-admin {
+    position: relative;
+    width: 100%;
+    touch-action: pan-y;
+  }
+
+  body.luzori-admin .layout-page,
+  body.luzori-admin .content-wrapper {
+    width: 100% !important;
+    max-width: 100vw !important;
+  }
+}

@@ -83,4 +83,5 @@ return [
     'support_ticket'                    => 'Support Ticket',
     'new_support_ticket'                => 'New Support Ticket',
     'luzori_support'                    => 'Luzori Support',
+    'support_settings'                  => 'Support Settings',
 ];

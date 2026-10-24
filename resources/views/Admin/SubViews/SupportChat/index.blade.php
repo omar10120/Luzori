@@ -3,7 +3,7 @@
 @section('title', $title)
 
 @section('vendor-style')
-    <link rel="stylesheet" href="{{ asset('assets/css/luzori-support.css') }}?v=1">
+    <link rel="stylesheet" href="{{ asset('assets/css/luzori-support.css') }}?v=2">
 @endsection
 
 @section('content')
@@ -44,6 +44,24 @@
                                         <span class="lz-chat-badge">{{ $row['unread'] }}</span>
                                     @endif
                                 </span>
+                                <span class="lz-center-toggle-wrap" onclick="event.stopPropagation()">
+                                    <span class="form-check form-switch">
+                                        <input type="checkbox" class="form-check-input lz-center-toggle"
+                                            data-center-id="{{ $row['center_id'] }}"
+                                            data-field="support_chat_enabled"
+                                            @checked($row['support_chat_enabled'] ?? true)
+                                            title="{{ __('locale.support_chat') }}">
+                                        <label class="form-check-label">{{ __('locale.support_chat') }}</label>
+                                    </span>
+                                    <span class="form-check form-switch">
+                                        <input type="checkbox" class="form-check-input lz-center-toggle"
+                                            data-center-id="{{ $row['center_id'] }}"
+                                            data-field="support_tickets_enabled"
+                                            @checked($row['support_tickets_enabled'] ?? true)
+                                            title="{{ __('locale.support_tickets') }}">
+                                        <label class="form-check-label">{{ __('locale.support_tickets') }}</label>
+                                    </span>
+                                </span>
                             </span>
                         </button>
                     @empty
@@ -65,11 +83,23 @@
                     <i class="ti ti-message-circle"></i>
                     {{ __('field.support_chat_empty') }}
                 </div>
+                <div class="lz-chat-typing d-none" id="lzChatTyping"></div>
                 <form class="lz-chat-composer" id="lzChatComposer" autocomplete="off">
-                    <textarea id="lzChatInput" rows="1" placeholder="{{ __('field.type_a_message') }}" disabled></textarea>
-                    <button type="submit" class="btn-send" disabled title="{{ __('general.send') }}">
-                        <i class="ti ti-send"></i>
-                    </button>
+                    <div class="lz-chat-file-preview d-none" id="lzChatFilePreview">
+                        <span class="lz-file-name"></span>
+                        <button type="button" class="btn btn-sm btn-link" id="lzChatFileClear">{{ __('general.cancel') }}</button>
+                    </div>
+                    <div class="lz-chat-composer-row">
+                        <label class="lz-chat-attach" title="{{ __('field.attach_file') }}">
+                            <i class="ti ti-paperclip"></i>
+                            <input type="file" id="lzChatFile" class="d-none"
+                                accept="image/*,video/*">
+                        </label>
+                        <textarea id="lzChatInput" rows="1" placeholder="{{ __('field.type_a_message') }}" disabled></textarea>
+                        <button type="submit" class="btn-send" disabled title="{{ __('general.send') }}">
+                            <i class="ti ti-send"></i>
+                        </button>
+                    </div>
                 </form>
             </section>
         </div>
@@ -82,7 +112,7 @@
         <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
         <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
     @endif
-    <script src="{{ asset('assets/js/luzori-support-chat.js') }}?v=1"></script>
+    <script src="{{ asset('assets/js/luzori-support-chat.js') }}?v=2"></script>
     <script>
     (function () {
         var chat = new LuzoriSupportChat({
@@ -91,22 +121,20 @@
             csrf: @json(csrf_token()),
             firebaseConfig: @json($firebaseConfig),
             firebaseToken: @json($firebaseToken),
+            limits: @json($limits),
+            i18n: {
+                typing: @json(__('field.is_typing')),
+                unsupported: @json(__('field.unsupported_attachment')),
+                tooLarge: @json(__('field.attachment_too_large')),
+            },
             routes: {
                 messages: @json(url('admin/support-chat/__CENTER__/messages')),
                 send: @json(url('admin/support-chat/__CENTER__/send')),
+                typing: @json(url('admin/support-chat/__CENTER__/typing')),
+                toggle: @json(url('admin/support-chat/__CENTER__/toggle')),
                 unread: @json(route('admin.support-chat.unread')),
             }
         });
-
-        var input = document.getElementById('lzChatInput');
-        var sendBtn = document.querySelector('#lzChatComposer .btn-send');
-        var origOpen = chat.openConversation.bind(chat);
-        chat.openConversation = function (id, name, domain) {
-            origOpen(id, name, domain);
-            if (input) input.disabled = false;
-            if (sendBtn) sendBtn.disabled = false;
-            if (input) input.focus();
-        };
         chat.init();
     })();
     </script>

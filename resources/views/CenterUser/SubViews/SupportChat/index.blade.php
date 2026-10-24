@@ -3,7 +3,7 @@
 @section('title', $title)
 
 @section('vendor-style')
-    <link rel="stylesheet" href="{{ asset('assets/css/luzori-support.css') }}?v=1">
+    <link rel="stylesheet" href="{{ asset('assets/css/luzori-support.css') }}?v=2">
 @endsection
 
 @section('content')
@@ -13,9 +13,12 @@
                 <div class="lz-page-icon"><i class="ti ti-headset"></i></div>
                 <h1 class="lz-page-title">{{ $title }}</h1>
             </div>
+            <a href="{{ route('center_user.support-chat.settings') }}" class="btn btn-luzori-muted btn-sm">
+                <i class="ti ti-settings me-1"></i>{{ __('locale.support_settings') }}
+            </a>
         </div>
 
-        <div class="lz-chat-shell lz-chat-single">
+        <div class="lz-chat-shell lz-chat-single" id="lzChatShell">
             <section class="lz-chat-main">
                 <div class="lz-chat-main-head">
                     <span class="lz-chat-avatar"><i class="ti ti-lifebuoy"></i></span>
@@ -29,11 +32,22 @@
                     <i class="ti ti-message-circle"></i>
                     {{ __('field.support_chat_empty') }}
                 </div>
+                <div class="lz-chat-typing d-none" id="lzChatTyping"></div>
                 <form class="lz-chat-composer" id="lzChatComposer" autocomplete="off">
-                    <textarea id="lzChatInput" rows="1" placeholder="{{ __('field.type_a_message') }}"></textarea>
-                    <button type="submit" class="btn-send" title="{{ __('general.send') }}">
-                        <i class="ti ti-send"></i>
-                    </button>
+                    <div class="lz-chat-file-preview d-none" id="lzChatFilePreview">
+                        <span class="lz-file-name"></span>
+                        <button type="button" class="btn btn-sm btn-link" id="lzChatFileClear">{{ __('general.cancel') }}</button>
+                    </div>
+                    <div class="lz-chat-composer-row">
+                        <label class="lz-chat-attach" title="{{ __('field.attach_file') }}">
+                            <i class="ti ti-paperclip"></i>
+                            <input type="file" id="lzChatFile" class="d-none" accept="image/*,video/*">
+                        </label>
+                        <textarea id="lzChatInput" rows="1" placeholder="{{ __('field.type_a_message') }}"></textarea>
+                        <button type="submit" class="btn-send" title="{{ __('general.send') }}">
+                            <i class="ti ti-send"></i>
+                        </button>
+                    </div>
                 </form>
             </section>
         </div>
@@ -46,7 +60,7 @@
         <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
         <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
     @endif
-    <script src="{{ asset('assets/js/luzori-support-chat.js') }}?v=1"></script>
+    <script src="{{ asset('assets/js/luzori-support-chat.js') }}?v=2"></script>
     <script>
     (function () {
         var chat = new LuzoriSupportChat({
@@ -59,9 +73,16 @@
             centerName: @json($center->name),
             centerDomain: @json($center->domain),
             initialMessages: @json($messages),
+            limits: @json($limits),
+            i18n: {
+                typing: @json(__('field.is_typing')),
+                unsupported: @json(__('field.unsupported_attachment')),
+                tooLarge: @json(__('field.attachment_too_large')),
+            },
             routes: {
                 messages: @json(route('center_user.support-chat.messages')),
                 send: @json(route('center_user.support-chat.send')),
+                typing: @json(route('center_user.support-chat.typing')),
                 unread: @json(route('center_user.support-chat.unread')),
             }
         });

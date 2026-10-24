@@ -17,6 +17,16 @@ class CenterRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('support_chat_enabled')) {
+            $this->merge(['support_chat_enabled' => $this->boolean('support_chat_enabled')]);
+        }
+        if ($this->has('support_tickets_enabled')) {
+            $this->merge(['support_tickets_enabled' => $this->boolean('support_tickets_enabled')]);
+        }
+    }
+
     /**
      * Get the validation rules that apply to the request.
      *
@@ -41,6 +51,8 @@ class CenterRequest extends FormRequest
                 'primary_image.*' => 'image|max:4096|mimes:jpg,jpeg,png,gif|mimetypes:image/jpeg,image/png',
                 'delete_primary_images' => 'nullable|string',
                 'status' => 'nullable|in:pending,approve,reject',
+                'support_chat_enabled' => 'nullable|boolean',
+                'support_tickets_enabled' => 'nullable|boolean',
                 'reject_reason' => 'nullable|string',
                 'rate' => 'nullable|in:recently_viewed,recommended,new_to,trending',
                 'bank_name' => 'nullable|string|max:40',
@@ -67,6 +79,8 @@ class CenterRequest extends FormRequest
                 'primary_image.*' => 'image|max:4096|mimes:jpg,jpeg,png,gif|mimetypes:image/jpeg,image/png',
                 'delete_primary_images' => 'nullable|string',
                 'status' => 'nullable|in:pending,approve,reject',
+                'support_chat_enabled' => 'nullable|boolean',
+                'support_tickets_enabled' => 'nullable|boolean',
                 'expire_date' => 'nullable|date',
                 'reject_reason' => 'nullable|string',
                 'rate' => 'nullable|in:recently_viewed,recommended,new_to,trending',
