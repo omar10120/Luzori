@@ -22,6 +22,7 @@
             gap: 0.45rem;
             font-weight: 600;
             color: #002b26;
+            white-space: nowrap;
         }
         .lz-weeksdays-table .lz-day-dot {
             width: 8px;
@@ -35,6 +36,60 @@
             border-radius: 50%;
             border-color: #c5a070 !important;
             box-shadow: none !important;
+        }
+
+        /* Mobile: keep table layout + enable horizontal scroll */
+        @media (max-width: 991.98px) {
+            .lz-weeksdays-page {
+                overflow-x: visible !important;
+                max-width: 100%;
+            }
+            .lz-weeksdays-page .lz-table-card,
+            .lz-weeksdays-page .lz-table-card .card-body,
+            .lz-weeksdays-page .dataTables_wrapper {
+                overflow: visible;
+                max-width: 100%;
+            }
+            .lz-weeksdays-page .table-responsive {
+                display: block;
+                width: 100%;
+                max-width: 100%;
+                overflow-x: auto !important;
+                overflow-y: hidden;
+                -webkit-overflow-scrolling: touch;
+                overscroll-behavior-x: contain;
+                touch-action: pan-x pan-y;
+                margin: 0 -0.25rem;
+                padding-bottom: 0.35rem;
+            }
+            .lz-weeksdays-page #weeksdays-table,
+            .lz-weeksdays-page .lz-weeksdays-table {
+                min-width: 520px;
+                width: 100%;
+            }
+            .lz-weeksdays-page .lz-weeksdays-table thead th,
+            .lz-weeksdays-page .lz-weeksdays-table tbody td {
+                white-space: nowrap;
+                vertical-align: middle !important;
+            }
+            .lz-weeksdays-page .lz-weeksdays-table .switch {
+                margin: 0;
+            }
+            .lz-weeksdays-page .dataTables_wrapper .row {
+                margin-left: 0;
+                margin-right: 0;
+            }
+            .lz-weeksdays-page .dataTables_wrapper .dataTables_filter,
+            .lz-weeksdays-page .dataTables_wrapper .dataTables_length {
+                float: none;
+                text-align: start;
+            }
+            .lz-weeksdays-page .dataTables_wrapper .dataTables_filter input {
+                width: 100%;
+                max-width: 100%;
+                margin-left: 0 !important;
+                margin-top: 0.35rem;
+            }
         }
     </style>
 @endsection

@@ -269,9 +269,17 @@ body.luzori-center .layout-menu .ps__thumb-x {
 
 @media (max-width: 1199.98px) {
   html.layout-menu-expanded body.luzori-center .layout-menu .menu-inner,
-  html.layout-menu-expanded body.luzori-center .layout-menu .ps {
+  html.layout-menu-expanded body.luzori-center .layout-menu .ps,
+  body.luzori-center .layout-menu .menu-inner,
+  body.luzori-center .layout-menu .ps {
     overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch;
+    -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-y !important;
+    overscroll-behavior: contain;
+  }
+  /* PerfectScrollbar often blocks mobile pan — prefer native scroll */
+  body.luzori-center .layout-menu .menu-inner.ps {
+    overflow-y: auto !important;
   }
 }
 
@@ -2115,6 +2123,26 @@ body.luzori-center .luzori-page {
     overscroll-behavior: contain;
     touch-action: pan-y;
     padding-top: 3.875rem !important;
+  }
+
+  /* DataTables: allow horizontal swipe inside table wrappers */
+  body.luzori-center .lz-table-card .card-body {
+    max-width: 100%;
+    min-width: 0;
+  }
+  body.luzori-center .lz-table-card .table-responsive {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    touch-action: pan-x pan-y !important;
+  }
+  body.luzori-center .lz-table-card table.dataTable,
+  body.luzori-center .lz-table-card .table {
+    min-width: 560px;
   }
 
   /* Notifications dropdown — mobile panel under navbar */

@@ -121,9 +121,10 @@
     var self = this;
     document.documentElement.classList.add('lz-chat-lock');
     document.body.classList.add('lz-chat-active');
-    // Freeze body scroll position (prevents outer rubber-band on iOS)
+    // Freeze body without shifting layout (avoids white gap under navbar)
     this._lockScrollY = window.scrollY || 0;
-    document.body.style.top = '-' + this._lockScrollY + 'px';
+    document.body.style.top = '0px';
+    window.scrollTo(0, 0);
     this.lockOuterScroll();
     if (this.mode === 'center') this.showThread(true);
 
@@ -201,6 +202,8 @@
     if (this.mode === 'center' && this.activeCenterId) {
       this.openConversation(this.activeCenterId, this.opts.centerName, this.opts.centerDomain);
       if (this.opts.initialMessages) this.renderMessages(this.opts.initialMessages, true);
+      this.scrollBottom();
+      setTimeout(function () { self.scrollBottom(); }, 350);
     }
 
     this.startPolling();
@@ -223,12 +226,13 @@
         e.preventDefault();
         return;
       }
-      var scroller = t.closest('.lz-chat-messages, .lz-chat-list, textarea, .lz-chat-composer');
+      // Allow layout sidebar + chat scroll areas
+      if (t.closest('.layout-menu, #layout-menu, .menu-inner, .ps')) return;
+      var scroller = t.closest('.lz-chat-messages, .lz-chat-list, textarea, .lz-chat-composer, .lz-notif-list');
       if (!scroller) {
         e.preventDefault();
         return;
       }
-      // At edges of inner scroller: block chaining to body
       if (scroller.classList && (scroller.classList.contains('lz-chat-messages')
           || scroller.classList.contains('lz-chat-list'))) {
         var top = scroller.scrollTop;
@@ -237,7 +241,6 @@
         if (!touch) return;
         var dy = touch.clientY - (self._lastTouchY || touch.clientY);
         self._lastTouchY = touch.clientY;
-        // scrolling up at top, or down at bottom → prevent
         if ((top <= 0 && dy > 0) || (top >= max - 1 && dy < 0)) {
           e.preventDefault();
         }
@@ -257,36 +260,36 @@
     var navEl = document.getElementById('layout-navbar')
       || document.querySelector('.layout-navbar');
     var getNavH = function () {
-      if (navEl) return Math.round(navEl.getBoundingClientRect().height) || 62;
-      return 62;
+      if (!navEl) return 62;
+      var h = Math.round(navEl.getBoundingClientRect().height);
+      // Guard against inflated measurements
+      if (!h || h < 40 || h > 90) return 62;
+      return h;
     };
     var apply = function () {
       var navH = getNavH();
+      var kb = 0;
+      if (window.visualViewport) {
+        var vv = window.visualViewport;
+        kb = Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop));
+      }
       document.documentElement.style.setProperty('--lz-nav-h', navH + 'px');
-      if (page) page.style.setProperty('--lz-nav-h', navH + 'px');
-
-      if (!window.visualViewport) {
-        if (page) {
-          page.style.top = navH + 'px';
-          page.style.bottom = '0px';
-          page.style.height = '';
-        }
-        return;
-      }
-      var vv = window.visualViewport;
-      var kb = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
-      // Sit flush under navbar; only shrink from bottom when keyboard opens
-      var top = navH;
-      var bottom = kb;
       document.documentElement.style.setProperty('--lz-kb-offset', kb + 'px');
-      if (self.$shell) self.$shell.style.setProperty('--lz-kb-offset', kb + 'px');
       if (page) {
-        page.style.top = top + 'px';
-        page.style.bottom = bottom + 'px';
-        page.style.height = '';
-        page.style.maxHeight = '';
+        page.style.setProperty('--lz-nav-h', navH + 'px');
+        // Explicit geometry — no white gap, composer stays on screen
+        page.style.top = navH + 'px';
+        page.style.left = '0px';
+        page.style.right = '0px';
+        page.style.bottom = kb + 'px';
+        page.style.height = (window.innerHeight - navH - kb) + 'px';
+        page.style.maxHeight = (window.innerHeight - navH - kb) + 'px';
       }
-      if (self.$list) self.scrollBottom();
+      if (self.$shell) {
+        self.$shell.style.height = '100%';
+        self.$shell.style.minHeight = '0';
+      }
+      self.scrollBottom();
     };
     if (window.visualViewport) {
       window.visualViewport.addEventListener('resize', apply);
@@ -294,6 +297,9 @@
     }
     window.addEventListener('resize', apply);
     apply();
+    // Re-measure after layout paint / fonts
+    setTimeout(apply, 50);
+    setTimeout(apply, 300);
   };
 
   SupportChat.prototype.onFilePicked = function (file) {
@@ -565,8 +571,23 @@
   };
 
   SupportChat.prototype.scrollBottom = function () {
-    if (!this.$list) return;
-    this.$list.scrollTop = this.$list.scrollHeight;
+    var list = this.$list;
+    if (!list) return;
+    var go = function () {
+      list.scrollTop = list.scrollHeight;
+    };
+    go();
+    requestAnimationFrame(function () {
+      go();
+      // Images/videos may expand height after load
+      list.querySelectorAll('img, video').forEach(function (media) {
+        if (media.complete) return;
+        media.addEventListener('load', go, { once: true });
+        media.addEventListener('loadeddata', go, { once: true });
+      });
+    });
+    setTimeout(go, 120);
+    setTimeout(go, 400);
   };
 
   SupportChat.prototype.setBadge = function (n) {
