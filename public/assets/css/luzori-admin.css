@@ -3156,8 +3156,8 @@ html:has(body.luzori-admin),
 html:has(body.luzori-admin) body,
 body.luzori-admin {
   overflow-x: hidden !important;
+  overflow-y: auto !important;
   overscroll-behavior-x: none !important;
-  overscroll-behavior-y: contain !important;
   max-width: 100% !important;
 }
 
@@ -3173,47 +3173,37 @@ body.luzori-admin .luzori-page {
 }
 
 @media (max-width: 1199.98px) {
-  /* Page shell: fixed navbar + scroll only inside content area */
-  html:has(body.luzori-admin:not(.lz-chat-active)),
-  body.luzori-admin:not(.lz-chat-active) {
-    height: 100% !important;
-    height: 100dvh !important;
-    overflow: hidden !important;
+  /* Keep natural page scroll — only block horizontal rubber-band */
+  html:has(body.luzori-admin),
+  body.luzori-admin {
     position: relative;
     width: 100%;
-    touch-action: pan-y;
-  }
-
-  body.luzori-admin:not(.lz-chat-active) .layout-wrapper,
-  body.luzori-admin:not(.lz-chat-active) .layout-container {
-    height: 100% !important;
-    max-height: 100dvh !important;
-    overflow: hidden !important;
-    width: 100% !important;
-    max-width: 100vw !important;
-  }
-
-  body.luzori-admin:not(.lz-chat-active) .layout-page {
-    height: 100% !important;
-    max-height: 100dvh !important;
-    overflow: hidden !important;
-    display: flex;
-    flex-direction: column;
-    width: 100% !important;
-    max-width: 100vw !important;
-  }
-
-  body.luzori-admin:not(.lz-chat-active) .layout-page > .content-wrapper {
-    flex: 1 1 auto !important;
-    min-height: 0 !important;
-    width: 100% !important;
-    max-width: 100vw !important;
     overflow-x: hidden !important;
     overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior: contain;
+    height: auto !important;
+    max-height: none !important;
     touch-action: pan-y;
-    padding-top: 3.875rem !important;
+  }
+
+  body.luzori-admin .layout-wrapper,
+  body.luzori-admin .layout-container,
+  body.luzori-admin .layout-page {
+    width: 100% !important;
+    max-width: 100vw !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    overflow-x: hidden !important;
+  }
+
+  body.luzori-admin .layout-page > .content-wrapper {
+    width: 100% !important;
+    max-width: 100vw !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    overflow-x: hidden !important;
+    overflow-y: visible !important;
   }
 
   /* Notifications dropdown — mobile panel under navbar */
