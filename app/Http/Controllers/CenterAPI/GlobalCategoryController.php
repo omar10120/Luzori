@@ -12,25 +12,19 @@ use Illuminate\Http\Request;
 class GlobalCategoryController extends Controller
 {
     /**
-     * Fetch all global categories with pagination.
+     * Fetch ALL global categories.
      *
-     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function index(Request $request)
+    public function index()
     {
-        // 1. Safely get per_page (Default to 15, max out at 100 to prevent crashes)
-        $perPage = min((int) $request->input('per_page', 15), 100);
-        
-        // 2. Add ->withQueryString() so your filters aren't lost when changing pages
-        $paginator = GlobalCategory::on('central')
+        // Use ->get() instead of ->paginate() to fetch everything
+        $categories = GlobalCategory::on('central')
             ->orderBy('id')
-            ->paginate($perPage)
-            ->withQueryString();
+            ->get();
 
-        // 3. Use the API Resource Collection directly. 
-        // Laravel automatically formats the data, links, and meta arrays perfectly.
-        $data = GlobalCategoryResource::collection($paginator);
+        // Pass the full collection to the Resource
+        $data = GlobalCategoryResource::collection($categories);
 
         return MyHelper::responseJSON(
             __('api.doneSuccessfully'),
