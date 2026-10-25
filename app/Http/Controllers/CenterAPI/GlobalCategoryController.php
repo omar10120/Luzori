@@ -22,8 +22,8 @@ class GlobalCategoryController extends Controller
         $perPage = (int) $request->input('per_page', 15);
         
         $paginator = GlobalCategory::on('central')
-            ->orderBy('id')
-            ->paginate($perPage);
+            ->orderBy('id');
+            // ->paginate($perPage);
 
         // Build paginated response structure
         $data = [

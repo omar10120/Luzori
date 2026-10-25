@@ -233,7 +233,7 @@
 @endsection
 
 @section('content')
-    <div class="container-xxl flex-grow-1 container-p-y">
+    <div class="container-xxl flex-grow-1 container-p-y ">
         <div class="subscription-page">
             @if (!($isExpired || session('center_expired')))
                 @include('CenterUser.Components.breadcrumbs')

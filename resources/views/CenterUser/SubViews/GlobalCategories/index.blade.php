@@ -94,7 +94,7 @@
 @endsection
 
 @section('content')
-    <div class="luzori-page lz-global-categories-page">
+    <div class="luzori-page lz-global-categories-page ">
         @include('CenterUser.Components.breadcrumbs')
 
         <div class="lz-page-toolbar">

@@ -17,7 +17,7 @@
                     <div class="card-header">
                         <h2>{{ $title }}</h2>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body overflow-auto">
                         <input type="hidden" name="id" value="{{ $item ? $item->id : '' }}">
                         <div class="row">
                             <div class="col-md-6">
