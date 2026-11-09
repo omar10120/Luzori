@@ -7,12 +7,14 @@
     <style>
         @page {
             size: 80mm auto;
-            margin: 4mm;
+            margin: 0 2mm 0 2mm;
         }
 
         html, body {
             margin: 0;
             padding: 0;
+            width: 80mm;
+            height: auto;
             background: #fff;
             color: #000;
         }
@@ -20,7 +22,8 @@
         .invoice-box {
             max-width: 80mm;
             width: 100%;
-            margin: auto;
+            margin: 0;
+            padding: 0;
             font-size: 14px;
             font-weight: 700;
             line-height: 20px;
@@ -29,13 +32,21 @@
         }
 
         @media print {
-            body { margin: 0; }
-            .invoice-box { max-width: 100%; }
+            html, body {
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            .invoice-box {
+                margin: 0;
+                padding: 0;
+            }
             .no-print { display: none !important; }
         }
 
         .invoice-box table {
             width: 100%;
+            margin: 0;
+            border-collapse: collapse;
             line-height: inherit;
             text-align: left;
         }
@@ -184,13 +195,11 @@
                 printed = true;
                 try {
                     window.focus();
-                    window.print(); // With Chrome --kiosk-printing this is silent → default printer
+                    window.print();
                 } catch (e) {}
             }
             window.addEventListener('afterprint', closeSoon);
-            // Fallback if afterprint never fires
             setTimeout(closeSoon, 4000);
-
             if (document.readyState === 'complete') {
                 setTimeout(doPrint, 200);
             } else {

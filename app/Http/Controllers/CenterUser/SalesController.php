@@ -896,10 +896,12 @@ class SalesController extends Controller
             $options = [
                 'format' => [80, 200],
                 'orientation' => 'portrait',
-                'margin-top' => 10,
-                'margin-bottom' => 10,
-                'margin-left' => 10,
-                'margin-right' => 10,
+                'margin_top' => 2,
+                'margin_bottom' => 12,
+                'margin_left' => 3,
+                'margin_right' => 3,
+                'margin_header' => 0,
+                'margin_footer' => 0,
             ];
             $pdf = Pdf::loadView($view, compact('sale', 'template', 'autoPrint', 'paymentMethod'), [], $options);
             return $pdf->stream('sale_' . $id . '.pdf');
