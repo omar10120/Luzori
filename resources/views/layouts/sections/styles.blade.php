@@ -40,10 +40,47 @@
    */
   @media (max-width: 1199.98px) {
     html.layout-navbar-fixed body.luzori-center .layout-page {
-      padding-top: 0 !important;
+      padding: 0 !important;
     }
     html.layout-navbar-fixed body.luzori-center .layout-page > .content-wrapper {
       padding-top: 3.875rem !important;
+      padding-left: 0 !important;
+      padding-right: 0 !important;
+    }
+    body.luzori-center .layout-wrapper,
+    body.luzori-center .layout-container,
+    body.luzori-center .layout-page,
+    body.luzori-center .content-wrapper {
+      width: 100% !important;
+      max-width: 100% !important;
+      margin-left: 0 !important;
+      margin-right: 0 !important;
+    }
+    body.luzori-center .content-wrapper > .container-fluid,
+    body.luzori-center .content-wrapper > .container-xxl,
+    body.luzori-center .container-p-y {
+      width: 100% !important;
+      max-width: 100% !important;
+      margin-left: 0 !important;
+      margin-right: 0 !important;
+      padding-left: 0.45rem !important;
+      padding-right: 0.45rem !important;
+    }
+    html:not(.layout-menu-expanded) body.luzori-center #layout-menu {
+      position: fixed !important;
+      top: 0 !important;
+      bottom: 0 !important;
+      left: -100vw !important;
+      right: auto !important;
+      inset-inline-start: auto !important;
+      inset-inline-end: auto !important;
+      width: 16.25rem !important;
+      margin: 0 !important;
+      transform: none !important;
+    }
+    html[dir='rtl']:not(.layout-menu-expanded) body.luzori-center #layout-menu {
+      left: auto !important;
+      right: -100vw !important;
     }
     html.layout-navbar-fixed body.luzori-center #layout-navbar,
     html.layout-navbar-fixed body.luzori-center .layout-navbar.navbar-detached {

@@ -518,18 +518,37 @@
             .lz-sales-cart-page .lz-form-card > .card-body {
                 padding: 0.55rem !important;
             }
-            .lz-sales-cart-page .nav-tabs {
-                display: flex;
-                flex-wrap: nowrap;
+            .lz-sales-cart-page .card,
+            .lz-sales-cart-page .card-body,
+            .lz-sales-cart-page .col-12 {
+                min-width: 0;
                 max-width: 100%;
-                overflow-x: auto;
-                overflow-y: hidden;
+            }
+            .lz-sales-cart-page .nav-tabs {
+                display: flex !important;
+                flex-wrap: nowrap !important;
+                width: 100%;
+                max-width: 100%;
+                overflow-x: auto !important;
+                overflow-y: hidden !important;
                 -webkit-overflow-scrolling: touch;
+                overscroll-behavior-x: contain;
+                touch-action: pan-x pan-y;
+                scrollbar-width: none;
+            }
+            .lz-sales-cart-page .nav-tabs::-webkit-scrollbar {
+                display: none;
+            }
+            .lz-sales-cart-page .nav-tabs .nav-item,
+            .lz-sales-cart-page .nav-tabs.nav-fill .nav-item,
+            .lz-sales-cart-page .nav-tabs.nav-fill > .nav-link {
+                flex: 0 0 auto !important;
+                width: auto !important;
             }
             .lz-sales-cart-page .nav-tabs .nav-link {
-                white-space: nowrap;
+                white-space: nowrap !important;
                 font-size: 0.8rem;
-                padding: 0.55rem 0.7rem !important;
+                padding: 0.55rem 0.85rem !important;
             }
             .lz-sales-cart-page .bs-stepper-header {
                 width: 100%;
@@ -1142,7 +1161,7 @@
                             <li class="nav-item">
                                 <a class="nav-link" id="cart-user-wallet-tab" data-bs-toggle="tab" href="#cart-user-wallet-pane" role="tab">
                                     <i class="ti ti-wallet me-1"></i>
-                                    <span class="d-none d-sm-inline">{{ __('field.coupons') }}</span>
+                                    {{ __('field.coupons') }}
                                     <span class="badge rounded-pill bg-label-primary ms-1" id="cart-user-wallet-count" style="display:none">0</span>
                                 </a>
                             </li>
