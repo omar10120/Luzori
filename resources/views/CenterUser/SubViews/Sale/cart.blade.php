@@ -513,13 +513,15 @@
         /* Phone only — laptop layout stays as-is */
         @media (max-width: 767.98px) {
             .lz-sales-cart-page .lz-form-card > .card-header {
-                padding: 0.9rem 0.85rem 0.75rem !important;
+                padding: 0.75rem 0.55rem 0.6rem !important;
             }
             .lz-sales-cart-page .lz-form-card > .card-body {
-                padding: 0.85rem !important;
+                padding: 0.55rem !important;
             }
             .lz-sales-cart-page .nav-tabs {
+                display: flex;
                 flex-wrap: nowrap;
+                max-width: 100%;
                 overflow-x: auto;
                 overflow-y: hidden;
                 -webkit-overflow-scrolling: touch;
