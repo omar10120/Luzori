@@ -1,4 +1,4 @@
-<div style="text-align: center; color: #000;">
+<div style="text-align: center; color: #000; margin-bottom: 12px;">
     @php
         // Browser/HTML print needs a public URL; mPDF prefers a local filesystem path.
         $isPdf = request()->query('format') === 'pdf';
@@ -18,9 +18,9 @@
     <img src="{{ $logoPath }}" style="width: 80px; height: auto;" alt="logo" />
 
     @if (isset($center) || isset($invoiceSettings))
-        <div style="margin-top: 8px; line-height: 1.55; font-size: 14px; color: #000; font-weight: 800;">
+        <div style="margin-top: 8px; line-height: 1.55; font-size: 14px; color: #000; font-weight: 600;">
             @if (!empty($center?->name))
-                <div style="font-size: 16px; font-weight: 900; color: #000; margin-bottom: 2px;">{{ $center->name }}</div>
+                <div style="font-size: 16px; font-weight: 700; color: #000; margin-bottom: 2px;">{{ $center->name }}</div>
             @endif
 
             @php
@@ -32,19 +32,19 @@
             @endphp
 
             @if ($phones)
-                <div style="color: #000; font-weight: 800;">{{ $phones }}</div>
+                <div style="color: #000; font-weight: 600;">{{ $phones }}</div>
             @endif
 
-            <div style="color: #000; font-weight: 800;">United Arab Emirates</div>
+            <div style="color: #000; font-weight: 600;">United Arab Emirates</div>
 
             @if (!empty($invoiceSettings?->emirate))
-                <div style="color: #000; font-weight: 800;">{{ $invoiceSettings->emirate }}</div>
+                <div style="color: #000; font-weight: 600;">{{ $invoiceSettings->emirate }}</div>
             @endif
 
-            <div style="color: #000; font-weight: 900; margin-top: 2px;">Tax Invoice</div>
+            <div style="color: #000; font-weight: 700; margin-top: 2px;">Tax Invoice</div>
 
             @if (!empty($invoiceSettings?->tax_number))
-                <div style="color: #000; font-weight: 800;">TRN {{ $invoiceSettings->tax_number }}</div>
+                <div style="color: #000; font-weight: 600;">TRN {{ $invoiceSettings->tax_number }}</div>
             @endif
         </div>
     @endif
@@ -54,7 +54,7 @@
         $showInvoiceInfo = $invoiceInfoPlain !== '' && strcasecmp($invoiceInfoPlain, 'text') !== 0;
     @endphp
     @if ($showInvoiceInfo)
-        <div style="margin-top: 8px; color: #000; font-weight: 800;">
+        <div style="margin-top: 8px; color: #000; font-weight: 600;">
             {!! $invoice_info !!}
         </div>
     @endif
