@@ -72,15 +72,17 @@ body.luzori-center .layout-wrapper:not(.layout-navbar-full) .layout-navbar.navba
   max-width: none !important;
 }
 
-/* Fixed: keep sidebar offset â€” only drop the theme side padding from width */
-html.layout-navbar-fixed:not(.layout-menu-collapsed) body.luzori-center .layout-content-navbar:not(.layout-without-menu) .layout-navbar.navbar-detached {
-  width: calc(100% - 16.25rem) !important;
-  max-width: none !important;
-}
+/* Fixed: keep sidebar offset on laptop only */
+@media (min-width: 1200px) {
+  html.layout-navbar-fixed:not(.layout-menu-collapsed) body.luzori-center .layout-content-navbar:not(.layout-without-menu) .layout-navbar.navbar-detached {
+    width: calc(100% - 16.25rem) !important;
+    max-width: none !important;
+  }
 
-html.layout-navbar-fixed.layout-menu-collapsed body.luzori-center .layout-content-navbar:not(.layout-without-menu) .layout-navbar.navbar-detached {
-  width: calc(100% - 5.25rem) !important;
-  max-width: none !important;
+  html.layout-navbar-fixed.layout-menu-collapsed body.luzori-center .layout-content-navbar:not(.layout-without-menu) .layout-navbar.navbar-detached {
+    width: calc(100% - 5.25rem) !important;
+    max-width: none !important;
+  }
 }
 
 /*
@@ -2129,20 +2131,45 @@ body.luzori-center .luzori-page {
     overflow-y: visible !important;
   }
 
-  /* Sidebar stays off-canvas so the page uses the full phone width */
+  /* Drop the sidebar gutter so content uses the full phone width */
+  body.luzori-center .layout-container {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
   body.luzori-center .layout-page {
     padding-left: 0 !important;
     padding-right: 0 !important;
     margin-left: 0 !important;
     margin-right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
   }
-  html:not(.layout-menu-expanded) body.luzori-center .layout-menu {
+  body.luzori-center .content-wrapper > .container-fluid,
+  body.luzori-center .content-wrapper > .container-xxl,
+  body.luzori-center .container-p-y {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0.65rem !important;
+    padding-right: 0.65rem !important;
+  }
+  html:not(.layout-menu-expanded) body.luzori-center .layout-menu,
+  html:not(.layout-menu-expanded) body.luzori-center #layout-menu {
+    position: fixed !important;
+    width: 16.25rem !important;
+    max-width: 85vw !important;
+    margin: 0 !important;
     transform: translate3d(-100%, 0, 0) !important;
   }
-  html[dir='rtl']:not(.layout-menu-expanded) body.luzori-center .layout-menu {
+  html[dir='rtl']:not(.layout-menu-expanded) body.luzori-center .layout-menu,
+  html[dir='rtl']:not(.layout-menu-expanded) body.luzori-center #layout-menu {
     transform: translate3d(100%, 0, 0) !important;
   }
-  html.layout-menu-expanded body.luzori-center .layout-menu {
+  html.layout-menu-expanded body.luzori-center .layout-menu,
+  html.layout-menu-expanded body.luzori-center #layout-menu {
+    position: fixed !important;
     transform: translate3d(0, 0, 0) !important;
   }
 
