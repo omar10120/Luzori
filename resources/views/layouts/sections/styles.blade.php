@@ -26,7 +26,7 @@
 @stack('styles')
 
 @if (!str_contains(url()->current(), 'admin') && (str_contains(url()->current(), 'center_user') || auth('center_user')->check()))
-<link rel="stylesheet" href="{{ asset('assets/css/luzori-center.css') }}?v=20">
+<link rel="stylesheet" href="{{ asset('assets/css/luzori-center.css') }}?v=25">
 <style>
   body.luzori-center .luzori-page::before,
   body.luzori-center .luzori-dashboard::before {
@@ -40,10 +40,31 @@
    */
   @media (max-width: 1199.98px) {
     html.layout-navbar-fixed body.luzori-center .layout-page {
-      padding-top: 0 !important;
+      padding: 0 !important;
     }
     html.layout-navbar-fixed body.luzori-center .layout-page > .content-wrapper {
       padding-top: 3.875rem !important;
+      padding-left: 0 !important;
+      padding-right: 0 !important;
+    }
+    body.luzori-center .layout-wrapper,
+    body.luzori-center .layout-container,
+    body.luzori-center .layout-page,
+    body.luzori-center .content-wrapper {
+      width: 100% !important;
+      max-width: 100% !important;
+      margin-left: 0 !important;
+      margin-right: 0 !important;
+    }
+    body.luzori-center .content-wrapper > .container-fluid,
+    body.luzori-center .content-wrapper > .container-xxl,
+    body.luzori-center .container-p-y {
+      width: 100% !important;
+      max-width: 100% !important;
+      margin-left: 0 !important;
+      margin-right: 0 !important;
+      padding-left: 0.45rem !important;
+      padding-right: 0.45rem !important;
     }
     html.layout-navbar-fixed body.luzori-center #layout-navbar,
     html.layout-navbar-fixed body.luzori-center .layout-navbar.navbar-detached {

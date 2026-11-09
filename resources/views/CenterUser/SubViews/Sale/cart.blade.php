@@ -509,6 +509,92 @@
                 max-height: 280px;
             }
         }
+
+        /* Phone only — laptop layout stays as-is */
+        @media (max-width: 767.98px) {
+            .lz-sales-cart-page .lz-form-card > .card-header {
+                padding: 0.75rem 0.55rem 0.6rem !important;
+            }
+            .lz-sales-cart-page .lz-form-card > .card-body {
+                padding: 0.55rem !important;
+            }
+            .lz-sales-cart-page .card,
+            .lz-sales-cart-page .card-body,
+            .lz-sales-cart-page .col-12 {
+                min-width: 0;
+                max-width: 100%;
+            }
+            .lz-sales-cart-page .nav-tabs {
+                display: flex !important;
+                flex-wrap: nowrap !important;
+                width: 100%;
+                max-width: 100%;
+                overflow-x: auto !important;
+                overflow-y: hidden !important;
+                -webkit-overflow-scrolling: touch;
+                overscroll-behavior-x: contain;
+                touch-action: pan-x pan-y;
+                scrollbar-width: none;
+            }
+            .lz-sales-cart-page .nav-tabs::-webkit-scrollbar {
+                display: none;
+            }
+            .lz-sales-cart-page .nav-tabs .nav-item,
+            .lz-sales-cart-page .nav-tabs.nav-fill .nav-item,
+            .lz-sales-cart-page .nav-tabs.nav-fill > .nav-link {
+                flex: 0 0 auto !important;
+                width: auto !important;
+            }
+            .lz-sales-cart-page .nav-tabs .nav-link {
+                white-space: nowrap !important;
+                font-size: 0.8rem;
+                padding: 0.55rem 0.85rem !important;
+            }
+            .lz-sales-cart-page .bs-stepper-header {
+                width: 100%;
+                align-items: stretch !important;
+            }
+            .lz-sales-cart-page .bs-stepper .step,
+            .lz-sales-cart-page .bs-stepper .step-trigger {
+                width: 100%;
+            }
+            .lz-sales-cart-page .bs-stepper .bs-stepper-label {
+                white-space: normal;
+                line-height: 1.3;
+            }
+            .lz-sales-cart-page #booking-service-container .lz-service-block {
+                padding: 0.85rem 0.75rem 0.7rem;
+            }
+            .lz-sales-cart-page #booking-service-container .lz-service-block > h5 {
+                white-space: normal;
+                overflow-wrap: anywhere;
+                line-height: 1.35;
+            }
+            .lz-sales-cart-page #booking-service-container .row > [class*="col-"] {
+                flex: 0 0 100%;
+                max-width: 100%;
+                width: 100%;
+            }
+            .lz-sales-cart-page #booking-service-container .form-label,
+            .lz-sales-cart-page #booking-service-container .lz-readonly-field {
+                white-space: normal;
+                overflow-wrap: anywhere;
+            }
+            .lz-sales-cart-page #booking-service-container .form-control,
+            .lz-sales-cart-page #booking-service-container .form-select,
+            .lz-sales-cart-page #booking-service-container select.form-control {
+                width: 100%;
+                max-width: 100%;
+                min-width: 0;
+            }
+            .lz-sales-cart-page .bs-stepper-content .d-flex.justify-content-between {
+                gap: 0.75rem;
+            }
+            .lz-sales-cart-page .bs-stepper-content .btn-prev,
+            .lz-sales-cart-page .bs-stepper-content .btn-next {
+                min-width: 3rem;
+            }
+        }
     </style>
 @endsection
 
@@ -1075,7 +1161,7 @@
                             <li class="nav-item">
                                 <a class="nav-link" id="cart-user-wallet-tab" data-bs-toggle="tab" href="#cart-user-wallet-pane" role="tab">
                                     <i class="ti ti-wallet me-1"></i>
-                                    <span class="d-none d-sm-inline">{{ __('field.coupons') }}</span>
+                                    {{ __('field.coupons') }}
                                     <span class="badge rounded-pill bg-label-primary ms-1" id="cart-user-wallet-count" style="display:none">0</span>
                                 </a>
                             </li>
@@ -2109,11 +2195,11 @@
                         <div class="lz-service-block" data-service-id="${service.id}">
                             <h5>${service.name}</h5>
                             <div class="row g-3 align-items-end">
-                                <div class="col-6 col-md-3">
+                                <div class="col-12 col-md-3">
                                     <label class="form-label">{{ __('field.date') }}</label>
                                     <input type="date" class="form-control" name="service[${service.id}][date]" value="{{ Carbon\Carbon::now()->toDateString() }}" />
                                 </div>
-                                <div class="col-6 col-md-3">
+                                <div class="col-12 col-md-3">
                                     <label class="form-label">{{ __('field.worker') }}</label>
                                     <select class="form-control booking-worker-select" name="service[${service.id}][worker_id]" data-service-id="${service.id}">`;
                     $.each(workers, function(index, worker) {
@@ -2124,11 +2210,11 @@
                     });
                     service_info += `</select>
                                 </div>
-                                <div class="col-6 col-md-3">
+                                <div class="col-12 col-md-3">
                                     <label class="form-label">{{ __('field.from') }}</label>
                                     <input type="time" class="form-control" name="service[${service.id}][from_time]" value="{{ Carbon\Carbon::now()->format('H:i') }}" />
                                 </div>
-                                <div class="col-6 col-md-3">
+                                <div class="col-12 col-md-3">
                                     <label class="form-label">{{ __('field.to') }}</label>
                                     <input type="time" class="form-control" name="service[${service.id}][to_time]" value="{{ Carbon\Carbon::now()->addHour()->format('H:i') }}" />
                                 </div>`;
@@ -2138,12 +2224,12 @@
                             ? '{{ __("field.percentage") }}'
                             : '{{ __("field.fixed_value") }}';
                         service_info += `
-                                <div class="col-6 col-md-4">
+                                <div class="col-12 col-md-4">
                                     <label class="form-label">{{ __('field.commission_type') }}</label>
                                     <input type="hidden" name="service[${service.id}][commission_type]" value="${posConfig.allowedCommissionType}">
                                     <div class="lz-readonly-field">${commissionTypeLabel}</div>
                                 </div>
-                                <div class="col-6 col-md-4">
+                                <div class="col-12 col-md-4">
                                     <label class="form-label">{{ __('field.commission') }}</label>`;
 
                         if (posConfig.allowedCommissionType === 'percentage') {

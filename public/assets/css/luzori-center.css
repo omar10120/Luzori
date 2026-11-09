@@ -72,15 +72,17 @@ body.luzori-center .layout-wrapper:not(.layout-navbar-full) .layout-navbar.navba
   max-width: none !important;
 }
 
-/* Fixed: keep sidebar offset â€” only drop the theme side padding from width */
-html.layout-navbar-fixed:not(.layout-menu-collapsed) body.luzori-center .layout-content-navbar:not(.layout-without-menu) .layout-navbar.navbar-detached {
-  width: calc(100% - 16.25rem) !important;
-  max-width: none !important;
-}
+/* Fixed: keep sidebar offset on laptop only */
+@media (min-width: 1200px) {
+  html.layout-navbar-fixed:not(.layout-menu-collapsed) body.luzori-center .layout-content-navbar:not(.layout-without-menu) .layout-navbar.navbar-detached {
+    width: calc(100% - 16.25rem) !important;
+    max-width: none !important;
+  }
 
-html.layout-navbar-fixed.layout-menu-collapsed body.luzori-center .layout-content-navbar:not(.layout-without-menu) .layout-navbar.navbar-detached {
-  width: calc(100% - 5.25rem) !important;
-  max-width: none !important;
+  html.layout-navbar-fixed.layout-menu-collapsed body.luzori-center .layout-content-navbar:not(.layout-without-menu) .layout-navbar.navbar-detached {
+    width: calc(100% - 5.25rem) !important;
+    max-width: none !important;
+  }
 }
 
 /*
@@ -158,8 +160,14 @@ html.layout-menu-fixed-offcanvas body.luzori-center .layout-menu {
   position: fixed !important;
   top: 0 !important;
   bottom: 0 !important;
-  inset-inline-start: 0 !important;
   z-index: 1080;
+}
+
+@media (min-width: 1200px) {
+  html.layout-menu-fixed body.luzori-center .layout-menu,
+  html.layout-menu-fixed-offcanvas body.luzori-center .layout-menu {
+    inset-inline-start: 0 !important;
+  }
 }
 
 /* Mobile: menu must sit above layout-overlay or taps hit the overlay */
@@ -2096,37 +2104,61 @@ body.luzori-center .luzori-page {
 }
 
 @media (max-width: 1199.98px) {
-  /* Keep natural page scroll — only block horizontal rubber-band */
+  /* Document scroll. Nested overflow:hidden was clipping the page and blocking touch. */
   html:has(body.luzori-center),
+  html:has(body.luzori-center) body,
   body.luzori-center {
-    position: relative;
-    width: 100%;
-    overflow-x: hidden !important;
-    overflow-y: auto !important;
+    position: static !important;
+    width: 100% !important;
     height: auto !important;
+    min-height: 100% !important;
     max-height: none !important;
-    touch-action: pan-y;
+    overflow: visible !important;
+    touch-action: auto !important;
   }
 
   body.luzori-center .layout-wrapper,
   body.luzori-center .layout-container,
-  body.luzori-center .layout-page {
+  body.luzori-center .layout-page,
+  body.luzori-center .layout-page > .content-wrapper {
+    display: block !important;
     width: 100% !important;
-    max-width: 100vw !important;
+    max-width: 100% !important;
     height: auto !important;
+    min-height: 0 !important;
     max-height: none !important;
     overflow: visible !important;
-    overflow-x: hidden !important;
+    flex: none !important;
   }
 
-  body.luzori-center .layout-page > .content-wrapper {
+  /* Drop the sidebar gutter so content uses the full phone width */
+  body.luzori-center .layout-page {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
     width: 100% !important;
-    max-width: 100vw !important;
-    height: auto !important;
-    max-height: none !important;
-    overflow: visible !important;
-    overflow-x: hidden !important;
-    overflow-y: visible !important;
+    max-width: 100% !important;
+  }
+  body.luzori-center .content-wrapper > .container-fluid,
+  body.luzori-center .content-wrapper > .container-xxl,
+  body.luzori-center .container-p-y {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0.65rem !important;
+    padding-right: 0.65rem !important;
+  }
+  body.luzori-center .content-wrapper > .container-fluid,
+  body.luzori-center .content-wrapper > .container-xxl,
+  body.luzori-center .container-p-y {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0.4rem !important;
+    padding-right: 0.4rem !important;
   }
 
   /* DataTables: allow horizontal swipe inside table wrappers */
