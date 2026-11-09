@@ -11,6 +11,7 @@ use App\Models\CategoryService;
 use App\Models\AppUser;
 use App\Models\FavoriteCenter;
 use App\Models\CenterReview;
+use App\Models\GlobalCategory; 
 use App\Services\PageService;
 use App\Models\product;
 use App\Services\AppNotificationService;   
@@ -55,14 +56,6 @@ class CenterService
     // =========================================================================
     // INCLUDES
     // =========================================================================
-    /**
-     * Parse the ?include=... query param into an allowlisted array.
-     *
-     * Examples:
-     *   ?include=branches,packages
-     *   ?include[]=branches&include[]=services
-     *   (no include)  -> defaults to ['global_categories']
-     */
     private function parseIncludes($request): array
     {
         $allowed = [
@@ -74,10 +67,10 @@ class CenterService
             'about_us',
             'user_packages',
             'user_used_packages',
-            'workers',      // only meaningful with categories/services
-            'vacations',    // only meaningful with workers
+            'workers',      
+            'vacations',    
             'reviews',
-             'infos',     // only meaningful with categories/services
+             'infos',     
         ];
 
         if (!$request->has('include')) {
@@ -94,29 +87,14 @@ class CenterService
             return ['global_categories'];
         }
 
-        // workers/vacations only make sense with categories or services
         if (in_array('workers', $items, true)
             && !array_intersect($items, ['categories', 'services'])) {
             $items = array_values(array_diff($items, ['workers', 'vacations']));
         }
 
-        if (!$request->has('include')) {
-            return ['global_categories'];   // good, keep it
-        }
-
-        if (!in_array('global_categories', $items, true)) {
-            // global_categories is cheap (main DB) — keep it always on unless
-            // the client explicitly asked for a very narrow include set.
-            // Remove this block if you want it strictly opt-in.
-        }
-
         return $items;
     }
 
-    /**
- * Single center detail — same include semantics as the list endpoint.
- * Returns a ready-to-serialize array, or null if not found.
- */
     public function getCenterById($request, int $id): ?array
     {
         $includes = $this->parseIncludes($request);
@@ -143,8 +121,6 @@ class CenterService
             try {
                 $this->hydrateCenterForList($center, $userId, $includes);
 
-                // Serialize WHILE still on tenant DB so lazy-loaded translations
-                // (branch_translations, service_translations, ...) resolve.
                 $payload = json_decode(
                     \App\Http\Resources\CenterResource::make($center)->toJson(),
                     true
@@ -156,13 +132,11 @@ class CenterService
                     'error'     => $e->getMessage(),
                 ]);
 
-                // still return base center so the client gets *something*
                 $payload = json_decode(
                     \App\Http\Resources\CenterResource::make($center)->toJson(),
                     true
                 );
             } finally {
-                // *** critical: always put mysql back on the central DB ***
                 $this->restoreMainDatabase($originalDb);
             }
         } else {
@@ -200,6 +174,18 @@ class CenterService
 
         $includes = $this->parseIncludes($request);
 
+        $globalCategoryId = $request->filled('global_category_id') ? (int) $request->global_category_id : null;
+
+        if ($request->filled('global_category_slug')) {
+            $category = GlobalCategory::on('central')
+                ->where('slug', $request->global_category_slug)
+                ->first();
+            if ($category) {
+                $globalCategoryId = $category->id;
+            }
+        }
+        // ----------------------------------------------
+
         $centersQuery = Center::where('status', 'approve')
             ->where(function ($q) {
                 $q->whereNull('expire_date')->orWhere('expire_date', '>', now());
@@ -207,9 +193,9 @@ class CenterService
             ->when($request->filled('rate'), function ($q) use ($request) {
                 $q->where('rate', $request->rate);
             })
-            ->when($request->filled('global_category_id'), function ($q) use ($request) {
-                $q->whereHas('globalCategories', function ($q) use ($request) {
-                    $q->where('global_categories.id', (int) $request->global_category_id);
+            ->when($globalCategoryId, function ($q) use ($globalCategoryId) {
+                $q->whereHas('globalCategories', function ($q) use ($globalCategoryId) {
+                    $q->where('global_categories.id', $globalCategoryId);
                 });
             });
 
@@ -297,7 +283,6 @@ class CenterService
             try {
                 $this->hydrateCenterForList($center, $userId, $includes);
 
-                // Serialize while still on tenant DB (nested translations lazy-load here)
                 $centerData = json_decode(
                     \App\Http\Resources\CenterResource::make($center)->toJson(),
                     true
@@ -341,6 +326,18 @@ class CenterService
 
         $includes = $this->parseIncludes($request);
 
+        $globalCategoryId = $request->filled('global_category_id') ? (int) $request->global_category_id : null;
+
+        if ($request->filled('global_category_slug')) {
+            $category = GlobalCategory::on('central')
+                ->where('slug', $request->global_category_slug)
+                ->first();
+            if ($category) {
+                $globalCategoryId = $category->id;
+            }
+        }
+        // ----------------------------------------------
+
         $centersQuery = Center::where('status', 'approve')
             ->where(function ($q) {
                 $q->whereNull('expire_date')->orWhere('expire_date', '>', now());
@@ -348,9 +345,9 @@ class CenterService
             ->when($request->filled('rate'), function ($q) use ($request) {
                 $q->where('rate', $request->rate);
             })
-            ->when($request->filled('global_category_id'), function ($q) use ($request) {
-                $q->whereHas('globalCategories', function ($q) use ($request) {
-                    $q->where('global_categories.id', (int) $request->global_category_id);
+            ->when($globalCategoryId, function ($q) use ($globalCategoryId) {
+                $q->whereHas('globalCategories', function ($q) use ($globalCategoryId) {
+                    $q->where('global_categories.id', $globalCategoryId);
                 });
             });
 
@@ -448,17 +445,6 @@ class CenterService
     // =========================================================================
     // FILTER MATCHER
     // =========================================================================
-    /**
-     * Cheap tenant filter pass — no heavy eager loads.
-     * Returns ['distance' => float|null] on match, false otherwise.
-     *
-     * $tenantSearchHits is a precomputed array of tenant DB names that matched
-     * the search term (from batchTenantSearch). Passed in to avoid per-center
-     * tenant queries.
-     *
-     * $serviceNameHits: null = no service_name filter;
-     * array of DB names that have a matching service.
-     */
     private function centerMatchesFilters(
         Center $center,
         ?string $search,
@@ -627,12 +613,6 @@ class CenterService
         Config::set('database.connections.mysql.database', $originalDb);
     }
 
-    /**
-     * Favorite center IDs for the authenticated AppUser (optional Bearer token).
-     *
-     * @param  array<int>  $centerIds
-     * @return array<int>
-     */
     private function favoriteCenterIdsForRequest($request, array $centerIds): array
     {
         $centerIds = array_values(array_filter(array_map('intval', $centerIds)));
@@ -652,10 +632,6 @@ class CenterService
             ->all();
     }
 
-    /**
-     * @param  array<int>  $centerIds
-     * @return array<int, array{avg_rating: ?float, reviews_count: int}>
-     */
     private function reviewStatsForCenters(array $centerIds): array
     {
         $centerIds = array_values(array_filter(array_map('intval', $centerIds)));
@@ -679,10 +655,6 @@ class CenterService
         return $stats;
     }
 
-    /**
-     * @param  array<int>  $centerIds
-     * @return array<int, array{id:int,rating:int,comment:?string}>
-     */
     private function myReviewsForRequest($request, array $centerIds): array
     {
         $centerIds = array_values(array_filter(array_map('intval', $centerIds)));
@@ -716,11 +688,6 @@ class CenterService
         $centerData['my_review'] = $myReviews[$centerId] ?? null;
     }
 
-    /**
-     * Filter by isFavorite / is_favorite query param.
-     * true  → only favorited centers (requires AppUser token)
-     * false → only non-favorited centers
-     */
     private function applyIsFavoriteFilter($centersQuery, $request): void
     {
         $raw = $request->input('isFavorite', $request->input('is_favorite'));
@@ -730,7 +697,6 @@ class CenterService
 
         $wantFavorite = filter_var($raw, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
         if ($wantFavorite === null) {
-            // Accept "1"/"0" already handled by FILTER_VALIDATE_BOOLEAN; reject invalid
             return;
         }
 
@@ -792,10 +758,6 @@ class CenterService
         return $min;
     }
 
-    /**
-     * Search tenant DBs for category/service name matches.
-     * Returns an array of database names that matched.
-     */
     private function batchTenantSearch($centers, string $search): array
     {
         $dbNames = collect($centers)
@@ -846,11 +808,6 @@ class CenterService
         return array_values(array_unique($hits));
     }
 
-    /**
-     * Find tenant DBs that have an active service matching the given name.
-     *
-     * @return array<int, string> database names
-     */
     private function batchTenantServiceSearch($centers, string $serviceName): array
     {
         $dbNames = collect($centers)
@@ -909,11 +866,6 @@ class CenterService
     // =========================================================================
     // HYDRATION
     // =========================================================================
-    /**
-     * Load only the relations requested via ?include=...
-     * Always keeps global_categories off the tenant (it comes from the main DB
-     * and is loaded on the Center query itself).
-     */
     private function hydrateCenterForList(
         Center $center,
         $userId = null,
@@ -1012,8 +964,6 @@ class CenterService
             if ($center->status == 'approve') {
                 $this->setupCenterDatabase($center);
 
-                // setupCenterDatabase() silently skips setting is_setup on failure,
-                // so only notify if the tenant DB was actually provisioned.
                 $center->refresh();
 
                 if ($center->is_setup) {
@@ -1103,7 +1053,7 @@ class CenterService
                 $userData = $center->only(['name', 'email', 'country_code', 'phone', 'currency']);
                 $userData['created_at'] = now();
                 $userData['updated_at'] = now();
-                $userData['password']   = $center->password; // already hashed
+                $userData['password']   = $center->password; 
 
                 $centerUserId = DB::connection('tenant')
                     ->table('center_users')
@@ -1159,10 +1109,6 @@ class CenterService
         try {
             $center = Center::withTrashed()->find($request['id']);
     
-            // === Snapshot BEFORE any mutation ===
-            // Captured so we can diff after commit (inside the transaction, the
-            // notification path would purge/reconnect the connection and silently
-            // break the transaction, so we deliberately defer it to after commit).
             $oldSnapshot = [
                 'name'         => (string) ($center->name ?? ''),
                 'email'        => (string) ($center->email ?? ''),
@@ -1218,7 +1164,6 @@ class CenterService
     
             DB::commit();
     
-            // === Notify AFTER commit (best-effort, never blocks the response) ===
             $this->notifyCenterEdited($center->fresh(), $oldSnapshot);
     
             return $center;
@@ -1232,9 +1177,6 @@ class CenterService
         }
     }
 
-    /**
-     * Mirror center profile onto the tenant center_users row that shares the previous email.
-     */
     private function syncTenantCenterUser(Center $center, ?string $oldEmail, array $request): void
     {
         if (!$oldEmail || !$center->database) {
@@ -1248,7 +1190,6 @@ class CenterService
             }
         }
 
-        // Center mutator already hashed the password; write it directly so it is not hashed again.
         if (!empty($request['password'])) {
             $payload['password'] = $center->password;
         }
@@ -1278,10 +1219,6 @@ class CenterService
         return $center;
     }
 
-        /**
-     * Paginated workers for a single center.
-     * Returns null if the center doesn't exist, or a LengthAwarePaginator.
-     */
     public function getCenterWorkers($request, int $id): ?LengthAwarePaginator
     {
         $perPage = (int) $request->input('per_page', 20);
@@ -1296,7 +1233,6 @@ class CenterService
 
         if (!$center) {return null;}
 
-        // No tenant DB → empty page
         if (!$center->database) {
             return new LengthAwarePaginator(
                 [],
@@ -1310,12 +1246,10 @@ class CenterService
         $originalDb = Config::get('database.connections.mysql.database');
 
         try {
-            // Switch to tenant DB
             $safeDb = str_replace('`', '``', $center->database);
             DB::connection('mysql')->getPdo()->exec("USE `{$safeDb}`");
             Config::set('database.connections.mysql.database', $center->database);
 
-            // --- optional filters ---
             $branchId  = $request->filled('branch_id')  ? (int) $request->branch_id  : null;
             $search    = $request->filled('search')
                 ? '%' . mb_strtolower(trim($request->search)) . '%'
@@ -1328,7 +1262,6 @@ class CenterService
                 ->orderBy('id')
                 ->paginate($perPage, ['*'], 'page', $page);
 
-            // Map while still on tenant connection so media() resolves
             $items = collect($paginator->items())->map(function ($worker) {
                 return [
                     'id'              => (int) $worker->id,
@@ -1371,11 +1304,8 @@ class CenterService
             $this->restoreMainDatabase($originalDb);
         }
     }
-        /**
-     * Paginated products for a single center.
-     * Returns null if the center doesn't exist, or a LengthAwarePaginator.
-     */
-   public function getCenterProducts($request, int $id): ?LengthAwarePaginator
+
+    public function getCenterProducts($request, int $id): ?LengthAwarePaginator
     {
         $perPage = (int) $request->input('per_page', 20);
         $perPage = max(1, min($perPage, 100));
@@ -1405,7 +1335,6 @@ class CenterService
             DB::connection('mysql')->getPdo()->exec("USE `{$safeDb}`");
             Config::set('database.connections.mysql.database', $center->database);
 
-            // --- filters that match the real schema ---
             $branchId   = $request->filled('branch_id')   ? (int) $request->branch_id   : null;
             $categoryId = $request->filled('category_id') ? (int) $request->category_id : null;
             $brandId    = $request->filled('brand_id')    ? (int) $request->brand_id    : null;
@@ -1421,15 +1350,13 @@ class CenterService
                     'category',
                     'skus',
                     'primarySku',
-                    'branches',   // pivot: stock_quantity
+                    'branches',
                 ])
                 ->when($categoryId, fn ($q) => $q->where('category_id', $categoryId))
                 ->when($brandId,    fn ($q) => $q->where('brand_id', $brandId))
-                // branch filter goes through the pivot, not a column
                 ->when($branchId, fn ($q) => $q->whereHas('branches', function ($bq) use ($branchId) {
                     $bq->where('branches.id', $branchId);
                 }))
-                // search only inside translations (name + text)
                 ->when($search, function ($q) use ($search) {
                     $q->whereHas('translations', function ($tq) use ($search) {
                         $tq->whereRaw('LOWER(name) LIKE ?', [$search])
@@ -1440,7 +1367,6 @@ class CenterService
                 ->paginate($perPage, ['*'], 'page', $page);
 
             $items = collect($paginator->items())->map(function ($product) use ($branchId) {
-                // if a specific branch was requested, expose its stock
                 $stockQuantity = null;
                 if ($branchId && $product->relationLoaded('branches')) {
                     $pivot = $product->branches->firstWhere('id', $branchId);
@@ -1449,7 +1375,7 @@ class CenterService
 
                 return [
                     'id'               => (int) $product->id,
-                    'name'             => $product->name,          // auto from translation
+                    'name'             => $product->name,
                     'text'             => $product->text,
                     'short_description'=> $product->short_description,
                     'barcode'          => $product->barcode,
@@ -1508,10 +1434,7 @@ class CenterService
             $this->restoreMainDatabase($originalDb);
         }
     }
-        /**
-     * Single product for a specific center.
-     * Returns null if the center or product doesn't exist.
-     */
+
     public function getCenterProductById($request, int $centerId, int $productId): ?array
     {
         $center = Center::where('status', 'approve')
@@ -1527,7 +1450,6 @@ class CenterService
         $originalDb = Config::get('database.connections.mysql.database');
 
         try {
-            // Switch to tenant DB
             $safeDb = str_replace('`', '``', $center->database);
             DB::connection('mysql')->getPdo()->exec("USE `{$safeDb}`");
             Config::set('database.connections.mysql.database', $center->database);
@@ -1540,7 +1462,7 @@ class CenterService
                     'category',
                     'skus',
                     'primarySku',
-                    'branches',   // pivot: stock_quantity
+                    'branches',
                     'mainStocks',
                 ])
                 ->find($productId);
@@ -1549,14 +1471,13 @@ class CenterService
                 return null;
             }
 
-            // Map while still on tenant connection so media()/relations resolve
             return [
                 'id'                 => (int) $product->id,
                 'center_id'          => (int) $center->id,
                 'center_name'        => $center->name,
                 'center_domain'      => $center->domain,
 
-                'name'               => $product->name,   // from translation
+                'name'               => $product->name,
                 'text'               => $product->text,
                 'short_description'  => $product->short_description,
                 'barcode'            => $product->barcode,
@@ -1656,7 +1577,6 @@ class CenterService
                 ]
             );
         } catch (\Throwable $e) {
-            // The notification must never break center creation.
             Log::warning('notifyNewCenterWelcome failed', [
                 'center_id' => $center->id ?? null,
                 'error'     => $e->getMessage(),
@@ -1668,7 +1588,6 @@ class CenterService
     private function notifyCenterEdited(Center $center, array $old): void
     {
         try {
-            // Fields whose change is worth a notification.
             $infoFields = ['name', 'email', 'phone', 'country_code', 'currency', 'bank_name'];
 
             $infoChanges = [];
@@ -1688,12 +1607,11 @@ class CenterService
             $statusLeftApprove  = ($oldStatus === 'approve' && $newStatus !== 'approve');
 
             if (empty($infoChanges) && !$statusJustApproved && !$statusLeftApprove) {
-                return; // nothing meaningful changed — don't spam
+                return; 
             }
 
             $name = trim((string) ($center->name ?? 'Center')) ?: 'Center';
 
-            // ---------- Build message parts ----------
             $enParts = [];
             $arParts = [];
             $action  = 'center_edited';
@@ -1716,7 +1634,6 @@ class CenterService
                 $arParts[] = 'تم تغيير حالة مركزك من "' . $oldStatus . '" إلى "' . $newStatus . '".';
             }
 
-            // Info field changes (independent of status)
             $fieldLabels = [
                 'name'         => ['en' => 'name',      'ar' => 'الاسم'],
                 'email'        => ['en' => 'email',     'ar' => 'البريد الإلكتروني'],
@@ -1730,7 +1647,6 @@ class CenterService
                 $enLabel = $fieldLabels[$field]['en'];
                 $arLabel = $fieldLabels[$field]['ar'];
 
-                // Hide the actual values for phone/email from push — show only the field name.
                 $enParts[] = ucfirst($enLabel) . ' has been updated.';
                 $arParts[] = 'تم تحديث ' . $arLabel . '.';
             }
@@ -1739,7 +1655,6 @@ class CenterService
                 return;
             }
 
-            // ---------- Send ----------
             app(AppNotificationService::class)->notifyCenterEvent(
                 $center,
                 'system',
@@ -1756,7 +1671,6 @@ class CenterService
                 ]
             );
         } catch (\Throwable $e) {
-            // Never break the edit response because of a notification issue.
             Log::warning('notifyCenterEdited failed', [
                 'center_id' => $center->id ?? null,
                 'error'     => $e->getMessage(),
