@@ -2129,6 +2129,23 @@ body.luzori-center .luzori-page {
     overflow-y: visible !important;
   }
 
+  /* Sidebar stays off-canvas so the page uses the full phone width */
+  body.luzori-center .layout-page {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+  html:not(.layout-menu-expanded) body.luzori-center .layout-menu {
+    transform: translate3d(-100%, 0, 0) !important;
+  }
+  html[dir='rtl']:not(.layout-menu-expanded) body.luzori-center .layout-menu {
+    transform: translate3d(100%, 0, 0) !important;
+  }
+  html.layout-menu-expanded body.luzori-center .layout-menu {
+    transform: translate3d(0, 0, 0) !important;
+  }
+
   /* DataTables: allow horizontal swipe inside table wrappers */
   body.luzori-center .lz-table-card .card-body {
     max-width: 100%;
