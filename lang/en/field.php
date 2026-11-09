@@ -276,6 +276,7 @@ return [
     'add_to_cart'                    => 'Add to Cart',
     'client'                         => 'Client',
     'tax'                            => 'Tax',
+    'vat'                            => 'VAT',
     'tip_will_be_for_this_employee'    => 'Tip Will Be For This Worker',
     'order_summary'                  => 'Order Summary',
     'complete_payment'               => 'Complete Payment',

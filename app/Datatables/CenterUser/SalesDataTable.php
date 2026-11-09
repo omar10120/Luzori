@@ -746,8 +746,8 @@ JS;
             'notes' => implode("\n", array_values(array_unique(array_filter($notes)))),
             'status_label' => $statusLabel,
             'status_tone' => $statusTone,
-            'subtotal' => number_format((float) ($row->subtotal ?? 0), 2) . ' ' . $currency,
-            'tax' => number_format((float) ($row->tax ?? 0), 2) . ' ' . $currency,
+            'subtotal' => number_format($row->vatBreakdown()['subtotal'], 2) . ' ' . $currency,
+            'tax' => number_format($row->vatBreakdown()['vat'], 2) . ' ' . $currency,
             'total' => number_format((float) ($row->total ?? 0), 2) . ' ' . $currency,
         ];
     }

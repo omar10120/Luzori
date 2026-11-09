@@ -134,15 +134,6 @@ h6,
                                 </div>
                             </div>
 
-                            <!-- Tax -->
-                            <div class="row mb-3">
-                                <div class="col-md-12">
-                                    <label for="tax" class="form-label">{{ __('field.tax') }}</label>
-                                    <input type="number" class="form-control" id="tax" name="tax" 
-                                        value="{{ $cart['tax'] ?? 0 }}" min="0" step="0.01">
-                                </div>
-                            </div>
-
                         </form>
                     </div>
                 </div>
@@ -296,17 +287,19 @@ h6,
                                     }
                                 }
                             }
-                            $tax = isset($cart['tax']) ? (float)$cart['tax'] : 0;
                             $tip = isset($cart['tip']) ? (float)$cart['tip'] : 0;
-                            $total = $subtotal + $tax + $tip;
+                            $vatSplit = \App\Models\Sale::splitInclusiveVat($subtotal);
+                            $netSubtotal = $vatSplit['subtotal'];
+                            $vat = $vatSplit['vat'];
+                            $total = $vatSplit['inclusive'] + $tip;
                         @endphp
                         <div class="d-flex justify-content-between mb-2">
                             <span>{{ __('field.subtotal') }}:</span>
-                            <strong id="summary-subtotal">{{ number_format($subtotal, 2) }} {{ get_currency() }}</strong>
+                            <strong id="summary-subtotal">{{ number_format($netSubtotal, 2) }} {{ get_currency() }}</strong>
                         </div>
                         <div class="d-flex justify-content-between mb-2">
-                            <span>{{ __('field.tax') }}:</span>
-                            <strong id="summary-tax">{{ number_format($tax, 2) }} {{ get_currency() }}</strong>
+                            <span>{{ __('field.vat') }} (5%):</span>
+                            <strong id="summary-tax">{{ number_format($vat, 2) }} {{ get_currency() }}</strong>
                         </div>
                         <div class="d-flex justify-content-between mb-2">
                             <span>{{ __('field.tip') }}:</span>
@@ -342,13 +335,14 @@ h6,
         $(document).ready(function() {
             // Calculate totals
             function calculateTotals() {
-                let subtotal = {{ number_format($subtotal, 2, '.', '') }};
-                const tax = parseFloat($('#tax').val()) || 0;
+                const goods = {{ number_format($subtotal, 2, '.', '') }};
                 const tip = parseFloat($('#tip').val()) || 0;
-                const total = subtotal + tax + tip;
+                const vat = Math.round(goods * 5) / 100;
+                const net = Math.round((goods - vat) * 100) / 100;
+                const total = Math.round((goods + tip) * 100) / 100;
 
-                $('#summary-subtotal').text(subtotal.toFixed(2) + ' {{ get_currency() }}');
-                $('#summary-tax').text(tax.toFixed(2) + ' {{ get_currency() }}');
+                $('#summary-subtotal').text(net.toFixed(2) + ' {{ get_currency() }}');
+                $('#summary-tax').text(vat.toFixed(2) + ' {{ get_currency() }}');
                 $('#summary-tip').text(tip.toFixed(2) + ' {{ get_currency() }}');
                 $('#summary-total').text(total.toFixed(2) + ' {{ get_currency() }}');
             }
@@ -356,8 +350,8 @@ h6,
             // Initialize totals on page load
             calculateTotals();
 
-            // Update totals on change
-            $('#tax, #tip').on('input', calculateTotals);
+            // Update totals when the tip changes
+            $('#tip').on('input', calculateTotals);
 
             // Process Payment
             $('#processPaymentBtn').on('click', function() {
@@ -371,39 +365,29 @@ h6,
                     data: {
                         _token: '{{ csrf_token() }}',
                         worker_id: $('#worker_id').val() || null,
-                        tip: $('#tip').val() || 0,
-                        tax: $('#tax').val() || 0
+                        tip: $('#tip').val() || 0
                     },
                     success: function(response) {
                         if (response.message === 'redirect_to_home') {
                             const result = response.data || {};
                             const redirectUrl = result.redirect_url || response.data;
                             if (result.print_url) {
-                                const printFrame = document.createElement('iframe');
-                                printFrame.style.position = 'fixed';
-                                printFrame.style.width = '1px';
-                                printFrame.style.height = '1px';
-                                printFrame.style.border = '0';
-                                printFrame.src = result.print_url;
-                                document.body.appendChild(printFrame);
-                                let redirected = false;
-                                const redirect = function () {
-                                    if (!redirected) {
-                                        redirected = true;
-                                        window.location.href = redirectUrl;
-                                    }
-                                };
-                                printFrame.onload = function () {
-                                    try {
-                                        printFrame.contentWindow.focus();
-                                        printFrame.contentWindow.print();
-                                    } catch (error) {
-                                        window.open(result.print_url, '_blank');
-                                    }
-                                    setTimeout(function () { printFrame.remove(); }, 3000);
-                                    setTimeout(redirect, 500);
-                                };
-                                setTimeout(redirect, 5000);
+                                // Open receipt in a new tab so the OS print dialog can target the thermal printer
+                                const printWin = window.open(result.print_url, '_blank');
+                                if (!printWin) {
+                                    // Popup blocked — fallback to hidden iframe
+                                    const printFrame = document.createElement('iframe');
+                                    printFrame.style.position = 'fixed';
+                                    printFrame.style.width = '0';
+                                    printFrame.style.height = '0';
+                                    printFrame.style.border = '0';
+                                    printFrame.src = result.print_url;
+                                    document.body.appendChild(printFrame);
+                                    setTimeout(function () { printFrame.remove(); }, 15000);
+                                }
+                                setTimeout(function () {
+                                    window.location.href = redirectUrl;
+                                }, 800);
                             } else {
                                 window.location.href = redirectUrl;
                             }

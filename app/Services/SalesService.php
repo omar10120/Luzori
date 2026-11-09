@@ -182,11 +182,11 @@ class SalesService
                 throw new \Exception('Cart is empty');
             }
 
-            // Calculate totals
-            $subtotal = $this->calculateSubtotal($cartData['items']);
-            $tax = $cartData['tax'] ?? 0;
-            $tip = $cartData['tip'] ?? 0;
-            $total = $subtotal + $tax + $tip;
+            // Item prices are VAT-inclusive. VAT is 5% of that total.
+            $inclusive = $this->calculateSubtotal($cartData['items']);
+            $vatSplit = Sale::splitInclusiveVat($inclusive);
+            $tip = (float) ($cartData['tip'] ?? 0);
+            $total = round($vatSplit['inclusive'] + $tip, 2);
 
             // Get branch with override support
             $branchId = $this->resolveSaleBranchId($cartData, $overrides);
@@ -197,8 +197,8 @@ class SalesService
 
             // Create Sale record
             $sale = Sale::create([
-                'subtotal' => $subtotal,
-                'tax' => $tax,
+                'subtotal' => $vatSplit['subtotal'],
+                'tax' => $vatSplit['vat'],
                 'tip' => $tip,
                 'total' => $total,
                 'worker_id' => $cartData['worker_id'] ?? null,
@@ -1096,9 +1096,17 @@ class SalesService
             $targetDetail->tip = $tip;
             $targetDetail->save();
 
+            $inclusive = round((float) $sale->subtotal + (float) $sale->tax, 2);
+            if ($inclusive <= 0) {
+                $inclusive = round((float) $sale->total - (float) ($sale->tip ?? 0), 2);
+            }
+            $vatSplit = Sale::splitInclusiveVat($inclusive);
+
+            $sale->subtotal = $vatSplit['subtotal'];
+            $sale->tax = $vatSplit['vat'];
             $sale->tip = $tip;
             $sale->worker_id = $workerId ?: $targetDetail->worker_id;
-            $sale->total = (float) $sale->subtotal + (float) $sale->tax + $tip;
+            $sale->total = round($vatSplit['inclusive'] + $tip, 2);
             $sale->save();
 
             return $sale->fresh(['worker', 'client', 'bookings.details']);

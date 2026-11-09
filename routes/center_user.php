@@ -420,6 +420,7 @@ Route::group(['middleware' => 'auth_center_user:center_user'], function () {
         Route::controller(InvoiceSettingController::class)->group(function () {
             Route::get('index', 'index')->name('index');
             Route::post('updateOrCreate', 'updateOrCreate')->name('updateOrCreate');
+            Route::get('cashier-chrome', 'downloadCashierChrome')->name('cashierChrome');
         });
     });
 

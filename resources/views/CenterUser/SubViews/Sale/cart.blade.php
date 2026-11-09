@@ -1114,7 +1114,7 @@
                             <strong id="cart-subtotal">0 {{ get_currency() }}</strong>
                         </div>
                         <div class="d-flex justify-content-between mb-2">
-                            <span>{{ __('field.tax') }}:</span>
+                            <span>{{ __('field.vat') }} (5%):</span>
                             <strong id="cart-tax">0 {{ get_currency() }}</strong>
                         </div>
                         <div class="d-flex justify-content-between mb-3">
@@ -3309,7 +3309,10 @@
                         subtotal += price * quantity;
                     }
                 });
-                $('#cart-subtotal').text(subtotal.toFixed(2) + ' {{ get_currency() }}');
+                const vat = Math.round(subtotal * 5) / 100;
+                const net = Math.round((subtotal - vat) * 100) / 100;
+                $('#cart-subtotal').text(net.toFixed(2) + ' {{ get_currency() }}');
+                $('#cart-tax').text(vat.toFixed(2) + ' {{ get_currency() }}');
                 $('#cart-total').text(subtotal.toFixed(2) + ' {{ get_currency() }}');
                 // Enable button if cart has items (including wallets) AND customer is selected
                 // Allow proceeding with just coupons/wallets

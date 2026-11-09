@@ -308,11 +308,12 @@ class BuyProductController extends Controller
                 $totalPrice,
                 $totalQty,
             ) {
+                $vatSplit = Sale::splitInclusiveVat((float) $totalPrice);
                 $sale = Sale::create([
-                    'subtotal'   => $totalPrice,
-                    'tax'        => 0,
+                    'subtotal'   => $vatSplit['subtotal'],
+                    'tax'        => $vatSplit['vat'],
                     'tip'        => 0,
-                    'total'      => $totalPrice,
+                    'total'      => $vatSplit['inclusive'],
                     // 'worker_id'  => $validated['worker_id'] ?? $validated['sales_worker_id'],
                     'worker_id'  => $this->resolveDefaultWorkerId($validated['worker_id'] ?? null),
                     'client_id'  => $tenantUser->id,

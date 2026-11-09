@@ -241,13 +241,16 @@
                             @endforeach
                         @endforeach
 
+                        @php
+                            $vatSplit = $sale->vatBreakdown();
+                        @endphp
                         <div class="lz-summary-row mt-3">
                             <span>{{ __('field.subtotal') }}</span>
-                            <span id="summary-subtotal">{{ number_format((float) $sale->subtotal, 2) }} {{ $currency }}</span>
+                            <span id="summary-subtotal">{{ number_format($vatSplit['subtotal'], 2) }} {{ $currency }}</span>
                         </div>
                         <div class="lz-summary-row">
-                            <span>{{ __('field.tax') }}</span>
-                            <span id="summary-tax">{{ number_format((float) $sale->tax, 2) }} {{ $currency }}</span>
+                            <span>{{ __('field.vat') }} (5%)</span>
+                            <span id="summary-tax">{{ number_format($vatSplit['vat'], 2) }} {{ $currency }}</span>
                         </div>
                         <div class="lz-summary-row">
                             <span>{{ __('field.tip') }}</span>
@@ -256,7 +259,7 @@
                         <div class="lz-summary-row lz-summary-total">
                             <span>{{ __('field.total') }}</span>
                             <span id="summary-total">
-                                {{ number_format((float) $sale->subtotal + (float) $sale->tax, 2) }} {{ $currency }}
+                                {{ number_format($vatSplit['inclusive'], 2) }} {{ $currency }}
                             </span>
                         </div>
 
@@ -280,13 +283,12 @@
 
     <script>
         $(document).ready(function() {
-            const subtotal = {{ number_format((float) $sale->subtotal, 2, '.', '') }};
-            const tax = {{ number_format((float) $sale->tax, 2, '.', '') }};
+            const goods = {{ number_format($sale->inclusiveAmount(), 2, '.', '') }};
             const currency = @json($currency);
 
             function calculateTotals() {
                 const tip = parseFloat($('#tip').val()) || 0;
-                const total = subtotal + tax + tip;
+                const total = goods + tip;
                 $('#summary-tip').text(tip.toFixed(2) + ' ' + currency);
                 $('#summary-total').text(total.toFixed(2) + ' ' + currency);
             }

@@ -179,6 +179,18 @@
                                     {{ __('general.auto_print_sale_after_payment') ?? 'Print the sale invoice automatically after payment' }}
                                 </label>
                             </div>
+                            <div class="alert alert-secondary border-0 mb-3" style="background:#f7f2ea;color:#002b26;">
+                                <div class="d-flex flex-wrap align-items-start gap-2">
+                                    <i class="ti ti-info-circle mt-1"></i>
+                                    <div class="flex-grow-1">
+                                        <div class="fw-semibold mb-1">{{ __('general.silent_print_cashier_hint') }}</div>
+                                        <a class="btn btn-sm btn-luzori-primary mt-1"
+                                           href="{{ route('center_user.invoice_settings.cashierChrome') }}">
+                                            <i class="ti ti-download me-1"></i>{{ __('general.download_cashier_chrome') }}
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
 
                             {{-- Section: Allow Notification (simple active/inactive toggle) --}}
                             <div class="d-flex align-items-center gap-2 mb-3 mt-4">

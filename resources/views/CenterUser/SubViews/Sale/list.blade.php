@@ -499,7 +499,7 @@
                 viewDetails: @json(__('general.view_details')),
                 tip: @json(__('field.tip')),
                 subtotal: @json(__('field.subtotal')),
-                tax: @json(__('field.tax')),
+                tax: @json(__('field.vat') . ' (5%)'),
                 total: @json(__('field.total')),
                 worker: @json(__('field.worker')),
                 bookingBy: @json(__('field.booking_by')),

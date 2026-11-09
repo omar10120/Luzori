@@ -6,17 +6,32 @@
     <title>Sale Receipt</title>
     <style>
         @page {
-            margin: 15px;
+            size: 80mm auto;
+            margin: 4mm;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            background: #fff;
+            color: #000;
         }
 
         .invoice-box {
-            max-width: 100%;
+            max-width: 80mm;
+            width: 100%;
             margin: auto;
             font-size: 14px;
-            font-weight: bolder;
+            font-weight: 700;
             line-height: 20px;
-           font-family: 'Cairo', sans-srif;, sans-serif;
-            color: #555;
+            font-family: 'Cairo', DejaVu Sans, sans-serif;
+            color: #000;
+        }
+
+        @media print {
+            body { margin: 0; }
+            .invoice-box { max-width: 100%; }
+            .no-print { display: none !important; }
         }
 
         .invoice-box table {
@@ -84,12 +99,10 @@
                                 <td>Walk-in</td>
                             </tr>
                         @endif
-                        @if ($sale->payment_type)
-                            <tr>
-                                <td>Payment Method:</td>
-                                <td>{{ $sale->payment_type }}</td>
-                            </tr>
-                        @endif
+                        <tr>
+                            <td>Payment Method:</td>
+                            <td>{{ $paymentMethod ?? '-' }}</td>
+                        </tr>
                     </table>
                 </td>
             </tr>
@@ -131,16 +144,17 @@
                                 <td>{{ number_format($saleItem->price, 2) }} {{ get_currency() }}</td>
                             </tr>
                         @endforeach
+                        @php
+                            $vatSplit = $sale->vatBreakdown();
+                        @endphp
                         <tr>
                             <td colspan="3">Subtotal:</td>
-                            <td>{{ number_format($sale->subtotal, 2) }} {{ get_currency() }}</td>
+                            <td>{{ number_format($vatSplit['subtotal'], 2) }} {{ get_currency() }}</td>
                         </tr>
-                        @if($sale->tax > 0)
-                            <tr>
-                                <td colspan="3">Tax:</td>
-                                <td>{{ number_format($sale->tax, 2) }} {{ get_currency() }}</td>
-                            </tr>
-                        @endif
+                        <tr>
+                            <td colspan="3">VAT (5%):</td>
+                            <td>{{ number_format($vatSplit['vat'], 2) }} {{ get_currency() }}</td>
+                        </tr>
                         @if($sale->tip > 0)
                             <tr>
                                 <td colspan="3">Tip ({{ $sale->worker?->name }}):</td>
@@ -156,6 +170,35 @@
             </tr>
         </table>
     </div>
+    @if (!empty($autoPrint))
+    <script>
+        (function () {
+            var printed = false;
+            function closeSoon() {
+                setTimeout(function () {
+                    try { window.close(); } catch (e) {}
+                }, 400);
+            }
+            function doPrint() {
+                if (printed) return;
+                printed = true;
+                try {
+                    window.focus();
+                    window.print(); // With Chrome --kiosk-printing this is silent → default printer
+                } catch (e) {}
+            }
+            window.addEventListener('afterprint', closeSoon);
+            // Fallback if afterprint never fires
+            setTimeout(closeSoon, 4000);
+
+            if (document.readyState === 'complete') {
+                setTimeout(doPrint, 200);
+            } else {
+                window.addEventListener('load', function () { setTimeout(doPrint, 200); });
+            }
+        })();
+    </script>
+    @endif
 </body>
 
 </html>

@@ -53,17 +53,17 @@ function get_symbol_type($type = "")
 function get_color_type($type = "")
 {
     if ($type == "member_ship") {
-        return "#D8A7A0";
+        return "#8B3A3A";
     }
 
     if ($type == "discount_code") {
-        return "#FFD6A8";
+        return "#C62828"; // clear red for discounts
     }
 
     if ($type == "free_service") {
-        return "#93650f";
+        return "#6B4A0F";
     }
-    return "black";
+    return "#1A3A36";
 }
 
 function my_date($date, $with_time = false)
