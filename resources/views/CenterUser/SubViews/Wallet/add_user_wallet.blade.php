@@ -65,9 +65,10 @@
                             <label for="commission" class="lz-field-label">{{ __('field.commission') }}</label>
                             <select class="form-select" name="commission" id="commission">
                                 <option value="">{{ __('admin.Choose Commission') }}</option>
-                                @for ($i = 1; $i <= 100; $i++)
-                                    <option value="{{ $i }}">{{ $i }}</option>
-                                @endfor
+                                <!-- @for ($i = 1; $i <= 100; $i++) -->
+                                    <!-- <option value="{{ $i }}">{{ $i }}</option> -->
+                                <!-- @endfor -->
+                                <option value="10">10%</option>
                             </select>
                         </div>
                     </div>

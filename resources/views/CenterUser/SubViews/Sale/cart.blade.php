@@ -1062,9 +1062,10 @@
                                                 <label for="product-commission" class="form-label">{{ __('field.commission') }} <span class="text-danger">*</span></label>
                                                 <select class="form-control" name="commission" id="product-commission" required>
                                                     <option value="">{{ __('field.select_commission') }}</option>
-                                                    @for ($i = 1; $i <= 100; $i++)
+                                                    <!-- @for ($i = 1; $i <= 100; $i++)
                                                         <option value="{{ $i }}">{{ $i }}%</option>
-                                                    @endfor
+                                                    @endfor -->
+                                                    <option value="10">10%</option>
                                                 </select>
                                             </div>
                                         </div>
