@@ -144,13 +144,16 @@
                                 <td>{{ number_format($saleItem->price, 2) }} {{ get_currency() }}</td>
                             </tr>
                         @endforeach
+                        @php
+                            $vatSplit = $sale->vatBreakdown();
+                        @endphp
                         <tr>
                             <td colspan="3">Subtotal:</td>
-                            <td>{{ number_format($sale->subtotal, 2) }} {{ get_currency() }}</td>
+                            <td>{{ number_format($vatSplit['subtotal'], 2) }} {{ get_currency() }}</td>
                         </tr>
                         <tr>
-                            <td colspan="3">VAT:</td>
-                            <td>{{ number_format((float) ($sale->tax ?? 0), 2) }} {{ get_currency() }}</td>
+                            <td colspan="3">VAT (5%):</td>
+                            <td>{{ number_format($vatSplit['vat'], 2) }} {{ get_currency() }}</td>
                         </tr>
                         @if($sale->tip > 0)
                             <tr>

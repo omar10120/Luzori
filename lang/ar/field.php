@@ -276,6 +276,7 @@ return [
     'add_to_cart'                    => 'أضف الى السلة',
     'client'                         => 'العميل',
     'tax'                            => 'الضريبة',
+    'vat'                            => 'VAT',
     'tip_will_be_for_this_worker'    => 'النسبة المدفوعة لهذا العامل',
     'order_summary'                  => 'ملخص الطلب',
     'complete_payment'               => 'اكمل الدفع',

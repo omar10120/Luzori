@@ -421,13 +421,16 @@
                         <span>{{ __('field.financial_summary') }}</span>
                     </div>
                     <div class="lz-panel-body">
+                        @php
+                            $vatSplit = $sale->vatBreakdown();
+                        @endphp
                         <div class="lz-finance-row">
                             <span>{{ __('field.subtotal') }}</span>
-                            <span>{{ number_format($sale->subtotal, 2) }} {{ $currency }}</span>
+                            <span>{{ number_format($vatSplit['subtotal'], 2) }} {{ $currency }}</span>
                         </div>
                         <div class="lz-finance-row">
-                            <span>{{ __('field.tax') }}</span>
-                            <span>{{ number_format($sale->tax, 2) }} {{ $currency }}</span>
+                            <span>{{ __('field.vat') }} (5%)</span>
+                            <span>{{ number_format($vatSplit['vat'], 2) }} {{ $currency }}</span>
                         </div>
                         @if($displayTipTotal > 0)
                             <div class="lz-finance-row lz-finance-tip">
