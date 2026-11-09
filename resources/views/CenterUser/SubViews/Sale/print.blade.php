@@ -6,24 +6,26 @@
     <title>Sale Receipt</title>
     <style>
         @page {
-            size: 80mm auto;
-            margin: 0 2mm 0 2mm;
+            margin: 0;
         }
 
         html, body {
             margin: 0;
             padding: 0;
-            width: 80mm;
+            width: 100%;
             height: auto;
             background: #fff;
             color: #000;
+            text-align: center;
         }
 
         .invoice-box {
+            width: 80mm;
             max-width: 80mm;
-            width: 100%;
-            margin: 0;
+            margin: 0 auto;
             padding: 0;
+            display: inline-block;
+            text-align: left;
             font-size: 14px;
             font-weight: 700;
             line-height: 20px;
@@ -33,11 +35,13 @@
 
         @media print {
             html, body {
+                width: 100% !important;
                 margin: 0 !important;
                 padding: 0 !important;
+                text-align: center !important;
             }
             .invoice-box {
-                margin: 0;
+                margin: 0 auto !important;
                 padding: 0;
             }
             .no-print { display: none !important; }
