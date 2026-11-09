@@ -26,7 +26,7 @@
 @stack('styles')
 
 @if (!str_contains(url()->current(), 'admin') && (str_contains(url()->current(), 'center_user') || auth('center_user')->check()))
-<link rel="stylesheet" href="{{ asset('assets/css/luzori-center.css') }}?v=24">
+<link rel="stylesheet" href="{{ asset('assets/css/luzori-center.css') }}?v=25">
 <style>
   body.luzori-center .luzori-page::before,
   body.luzori-center .luzori-dashboard::before {
@@ -65,22 +65,6 @@
       margin-right: 0 !important;
       padding-left: 0.45rem !important;
       padding-right: 0.45rem !important;
-    }
-    html:not(.layout-menu-expanded) body.luzori-center #layout-menu {
-      position: fixed !important;
-      top: 0 !important;
-      bottom: 0 !important;
-      left: -100vw !important;
-      right: auto !important;
-      inset-inline-start: auto !important;
-      inset-inline-end: auto !important;
-      width: 16.25rem !important;
-      margin: 0 !important;
-      transform: none !important;
-    }
-    html[dir='rtl']:not(.layout-menu-expanded) body.luzori-center #layout-menu {
-      left: auto !important;
-      right: -100vw !important;
     }
     html.layout-navbar-fixed body.luzori-center #layout-navbar,
     html.layout-navbar-fixed body.luzori-center .layout-navbar.navbar-detached {
