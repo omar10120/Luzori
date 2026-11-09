@@ -575,12 +575,11 @@ class SalesController extends Controller
             // Clear cart
             session()->forget('sales_cart');
 
-            $autoPrint = app(InvoiceSettingsService::class)->first()->auto_print_sale;
-
             return MyHelper::responseJSON('redirect_to_home', Response::HTTP_CREATED, [
                 'redirect_url' => route('center_user.sales.index'),
                 'sale_id' => $sale->id,
-                'print_url' => $autoPrint ? route('center_user.sales.print', ['id' => $sale->id]) : null,
+                // Always trigger print dialog after sale (HTML receipt → OS printer / thermal)
+                'print_url' => route('center_user.sales.print', ['id' => $sale->id, 'auto' => 1]),
             ]);
         } catch (\Exception $e) {
             return MyHelper::responseJSON($e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
@@ -832,6 +831,7 @@ class SalesController extends Controller
 
     /**
      * Print sale receipt
+     * Default: HTML for browser/thermal print. Use ?format=pdf for PDF download.
      */
     public function print($id, InvoiceSettingsService $invoiceSettingsService)
     {
@@ -839,7 +839,9 @@ class SalesController extends Controller
             'worker',
             'client',
             'branch',
-            'saleItems'
+            'saleItems',
+            'bookings',
+            'buyProducts',
         ])->findOrFail($id);
         
         // Load relationships based on item type
@@ -851,16 +853,33 @@ class SalesController extends Controller
             }
         }
 
-        $options = [
-            'format' => [80, 200],
-            'orientation' => 'portrait',
-            'margin-top' => 10,
-            'margin-bottom' => 10,
-            'margin-left' => 10,
-            'margin-right' => 10,
-        ];
+        $paymentMethods = [];
+        foreach ($sale->bookings ?? [] as $booking) {
+            if (($booking->payment_type ?? null) === 'multiple' && is_array($booking->payment_methods ?? null)) {
+                foreach ($booking->payment_methods as $method) {
+                    $name = is_array($method) ? ($method['method'] ?? null) : null;
+                    if ($name && !in_array($name, $paymentMethods, true)) {
+                        $paymentMethods[] = (string) $name;
+                    }
+                }
+            } elseif (!empty($booking->payment_type) && !in_array($booking->payment_type, $paymentMethods, true)) {
+                $paymentMethods[] = (string) $booking->payment_type;
+            }
+        }
+        foreach ($sale->buyProducts ?? [] as $buyProduct) {
+            if (!empty($buyProduct->payment_type) && !in_array($buyProduct->payment_type, $paymentMethods, true)) {
+                $paymentMethods[] = (string) $buyProduct->payment_type;
+            }
+        }
+        $paymentMethod = empty($paymentMethods) ? '-' : implode(', ', $paymentMethods);
 
         $invoice_info = Setting::where('key', SettingEnum::invoice_info->value)->first()->value ?? '';
+        // Drop placeholder "text" / empty HTML under TRN
+        $invoice_info_plain = trim(html_entity_decode(strip_tags((string) $invoice_info)));
+        if ($invoice_info_plain === '' || strcasecmp($invoice_info_plain, 'text') === 0) {
+            $invoice_info = '';
+        }
+
         $center = $this->resolveActiveCenter();
         $invoiceSettings = $invoiceSettingsService->first();
         $template = (string) view('CenterUser.SubViews.Report.template.invoice_info', compact(
@@ -870,8 +889,23 @@ class SalesController extends Controller
         ));
 
         $view = 'CenterUser.SubViews.' . $this->model . '.print';
-        $pdf = Pdf::loadView($view, compact('sale', 'template'), [], $options);
-        return $pdf->stream('sale_' . $id . '.pdf');
+        $autoPrint = request()->boolean('auto');
+
+        // PDF only when explicitly requested
+        if (request()->query('format') === 'pdf') {
+            $options = [
+                'format' => [80, 200],
+                'orientation' => 'portrait',
+                'margin-top' => 10,
+                'margin-bottom' => 10,
+                'margin-left' => 10,
+                'margin-right' => 10,
+            ];
+            $pdf = Pdf::loadView($view, compact('sale', 'template', 'autoPrint', 'paymentMethod'), [], $options);
+            return $pdf->stream('sale_' . $id . '.pdf');
+        }
+
+        return view($view, compact('sale', 'template', 'autoPrint', 'paymentMethod'));
     }
 
     private function resolveActiveCenter(): ?Center

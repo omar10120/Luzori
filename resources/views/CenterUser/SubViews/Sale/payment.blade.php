@@ -379,31 +379,22 @@ h6,
                             const result = response.data || {};
                             const redirectUrl = result.redirect_url || response.data;
                             if (result.print_url) {
-                                const printFrame = document.createElement('iframe');
-                                printFrame.style.position = 'fixed';
-                                printFrame.style.width = '1px';
-                                printFrame.style.height = '1px';
-                                printFrame.style.border = '0';
-                                printFrame.src = result.print_url;
-                                document.body.appendChild(printFrame);
-                                let redirected = false;
-                                const redirect = function () {
-                                    if (!redirected) {
-                                        redirected = true;
-                                        window.location.href = redirectUrl;
-                                    }
-                                };
-                                printFrame.onload = function () {
-                                    try {
-                                        printFrame.contentWindow.focus();
-                                        printFrame.contentWindow.print();
-                                    } catch (error) {
-                                        window.open(result.print_url, '_blank');
-                                    }
-                                    setTimeout(function () { printFrame.remove(); }, 3000);
-                                    setTimeout(redirect, 500);
-                                };
-                                setTimeout(redirect, 5000);
+                                // Open receipt in a new tab so the OS print dialog can target the thermal printer
+                                const printWin = window.open(result.print_url, '_blank');
+                                if (!printWin) {
+                                    // Popup blocked — fallback to hidden iframe
+                                    const printFrame = document.createElement('iframe');
+                                    printFrame.style.position = 'fixed';
+                                    printFrame.style.width = '0';
+                                    printFrame.style.height = '0';
+                                    printFrame.style.border = '0';
+                                    printFrame.src = result.print_url;
+                                    document.body.appendChild(printFrame);
+                                    setTimeout(function () { printFrame.remove(); }, 15000);
+                                }
+                                setTimeout(function () {
+                                    window.location.href = redirectUrl;
+                                }, 800);
                             } else {
                                 window.location.href = redirectUrl;
                             }

@@ -224,6 +224,8 @@ return [
     'enter_the_percentage_of_the_employee' => 'أدخل نسبة الموظف',
     'enter_the_name_of_the_website' => 'أدخل اسم الموقع الإلكتروني',
     'auto_print_sale_after_payment'=> 'طباعة الفاتورة تلقائياً بعد الدفع',
+    'silent_print_cashier_hint' => 'للطباعة فوراً بدون نافذة اختيار الطابعة (مثل جهاز الكاشير): 1) اجعل طابعة الفواتير هي الطابعة الافتراضية في ويندوز 2) افتح لوحة التحكم عبر ملف cashier-chrome.bat أو شغّل Chrome بـ --kiosk-printing',
+    'download_cashier_chrome' => 'تحميل وضع الكاشير (Chrome)',
     'allow_sms'=> 'السماح بإرسال رسائل نصية',
     'sms_package'=> 'حزمة الرسائل النصية',
     'sms_package_balance' => 'رصيد حزمة الرسائل النصية',

@@ -12,10 +12,10 @@
             max-width: 100%;
             margin: auto;
             font-size: 14px;
-            font-weight: bolder;
+            font-weight: 700;
             line-height: 20px;
-           font-family: 'Cairo', sans-srif;, sans-serif;
-            color: #555;
+            font-family: 'Cairo', DejaVu Sans, sans-serif;
+            color: #000;
         }
         .invoice-box table {
             width: 100%;

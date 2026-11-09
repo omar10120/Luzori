@@ -80,6 +80,33 @@ class InvoiceSettingController extends Controller
         return MyHelper::responseJSON(__('admin.an_error_occurred'), Response::HTTP_INTERNAL_SERVER_ERROR);
     }
 
+    /**
+     * Download a Windows .bat that opens Chrome in silent-print (cashier) mode.
+     */
+    public function downloadCashierChrome()
+    {
+        $url = url('/');
+        $content = <<<BAT
+@echo off
+REM Luzori Cashier Mode — silent print to default printer (no dialog)
+set "CHROME="
+if exist "%ProgramFiles%\\Google\\Chrome\\Application\\chrome.exe" set "CHROME=%ProgramFiles%\\Google\\Chrome\\Application\\chrome.exe"
+if exist "%ProgramFiles(x86)%\\Google\\Chrome\\Application\\chrome.exe" set "CHROME=%ProgramFiles(x86)%\\Google\\Chrome\\Application\\chrome.exe"
+if exist "%LocalAppData%\\Google\\Chrome\\Application\\chrome.exe" set "CHROME=%LocalAppData%\\Google\\Chrome\\Application\\chrome.exe"
+if "%CHROME%"=="" (
+  echo Google Chrome not found. Please install Chrome.
+  pause
+  exit /b 1
+)
+start "" "%CHROME%" --kiosk-printing --disable-print-preview "{$url}"
+BAT;
+
+        return response($content, 200, [
+            'Content-Type' => 'application/octet-stream',
+            'Content-Disposition' => 'attachment; filename="luzori-cashier-chrome.bat"',
+        ]);
+    }
+
     private function hasSmsPackage(): bool
     {
         return (int) ($this->resolveActiveCenter()?->sms_request_package ?? 0) > 0;

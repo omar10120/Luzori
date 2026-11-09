@@ -225,6 +225,8 @@ return [
     'enter_the_percentage_of_the_employee' => 'Enter the employees percentage.',
     'enter_the_name_of_the_website' => 'Enter the name of the website',
     'auto_print_sale_after_payment'=> 'Auto Print Sale After Payment',
+    'silent_print_cashier_hint' => 'For instant print with no printer dialog (cashier mode): 1) Set your receipt printer as the Windows default printer 2) Open the dashboard via cashier-chrome.bat or launch Chrome with --kiosk-printing',
+    'download_cashier_chrome' => 'Download Cashier Mode (Chrome)',
     'allow_sms'=> 'Allow SMS',
     'sms_package' => 'SMS Package',
     'sms_package_balance' => 'SMS Package Balance',

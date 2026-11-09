@@ -6,47 +6,27 @@
      .daily-report-table {
         width: 100%;
         border-collapse: collapse;
-        font-size: 10px;
-        font-family: '{{ $fontFamily }}',
-        sans-serif !important;
+        font-size: 11px;
+        font-family: '{{ $fontFamily }}', sans-serif !important;
+        color: #1A3A36;
     }
 
     .daily-report-table td,
     .daily-report-table th {
         vertical-align: top;
+        color: #1A3A36;
+        font-weight: 600;
     }
 
     .daily-report-table strong {
-        font-weight: 300;
+        font-weight: 700;
         font-size: 12px;
+        color: #0F2E2A;
     }
 
     .table-responsive {
-
         font-size: 12px;
-    }
-</style><style>
-     .daily-report-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 10px;
-        font-family: '{{ $fontFamily }}',
-        sans-serif !important;
-    }
-
-    .daily-report-table td,
-    .daily-report-table th {
-        vertical-align: top;
-    }
-
-    .daily-report-table strong {
-        font-weight: 300;
-        font-size: 12px;
-    }
-
-    .table-responsive {
-
-        font-size: 12px;
+        color: #1A3A36;
     }
 </style>
 <div class="table-responsive">
