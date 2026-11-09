@@ -37,6 +37,7 @@
                         <thead>
                             <tr>
                                 <th>{{ __('field.users') }}</th>
+                                <th>{{ __('field.serial_number') }}</th>
                                 <th class="text-end">{{ __('general.actions') }}</th>
                             </tr>
                         </thead>
@@ -44,6 +45,7 @@
                             @forelse ($wallet->users as $user)
                                 <tr>
                                     <td><span class="lz-user-name">{{ $user->user->name }}</span></td>
+                                    <td>{{ $user->serial_number ?: '—' }}</td>
                                     <td class="text-end">
                                         <div class="d-inline-flex gap-2 flex-wrap justify-content-end">
                                             <a href="{{ route('center_user.users_wallets.print', ['user_id' => $user->user->id, 'wallet_id' => $wallet->id]) }}"
@@ -59,7 +61,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="2" class="text-muted text-center py-4">{{ __('general.no_users') }}</td>
+                                    <td colspan="3" class="text-muted text-center py-4">{{ __('general.no_users') }}</td>
                                 </tr>
                             @endforelse
                         </tbody>

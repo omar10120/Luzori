@@ -47,6 +47,11 @@
                                 @endforeach
                             </select>
                         </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="serial_number" class="lz-field-label">{{ __('field.serial_number') }}</label>
+                            <input type="text" id="serial_number" class="form-control" name="serial_number"
+                                placeholder="{{ __('field.serial_number') }}" />
+                        </div>
                         <div class="col-md-8 mb-3">
                             <label for="worker" class="lz-field-label">{{ __('locale.employee') }}</label>
                             <select class="form-select" name="worker_id" id="worker">

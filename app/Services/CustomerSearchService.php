@@ -163,10 +163,12 @@ class CustomerSearchService
 
             return [
                 'id' => $userWallet->id,
+                'serial_number' => $userWallet->serial_number,
                 'remaining_balance' => (float) $userWallet->amount - $used,
                 'wallet' => [
                     'id' => $userWallet->wallet_id,
                     'code' => $userWallet->wallet->code ?? '',
+                    'serial_number' => $userWallet->serial_number,
                 ],
             ];
         })->values();

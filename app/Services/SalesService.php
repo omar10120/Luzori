@@ -1011,6 +1011,9 @@ class SalesService
             if (empty($existingUserWallet->branch_id) && $branchId) {
                 $updates['branch_id'] = $branchId;
             }
+            if (empty($existingUserWallet->serial_number) && !empty($item['serial_number'])) {
+                $updates['serial_number'] = $item['serial_number'];
+            }
             if (!empty($updates)) {
                 $existingUserWallet->update($updates);
             }
@@ -1026,6 +1029,7 @@ class SalesService
         $userWallet = UserWallet::create([
             'wallet_id' => $item['wallet_id'],
             'user_id' => $item['user_id'],
+            'serial_number' => $item['serial_number'] ?? null,
             'wallet_type' => $item['wallet_type'] ?? null,
             'amount' => $item['amount'] ?? $wallet->amount,
             'invoiced_amount' => $item['invoiced_amount'] ?? $wallet->invoiced_amount,

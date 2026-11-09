@@ -1635,6 +1635,13 @@
                                     </select>
                                 </div>
                             </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="mb-1">
+                                    <label for="modal-wallet-serial-number" class="form-label">{{ __('field.serial_number') }}</label>
+                                    <input type="text" class="form-control" name="serial_number" id="modal-wallet-serial-number"
+                                        placeholder="{{ __('field.serial_number') }}" />
+                                </div>
+                            </div>
                             <div class="col-md-9 mb-3">
                                 <div class="mb-1">
                                     <label for="modal-wallet-worker" class="form-label">{{ __('locale.workers') }}</label>
@@ -3380,6 +3387,9 @@
                         itemHtml += `<small class="text-muted">
                             {{ __('field.code') }}: ${item.code || ''}<br>
                             {{ __('field.amount') }}: ${item.amount || 0} {{ get_currency() }}`;
+                        if (item.serial_number) {
+                            itemHtml += `<br>{{ __('field.serial_number') }}: ${item.serial_number}`;
+                        }
                         if (item.invoiced_amount) {
                             itemHtml += `<br>{{ __('field.invoiced_amount') }}: ${item.invoiced_amount || 0} {{ get_currency() }}`;
                         }
@@ -3630,11 +3640,16 @@
                             $.each(wallets, function(index, item) {
                                 var wallet = item.wallet;
                                 var balance = parseFloat(item.remaining_balance || 0);
+                                var serialNumber = item.serial_number || (wallet && wallet.serial_number) || '';
+                                var walletLabel = (wallet.code || '') + ' [' + balance.toFixed(2) + ' AED]';
+                                if (serialNumber) {
+                                    walletLabel += ' — {{ __('field.serial_number') }}: ' + serialNumber;
+                                }
                                 
                                 walletsElement += `<div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-2">
                                     <div class="form-check wallet-item" style="padding: 10px;color: #fff;background-color: #428bca;border-color: #357ebd;border-radius: 4px;min-height: 50px;display: flex;align-items: center;gap: 10px;font-size: 10px;width: 100%;">
                                         <label class="form-check-label flex-grow-1 text-start" for="booking-wallets${wallet.id}" style="word-break: break-word;white-space: normal;overflow: hidden;min-width: 0;margin: 0;">
-                                            ${wallet.code + ' [' + balance.toFixed(2) + ' AED]'}
+                                            ${walletLabel}
                                         </label>
                                         <input class="form-check-input flex-shrink-0 booking-wallet-radio" type="radio" name="discount_id" data-name="discount_id" value="${wallet.id}" id="booking-wallets${wallet.id}" data-wallet-amount="${balance}" style="margin-top: 0;width: 18px;height: 18px;flex-shrink: 0;">
                                     </div>
@@ -4308,6 +4323,7 @@
                 const userId = $('#modal-wallet-user').val();
                 const walletId = $('#modal-wallet-id').val();
                 const walletType = $('#modal-wallet-type').val();
+                const serialNumber = ($('#modal-wallet-serial-number').val() || '').trim();
                 const workerId = $('#modal-wallet-worker').val();
                 const commission = $('#modal-wallet-commission').val();
 
@@ -4376,6 +4392,7 @@
                         wallet_id: walletId, // Existing wallet ID - NOT creating new wallet
                         user_id: userId,
                         wallet_type: walletType,
+                        serial_number: serialNumber || null,
                         worker_id: workerId || null,
                         commission: commission || null
                     },
@@ -4415,6 +4432,7 @@
                                 end_at: walletEnd,
                                 user_id: userId,
                                 wallet_type: walletType,
+                                serial_number: serialNumber || null,
                                 worker_id: workerId,
                                     worker_name: workerName,
                                 commission: commission
