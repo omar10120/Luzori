@@ -147,8 +147,6 @@ class StockOrderController extends Controller
 
         if ($sourceType === 'supplier') {
             $query->whereHas('productSuppliers', fn ($q) => $q->where('product_suppliers.id', $supplierId));
-        } else {
-            $query->whereHas('mainStocks', fn ($q) => $q->available());
         }
 
         if ($search !== '') {
@@ -165,13 +163,6 @@ class StockOrderController extends Controller
         }
 
         $products = $query->orderBy('id')->limit(100)->get();
-        if ($sourceType === 'main_stock') {
-            $products = $products->filter(function ($product) {
-                $skuId = $product->primarySku?->id;
-                $mainStock = $product->mainStocks->first(fn ($stock) => $stock->sku_id == $skuId);
-                return ($mainStock?->available_quantity ?? 0) > 0;
-            })->values();
-        }
 
         $data = $products->map(function ($product) use ($branchIds, $sourceType) {
             $branches = $product->productBranches;
