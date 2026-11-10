@@ -51,7 +51,12 @@ class StockOrderController extends Controller
         $menu_link = route($this->indexRoute);
         $title = __('general.add') . ' ' . __('locale.stockorder');
         $requestUrl = route('center_user.stockorders.updateOrCreate');
-        $branches = Branch::with('translation')->get();
+        $branchesQuery = Branch::with('translation')->orderBy('id');
+        $lockedBranchId = $this->lockedBranchId();
+        if ($lockedBranchId) {
+            $branchesQuery->where('id', $lockedBranchId);
+        }
+        $branches = $branchesQuery->get();
         $suppliers = ProductSupplier::query()->orderBy('name')->get(['id', 'name']);
 
         return view('CenterUser.SubViews.StockOrder.create', compact(
@@ -119,6 +124,10 @@ class StockOrderController extends Controller
         $sourceType = (string) $request->get('source_type', 'supplier');
         $search = trim((string) $request->get('q', ''));
         $branchIds = array_filter(array_map('intval', (array) $request->get('branch_ids', [])));
+        $lockedBranchId = $this->lockedBranchId();
+        if ($lockedBranchId) {
+            $branchIds = [$lockedBranchId];
+        }
 
         if (!in_array($sourceType, ['supplier', 'main_stock'], true)) {
             return response()->json(['message' => __('field.invalid_stock_order_source')], Response::HTTP_UNPROCESSABLE_ENTITY);
@@ -269,5 +278,16 @@ class StockOrderController extends Controller
             'menu',
             'menu_link'
         ));
+    }
+
+    private function lockedBranchId(): ?int
+    {
+        if ((int) get_user_role() === 1) {
+            return null;
+        }
+
+        $branchId = auth('center_user')->user()?->branch_id;
+
+        return $branchId ? (int) $branchId : null;
     }
 }
