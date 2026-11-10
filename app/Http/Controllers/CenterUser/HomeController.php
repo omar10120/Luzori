@@ -8,13 +8,13 @@ use App\Models\Booking;
 use App\Models\BookingDetail;
 use App\Models\Worker;
 use App\Models\UserWallet;
-use App\Models\BuyProduct;
 use App\Models\Service;
 use App\Models\User;
 use App\Models\Wallet;
 use App\Models\Product;
 use Carbon\Carbon;
 use App\Datatables\CenterUser\ServiceDataTable;
+use Illuminate\Support\Facades\DB;
 
 class HomeController extends Controller
 {
@@ -79,50 +79,9 @@ class HomeController extends Controller
     
     private function getTodayRevenue($today)
     {
-        // Reuse DailyReportController revenue calculation logic
-        $revenue = 0;
-        
-        // 1. Revenue from Bookings
-        $bookings = Booking::whereRaw('DATE(booking_date)="' . $today . '"')
-            ->with('details')
-            ->get();
-            
-        foreach ($bookings as $booking) {
-            if (!empty($booking->details)) {
-                foreach ($booking->details as $detail) {
-                    $revenue += $detail->price;
-                }
-            }
-        }
-        
-        // 2. Revenue from BuyProduct
-        $buyProducts = BuyProduct::select('buy_products.*')
-            ->with('details')
-            ->join('workers', 'workers.id', '=', 'buy_products.worker_id')
-            ->whereRaw('DATE(buy_products.created_at)="' . $today . '"')
-            ->get();
-            
-        foreach ($buyProducts as $buyProduct) {
-            if (!$buyProduct->details->isEmpty()) {
-                foreach ($buyProduct->details as $detail) {
-                    $product_price = $detail->price;
-                    if (!empty($buyProduct->discount)) {
-                        $product_price -= ($product_price * $buyProduct->discount) / 100;
-                    }
-                    $revenue += $product_price;
-                }
-            }
-        }
-        
-        // 3. Revenue from UserWallet
-        $wallets = UserWallet::whereRaw('DATE(users_wallets.created_at)="' . $today . '"')
-            ->get();
-            
-        foreach ($wallets as $wallet) {
-            $revenue += $wallet->invoiced_amount;
-        }
-        
-        return $revenue;
+        $byDay = $this->revenueByDay($today, $today);
+
+        return $byDay[$today] ?? 0;
     }
     
     private function getActiveCouponsCount()
@@ -149,7 +108,7 @@ class HomeController extends Controller
     
     private function getBestService($thisMonth)
     {
-        $serviceCounts = Booking::with('details.service')
+        $serviceCounts = Booking::with('details')
             ->whereRaw('DATE_FORMAT(booking_date, "%Y-%m")="' . $thisMonth . '"')
             ->get()
             ->flatMap(function ($booking) {
@@ -250,7 +209,7 @@ class HomeController extends Controller
 
     private function getPopularServices($thisMonth)
     {
-        $serviceCounts = Booking::with('details.service')
+        $serviceCounts = Booking::with('details')
             ->whereRaw('DATE_FORMAT(booking_date, "%Y-%m")="' . $thisMonth . '"')
             ->get()
             ->flatMap(function ($booking) {
@@ -275,13 +234,16 @@ class HomeController extends Controller
     private function getRevenueTrends($year, $month)
     {
         $days = cal_days_in_month(CAL_GREGORIAN, (int) $month, (int) $year);
+        $start = sprintf('%04d-%02d-01', $year, $month);
+        $end = sprintf('%04d-%02d-%02d', $year, $month, $days);
+        $byDay = $this->revenueByDay($start, $end);
         $data = [];
 
         for ($i = 1; $i <= $days; $i++) {
             $date = sprintf('%04d-%02d-%02d', $year, $month, $i);
             $data[] = [
                 'day' => $i,
-                'revenue' => $this->getTodayRevenue($date),
+                'revenue' => $byDay[$date] ?? 0,
             ];
         }
 
@@ -317,6 +279,94 @@ class HomeController extends Controller
             'inside_pct' => $all > 0 ? round(($inside / $all) * 100) : 0,
             'outside_pct' => $all > 0 ? round(($outside / $all) * 100) : 0,
         ];
+    }
+
+    private function revenueByDay(string $start, string $end): array
+    {
+        $totals = [];
+
+        foreach (['bookings' => $this->bookingRevenueByDay($start, $end), 'products' => $this->productRevenueByDay($start, $end), 'wallets' => $this->walletRevenueByDay($start, $end)] as $rows) {
+            foreach ($rows as $day => $amount) {
+                $key = substr((string) $day, 0, 10);
+                $totals[$key] = ($totals[$key] ?? 0) + (float) $amount;
+            }
+        }
+
+        return $totals;
+    }
+
+    private function revenuePartsForDay(string $day): array
+    {
+        return [
+            'bookings' => $this->firstAmount($this->bookingRevenueByDay($day, $day)),
+            'products' => $this->firstAmount($this->productRevenueByDay($day, $day)),
+            'wallets' => $this->firstAmount($this->walletRevenueByDay($day, $day)),
+        ];
+    }
+
+    private function firstAmount(array $rows): float
+    {
+        return (float) (array_values($rows)[0] ?? 0);
+    }
+
+    private function bookingRevenueByDay(string $start, string $end): array
+    {
+        $rows = DB::table('bookings_details')
+            ->join('bookings', 'bookings.id', '=', 'bookings_details.booking_id')
+            ->whereNull('bookings.deleted_at')
+            ->whereRaw('DATE(bookings.booking_date) between ? and ?', [$start, $end])
+            ->orderBy('bookings.id')
+            ->orderBy('bookings_details.id')
+            ->get(['bookings.booking_date as day', 'bookings_details.price']);
+
+        $totals = [];
+        foreach ($rows as $row) {
+            $key = substr((string) $row->day, 0, 10);
+            $totals[$key] = ($totals[$key] ?? 0) + $row->price;
+        }
+
+        return $totals;
+    }
+
+    private function productRevenueByDay(string $start, string $end): array
+    {
+        $rows = DB::table('buy_products_details')
+            ->join('buy_products', 'buy_products.id', '=', 'buy_products_details.buy_product_id')
+            ->join('workers', 'workers.id', '=', 'buy_products.worker_id')
+            ->whereNull('buy_products.deleted_at')
+            ->whereRaw('DATE(buy_products.created_at) between ? and ?', [$start, $end])
+            ->orderBy('buy_products.id')
+            ->orderBy('buy_products_details.id')
+            ->get(['buy_products.created_at as day', 'buy_products.discount', 'buy_products_details.price']);
+
+        $totals = [];
+        foreach ($rows as $row) {
+            $productPrice = $row->price;
+            if (!empty($row->discount)) {
+                $productPrice -= ($productPrice * $row->discount) / 100;
+            }
+            $key = substr((string) $row->day, 0, 10);
+            $totals[$key] = ($totals[$key] ?? 0) + $productPrice;
+        }
+
+        return $totals;
+    }
+
+    private function walletRevenueByDay(string $start, string $end): array
+    {
+        $rows = DB::table('users_wallets')
+            ->whereNull('deleted_at')
+            ->whereRaw('DATE(created_at) between ? and ?', [$start, $end])
+            ->orderBy('id')
+            ->get(['created_at as day', 'invoiced_amount']);
+
+        $totals = [];
+        foreach ($rows as $row) {
+            $key = substr((string) $row->day, 0, 10);
+            $totals[$key] = ($totals[$key] ?? 0) + $row->invoiced_amount;
+        }
+
+        return $totals;
     }
 
     private function getLatestSales($period = 'day')
@@ -617,34 +667,10 @@ class HomeController extends Controller
     public function getRevenueDetails()
     {
         $today = now()->format('Y-m-d');
-        
-        // Get revenue from bookings
-        $bookingRevenue = Booking::whereRaw('DATE(booking_date)="' . $today . '"')
-            ->with('details')
-            ->get()
-            ->sum(function($booking) {
-                return $booking->details->sum('price');
-            });
-        
-        // Get revenue from buy products
-        $productRevenue = BuyProduct::select('buy_products.*')
-            ->with('details')
-            ->join('workers', 'workers.id', '=', 'buy_products.worker_id')
-            ->whereRaw('DATE(buy_products.created_at)="' . $today . '"')
-            ->get()
-            ->sum(function($buyProduct) {
-                return $buyProduct->details->sum(function($detail) use ($buyProduct) {
-                    $product_price = $detail->price;
-                    if (!empty($buyProduct->discount)) {
-                        $product_price -= ($product_price * $buyProduct->discount) / 100;
-                    }
-                    return $product_price;
-                });
-            });
-        
-        // Get revenue from user wallets
-        $walletRevenue = UserWallet::whereRaw('DATE(users_wallets.created_at)="' . $today . '"')
-            ->sum('invoiced_amount');
+        $parts = $this->revenuePartsForDay($today);
+        $bookingRevenue = $parts['bookings'];
+        $productRevenue = $parts['products'];
+        $walletRevenue = $parts['wallets'];
         
         $html = '<div class="table-responsive">';
         $html .= '<table class="table table-bordered table-hover">';

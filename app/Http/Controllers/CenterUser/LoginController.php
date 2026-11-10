@@ -14,6 +14,7 @@ use App\Models\Center;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Http\Request;
 use App\Models\Info;
 use Spatie\Permission\Models\Permission;
@@ -123,16 +124,14 @@ class LoginController extends Controller
         $isBaseOrDashboard = (count($parts) <= 2 || (count($parts) === 3 && $parts[0] === 'www') || in_array('dashboard', $parts));
 
         if ($isBaseOrDashboard) {
-            \Log::info("Dashboard/Root login attempt.", ['host' => $host, 'email' => $request->email]);
             $centers = Center::all();
             $originalDatabase = \Config::get('database.connections.mysql.database');
     
             foreach ($centers as $center) {
                 try {
-                    // Switch DB dynamically
-                    \Config::set('database.connections.mysql.database', $center->database);
-                    \DB::purge('mysql');
-                    \DB::reconnect('mysql');
+                    if (!$this->switchTenantDatabase($center->database)) {
+                        continue;
+                    }
     
                     $centerUser = CenterUser::withTrashed()
                         ->where('statusWeb', 1)
@@ -141,12 +140,9 @@ class LoginController extends Controller
     
                     if ($centerUser && \Hash::check($request->password, $centerUser->password)) {
                         if ($center->expire_date && now()->gt($center->expire_date)) {
-                            \Config::set('database.connections.mysql.database', $originalDatabase);
-                            \DB::purge('mysql');
-                            \DB::reconnect('mysql');
+                            $this->switchTenantDatabase($originalDatabase);
                             return MyHelper::responseJSON('انتهت فترة صلاحية هذا المركز. يرجى التواصل مع الدعم الفني.', 400);
                         }
-                        \Log::info("User found in database: " . $center->database);
                         // Generate a signed URL with user data for cross-domain authentication
                         $userData = [
                             'id' => $centerUser->id,
@@ -178,11 +174,7 @@ class LoginController extends Controller
                 }
             }
             
-            // Restore original database
-            \Log::info("Login failed. Restoring original database.");
-            \Config::set('database.connections.mysql.database', $originalDatabase);
-            \DB::purge('mysql');
-            \DB::reconnect('mysql');
+            $this->switchTenantDatabase($originalDatabase);
     
             return MyHelper::responseJSON('فشلت عملية تسجيل الدخول, حقل اسم المستخدم او كلمة المرور غير صحيحة', 400);
         }
@@ -295,6 +287,38 @@ class LoginController extends Controller
         $this->sendVerificationCodeEmail($pending['email'], $code);
 
         return MyHelper::responseJSON('تم إرسال رمز التحقق مرة أخرى', 200);
+    }
+
+    /**
+     * Point the shared mysql connection at a tenant database without reconnecting.
+     */
+    private function switchTenantDatabase(?string $database): bool
+    {
+        if (!is_string($database) || $database === '') {
+            return false;
+        }
+
+        Config::set('database.connections.mysql.database', $database);
+
+        if (!preg_match('/^[A-Za-z0-9_-]+$/', $database)) {
+            DB::purge('mysql');
+            DB::reconnect('mysql');
+
+            return true;
+        }
+        $connection = DB::connection('mysql');
+
+        try {
+            $connection->getPdo()->exec('USE `'.$database.'`');
+        } catch (\Throwable $e) {
+            DB::purge('mysql');
+            $connection = DB::connection('mysql');
+            $connection->reconnect();
+        }
+
+        $connection->setDatabaseName($database);
+
+        return true;
     }
 
     private function generateVerificationCode(): string

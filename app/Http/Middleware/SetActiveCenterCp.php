@@ -68,9 +68,33 @@ class SetActiveCenterCp
 
     private function configureCenterDatabase(Center $center): void
     {
-        Config::set('database.connections.mysql.database', $center->database);
-        DB::purge('mysql');
-        DB::reconnect('mysql');
+        $database = $center->database;
+        if (!is_string($database) || $database === '') {
+            return;
+        }
+
+        Config::set('database.connections.mysql.database', $database);
+
+        if (!preg_match('/^[A-Za-z0-9_-]+$/', $database)) {
+            DB::purge('mysql');
+            DB::reconnect('mysql');
+
+            return;
+        }
+
+        $connection = DB::connection('mysql');
+
+        if ($connection->getDatabaseName() === $database && $connection->getPdo()) {
+            return;
+        }
+
+        try {
+            $connection->getPdo()->exec('USE `'.$database.'`');
+            $connection->setDatabaseName($database);
+        } catch (\Throwable $e) {
+            DB::purge('mysql');
+            DB::reconnect('mysql');
+        }
     }
 
     private function centerIsExpired(Center $center): bool
