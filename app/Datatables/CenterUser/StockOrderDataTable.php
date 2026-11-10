@@ -73,10 +73,19 @@ class StockOrderDataTable extends DataTable
 
     public function query(StockOrder $model): QueryBuilder
     {
-        return $model->query()
+        $query = $model->query()
             ->withTrashed()
             ->with(['supplier', 'branches.translation'])
             ->orderBy('stock_orders.id', 'DESC');
+
+        if ((int) get_user_role() !== 1) {
+            $branchId = auth('center_user')->user()?->branch_id;
+            if ($branchId) {
+                $query->whereHas('branches', fn ($q) => $q->where('branches.id', $branchId));
+            }
+        }
+
+        return $query;
     }
 
     public function html(): HtmlBuilder

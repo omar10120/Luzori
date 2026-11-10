@@ -197,12 +197,13 @@ class StockOrderController extends Controller
             return abort(403);
         }
 
-        $order = StockOrder::with([
-            'items.product.translation',
-            'items.product.primarySku',
-            'branches.translation',
-            'supplier',
-        ])->findOrFail($id);
+        $order = $this->stockOrdersQuery()
+            ->with([
+                'items.product.translation',
+                'items.product.primarySku',
+                'branches.translation',
+                'supplier',
+            ])->findOrFail($id);
 
         if ($order->status !== 'ordered') {
             return redirect()->route('center_user.stockorders.show', ['id' => $order->id]);
@@ -229,7 +230,7 @@ class StockOrderController extends Controller
             return abort(403);
         }
 
-        $order = StockOrder::with(['items', 'branches'])->findOrFail($id);
+        $order = $this->stockOrdersQuery()->with(['items', 'branches'])->findOrFail($id);
 
         try {
             $order = $this->stockOrderService->receive($order, $request->validated()['items']);
@@ -251,13 +252,15 @@ class StockOrderController extends Controller
             return abort(403);
         }
 
-        $order = StockOrder::with([
-            'items.product.translation',
-            'items.product.primarySku',
-            'branches.translation',
-            'supplier',
-            'createdBy',
-        ])->withTrashed()->findOrFail($id);
+        $order = $this->stockOrdersQuery()
+            ->withTrashed()
+            ->with([
+                'items.product.translation',
+                'items.product.primarySku',
+                'branches.translation',
+                'supplier',
+                'createdBy',
+            ])->findOrFail($id);
 
         $menu = __('locale.' . $this->plural);
         $menu_link = route($this->indexRoute);
@@ -269,6 +272,17 @@ class StockOrderController extends Controller
             'menu',
             'menu_link'
         ));
+    }
+
+    private function stockOrdersQuery()
+    {
+        $query = StockOrder::query();
+        $branchId = $this->lockedBranchId();
+        if ($branchId) {
+            $query->whereHas('branches', fn ($q) => $q->where('branches.id', $branchId));
+        }
+
+        return $query;
     }
 
     private function lockedBranchId(): ?int
