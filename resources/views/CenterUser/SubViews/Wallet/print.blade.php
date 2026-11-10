@@ -98,6 +98,12 @@
                             <td>Wallet:</td>
                             <td>{{ $user_wallet->id }}</td>
                         </tr>
+                        @if ($user_wallet->serial_number)
+                        <tr>
+                            <td>{{ __('field.serial_number') }}:</td>
+                            <td>{{ $user_wallet->serial_number }}</td>
+                        </tr>
+                        @endif
                         <tr>
                             <td>Date:</td>
                             <td>{{ my_date($user_wallet->created_at) }}</td>

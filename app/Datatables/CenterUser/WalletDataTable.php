@@ -40,7 +40,8 @@ class WalletDataTable extends DataTable
                     if (!$name) {
                         continue;
                     }
-                    $users .= '<span class="lz-user-badge">' . e($name) . '</span>';
+                    $serial = $user->serial_number ? ' (' . e($user->serial_number) . ')' : '';
+                    $users .= '<span class="lz-user-badge">' . e($name) . $serial . '</span>';
                 }
                 return $users !== '' ? $users : '—';
             })

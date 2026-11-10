@@ -30,6 +30,7 @@ class UserWalletRequest extends FormRequest
             'wallet_type' => 'required|string',
             'worker_id' => 'nullable|exists:workers,id',
             'commission' => Rule::requiredIf($this->worker_id != ''),
+            'serial_number' => 'nullable|string|unique:users_wallets,serial_number',
         ];
     }
 }

@@ -16,6 +16,7 @@ class UserWalletResource extends JsonResource
     {
         $res['id'] = $this->id;
         $res['user_name'] = $this->user->name;
+        $res['serial_number'] = $this->serial_number;
         return $res;
     }
 }
