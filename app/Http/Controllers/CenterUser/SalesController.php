@@ -251,7 +251,7 @@ class SalesController extends Controller
     /**
      * Lazy-load coupons for the cart wallet tab.
      */
-    public function cartWallets()
+    public function cartWallets(Request $request)
     {
         $can = 'CREATE_' . Str::upper($this->plural);
         if (!auth('center_user')->user()->can($can, 'center_api')) {
@@ -263,11 +263,12 @@ class SalesController extends Controller
     
         // Role 1 = admin / super admin → see ALL wallets (no branch filter)
         $isAdmin = ((int) get_user_role() === 1);
+        $perPage = max(1, min(50, (int) $request->input('per_page', 10)));
     
-        $wallets  = $this->salesService->getCartWallets($centerUser, $isAdmin);
+        $wallets  = $this->salesService->getCartWallets($centerUser, $isAdmin, $perPage);
         $currency = get_currency();
     
-        $rows = $wallets->map(function ($wallet) use ($currency) {
+        $rows = $wallets->getCollection()->map(function ($wallet) use ($currency) {
             $clients = $wallet->users
                 ->map(fn ($uw) => $uw->user->name ?? null)
                 ->filter()
@@ -293,7 +294,17 @@ class SalesController extends Controller
             ];
         });
     
-        return response()->json(['data' => $rows]);
+        return response()->json([
+            'data' => $rows,
+            'meta' => [
+                'current_page' => $wallets->currentPage(),
+                'last_page' => $wallets->lastPage(),
+                'per_page' => $wallets->perPage(),
+                'total' => $wallets->total(),
+                'from' => $wallets->firstItem(),
+                'to' => $wallets->lastItem(),
+            ],
+        ]);
     }
     /**
      * Lazy-load packages for the cart package tab.

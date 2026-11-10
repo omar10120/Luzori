@@ -131,7 +131,7 @@ class SalesService
      * @param  mixed  $centerUser  The authenticated center user (API or web guard)
      * @param  bool   $isAdmin     When true, skip the branch scope (see all wallets)
      */
-    public function getCartWallets($centerUser, bool $isAdmin = false)
+    public function getCartWallets($centerUser, bool $isAdmin = false, int $perPage = 10)
     {
         $query = Wallet::with([
             'created_by_user:id,name',
@@ -149,7 +149,7 @@ class SalesService
             $query->forCenterUserBranch($centerUser);
         }
 
-        return $query->get([
+        return $query->paginate($perPage, [
             'id', 'code', 'amount', 'invoiced_amount',
             'used', 'start_at', 'end_at', 'created_by',
         ]);
