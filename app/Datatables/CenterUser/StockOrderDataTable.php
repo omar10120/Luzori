@@ -23,14 +23,20 @@ class StockOrderDataTable extends DataTable
                 $route = 'center_user.' . $this->plural;
                 $id = $item->id;
                 $model = $this->model;
+                $user = auth('center_user')->user();
+                $canUpdate = $user?->can('UPDATE_STOCKTAKES', 'center_api');
+                $canDelete = $user?->can('DELETE_STOCKTAKES', 'center_api');
                 $options = [
                     'show' => true,
-                    'delete' => true,
                     'operation' => DeleteActionEnum::FORCE_DELETE->value,
                     'with_trashed' => 1,
                 ];
 
-                if ($item->status === 'ordered') {
+                if ($canDelete) {
+                    $options['delete'] = true;
+                }
+
+                if ($canUpdate && $item->status === 'ordered') {
                     $options['receive_url'] = route('center_user.stockorders.receive', ['id' => $id]);
                 }
 
