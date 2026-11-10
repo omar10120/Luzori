@@ -474,16 +474,60 @@
         transform: translateY(-1px);
         box-shadow: 0 8px 18px rgba(197, 160, 112, 0.35);
     }
+
+    .luzori-dashboard .lz-shimmer,
+    .luzori-dashboard .lz-shimmer-block,
+    .luzori-dashboard .lz-shimmer-line {
+        background: linear-gradient(90deg, #efe8de 25%, #fffdf9 37%, #efe8de 63%);
+        background-size: 400% 100%;
+        animation: lz-shimmer 1.15s ease infinite;
+    }
+
+    .luzori-dashboard .lz-kpi--dark .lz-shimmer {
+        background: linear-gradient(90deg, rgba(255,255,255,.14) 25%, rgba(255,255,255,.32) 37%, rgba(255,255,255,.14) 63%);
+        background-size: 400% 100%;
+    }
+
+    .luzori-dashboard .lz-shimmer {
+        display: inline-block;
+        width: 5.2rem;
+        height: .85em;
+        border-radius: 8px;
+        vertical-align: middle;
+    }
+
+    .luzori-dashboard .lz-shimmer--short {
+        width: 2.4rem;
+    }
+
+    .luzori-dashboard .lz-shimmer-block {
+        height: 280px;
+        border-radius: 14px;
+    }
+
+    .luzori-dashboard .lz-shimmer-block--donut {
+        height: 220px;
+    }
+
+    .luzori-dashboard .lz-shimmer-line {
+        height: 12px;
+        border-radius: 999px;
+        margin-bottom: .7rem;
+    }
+
+    .luzori-dashboard .lz-shimmer-line:last-child {
+        width: 70%;
+        margin-bottom: 0;
+    }
+
+    @keyframes lz-shimmer {
+        0% { background-position: 100% 0; }
+        100% { background-position: 0 0; }
+    }
 </style>
 @endpush
 
 @php
-    $popularServices = $chartData['popular_services'] ?? [];
-    $revenueTrends = $chartData['revenue_trends'] ?? [];
-    $earningsWeek = $chartData['earnings_per_week'] ?? [];
-    $latestSales = $chartData['latest_sales'] ?? [];
-    $ratingStats = $chartData['rating_stats'] ?? [];
-    $currency = trim(get_currency());
     $salesPeriod = $salesPeriod ?? 'day';
     $userName = auth('center_user')->user()->name ?? '';
     $hour = (int) now()->format('H');
@@ -496,7 +540,7 @@
     }
 @endphp
 
-<div class="luzori-dashboard">
+<div class="luzori-dashboard" data-stats-url="{{ route('center_user.cp.stats') }}" data-period="{{ $salesPeriod }}">
     <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
         <div>
             <h1 class="lz-greeting">{{ $greeting }}, {{ $userName }}</h1>
@@ -516,7 +560,7 @@
                     <div class="lz-kpi-icon"><i class="ti ti-calendar-event"></i></div>
                     <div>
                         <p class="lz-kpi-label">{{ __('field.today_bookings') }}</p>
-                        <p class="lz-kpi-value">{{ number_format($statistics['today_bookings_count']) }}</p>
+                        <p class="lz-kpi-value" id="lz-kpi-bookings"><span class="lz-shimmer"></span></p>
                     </div>
                 </div>
                 <span class="lz-kpi-arrow"><i class="ti ti-arrow-up-right"></i></span>
@@ -528,7 +572,7 @@
                     <div class="lz-kpi-icon"><i class="ti ti-users"></i></div>
                     <div>
                         <p class="lz-kpi-label">{{ __('field.customers') }}</p>
-                        <p class="lz-kpi-value">{{ number_format($statistics['customers_count']) }}</p>
+                        <p class="lz-kpi-value" id="lz-kpi-customers"><span class="lz-shimmer"></span></p>
                     </div>
                 </div>
                 <span class="lz-kpi-arrow"><i class="ti ti-arrow-up-right"></i></span>
@@ -540,7 +584,7 @@
                     <div class="lz-kpi-icon"><i class="ti ti-scissors"></i></div>
                     <div>
                         <p class="lz-kpi-label">{{ __('field.services') }}</p>
-                        <p class="lz-kpi-value">{{ number_format($statistics['services_count']) }}</p>
+                        <p class="lz-kpi-value" id="lz-kpi-services"><span class="lz-shimmer"></span></p>
                     </div>
                 </div>
                 <span class="lz-kpi-arrow"><i class="ti ti-arrow-up-right"></i></span>
@@ -552,7 +596,7 @@
                     <div class="lz-kpi-icon"><i class="ti ti-coin"></i></div>
                     <div>
                         <p class="lz-kpi-label">{{ __('field.today_revenue') }}</p>
-                        <p class="lz-kpi-value">{{ number_format($statistics['today_revenue'], 0) }} {{ $currency }}</p>
+                        <p class="lz-kpi-value" id="lz-kpi-revenue"><span class="lz-shimmer"></span></p>
                     </div>
                 </div>
                 <span class="lz-kpi-arrow"><i class="ti ti-arrow-up-right"></i></span>
@@ -568,7 +612,7 @@
                     <h5 class="lz-panel-title">{{ __('field.most_popular_services') }}</h5>
                 </div>
                 <div class="card-body">
-                    <div id="popularServicesChart"></div>
+                    <div id="popularServicesChart" class="lz-shimmer-block"></div>
                 </div>
             </div>
         </div>
@@ -578,7 +622,7 @@
                     <h5 class="lz-panel-title">{{ __('field.most_revenue_trends') }}</h5>
                 </div>
                 <div class="card-body">
-                    <div id="revenueTrendsChart"></div>
+                    <div id="revenueTrendsChart" class="lz-shimmer-block"></div>
                 </div>
             </div>
         </div>
@@ -588,7 +632,7 @@
                     <h5 class="lz-panel-title">{{ __('field.earnings_per_week') }}</h5>
                 </div>
                 <div class="card-body">
-                    <div id="earningsWeekChart"></div>
+                    <div id="earningsWeekChart" class="lz-shimmer-block lz-shimmer-block--donut"></div>
                     <div class="lz-earnings-legend">
                         <div class="lz-earnings-legend-item">
                             <div class="d-flex align-items-center justify-content-between gap-2">
@@ -596,9 +640,9 @@
                                     <span class="lz-earnings-dot" style="background:#8a9a96"></span>
                                     {{ __('api.outside_booking') }}
                                 </span>
-                                <span>{{ $earningsWeek['outside_pct'] ?? 0 }}%</span>
+                                <span id="lz-earnings-outside-pct"><span class="lz-shimmer lz-shimmer--short"></span></span>
                             </div>
-                            <div class="lz-earnings-bar"><span style="width: {{ $earningsWeek['outside_pct'] ?? 0 }}%; background:#8a9a96"></span></div>
+                            <div class="lz-earnings-bar"><span id="lz-earnings-outside-bar" style="width: 0%; background:#8a9a96"></span></div>
                         </div>
                         <div class="lz-earnings-legend-item">
                             <div class="d-flex align-items-center justify-content-between gap-2">
@@ -606,9 +650,9 @@
                                     <span class="lz-earnings-dot" style="background:#002b26"></span>
                                     {{ __('api.inside_booking') }}
                                 </span>
-                                <span>{{ $earningsWeek['inside_pct'] ?? 0 }}%</span>
+                                <span id="lz-earnings-inside-pct"><span class="lz-shimmer lz-shimmer--short"></span></span>
                             </div>
-                            <div class="lz-earnings-bar"><span style="width: {{ $earningsWeek['inside_pct'] ?? 0 }}%"></span></div>
+                            <div class="lz-earnings-bar"><span id="lz-earnings-inside-bar" style="width: 0%"></span></div>
                         </div>
                     </div>
                 </div>
@@ -622,15 +666,14 @@
             <div class="card lz-panel">
                 <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <h5 class="lz-panel-title">{{ __('field.latest_sales') }}</h5>
-                    <form method="POST" action="{{ route('center_user.cp') }}" class="d-flex gap-2 align-items-center mb-0">
-                        @csrf
-                        <button type="submit" name="period" value="day"
+                    <div class="d-flex gap-2 align-items-center mb-0" id="lz-sales-filters">
+                        <button type="button" data-period="day"
                             class="lz-filter-btn {{ $salesPeriod === 'day' ? 'active' : '' }}">{{ __('field.day') }}</button>
-                        <button type="submit" name="period" value="week"
+                        <button type="button" data-period="week"
                             class="lz-filter-btn {{ $salesPeriod === 'week' ? 'active' : '' }}">{{ __('field.week') }}</button>
-                        <button type="submit" name="period" value="month"
+                        <button type="button" data-period="month"
                             class="lz-filter-btn {{ $salesPeriod === 'month' ? 'active' : '' }}">{{ __('field.month') }}</button>
-                    </form>
+                    </div>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
@@ -646,36 +689,12 @@
                                     <th>{{ __('field.status') }}</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                @forelse ($latestSales as $sale)
+                            <tbody id="lz-sales-body">
+                                @for ($i = 0; $i < 4; $i++)
                                     <tr>
-                                        <td>
-                                            <div class="service-cell">
-                                                <img src="{{ $sale['service_image'] }}" alt="" class="service-thumb">
-                                                <span>{{ $sale['service_name'] }}</span>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div>{{ $sale['customer_name'] }}</div>
-                                            @if (!empty($sale['customer_email']))
-                                                <div class="customer-email">{{ $sale['customer_email'] }}</div>
-                                            @endif
-                                        </td>
-                                        <td>{{ $sale['phone'] }}</td>
-                                        <td>{{ $sale['worker'] }}</td>
-                                        <td>{{ ucfirst(str_replace('_', ' ', $sale['payment_type'])) }}</td>
-                                        <td>{{ number_format($sale['total'], 2) }} {{ $currency }}</td>
-                                        <td>
-                                            <span class="lz-status-badge lz-status-badge--{{ $sale['status'] === 'pending' ? 'pending' : 'confirmed' }}">
-                                                {{ ucfirst($sale['status']) }}
-                                            </span>
-                                        </td>
+                                        <td colspan="7"><span class="lz-shimmer-line"></span></td>
                                     </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="7" class="text-center text-muted py-4">{{ __('general.no_data') }}</td>
-                                    </tr>
-                                @endforelse
+                                @endfor
                             </tbody>
                         </table>
                     </div>
@@ -689,22 +708,11 @@
                     <h5 class="lz-panel-title">{{ __('field.top_performers') }}</h5>
                     <p class="text-muted mb-0 mt-1" style="font-size:.78rem">{{ __('field.bookings_this_month') }}</p>
                 </div>
-                <div class="card-body">
-                    @forelse ($ratingStats as $index => $stat)
-                        <div class="lz-performer-row">
-                            <div class="lz-rank">{{ $index + 1 }}</div>
-                            <div class="lz-performer-avatar">
-                                {{ mb_strtoupper(mb_substr($stat['label'] ?? 'N', 0, 1)) }}
-                            </div>
-                            <div class="lz-performer-meta">
-                                <p class="lz-performer-name">{{ $stat['label'] }}</p>
-                                <p class="lz-performer-sub">{{ $stat['value'] }} {{ __('field.bookings_count') }} · {{ $stat['subtitle'] }}</p>
-                                <div class="lz-progress"><span style="width: {{ $stat['pct'] }}%"></span></div>
-                            </div>
-                        </div>
-                    @empty
-                        <p class="text-muted text-center py-4 mb-0">{{ __('general.no_data') }}</p>
-                    @endforelse
+                <div class="card-body" id="lz-performers">
+                    @for ($i = 0; $i < 3; $i++)
+                        <div class="lz-shimmer-line"></div>
+                        <div class="lz-shimmer-line"></div>
+                    @endfor
                 </div>
             </div>
 
@@ -735,127 +743,320 @@ document.addEventListener('DOMContentLoaded', function () {
     const isDarkStyle = document.documentElement.classList.contains('dark-style');
     const chartLabelColor = isDarkStyle ? '#e4e6e8' : '#3d4f4c';
 
-    const popularServices = @json($popularServices);
-    const revenueTrends = @json($revenueTrends);
-    const earningsWeek = @json($earningsWeek);
-    const currency = @json($currency);
+    const root = document.querySelector('.luzori-dashboard');
+    const labels = {
+        noData: @json(__('general.no_data')),
+        bookingsCount: @json(__('field.bookings_count')),
+        loadError: @json(__('general.error')),
+        services: @json(__('field.services')),
+        revenue: @json(__('field.today_revenue')),
+        total: @json(__('field.total')),
+        outside: @json(__('api.outside_booking')),
+        inside: @json(__('api.inside_booking'))
+    };
 
-    if (popularServices.length && document.querySelector('#popularServicesChart')) {
-        const palette = [forest, sage, tan, cream, '#5f7a72', '#b8956a'];
-        const barColors = popularServices.map((_, i) => palette[i % palette.length]);
-
-        new ApexCharts(document.querySelector('#popularServicesChart'), {
-            chart: { type: 'bar', height: 280, toolbar: { show: false }, fontFamily: 'DM Sans, Cairo, sans-serif' },
-            plotOptions: {
-                bar: {
-                    borderRadius: 10,
-                    columnWidth: '45%',
-                    distributed: true
-                }
-            },
-            colors: barColors,
-            dataLabels: { enabled: false },
-            series: [{ name: '{{ __("field.services") }}', data: popularServices.map(s => s.count) }],
-            xaxis: {
-                categories: popularServices.map(s => s.name),
-                labels: { style: { fontSize: '11px', colors: chartLabelColor }, rotate: -30, trim: true },
-                axisBorder: { show: false },
-                axisTicks: { show: false }
-            },
-            yaxis: { labels: { style: { fontSize: '11px', colors: chartLabelColor } } },
-            grid: { borderColor: '#f1ebe3', strokeDashArray: 4 },
-            legend: { show: false },
-            tooltip: { theme: 'light' }
-        }).render();
-    } else if (document.querySelector('#popularServicesChart')) {
-        document.querySelector('#popularServicesChart').innerHTML = '<p class="text-muted text-center py-5">{{ __("general.no_data") }}</p>';
+    function clearChart(selector) {
+        const el = document.querySelector(selector);
+        if (!el) return null;
+        el.classList.remove('lz-shimmer-block', 'lz-shimmer-block--donut');
+        el.replaceChildren();
+        return el;
     }
 
-    if (revenueTrends.length && document.querySelector('#revenueTrendsChart')) {
-        new ApexCharts(document.querySelector('#revenueTrendsChart'), {
-            chart: { type: 'area', height: 280, toolbar: { show: false }, zoom: { enabled: false }, fontFamily: 'DM Sans, Cairo, sans-serif' },
-            colors: [forest],
-            fill: {
-                type: 'gradient',
-                gradient: {
-                    shadeIntensity: 1,
-                    opacityFrom: .4,
-                    opacityTo: .05,
-                    stops: [0, 90, 100],
-                    colorStops: [
-                        { offset: 0, color: '#7d9b8f', opacity: .45 },
-                        { offset: 100, color: '#f9f6f1', opacity: .05 }
-                    ]
-                }
-            },
-            stroke: { curve: 'smooth', width: 2.5 },
-            dataLabels: { enabled: false },
-            series: [{ name: '{{ __("field.today_revenue") }}', data: revenueTrends.map(r => r.revenue) }],
-            xaxis: {
-                categories: revenueTrends.map(r => r.day),
-                labels: { style: { fontSize: '10px', colors: chartLabelColor } },
-                tickAmount: 10,
-                axisBorder: { show: false },
-                axisTicks: { show: false }
-            },
-            yaxis: {
-                labels: {
-                    style: { fontSize: '10px', colors: chartLabelColor },
-                    formatter: val => Math.round(val).toLocaleString()
-                }
-            },
-            grid: { borderColor: '#f1ebe3', strokeDashArray: 4 },
-            tooltip: {
-                y: { formatter: val => val.toLocaleString() + ' ' + currency }
+    function salesShimmer() {
+        const body = document.querySelector('#lz-sales-body');
+        if (!body) return;
+        body.replaceChildren();
+        for (let i = 0; i < 4; i++) {
+            const tr = document.createElement('tr');
+            const td = document.createElement('td');
+            td.colSpan = 7;
+            const line = document.createElement('span');
+            line.className = 'lz-shimmer-line';
+            td.appendChild(line);
+            tr.appendChild(td);
+            body.appendChild(tr);
+        }
+    }
+
+    function fillSales(rows) {
+        const body = document.querySelector('#lz-sales-body');
+        if (!body) return;
+        body.replaceChildren();
+        if (!rows.length) {
+            const tr = document.createElement('tr');
+            const td = document.createElement('td');
+            td.colSpan = 7;
+            td.className = 'text-center text-muted py-4';
+            td.textContent = labels.noData;
+            tr.appendChild(td);
+            body.appendChild(tr);
+            return;
+        }
+
+        rows.forEach(function (sale) {
+            const tr = document.createElement('tr');
+            const service = document.createElement('td');
+            const cell = document.createElement('div');
+            cell.className = 'service-cell';
+            const img = document.createElement('img');
+            img.src = sale.service_image || '';
+            img.alt = '';
+            img.className = 'service-thumb';
+            const name = document.createElement('span');
+            name.textContent = sale.service_name || '';
+            cell.append(img, name);
+            service.appendChild(cell);
+
+            const customer = document.createElement('td');
+            const customerName = document.createElement('div');
+            customerName.textContent = sale.customer_name || '';
+            customer.appendChild(customerName);
+            if (sale.customer_email) {
+                const email = document.createElement('div');
+                email.className = 'customer-email';
+                email.textContent = sale.customer_email;
+                customer.appendChild(email);
             }
-        }).render();
+
+            const phone = document.createElement('td');
+            phone.textContent = sale.phone || '';
+            const worker = document.createElement('td');
+            worker.textContent = sale.worker || '';
+            const payment = document.createElement('td');
+            payment.textContent = sale.payment_label || '';
+            const total = document.createElement('td');
+            total.textContent = sale.total_display || '';
+            const status = document.createElement('td');
+            const badge = document.createElement('span');
+            badge.className = 'lz-status-badge lz-status-badge--' + (sale.status_class || 'confirmed');
+            badge.textContent = sale.status_label || '';
+            status.appendChild(badge);
+
+            tr.append(service, customer, phone, worker, payment, total, status);
+            body.appendChild(tr);
+        });
     }
 
-    if (document.querySelector('#earningsWeekChart')) {
-        const insidePct = earningsWeek.inside_pct || 0;
-        const outsidePct = earningsWeek.outside_pct || 0;
-        const totalLabel = '{{ __("field.total") }}';
+    function fillPerformers(stats) {
+        const box = document.querySelector('#lz-performers');
+        if (!box) return;
+        box.replaceChildren();
+        if (!stats.length) {
+            const empty = document.createElement('p');
+            empty.className = 'text-muted text-center py-4 mb-0';
+            empty.textContent = labels.noData;
+            box.appendChild(empty);
+            return;
+        }
 
-        new ApexCharts(document.querySelector('#earningsWeekChart'), {
-            chart: { type: 'donut', height: 220, fontFamily: 'DM Sans, Cairo, sans-serif' },
-            series: [outsidePct || 0.001, insidePct || 0.001],
-            labels: ['{{ __("api.outside_booking") }}', '{{ __("api.inside_booking") }}'],
-            colors: ['#8a9a96', forest],
-            stroke: { width: 0 },
-            plotOptions: {
-                pie: {
-                    donut: {
-                        size: '72%',
-                        labels: {
-                            show: true,
-                            name: { show: true, fontSize: '12px', color: chartLabelColor, offsetY: 18 },
-                            value: {
+        stats.forEach(function (stat, index) {
+            const row = document.createElement('div');
+            row.className = 'lz-performer-row';
+            const rank = document.createElement('div');
+            rank.className = 'lz-rank';
+            rank.textContent = String(index + 1);
+            const avatar = document.createElement('div');
+            avatar.className = 'lz-performer-avatar';
+            avatar.textContent = String(stat.label || 'N').charAt(0).toLocaleUpperCase();
+            const meta = document.createElement('div');
+            meta.className = 'lz-performer-meta';
+            const title = document.createElement('p');
+            title.className = 'lz-performer-name';
+            title.textContent = stat.label || '';
+            const sub = document.createElement('p');
+            sub.className = 'lz-performer-sub';
+            sub.textContent = (stat.value || 0) + ' ' + labels.bookingsCount + ' · ' + (stat.subtitle || '');
+            const progress = document.createElement('div');
+            progress.className = 'lz-progress';
+            const bar = document.createElement('span');
+            bar.style.width = (stat.pct || 0) + '%';
+            progress.appendChild(bar);
+            meta.append(title, sub, progress);
+            row.append(rank, avatar, meta);
+            box.appendChild(row);
+        });
+    }
+
+    function renderCharts(data) {
+        const popularServices = data.popular_services || [];
+        const revenueTrends = data.revenue_trends || [];
+        const earningsWeek = data.earnings_per_week || {};
+        const currency = data.currency || '';
+        const popularEl = clearChart('#popularServicesChart');
+        const revenueEl = clearChart('#revenueTrendsChart');
+        const earningsEl = clearChart('#earningsWeekChart');
+
+        if (popularServices.length && popularEl) {
+            const palette = [forest, sage, tan, cream, '#5f7a72', '#b8956a'];
+            new ApexCharts(popularEl, {
+                chart: { type: 'bar', height: 280, toolbar: { show: false }, fontFamily: 'DM Sans, Cairo, sans-serif' },
+                plotOptions: { bar: { borderRadius: 10, columnWidth: '45%', distributed: true } },
+                colors: popularServices.map((_, i) => palette[i % palette.length]),
+                dataLabels: { enabled: false },
+                series: [{ name: labels.services, data: popularServices.map(s => s.count) }],
+                xaxis: {
+                    categories: popularServices.map(s => s.name),
+                    labels: { style: { fontSize: '11px', colors: chartLabelColor }, rotate: -30, trim: true },
+                    axisBorder: { show: false },
+                    axisTicks: { show: false }
+                },
+                yaxis: { labels: { style: { fontSize: '11px', colors: chartLabelColor } } },
+                grid: { borderColor: '#f1ebe3', strokeDashArray: 4 },
+                legend: { show: false },
+                tooltip: { theme: 'light' }
+            }).render();
+        } else if (popularEl) {
+            const empty = document.createElement('p');
+            empty.className = 'text-muted text-center py-5';
+            empty.textContent = labels.noData;
+            popularEl.appendChild(empty);
+        }
+
+        if (revenueTrends.length && revenueEl) {
+            new ApexCharts(revenueEl, {
+                chart: { type: 'area', height: 280, toolbar: { show: false }, zoom: { enabled: false }, fontFamily: 'DM Sans, Cairo, sans-serif' },
+                colors: [forest],
+                fill: {
+                    type: 'gradient',
+                    gradient: {
+                        shadeIntensity: 1,
+                        opacityFrom: .4,
+                        opacityTo: .05,
+                        stops: [0, 90, 100],
+                        colorStops: [
+                            { offset: 0, color: '#7d9b8f', opacity: .45 },
+                            { offset: 100, color: '#f9f6f1', opacity: .05 }
+                        ]
+                    }
+                },
+                stroke: { curve: 'smooth', width: 2.5 },
+                dataLabels: { enabled: false },
+                series: [{ name: labels.revenue, data: revenueTrends.map(r => r.revenue) }],
+                xaxis: {
+                    categories: revenueTrends.map(r => r.day),
+                    labels: { style: { fontSize: '10px', colors: chartLabelColor } },
+                    tickAmount: 10,
+                    axisBorder: { show: false },
+                    axisTicks: { show: false }
+                },
+                yaxis: {
+                    labels: {
+                        style: { fontSize: '10px', colors: chartLabelColor },
+                        formatter: val => Math.round(val).toLocaleString()
+                    }
+                },
+                grid: { borderColor: '#f1ebe3', strokeDashArray: 4 },
+                tooltip: { y: { formatter: val => val.toLocaleString() + ' ' + currency } }
+            }).render();
+        }
+
+        if (earningsEl) {
+            const insidePct = earningsWeek.inside_pct || 0;
+            const outsidePct = earningsWeek.outside_pct || 0;
+            document.querySelector('#lz-earnings-outside-pct').textContent = outsidePct + '%';
+            document.querySelector('#lz-earnings-inside-pct').textContent = insidePct + '%';
+            document.querySelector('#lz-earnings-outside-bar').style.width = outsidePct + '%';
+            document.querySelector('#lz-earnings-inside-bar').style.width = insidePct + '%';
+
+            new ApexCharts(earningsEl, {
+                chart: { type: 'donut', height: 220, fontFamily: 'DM Sans, Cairo, sans-serif' },
+                series: [outsidePct || 0.001, insidePct || 0.001],
+                labels: [labels.outside, labels.inside],
+                colors: ['#8a9a96', forest],
+                stroke: { width: 0 },
+                plotOptions: {
+                    pie: {
+                        donut: {
+                            size: '72%',
+                            labels: {
                                 show: true,
-                                fontSize: '15px',
-                                fontWeight: 700,
-                                color: forest,
-                                offsetY: -12,
-                                formatter: () => (earningsWeek.all || 0).toLocaleString()
-                            },
-                            total: {
-                                show: true,
-                                showAlways: true,
-                                label: totalLabel,
-                                fontSize: '12px',
-                                color: chartLabelColor,
-                                formatter: () => (earningsWeek.all || 0).toLocaleString() + ' ' + currency
+                                name: { show: true, fontSize: '12px', color: chartLabelColor, offsetY: 18 },
+                                value: {
+                                    show: true,
+                                    fontSize: '15px',
+                                    fontWeight: 700,
+                                    color: forest,
+                                    offsetY: -12,
+                                    formatter: () => (earningsWeek.all || 0).toLocaleString()
+                                },
+                                total: {
+                                    show: true,
+                                    showAlways: true,
+                                    label: labels.total,
+                                    fontSize: '12px',
+                                    color: chartLabelColor,
+                                    formatter: () => (earningsWeek.all || 0).toLocaleString() + ' ' + currency
+                                }
                             }
                         }
                     }
-                }
-            },
-            dataLabels: { enabled: false },
-            legend: { show: false },
-            tooltip: {
-                y: { formatter: val => val + '%' }
-            }
-        }).render();
+                },
+                dataLabels: { enabled: false },
+                legend: { show: false },
+                tooltip: { y: { formatter: val => val + '%' } }
+            }).render();
+        }
     }
+
+    function applyStats(data) {
+        const stats = data.statistics || {};
+        document.querySelector('#lz-kpi-bookings').textContent = stats.today_bookings_count || '0';
+        document.querySelector('#lz-kpi-customers').textContent = stats.customers_count || '0';
+        document.querySelector('#lz-kpi-services').textContent = stats.services_count || '0';
+        document.querySelector('#lz-kpi-revenue').textContent = stats.today_revenue || '0';
+        fillSales(data.latest_sales || []);
+        fillPerformers(data.rating_stats || []);
+        renderCharts(data);
+    }
+
+    function showLoadError() {
+        ['#lz-kpi-bookings', '#lz-kpi-customers', '#lz-kpi-services', '#lz-kpi-revenue'].forEach(function (selector) {
+            const el = document.querySelector(selector);
+            if (el) el.textContent = labels.loadError;
+        });
+        clearChart('#popularServicesChart');
+        clearChart('#revenueTrendsChart');
+        clearChart('#earningsWeekChart');
+        fillSales([]);
+        fillPerformers([]);
+    }
+
+    function loadStats(onlySales) {
+        if (!root) return;
+        const url = new URL(root.dataset.statsUrl, window.location.origin);
+        url.searchParams.set('period', root.dataset.period || 'day');
+        if (onlySales) {
+            url.searchParams.set('only', 'sales');
+            salesShimmer();
+        }
+
+        fetch(url.toString(), {
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            credentials: 'same-origin'
+        }).then(function (response) {
+            if (!response.ok) throw new Error('stats');
+            return response.json();
+        }).then(function (data) {
+            if (onlySales) fillSales(data.latest_sales || []);
+            else applyStats(data);
+        }).catch(function () {
+            if (onlySales) fillSales([]);
+            else showLoadError();
+        });
+    }
+
+    document.querySelectorAll('#lz-sales-filters [data-period]').forEach(function (button) {
+        button.addEventListener('click', function () {
+            root.dataset.period = button.dataset.period;
+            document.querySelectorAll('#lz-sales-filters [data-period]').forEach(function (item) {
+                item.classList.toggle('active', item === button);
+            });
+            loadStats(true);
+        });
+    });
+
+    loadStats(false);
 });
 </script>
 @endpush

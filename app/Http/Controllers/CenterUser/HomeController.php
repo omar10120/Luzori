@@ -20,25 +20,62 @@ class HomeController extends Controller
 {
     public function cp(Request $request)
     {
+        $salesPeriod = $this->salesPeriod($request);
+
+        return view('CenterUser.SubViews.cp', compact('salesPeriod'));
+    }
+
+    public function dashboardStats(Request $request)
+    {
+        $salesPeriod = $this->salesPeriod($request);
+        $currency = trim(get_currency());
+
+        if ($request->query('only') === 'sales') {
+            return response()->json([
+                'sales_period' => $salesPeriod,
+                'latest_sales' => $this->presentLatestSales($this->getLatestSales($salesPeriod), $currency),
+                'currency' => $currency,
+            ]);
+        }
+
         $today = now()->format('Y-m-d');
         $thisMonth = now()->format('Y-m');
-        $salesPeriod = in_array($request->input('period'), ['day', 'week', 'month'], true)
+        $statistics = $this->getStatistics($today, $thisMonth);
+
+        return response()->json([
+            'statistics' => [
+                'today_bookings_count' => number_format($statistics['today_bookings_count']),
+                'customers_count' => number_format($statistics['customers_count']),
+                'services_count' => number_format($statistics['services_count']),
+                'today_revenue' => number_format($statistics['today_revenue'], 0).' '.$currency,
+            ],
+            'popular_services' => $this->getPopularServices($thisMonth),
+            'revenue_trends' => $this->getRevenueTrends(now()->year, now()->month),
+            'earnings_per_week' => $this->getEarningsPerWeek(),
+            'latest_sales' => $this->presentLatestSales($this->getLatestSales($salesPeriod), $currency),
+            'rating_stats' => $this->getRatingStats($statistics),
+            'currency' => $currency,
+            'sales_period' => $salesPeriod,
+        ]);
+    }
+
+    private function salesPeriod(Request $request): string
+    {
+        return in_array($request->input('period'), ['day', 'week', 'month'], true)
             ? $request->input('period')
             : 'day';
+    }
 
-        $statistics = $this->getStatistics($today, $thisMonth);
-        $year = now()->year;
-        $month = now()->month;
+    private function presentLatestSales(array $rows, string $currency): array
+    {
+        return array_map(function (array $sale) use ($currency) {
+            $sale['total_display'] = number_format($sale['total'], 2).' '.$currency;
+            $sale['payment_label'] = ucfirst(str_replace('_', ' ', (string) $sale['payment_type']));
+            $sale['status_label'] = ucfirst((string) $sale['status']);
+            $sale['status_class'] = ($sale['status'] ?? '') === 'pending' ? 'pending' : 'confirmed';
 
-        $chartData = [
-            'popular_services' => $this->getPopularServices($thisMonth),
-            'revenue_trends' => $this->getRevenueTrends($year, $month),
-            'earnings_per_week' => $this->getEarningsPerWeek(),
-            'latest_sales' => $this->getLatestSales($salesPeriod),
-            'rating_stats' => $this->getRatingStats($statistics),
-        ];
-
-        return view('CenterUser.SubViews.cp', compact('statistics', 'chartData', 'salesPeriod'));
+            return $sale;
+        }, $rows);
     }
     
     private function getStatistics($today, $thisMonth)
