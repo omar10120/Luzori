@@ -495,19 +495,6 @@ $(function () {
             return;
         }
 
-        if (currentSource === 'main_stock') {
-            const insufficientItem = items.find(function (item) {
-                return Number(item.order_qty) * branchIds.length > Number(item.available_quantity);
-            });
-            if (insufficientItem) {
-                $('#listError').append($('<li>').text(
-                    '{{ __('field.stock_order_main_stock_insufficient') }}: ' + insufficientItem.name
-                ));
-                $('#alertError').removeClass('d-none');
-                return;
-            }
-        }
-
         $btn.prop('disabled', true);
 
         $.ajax({
