@@ -6,7 +6,7 @@
         || $options['row_details']
         || isset($options['show']);
 @endphp
-<div class="lz-action-icons" onclick="event.stopPropagation()">
+<div class="lz-action-icons{{ (!$openSideDetails && !$hasSaleDrawer) ? ' lz-no-auto-details' : '' }}" onclick="event.stopPropagation()">
     @if($hasSaleDrawer)
         <a href="javascript:void(0)" class="lz-action-btn view-sale-side-details lz-view-side-details"
             title="{{ __('general.view_details') }}"

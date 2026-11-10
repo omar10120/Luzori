@@ -74,7 +74,11 @@
                 </div>
                 <h1 class="lz-page-title">{{ __('general.manage') }} {{ $title }}</h1>
             </div>
-            <div class="lz-page-actions" id="lz-stockorders-actions"><a href="{{ route('center_user.stockorders.create') }}" class="btn btn-luzori-primary btn-sm mx-1 px-3 py-2 lz-btn-add-new">{{ __('general.add_new') }} <i class="ti ti-plus"></i></a></div>
+            <div class="lz-page-actions" id="lz-stockorders-actions">
+                @if(auth('center_user')->user()?->can('CREATE_STOCKORDERS', 'center_api'))
+                    <a href="{{ route('center_user.stockorders.create') }}" class="btn btn-luzori-primary btn-sm mx-1 px-3 py-2 lz-btn-add-new">{{ __('general.add_new') }} <i class="ti ti-plus"></i></a>
+                @endif
+            </div>
         </div>
 
         <div class="card lz-table-card">

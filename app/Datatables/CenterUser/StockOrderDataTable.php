@@ -24,13 +24,18 @@ class StockOrderDataTable extends DataTable
                 $id = $item->id;
                 $model = $this->model;
                 $user = auth('center_user')->user();
-                $canUpdate = $user?->can('UPDATE_STOCKTAKES', 'center_api');
-                $canDelete = $user?->can('DELETE_STOCKTAKES', 'center_api');
+                $canShow = $user?->can('SHOW_STOCKORDERS', 'center_api') || $user?->can('SHOW_STOCKTAKES', 'center_api');
+                $canUpdate = $user?->can('UPDATE_STOCKORDERS', 'center_api') || $user?->can('UPDATE_STOCKTAKES', 'center_api');
+                $canDelete = $user?->can('DELETE_STOCKORDERS', 'center_api') || $user?->can('DELETE_STOCKTAKES', 'center_api');
                 $options = [
-                    'show' => true,
+                    'row_details' => false,
                     'operation' => DeleteActionEnum::FORCE_DELETE->value,
                     'with_trashed' => 1,
                 ];
+
+                if ($canShow) {
+                    $options['show'] = true;
+                }
 
                 if ($canDelete) {
                     $options['delete'] = true;

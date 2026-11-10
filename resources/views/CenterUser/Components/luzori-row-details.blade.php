@@ -354,6 +354,7 @@
         api.rows({ page: 'current' }).every(function () {
             const $tr = $(this.node());
             if (!$tr.length || $tr.hasClass('child')) return;
+            if ($tr.find('.lz-no-auto-details').length) return;
             if ($tr.find('.lz-open-row-details, .view-sale-side-details, .lz-view-side-details').length) return;
 
             const btn = detailsButtonHtml();
