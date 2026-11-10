@@ -54,9 +54,16 @@
                                 @php
                                     $available = null;
                                     if ($order->source_type === 'main_stock') {
-                                        $available = \App\Models\MainStock::where('product_id', $item->product_id)
-                                            ->when($item->sku_id, fn ($q) => $q->where('sku_id', $item->sku_id))
-                                            ->value('quantity') ?? 0;
+                                        $skuId = $item->product?->primarySku?->id;
+                                        $stock = \App\Models\MainStock::where('product_id', $item->product_id)
+                                            ->when(
+                                                $skuId,
+                                                fn ($q) => $q->where('sku_id', $skuId),
+                                                fn ($q) => $q->whereNull('sku_id')
+                                            )
+                                            ->first()
+                                            ?: \App\Models\MainStock::where('product_id', $item->product_id)->first();
+                                        $available = (int) ($stock?->quantity ?? 0);
                                     }
                                 @endphp
                                 <tr data-item-id="{{ $item->id }}">
@@ -78,8 +85,9 @@
                                         </td>
                                     @endif
                                     <td>
-                                        <input type="number" min="0" step="0.01" class="form-control form-control-sm receive-qty"
-                                               value="{{ number_format((float) ($item->received_qty ?? $item->order_qty), 2, '.', '') }}">
+                                        <input type="number" min="0" step="1" class="form-control form-control-sm receive-qty"
+                                               max="{{ (int) $item->order_qty }}"
+                                               value="{{ (int) ($item->received_qty ?? $item->order_qty) }}">
                                     </td>
                                     <td class="supplier-cost-column">
                                         <div class="input-group input-group-sm">
@@ -138,20 +146,10 @@ $(function () {
 
     $(document).on('input', '.receive-qty, .receive-unit-cost', recalc);
 
-    // Client-side guard: don't let received > available for main-stock transfers
     $(document).on('input', '.receive-qty', function () {
-        if (!isTransfer) return;
-        const $row       = $(this).closest('tr');
-        const ordered    = Number($row.find('td').eq(1).text().replace(/,/g, '')) || 0;
-        const available  = Number($row.find('td').eq(2).text().replace(/,/g, '')) || 0;
-        const received   = Number($(this).val() || 0);
-        const maxAllowed = Math.min(ordered, available);
-
-        if (received > maxAllowed) {
-            $(this).addClass('is-invalid');
-        } else {
-            $(this).removeClass('is-invalid');
-        }
+        const ordered = Number($(this).attr('max') || 0);
+        const received = Number($(this).val() || 0);
+        $(this).toggleClass('is-invalid', received > ordered);
     });
 
     $('#btnReceiveOrder').on('click', function () {
