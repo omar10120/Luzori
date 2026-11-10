@@ -58,8 +58,14 @@ class InventoryMovementDataTable extends DataTable
                 : $branchId;
         }
 
-        return $model->query()
-            ->with(['translation'])
+        $query = $model->query()
+            ->with(['translation']);
+
+        if ($branchId) {
+            $query->whereHas('productBranches', fn ($q) => $q->where('branch_id', $branchId));
+        }
+
+        return $query
             ->withSum([
                 'productBranches as current_stock' => function ($q) use ($branchId) {
                     if ($branchId) {

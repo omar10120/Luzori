@@ -47,6 +47,7 @@ class InventoryMovementController extends Controller
 
         $products = Product::query()
             ->with('translation')
+            ->when($branchId, fn ($q) => $q->whereHas('productBranches', fn ($pq) => $pq->where('branch_id', $branchId)))
             ->withSum([
                 'productBranches as current_stock' => function ($q) use ($branchId) {
                     if ($branchId) {
