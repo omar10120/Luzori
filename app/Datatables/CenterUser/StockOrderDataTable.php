@@ -73,7 +73,42 @@ class StockOrderDataTable extends DataTable
             ->editColumn('created_at', function ($row) {
                 return $row->created_at ?: '—';
             })
-            ->rawColumns(['action', 'status', 'order_number', 'total_cost'])
+            ->addColumn('source_type_label', function ($row) {
+                return $row->source_type === 'main_stock'
+                    ? e(__('field.main_stock'))
+                    : e(__('locale.suppliers'));
+            })
+            ->addColumn('order_items', function ($row) {
+                if ($row->items->isEmpty()) {
+                    return '—';
+                }
+
+                $hideCost = $row->source_type === 'main_stock';
+                $html = '<div class="lz-order-items">';
+                foreach ($row->items as $item) {
+                    $sku = $item->product?->primarySku?->sku;
+                    $received = $item->received_qty !== null
+                        ? number_format((float) $item->received_qty, 2)
+                        : '—';
+                    $html .= '<div class="lz-order-item">';
+                    $html .= '<div class="fw-semibold">' . e($item->product->name ?? '-') . '</div>';
+                    if ($sku) {
+                        $html .= '<small class="text-muted">SKU: ' . e($sku) . '</small>';
+                    }
+                    $html .= '<div class="small text-muted">';
+                    $html .= e(__('field.ordered')) . ': ' . number_format((float) $item->order_qty, 2);
+                    $html .= ' · ' . e(__('field.received')) . ': ' . $received;
+                    if (!$hideCost) {
+                        $html .= '<br>' . e(__('field.unit_cost')) . ': ' . number_format((float) $item->unit_cost, 2) . ' ' . e(get_currency());
+                        $html .= ' · ' . e(__('field.total_cost')) . ': ' . number_format((float) $item->line_total, 2) . ' ' . e(get_currency());
+                    }
+                    $html .= '</div></div>';
+                }
+                $html .= '</div>';
+
+                return $html;
+            })
+            ->rawColumns(['action', 'status', 'order_number', 'total_cost', 'order_items'])
             ->setRowId('id');
     }
 
@@ -81,7 +116,7 @@ class StockOrderDataTable extends DataTable
     {
         $query = $model->query()
             ->withTrashed()
-            ->with(['supplier', 'branches.translation'])
+            ->with(['supplier', 'branches.translation', 'items.product.translation', 'items.product.primarySku'])
             ->orderBy('stock_orders.id', 'DESC');
 
         if ((int) get_user_role() !== 1) {
@@ -166,6 +201,8 @@ class StockOrderDataTable extends DataTable
             Column::make('deliver_from')->searchable(true)->title(__('field.deliver_from'))->responsivePriority(3)->addClass('all'),
             Column::make('total_cost')->searchable(false)->title(__('field.total_cost'))->responsivePriority(2)->addClass('all'),
             Column::computed('status')->searchable(false)->title(__('field.status'))->responsivePriority(1)->addClass('all'),
+            Column::computed('source_type_label')->searchable(false)->title(__('field.stock_order_source'))->visible(false),
+            Column::computed('order_items')->searchable(false)->orderable(false)->title(__('locale.products'))->visible(false),
         ];
     }
 
