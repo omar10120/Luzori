@@ -5,6 +5,14 @@
 @section('vendor-style')
     @vite(['resources/assets/vendor/libs/select2/select2.scss', 'resources/assets/vendor/libs/bootstrap-select/bootstrap-select.scss', 'resources/assets/vendor/libs/tagify/tagify.scss', 'resources/assets/vendor/libs/bs-stepper/bs-stepper.scss'])
     <style>
+        .lz-sales-cart-page .select2-results__option.loading-results,
+        #selectCustomerModal .select2-results__option.loading-results {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #7a8582;
+            font-weight: 600;
+        }
         .lz-sales-cart-page .lz-form-card {
             border: none !important;
             border-radius: 18px !important;
