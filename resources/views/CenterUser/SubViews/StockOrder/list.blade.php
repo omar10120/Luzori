@@ -45,6 +45,10 @@
             background: #f3ebe0;
             color: #8a6a3d;
         }
+        .lz-stockorders-table .lz-status-badge.is-reception-receive {
+            background: #e8eef7;
+            color: #2f4d7a;
+        }
         table.dataTable.dtr-column > tbody > tr > td.dtr-control:before,
         table.dataTable.dtr-column.collapsed > tbody > tr > td.dtr-control:before {
             border-radius: 50%;

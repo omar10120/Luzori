@@ -70,6 +70,13 @@
             <i class="ti ti-package-import"></i>
         </a>
     @endisset
+    @isset($options['reception_receive_url'])
+        <a class="lz-action-btn" href="javascript:void(0)"
+            title="{{ __('field.reception_receive') }}"
+            onclick="event.preventDefault(); event.stopPropagation(); receptionReceiveOrder('{{ $options['reception_receive_url'] }}')">
+            <i class="ti ti-package"></i>
+        </a>
+    @endisset
     {{-- Optional: open full show page (not the side drawer) --}}
     @isset($options['show_full_page'])
         <a class="lz-action-btn" href="{{ route($route . '.show', ['id' => $id]) }}"
@@ -102,6 +109,46 @@
 @once
     @routes
     <script>
+        if (typeof receptionReceiveOrder !== 'function') {
+            function receptionReceiveOrder(url) {
+                Swal.fire({
+                    title: "{{ __('field.reception_receive') }}",
+                    icon: 'question',
+                    html: "{{ __('field.reception_receive_confirm') }}",
+                    showDenyButton: true,
+                    confirmButtonText: "{{ __('field.reception_receive') }}",
+                    denyButtonText: "{{ __('general.cancel') }}",
+                }).then((result) => {
+                    if (!result.isConfirmed) return;
+                    $.ajax({
+                        url: url,
+                        type: 'POST',
+                        dataType: 'json',
+                        data: { _token: '{{ csrf_token() }}' },
+                        success: function() {
+                            Swal.fire({
+                                title: "{{ __('general.success') }}",
+                                icon: 'success',
+                                timer: 3000
+                            });
+                            if ($('.table').DataTable().ajax.json())
+                                $('.table').DataTable().ajax.reload();
+                            else
+                                window.location.reload();
+                        },
+                        error: function(response) {
+                            fireMessage("{{ __('admin.ok') }}",
+                                (response.responseJSON && response.responseJSON.message)
+                                    ? response.responseJSON.message
+                                    : "{{ __('admin.an_error_occurred') }}",
+                                "",
+                                'error');
+                        }
+                    });
+                });
+            }
+        }
+
         if (typeof deleteEntity !== 'function') {
             function deleteEntity(model, id, operation, withTrashed) {
                 var url = route('center_user.delete', {

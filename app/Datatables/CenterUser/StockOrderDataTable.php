@@ -24,8 +24,10 @@ class StockOrderDataTable extends DataTable
                 $id = $item->id;
                 $model = $this->model;
                 $user = auth('center_user')->user();
+                $isSuperAdmin = (int) get_user_role() === 1;
                 $canShow = $user?->can('SHOW_STOCKORDERS', 'center_api') || $user?->can('SHOW_STOCKTAKES', 'center_api');
                 $canUpdate = $user?->can('UPDATE_STOCKORDERS', 'center_api') || $user?->can('UPDATE_STOCKTAKES', 'center_api');
+                $canReceptionReceive = $user?->can('RECEPTION_RECEIVE_STOCKORDERS', 'center_api') || $canUpdate;
                 $canDelete = $user?->can('DELETE_STOCKORDERS', 'center_api') || $user?->can('DELETE_STOCKTAKES', 'center_api');
                 $options = [
                     'row_details' => false,
@@ -41,8 +43,12 @@ class StockOrderDataTable extends DataTable
                     $options['delete'] = true;
                 }
 
-                if ($canUpdate && $item->status === 'ordered') {
+                if ($isSuperAdmin && $canUpdate && $item->status === StockOrder::STATUS_ORDERED) {
                     $options['receive_url'] = route('center_user.stockorders.receive', ['id' => $id]);
+                }
+
+                if ($canReceptionReceive && $item->status === StockOrder::STATUS_RECEIVED) {
+                    $options['reception_receive_url'] = route('center_user.stockorders.receptionReceive', ['id' => $id]);
                 }
 
                 return view()->make('_partials.center_action_icons', compact('id', 'route', 'options', 'model'))->render();
@@ -69,11 +75,13 @@ class StockOrderDataTable extends DataTable
                 return '<span class="lz-cost">' . number_format((float) $row->total_cost, 2) . ' ' . e(get_currency()) . '</span>';
             })
             ->editColumn('status', function ($row) {
-                $class = $row->status === 'received' ? 'is-received' : 'is-ordered';
-                $label = $row->status === 'received'
-                    ? __('field.received')
-                    : __('field.ordered');
-                return '<span class="lz-status-badge ' . $class . '">' . e($label) . '</span>';
+                $map = [
+                    StockOrder::STATUS_RECEIVED => ['class' => 'is-received', 'label' => __('field.received')],
+                    StockOrder::STATUS_RECEPTION_RECEIVE => ['class' => 'is-reception-receive', 'label' => __('field.reception_receive')],
+                    StockOrder::STATUS_ORDERED => ['class' => 'is-ordered', 'label' => __('field.ordered')],
+                ];
+                $status = $map[$row->status] ?? $map[StockOrder::STATUS_ORDERED];
+                return '<span class="lz-status-badge ' . $status['class'] . '">' . e($status['label']) . '</span>';
             })
             ->editColumn('created_at', function ($row) {
                 return $row->created_at ?: '—';

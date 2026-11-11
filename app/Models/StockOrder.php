@@ -15,6 +15,10 @@ class StockOrder extends Model
 {
     use HasFactory, CreatedAtTrait, UpdatedAtTrait, SoftDeletes;
 
+    public const STATUS_ORDERED = 'ordered';
+    public const STATUS_RECEIVED = 'received';
+    public const STATUS_RECEPTION_RECEIVE = 'reception-receive';
+
     protected $fillable = [
         'order_number',
         'product_supplier_id',

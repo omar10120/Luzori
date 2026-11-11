@@ -11,7 +11,9 @@
                 <div>
                     <h2 class="mb-1">{{ $order->order_number }}</h2>
                     <p class="text-muted mb-0">
-                        @if($order->status === 'received')
+                        @if($order->status === 'reception-receive')
+                            <span class="badge bg-label-info">{{ __('field.reception_receive') }}</span>
+                        @elseif($order->status === 'received')
                             <span class="badge bg-label-success">{{ __('field.received') }}</span>
                         @else
                             <span class="badge bg-label-warning">{{ __('field.ordered') }}</span>
@@ -20,8 +22,14 @@
                 </div>
                 <div class="d-flex gap-2">
                     <a href="{{ route('center_user.stockorders.index') }}" class="btn btn-outline-secondary">{{ __('general.close') }}</a>
-                    @if($order->status === 'ordered')
+                    @if($order->status === 'ordered' && (int) get_user_role() === 1)
                         <a href="{{ route('center_user.stockorders.receive', ['id' => $order->id]) }}" class="btn btn-primary">{{ __('general.receive') }}</a>
+                    @endif
+                    @if($order->status === 'received' && (auth('center_user')->user()?->can('RECEPTION_RECEIVE_STOCKORDERS', 'center_api') || auth('center_user')->user()?->can('UPDATE_STOCKORDERS', 'center_api')))
+                        <form method="POST" action="{{ route('center_user.stockorders.receptionReceive', ['id' => $order->id]) }}" class="d-inline">
+                            @csrf
+                            <button type="submit" class="btn btn-primary">{{ __('field.reception_receive') }}</button>
+                        </form>
                     @endif
                 </div>
             </div>

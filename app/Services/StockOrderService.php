@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\InventoryMovement;
 use App\Models\ProductSupplier;
 use App\Models\StockOrder;
 use Illuminate\Support\Facades\DB;
@@ -86,19 +87,6 @@ class StockOrderService
                 }
             }
 
-            if ($order->source_type === 'main_stock') {
-                app(ReceiveTransferOrder::class)->receive($order, $itemsById);
-                $order->update([
-                    'status' => 'received',
-                    'received_at' => now(),
-                    'total_cost' => 0,
-                ]);
-
-                return $order->fresh(['items.product.translation', 'branches.translation', 'supplier']);
-            }
-
-            $purchaseReceiver = app(ReceivePurchaseOrder::class);
-
             foreach ($order->items as $item) {
                 if (!$itemsById->has($item->id)) {
                     continue;
@@ -106,7 +94,7 @@ class StockOrderService
 
                 $payload = $itemsById->get($item->id);
                 $receivedQty = (float) $payload['received_qty'];
-                $unitCost = (float) $payload['unit_cost'];
+                $unitCost = $order->source_type === 'supplier' ? (float) $payload['unit_cost'] : 0;
                 if ($receivedQty > (float) $item->order_qty) {
                     throw new Exception('Received quantity cannot exceed the ordered quantity');
                 }
@@ -118,14 +106,58 @@ class StockOrderService
                     'unit_cost' => $unitCost,
                     'line_total' => $lineTotal,
                 ]);
-
-                $purchaseReceiver->receive($order, $item, (int) $receivedQty);
             }
 
             $order->update([
-                'status' => 'received',
+                'status' => StockOrder::STATUS_RECEIVED,
                 'received_at' => now(),
-                'total_cost' => round($totalCost, 2),
+                'total_cost' => $order->source_type === 'main_stock' ? 0 : round($totalCost, 2),
+            ]);
+
+            return $order->fresh(['items.product.translation', 'branches.translation', 'supplier']);
+        });
+    }
+
+    public function receptionReceive(StockOrder $order): StockOrder
+    {
+        return DB::transaction(function () use ($order) {
+            $order = StockOrder::query()->lockForUpdate()->findOrFail($order->id);
+            if ($order->status !== StockOrder::STATUS_RECEIVED) {
+                throw new Exception('Admin must receive this order first');
+            }
+
+            $order->load(['items.product.primarySku', 'branches']);
+            $alreadyApplied = InventoryMovement::query()
+                ->where('reference_type', class_basename($order))
+                ->where('reference_id', $order->id)
+                ->exists();
+
+            if (!$alreadyApplied) {
+                $itemsById = $order->items->mapWithKeys(function ($item) {
+                    $qty = $item->received_qty !== null
+                        ? (float) $item->received_qty
+                        : (float) $item->order_qty;
+
+                    return [$item->id => [
+                        'id' => $item->id,
+                        'received_qty' => $qty,
+                        'unit_cost' => (float) $item->unit_cost,
+                    ]];
+                });
+
+                if ($order->source_type === 'main_stock') {
+                    app(ReceiveTransferOrder::class)->receive($order, $itemsById);
+                } else {
+                    $purchaseReceiver = app(ReceivePurchaseOrder::class);
+                    foreach ($order->items as $item) {
+                        $qty = (int) ($itemsById[$item->id]['received_qty'] ?? 0);
+                        $purchaseReceiver->receive($order, $item, $qty);
+                    }
+                }
+            }
+
+            $order->update([
+                'status' => StockOrder::STATUS_RECEPTION_RECEIVE,
             ]);
 
             return $order->fresh(['items.product.translation', 'branches.translation', 'supplier']);

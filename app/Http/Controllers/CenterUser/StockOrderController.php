@@ -192,6 +192,10 @@ class StockOrderController extends Controller
 
     public function receive($id)
     {
+        if ((int) get_user_role() !== 1) {
+            return abort(403);
+        }
+
         $can = 'UPDATE_' . Str::upper($this->plural);
         if (!auth('center_user')->user()->can($can, 'center_api')) {
             return abort(403);
@@ -225,6 +229,10 @@ class StockOrderController extends Controller
 
     public function receiveStore(StockOrderReceiveRequest $request, $id)
     {
+        if ((int) get_user_role() !== 1) {
+            return abort(403);
+        }
+
         $can = 'UPDATE_' . Str::upper($this->plural);
         if (!auth('center_user')->user()->can($can, 'center_api')) {
             return abort(403);
@@ -242,6 +250,39 @@ class StockOrderController extends Controller
             );
         } catch (\Exception $e) {
             return MyHelper::responseJSON($e->getMessage() ?: __('admin.an_error_occurred'), Response::HTTP_BAD_REQUEST);
+        }
+    }
+
+    public function receptionReceive($id)
+    {
+        $user = auth('center_user')->user();
+        $can = $user?->can('RECEPTION_RECEIVE_STOCKORDERS', 'center_api')
+            || $user?->can('UPDATE_STOCKORDERS', 'center_api')
+            || $user?->can('UPDATE_STOCKTAKES', 'center_api');
+        if (!$can) {
+            return abort(403);
+        }
+
+        $order = $this->stockOrdersQuery()->with(['items', 'branches'])->findOrFail($id);
+
+        try {
+            $order = $this->stockOrderService->receptionReceive($order);
+
+            if (request()->ajax() || request()->expectsJson()) {
+                return MyHelper::responseJSON(
+                    __('admin.operation_done_successfully'),
+                    Response::HTTP_OK,
+                    ['id' => $order->id, 'redirect_url' => route($this->indexRoute)]
+                );
+            }
+
+            return redirect()->route($this->indexRoute)->with('success', __('admin.operation_done_successfully'));
+        } catch (\Exception $e) {
+            if (request()->ajax() || request()->expectsJson()) {
+                return MyHelper::responseJSON($e->getMessage() ?: __('admin.an_error_occurred'), Response::HTTP_BAD_REQUEST);
+            }
+
+            return redirect()->back()->with('error', $e->getMessage() ?: __('admin.an_error_occurred'));
         }
     }
 
