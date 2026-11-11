@@ -328,7 +328,8 @@ class SalesReportController extends Controller
                     $result[$date][$walletKey] += $users_wallet->invoiced_amount;
 
                     if (!empty($users_wallet->commission)) {
-                        $result[$date]['commission'] += $users_wallet->commission;
+                        $walletBase = floatval($users_wallet->invoiced_amount ?? $users_wallet->amount ?? 0);
+                        $result[$date]['commission'] += resolve_stored_commission($users_wallet->commission, $users_wallet->commission_type, $walletBase, false);
                     }
                 }
             }
@@ -369,6 +370,7 @@ class SalesReportController extends Controller
             if (!empty($BuyProduct)) {
                 foreach ($BuyProduct as $BuyProduct_item) {
                     $date = date('Y-m-d', strtotime($BuyProduct_item->created_at));
+                    $orderPrice = 0;
                     if (!$BuyProduct_item->details->isEmpty()) {
                         foreach ($BuyProduct_item->details as $detail) {
                             // Ensure payment type exists in result array
@@ -384,11 +386,12 @@ class SalesReportController extends Controller
                                 $product_price -= ($product_price * $BuyProduct_item->discount) / 100;
                             }
                             $result[$date][$BuyProduct_item->payment_type] += $product_price;
+                            $orderPrice += $product_price;
                         }
                     }
 
                     if (!empty($BuyProduct_item->commission)) {
-                        $result[$date]['commission'] += $BuyProduct_item->commission;
+                        $result[$date]['commission'] += resolve_stored_commission($BuyProduct_item->commission, $BuyProduct_item->commission_type, $orderPrice, false);
                     }
                 }
             }

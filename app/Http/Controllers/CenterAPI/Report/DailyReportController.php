@@ -341,8 +341,11 @@ class DailyReportController extends Controller
                     }
 
                     if (isset($users_with_commission[$BuyProduct_item->worker_id]) && $BuyProduct_item->commission) {
-                        // Commission is stored as percentage, calculate actual amount
-                        $product_commission_amount = ($orderPrice * floatval($BuyProduct_item->commission)) / 100;
+                        if ($BuyProduct_item->commission_type === 'fixed') {
+                            $product_commission_amount = floatval($BuyProduct_item->commission);
+                        } else {
+                            $product_commission_amount = ($orderPrice * floatval($BuyProduct_item->commission)) / 100;
+                        }
                         array_push($users_with_commission[$BuyProduct_item->worker_id], $product_commission_amount);
                     }
 

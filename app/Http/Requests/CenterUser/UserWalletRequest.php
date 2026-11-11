@@ -29,7 +29,8 @@ class UserWalletRequest extends FormRequest
             'user_id' => 'required|exists:users,id',
             'wallet_type' => 'required|string',
             'worker_id' => 'nullable|exists:workers,id',
-            'commission' => Rule::requiredIf($this->worker_id != ''),
+            'commission' => Rule::requiredIf(fn () => $this->filled('worker_id') && get_allowed_commission_type('coupon')),
+            'commission_type' => 'nullable|in:percentage,fixed',
             'serial_number' => 'nullable|string|unique:users_wallets,serial_number',
         ];
     }

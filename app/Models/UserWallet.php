@@ -19,6 +19,7 @@ class UserWallet extends Model
         'amount',
         'invoiced_amount',
         'commission',
+        'commission_type',
         'wallet_id',
         'user_id',
         'worker_id',

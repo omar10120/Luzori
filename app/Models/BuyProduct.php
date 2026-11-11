@@ -18,6 +18,7 @@ class BuyProduct extends Model
     protected $fillable = [
         'payment_type',
         'commission',
+        'commission_type',
         'discount',
         'sales_worker_id',
         'global_user_id',

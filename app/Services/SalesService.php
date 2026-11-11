@@ -825,12 +825,25 @@ class SalesService
 
         // Get common fields from first product (they should all have same discount, etc.)
         $firstProduct = $productItems[0];
-        $workerPercentage = (float) Worker::whereKey($firstProduct['worker_id'] ?? null)->value('percentage');
+        $commissionFromCart = $firstProduct['commission'] ?? null;
+        $commissionTypeFromCart = $firstProduct['commission_type'] ?? null;
+        if (array_key_exists('commission', $firstProduct) && ($commissionFromCart === null || $commissionFromCart === '')) {
+            $commissionValue = null;
+            $commissionTypeValue = null;
+        } elseif ($commissionFromCart !== null && $commissionFromCart !== '') {
+            $commissionValue = (float) $commissionFromCart;
+            $commissionTypeValue = $commissionTypeFromCart ?: 'percentage';
+        } else {
+            $workerPercentage = (float) Worker::whereKey($firstProduct['worker_id'] ?? null)->value('percentage');
+            $commissionValue = $workerPercentage > 0 ? $workerPercentage : null;
+            $commissionTypeValue = null;
+        }
         
         $buyProduct = BuyProduct::create([
-            'payment_type' => $paymentType, // Use payment type from payment section (sale payment_type)
+            'payment_type' => $paymentType,
             'discount' => $firstProduct['discount'] ?? null,
-            'commission' => $workerPercentage > 0 ? $workerPercentage : null,
+            'commission' => $commissionValue,
+            'commission_type' => $commissionTypeValue,
             'sales_worker_id' => $firstProduct['sales_worker_id'] ?? null,
             'worker_id' => $firstProduct['worker_id'] ?? null,
             'created_by' => auth('center_user')->id() ?? auth('center_api')->id(),
@@ -1014,6 +1027,10 @@ class SalesService
             if (empty($existingUserWallet->serial_number) && !empty($item['serial_number'])) {
                 $updates['serial_number'] = $item['serial_number'];
             }
+            if (array_key_exists('commission', $item)) {
+                $updates['commission'] = $item['commission'];
+                $updates['commission_type'] = $item['commission_type'] ?? null;
+            }
             if (!empty($updates)) {
                 $existingUserWallet->update($updates);
             }
@@ -1034,6 +1051,7 @@ class SalesService
             'amount' => $item['amount'] ?? $wallet->amount,
             'invoiced_amount' => $item['invoiced_amount'] ?? $wallet->invoiced_amount,
             'commission' => $item['commission'] ?? null,
+            'commission_type' => $item['commission_type'] ?? null,
             'worker_id' => $item['worker_id'] ?? null,
             'branch_id' => $resolvedBranchId,
             'created_by' => $centerUserId,

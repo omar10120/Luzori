@@ -171,3 +171,25 @@ function get_allowed_commission_type($type = 'booking')
         return null;
     }
 }
+
+function get_allowed_commission_rates(): array
+{
+    return [10, 6.6];
+}
+
+function resolve_stored_commission($commission, ?string $type, float $base, bool $legacyNullIsPercentage = true): float
+{
+    if ($commission === null || $commission === '') {
+        return 0;
+    }
+
+    $value = floatval($commission);
+    if ($type === 'fixed') {
+        return $value;
+    }
+    if ($type === 'percentage' || ($type === null && $legacyNullIsPercentage)) {
+        return ($base * $value) / 100;
+    }
+
+    return $value;
+}

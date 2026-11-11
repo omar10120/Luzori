@@ -124,9 +124,11 @@ class CommissionReportController extends Controller
                 foreach ($users_wallets as $users_wallet) {
                     $date = date('Y-m-d', strtotime($users_wallet->created_at));
                     if (!empty($users_wallet->commission) && isset($result[$date][$users_wallet->worker_id])) {
-                        $result[$date][$users_wallet->worker_id] += $users_wallet->commission;
-                        $users_with_totals[$users_wallet->worker_id] += $users_wallet->commission;
-                        $result[$date]["total"] += $users_wallet->commission;
+                        $walletBase = floatval($users_wallet->invoiced_amount ?? $users_wallet->amount ?? 0);
+                        $commissionAmount = resolve_stored_commission($users_wallet->commission, $users_wallet->commission_type, $walletBase, false);
+                        $result[$date][$users_wallet->worker_id] += $commissionAmount;
+                        $users_with_totals[$users_wallet->worker_id] += $commissionAmount;
+                        $result[$date]["total"] += $commissionAmount;
                     }
                 }
             }
@@ -142,10 +144,19 @@ class CommissionReportController extends Controller
             if (!$BuyProduct->isEmpty()) {
                 foreach ($BuyProduct as $BuyProduct_item) {
                     $date = date('Y-m-d', strtotime($BuyProduct_item->created_at));
+                    $orderPrice = 0;
+                    foreach ($BuyProduct_item->details as $detail) {
+                        $linePrice = floatval($detail->price);
+                        if (!empty($BuyProduct_item->discount)) {
+                            $linePrice -= ($linePrice * $BuyProduct_item->discount) / 100;
+                        }
+                        $orderPrice += $linePrice;
+                    }
                     if (!empty($BuyProduct_item->commission) && isset($result[$date][$BuyProduct_item->worker_id])) {
-                        $result[$date][$BuyProduct_item->worker_id] += $BuyProduct_item->commission;
-                        $result[$date]["total"] += $BuyProduct_item->commission;
-                        $users_with_totals[$BuyProduct_item->worker_id] += $BuyProduct_item->commission;
+                        $commissionAmount = resolve_stored_commission($BuyProduct_item->commission, $BuyProduct_item->commission_type, $orderPrice, false);
+                        $result[$date][$BuyProduct_item->worker_id] += $commissionAmount;
+                        $result[$date]["total"] += $commissionAmount;
+                        $users_with_totals[$BuyProduct_item->worker_id] += $commissionAmount;
                     }
                 }
             }

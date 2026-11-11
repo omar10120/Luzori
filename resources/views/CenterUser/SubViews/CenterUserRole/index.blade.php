@@ -74,6 +74,66 @@
         .lz-role-form-page .lz-commission-card .card-body {
             padding: 1rem 1.15rem !important;
         }
+        .lz-role-form-page .lz-commission-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+            padding: .75rem 0;
+            border-bottom: 1px solid #efe6d8;
+        }
+        .lz-role-form-page .lz-commission-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        .lz-role-form-page .lz-commission-row-label {
+            font-weight: 700;
+            color: #002b26;
+            min-width: 11rem;
+        }
+        .lz-role-form-page .lz-commission-switch {
+            display: inline-flex;
+            background: #f7f3ec;
+            border: 1px solid #efe6d8;
+            border-radius: 999px;
+            padding: .2rem;
+            gap: .15rem;
+        }
+        .lz-role-form-page .lz-commission-switch .form-check {
+            margin: 0;
+            padding: 0;
+        }
+        .lz-role-form-page .lz-commission-switch .form-check-input {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .lz-role-form-page .lz-commission-switch .form-check-label {
+            display: inline-block;
+            border-radius: 999px;
+            padding: .35rem .85rem;
+            font-size: .82rem;
+            font-weight: 700;
+            color: #5c6b68;
+            cursor: pointer;
+        }
+        .lz-role-form-page .lz-commission-switch .form-check-input:checked + .form-check-label {
+            background: #002b26;
+            color: #fff;
+        }
+        .lz-role-form-page .lz-commission-rates {
+            display: none;
+            gap: .4rem;
+        }
+        .lz-role-form-page .lz-commission-rates span {
+            background: #efe2d0;
+            color: #7a5a2f;
+            border-radius: 999px;
+            padding: .28rem .7rem;
+            font-size: .78rem;
+            font-weight: 700;
+        }
         .lz-role-form-page #senderEmailModal .modal-content {
             border: none;
             border-radius: 16px;
@@ -173,151 +233,60 @@
                                         <div class="col-md-12 p-0" id="commissionTypeSettingsInline" style="display: none;">
                                             <div class="card lz-commission-card mt-2">
                                                 <div class="card-body">
-                                                    <h5 class="lz-field-label mb-3">{{ __('field.commission') }} {{ __('field.types') }}</h5>
-
-                                                    <!-- Booking Commission Type -->
-                                                    <div class="row mb-3">
-                                                        <div class="col-md-12">
-                                                            <label class="lz-field-label mb-2">{{ __('locale.bookings') }} {{ __('field.commission_type') }}</label>
-                                                            <div class="d-flex gap-3 flex-wrap">
-                                                                @php
-                                                                    $bookingPercentagePerm = $permission->firstWhere('name', 'COMMISSION_BOOKING_PERCENTAGE');
-                                                                    $bookingFixedPerm = $permission->firstWhere('name', 'COMMISSION_BOOKING_FIXED');
-                                                                @endphp
-                                                                @if($bookingPercentagePerm)
-                                                                <div class="form-check">
-                                                                    <input class="form-check-input commission-booking-type" type="radio" name="commission_booking_type"
-                                                                        id="commission_booking_percentage" value="COMMISSION_BOOKING_PERCENTAGE"
-                                                                        {{ $item && in_array('COMMISSION_BOOKING_PERCENTAGE', array_column($item->permissions->toArray(), 'name')) ? 'checked' : '' }}>
-                                                                    <label class="form-check-label" for="commission_booking_percentage">
-                                                                        {{ __('field.percentage') }}
-                                                                    </label>
+                                                    <h5 class="lz-field-label mb-1">{{ __('field.commission') }} {{ __('field.types') }}</h5>
+                                                    @php
+                                                        $commissionKinds = [
+                                                            'booking' => __('field.commission_services'),
+                                                            'coupon' => __('field.commission_coupon'),
+                                                            'product' => __('field.commission_product'),
+                                                        ];
+                                                        $rolePermissionNames = $item ? array_column($item->permissions->toArray(), 'name') : [];
+                                                    @endphp
+                                                    @foreach ($commissionKinds as $kind => $kindLabel)
+                                                        @php
+                                                            $percentName = 'COMMISSION_'.strtoupper($kind).'_PERCENTAGE';
+                                                            $fixedName = 'COMMISSION_'.strtoupper($kind).'_FIXED';
+                                                            $percentPerm = $permission->firstWhere('name', $percentName);
+                                                            $fixedPerm = $permission->firstWhere('name', $fixedName);
+                                                        @endphp
+                                                        @if($percentPerm || $fixedPerm)
+                                                            <div class="lz-commission-row">
+                                                                <div class="lz-commission-row-label">{{ $kindLabel }}</div>
+                                                                <div class="lz-commission-switch">
+                                                                    @if($fixedPerm)
+                                                                        <div class="form-check">
+                                                                            <input class="form-check-input commission-{{ $kind }}-type" type="radio" name="commission_{{ $kind }}_type"
+                                                                                id="commission_{{ $kind }}_fixed" value="{{ $fixedName }}"
+                                                                                {{ in_array($fixedName, $rolePermissionNames, true) ? 'checked' : '' }}>
+                                                                            <label class="form-check-label" for="commission_{{ $kind }}_fixed">{{ __('field.fixed_value') }}</label>
+                                                                        </div>
+                                                                    @endif
+                                                                    @if($percentPerm)
+                                                                        <div class="form-check">
+                                                                            <input class="form-check-input commission-{{ $kind }}-type" type="radio" name="commission_{{ $kind }}_type"
+                                                                                id="commission_{{ $kind }}_percentage" value="{{ $percentName }}"
+                                                                                {{ in_array($percentName, $rolePermissionNames, true) ? 'checked' : '' }}>
+                                                                            <label class="form-check-label" for="commission_{{ $kind }}_percentage">%</label>
+                                                                        </div>
+                                                                    @endif
                                                                 </div>
+                                                                <div class="lz-commission-rates" data-commission-rates="commission_{{ $kind }}_type">
+                                                                    <span>10%</span>
+                                                                    <span>6.6%</span>
+                                                                </div>
+                                                                @if($percentPerm)
+                                                                    <input type="checkbox" class="commission-permission-checkbox" name="permissions[]" value="{{ $percentName }}"
+                                                                        id="perm_{{ $percentName }}" style="display: none;"
+                                                                        {{ in_array($percentName, $rolePermissionNames, true) ? 'checked' : '' }}>
                                                                 @endif
-                                                                @if($bookingFixedPerm)
-                                                                <div class="form-check">
-                                                                    <input class="form-check-input commission-booking-type" type="radio" name="commission_booking_type"
-                                                                        id="commission_booking_fixed" value="COMMISSION_BOOKING_FIXED"
-                                                                        {{ $item && in_array('COMMISSION_BOOKING_FIXED', array_column($item->permissions->toArray(), 'name')) ? 'checked' : '' }}>
-                                                                    <label class="form-check-label" for="commission_booking_fixed">
-                                                                        {{ __('field.fixed_value') }}
-                                                                    </label>
-                                                                </div>
-                                                                @endif
-                                                            </div>
-                                                            <!-- Hidden checkboxes for commission type permissions -->
-                                                            @if($bookingPercentagePerm)
-                                                                <input type="checkbox" class="commission-permission-checkbox" data-perm-name="COMMISSION_BOOKING_PERCENTAGE"
-                                                                    name="permissions[]" value="COMMISSION_BOOKING_PERCENTAGE"
-                                                                    id="perm_COMMISSION_BOOKING_PERCENTAGE"
-                                                                    style="display: none;"
-                                                                    {{ $item && in_array('COMMISSION_BOOKING_PERCENTAGE', array_column($item->permissions->toArray(), 'name')) ? 'checked' : '' }}>
-                                                            @endif
-                                                            @if($bookingFixedPerm)
-                                                                <input type="checkbox" class="commission-permission-checkbox" data-perm-name="COMMISSION_BOOKING_FIXED"
-                                                                    name="permissions[]" value="COMMISSION_BOOKING_FIXED"
-                                                                    id="perm_COMMISSION_BOOKING_FIXED"
-                                                                    style="display: none;"
-                                                                    {{ $item && in_array('COMMISSION_BOOKING_FIXED', array_column($item->permissions->toArray(), 'name')) ? 'checked' : '' }}>
-                                                            @endif
-                                                        </div>
-                                                    </div>
-
-                                                    <!-- Product Commission Type -->
-                                                    <!-- <div class="row mb-3">
-                                                        <div class="col-md-12">
-                                                            <label class="form-label mb-2">{{ __('field.products') }} {{ __('field.commission_type') }}</label>
-                                                            <div class="d-flex gap-3">
-                                                                @php
-                                                                    $productPercentagePerm = $permission->firstWhere('name', 'COMMISSION_PRODUCT_PERCENTAGE');
-                                                                    $productFixedPerm = $permission->firstWhere('name', 'COMMISSION_PRODUCT_FIXED');
-                                                                @endphp
-                                                                @if($productPercentagePerm)
-                                                                <div class="form-check">
-                                                                    <input class="form-check-input commission-product-type" type="radio" name="commission_product_type"
-                                                                        id="commission_product_percentage" value="COMMISSION_PRODUCT_PERCENTAGE"
-                                                                        {{ $item && in_array('COMMISSION_PRODUCT_PERCENTAGE', array_column($item->permissions->toArray(), 'name')) ? 'checked' : '' }}>
-                                                                    <label class="form-check-label" for="commission_product_percentage">
-                                                                        {{ __('field.percentage') }}
-                                                                    </label>
-                                                                </div>
-                                                                @endif
-                                                                @if($productFixedPerm)
-                                                                <div class="form-check">
-                                                                    <input class="form-check-input commission-product-type" type="radio" name="commission_product_type"
-                                                                        id="commission_product_fixed" value="COMMISSION_PRODUCT_FIXED"
-                                                                        {{ $item && in_array('COMMISSION_PRODUCT_FIXED', array_column($item->permissions->toArray(), 'name')) ? 'checked' : '' }}>
-                                                                    <label class="form-check-label" for="commission_product_fixed">
-                                                                        {{ __('field.fixed_value') }}
-                                                                    </label>
-                                                                </div>
+                                                                @if($fixedPerm)
+                                                                    <input type="checkbox" class="commission-permission-checkbox" name="permissions[]" value="{{ $fixedName }}"
+                                                                        id="perm_{{ $fixedName }}" style="display: none;"
+                                                                        {{ in_array($fixedName, $rolePermissionNames, true) ? 'checked' : '' }}>
                                                                 @endif
                                                             </div>
-
-                                                            @if($productPercentagePerm)
-                                                                <input type="checkbox" class="commission-permission-checkbox" data-perm-name="COMMISSION_PRODUCT_PERCENTAGE"
-                                                                    name="permissions[]" value="COMMISSION_PRODUCT_PERCENTAGE"
-                                                                    id="perm_COMMISSION_PRODUCT_PERCENTAGE"
-                                                                    style="display: none;"
-                                                                    {{ $item && in_array('COMMISSION_PRODUCT_PERCENTAGE', array_column($item->permissions->toArray(), 'name')) ? 'checked' : '' }}>
-                                                            @endif
-                                                            @if($productFixedPerm)
-                                                                <input type="checkbox" class="commission-permission-checkbox" data-perm-name="COMMISSION_PRODUCT_FIXED"
-                                                                    name="permissions[]" value="COMMISSION_PRODUCT_FIXED"
-                                                                    id="perm_COMMISSION_PRODUCT_FIXED"
-                                                                    style="display: none;"
-                                                                    {{ $item && in_array('COMMISSION_PRODUCT_FIXED', array_column($item->permissions->toArray(), 'name')) ? 'checked' : '' }}>
-                                                            @endif
-                                                        </div>
-                                                    </div> -->
-
-                                                    <!-- Coupon Commission Type -->
-                                                    <!-- <div class="row mb-3">
-                                                        <div class="col-md-12">
-                                                            <label class="form-label mb-2">{{ __('field.coupon') }} {{ __('field.commission_type') }}</label>
-                                                            <div class="d-flex gap-3">
-                                                                @php
-                                                                    $couponPercentagePerm = $permission->firstWhere('name', 'COMMISSION_COUPON_PERCENTAGE');
-                                                                    $couponFixedPerm = $permission->firstWhere('name', 'COMMISSION_COUPON_FIXED');
-                                                                @endphp
-                                                                @if($couponPercentagePerm)
-                                                                <div class="form-check">
-                                                                    <input class="form-check-input commission-coupon-type" type="radio" name="commission_coupon_type"
-                                                                        id="commission_coupon_percentage" value="COMMISSION_COUPON_PERCENTAGE"
-                                                                        {{ $item && in_array('COMMISSION_COUPON_PERCENTAGE', array_column($item->permissions->toArray(), 'name')) ? 'checked' : '' }}>
-                                                                    <label class="form-check-label" for="commission_coupon_percentage">
-                                                                        {{ __('field.percentage') }}
-                                                                    </label>
-                                                                </div>
-                                                                @endif
-                                                                @if($couponFixedPerm)
-                                                                <div class="form-check">
-                                                                    <input class="form-check-input commission-coupon-type" type="radio" name="commission_coupon_type"
-                                                                        id="commission_coupon_fixed" value="COMMISSION_COUPON_FIXED"
-                                                                        {{ $item && in_array('COMMISSION_COUPON_FIXED', array_column($item->permissions->toArray(), 'name')) ? 'checked' : '' }}>
-                                                                    <label class="form-check-label" for="commission_coupon_fixed">
-                                                                        {{ __('field.fixed_value') }}
-                                                                    </label>
-                                                                </div>
-                                                                @endif
-                                                            </div>
-
-                                                            @if($couponPercentagePerm)
-                                                                <input type="checkbox" class="commission-permission-checkbox" data-perm-name="COMMISSION_COUPON_PERCENTAGE"
-                                                                    name="permissions[]" value="COMMISSION_COUPON_PERCENTAGE"
-                                                                    id="perm_COMMISSION_COUPON_PERCENTAGE"
-                                                                    style="display: none;"
-                                                                    {{ $item && in_array('COMMISSION_COUPON_PERCENTAGE', array_column($item->permissions->toArray(), 'name')) ? 'checked' : '' }}>
-                                                            @endif
-                                                            @if($couponFixedPerm)
-                                                                <input type="checkbox" class="commission-permission-checkbox" data-perm-name="COMMISSION_COUPON_FIXED"
-                                                                    name="permissions[]" value="COMMISSION_COUPON_FIXED"
-                                                                    id="perm_COMMISSION_COUPON_FIXED"
-                                                                    style="display: none;"
-                                                                    {{ $item && in_array('COMMISSION_COUPON_FIXED', array_column($item->permissions->toArray(), 'name')) ? 'checked' : '' }}>
-                                                            @endif
-                                                        </div>
-                                                    </div> -->
+                                                        @endif
+                                                    @endforeach
                                                 </div>
                                             </div>
                                         </div>
@@ -481,9 +450,19 @@
                                 permissionCheckbox.checked = false;
                             }
                         }
+                        syncCommissionRates();
                     });
                 });
             });
+
+            function syncCommissionRates() {
+                document.querySelectorAll('.lz-commission-rates').forEach(function (box) {
+                    var groupName = box.getAttribute('data-commission-rates');
+                    var selected = document.querySelector('input[name="' + groupName + '"]:checked');
+                    var show = selected && selected.value.indexOf('PERCENTAGE') !== -1;
+                    box.style.display = show ? 'flex' : 'none';
+                });
+            }
 
             // Check on page load if VIEW_COMMISSION is already checked
             document.addEventListener('DOMContentLoaded', function() {
@@ -503,6 +482,7 @@
                         radio.checked = true;
                     }
                 });
+                syncCommissionRates();
             });
         })();
     </script>

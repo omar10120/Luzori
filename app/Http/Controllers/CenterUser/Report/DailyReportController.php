@@ -355,9 +355,9 @@ class DailyReportController extends Controller
                         "amount" => 0,
                         "products" => []
                     ];
+                    $orderPrice = 0;
 
                     if (!$BuyProduct_item->details->isEmpty()) {
-                        $orderPrice = 0;
                         foreach ($BuyProduct_item->details as $detail) {
                             // Ensure dynamic payment method key exists
                             if (!isset($product_details_prices[$BuyProduct_item->payment_type])) {
@@ -381,8 +381,11 @@ class DailyReportController extends Controller
                         }
                     }
 
-                    if (isset($users_with_commission[$BuyProduct_item->worker_id])) {
-                        array_push($users_with_commission[$BuyProduct_item->worker_id], $BuyProduct_item->commission);
+                    if (isset($users_with_commission[$BuyProduct_item->worker_id]) && $BuyProduct_item->commission !== null && $BuyProduct_item->commission !== '') {
+                        array_push(
+                            $users_with_commission[$BuyProduct_item->worker_id],
+                            resolve_stored_commission($BuyProduct_item->commission, $BuyProduct_item->commission_type, $orderPrice, false)
+                        );
                     }
 
                     if (isset($users_with_tips[$BuyProduct_item->worker_id])) {
@@ -418,8 +421,12 @@ class DailyReportController extends Controller
                     }
                     $wallet_details_prices[$get_wallet->wallet_type] += $get_wallet->invoiced_amount;
 
-                    if (isset($users_with_commission[$get_wallet->worker_id])) {
-                        array_push($users_with_commission[$get_wallet->worker_id], $get_wallet->commission);
+                    if (isset($users_with_commission[$get_wallet->worker_id]) && $get_wallet->commission !== null && $get_wallet->commission !== '') {
+                        $walletBase = floatval($get_wallet->invoiced_amount ?? $get_wallet->amount ?? 0);
+                        array_push(
+                            $users_with_commission[$get_wallet->worker_id],
+                            resolve_stored_commission($get_wallet->commission, $get_wallet->commission_type, $walletBase, false)
+                        );
                     }
                     if (isset($users_with_tips[$get_wallet->worker_id])) {
                         array_push($users_with_tips[$get_wallet->worker_id], $get_wallet->tip);

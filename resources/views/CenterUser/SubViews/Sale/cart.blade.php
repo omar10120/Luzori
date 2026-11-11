@@ -1059,14 +1059,22 @@
                                         </div>
                                         <div class="col-md-12 mb-2" style="display: none;" id="product-commission-div">
                                             <div class="mb-1">
+                                                <label class="form-label">{{ __('field.commission_type') }}</label>
+                                                <div class="lz-readonly-field">{{ get_allowed_commission_type('product') === 'fixed' ? __('field.fixed_value') : '%' }}</div>
+                                                <input type="hidden" id="product-commission-type" value="{{ get_allowed_commission_type('product') }}">
+                                            </div>
+                                            <div class="mb-1 mt-2">
                                                 <label for="product-commission" class="form-label">{{ __('field.commission') }} <span class="text-danger">*</span></label>
-                                                <select class="form-control" name="commission" id="product-commission" required>
-                                                    <option value="">{{ __('field.select_commission') }}</option>
-                                                    <!-- @for ($i = 1; $i <= 100; $i++)
-                                                        <option value="{{ $i }}">{{ $i }}%</option>
-                                                    @endfor -->
-                                                    <option value="10">10%</option>
-                                                </select>
+                                                @if(get_allowed_commission_type('product') === 'fixed')
+                                                    <input type="number" class="form-control" name="commission" id="product-commission" step="0.01" min="0" placeholder="{{ __('field.commission') }}">
+                                                @else
+                                                    <select class="form-control" name="commission" id="product-commission">
+                                                        <option value="">{{ __('field.select_commission') }}</option>
+                                                        @foreach(get_allowed_commission_rates() as $rate)
+                                                            <option value="{{ $rate }}">{{ $rate }}%</option>
+                                                        @endforeach
+                                                    </select>
+                                                @endif
                                             </div>
                                         </div>
                                         <div class="col-md-12 mb-2">
@@ -1741,15 +1749,24 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-md-3 mb-3" style="display: none;" id="modal-wallet-commission-div">
+                            <div class="col-md-6 mb-3" style="display: none;" id="modal-wallet-commission-div">
                                 <div class="mb-1">
+                                    <label class="form-label">{{ __('field.commission_type') }}</label>
+                                    <div class="lz-readonly-field">{{ get_allowed_commission_type('coupon') === 'fixed' ? __('field.fixed_value') : '%' }}</div>
+                                    <input type="hidden" id="modal-wallet-commission-type" value="{{ get_allowed_commission_type('coupon') }}">
+                                </div>
+                                <div class="mb-1 mt-2">
                                     <label for="modal-wallet-commission" class="form-label">{{ __('field.commission') }} <span class="text-danger">*</span></label>
-                                    <select class="form-control" name="commission" id="modal-wallet-commission" required>
-                                        <option value="">{{ __('field.select_commission') }}</option>
-                                        @for ($i = 1; $i <= 100; $i++)
-                                            <option value="{{ $i }}">{{ $i }}%</option>
-                                        @endfor
-                                    </select>
+                                    @if(get_allowed_commission_type('coupon') === 'fixed')
+                                        <input type="number" class="form-control" name="commission" id="modal-wallet-commission" step="0.01" min="0" placeholder="{{ __('field.commission') }}">
+                                    @else
+                                        <select class="form-control" name="commission" id="modal-wallet-commission">
+                                            <option value="">{{ __('field.select_commission') }}</option>
+                                            @foreach(get_allowed_commission_rates() as $rate)
+                                                <option value="{{ $rate }}">{{ $rate }}%</option>
+                                            @endforeach
+                                        </select>
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -1843,6 +1860,9 @@
             const posConfig = {
                 hasCommissionPermission: {{ has_commission_permission() ? 'true' : 'false' }},
                 allowedCommissionType: '{{ get_allowed_commission_type("booking") }}',
+                allowedProductType: '{{ get_allowed_commission_type("product") }}',
+                allowedCouponType: '{{ get_allowed_commission_type("coupon") }}',
+                allowedRates: @json(get_allowed_commission_rates()),
                 currency: '{{ get_currency() }}',
                 translations: {
                     max_commission: '{{ __("field.max_commission") }}',
@@ -2237,9 +2257,9 @@
                             service_info += `
                                     <select class="form-control commission-percentage-select" name="service[${service.id}][commission]" id="booking-commission_percentage_${service.id}">
                                         <option value="">${posConfig.translations.select_commission}</option>`;
-                            for (let i = 1; i <= 100; i++) {
-                                service_info += `<option value="${i}">${i}%</option>`;
-                            }
+                            posConfig.allowedRates.forEach(function (rate) {
+                                service_info += `<option value="${rate}">${rate}%</option>`;
+                            });
                             service_info += `</select>`;
                         } else {
                             service_info += `
@@ -2260,21 +2280,15 @@
                         const percentage = parseFloat($(this).find('option:selected').data('worker-percentage')) || 0;
                         const $commissionType = $('input[name="service[' + service.id + '][commission_type]"]');
                         const $percentage = $('#booking-commission_percentage_' + service.id);
-                        const $fixed = $('#booking-commission_fixed_' + service.id);
+                        const allowedRate = posConfig.allowedRates.some(function (rate) {
+                            return Math.abs(parseFloat(rate) - percentage) < 0.001;
+                        });
 
-                        if (percentage > 0) {
+                        if (posConfig.allowedCommissionType === 'percentage' && allowedRate && $percentage.length) {
                             $commissionType.val('percentage');
-                            if ($percentage.length) {
-                                $percentage.val(String(percentage));
-                            }
-                            if ($fixed.length) {
-                                $fixed.val('');
-                            }
-                        } else {
-                            $commissionType.val(posConfig.allowedCommissionType || '');
-                            if ($percentage.length) {
-                                $percentage.val('');
-                            }
+                            $percentage.val(String(percentage));
+                        } else if ($percentage.length) {
+                            $percentage.val('');
                         }
                     }).trigger('change');
                     
@@ -3302,7 +3316,8 @@
                             discount: discount || null,
                             worker_id: workerId || null,
                             worker_name: worker ? worker.name : '',
-                            commission: commission || null
+                            commission: commission || null,
+                            commission_type: $('#product-commission-type').val() || null
                         });
     
                         productsAdded++;
@@ -4351,7 +4366,7 @@
                 const $commissionField = $('#product-commission');
                 const $commissionDiv = $('#product-commission-div');
                 
-                if (workerId == '') {
+                if (workerId == '' || !posConfig.allowedProductType) {
                     $commissionDiv.hide();
                     $commissionField.prop('required', false);
                     $commissionField.val('');
@@ -4392,7 +4407,7 @@
                 const $commissionField = $('#modal-wallet-commission');
                 const $commissionDiv = $('#modal-wallet-commission-div');
                 
-                if (workerId == '') {
+                if (workerId == '' || !posConfig.allowedCouponType) {
                     $commissionDiv.hide();
                     $commissionField.prop('required', false);
                     $commissionField.val('');
@@ -4481,7 +4496,8 @@
                         wallet_type: walletType,
                         serial_number: serialNumber || null,
                         worker_id: workerId || null,
-                        commission: commission || null
+                        commission: commission || null,
+                        commission_type: $('#modal-wallet-commission-type').val() || null
                     },
                     success: function(response) {
                         // Check if user-wallet association was successful
@@ -4522,7 +4538,8 @@
                                 serial_number: serialNumber || null,
                                 worker_id: workerId,
                                     worker_name: workerName,
-                                commission: commission
+                                commission: commission,
+                                commission_type: $('#modal-wallet-commission-type').val() || null
                             });
 
                                 saveCartToSession();
