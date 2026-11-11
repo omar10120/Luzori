@@ -13,9 +13,9 @@ class MainStockController extends Controller
     public function index(MainStockDataTable $dataTable)
     {
         $permission = 'VIEW_' . Str::upper($this->plural);
-        if (!auth('center_user')->user()->can($permission, 'center_api')) {
-            return abort(403);
-        }
+        // if (!auth('center_user')->user()->can($permission, 'center_api')) {
+        //     return abort(403);
+        // }
 
         $title = __('locale.' . $this->plural);
         return $dataTable->render('CenterUser.SubViews.MainStock.list', compact('title'));
