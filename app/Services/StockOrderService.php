@@ -132,19 +132,19 @@ class StockOrderService
                 ->where('reference_id', $order->id)
                 ->exists();
 
+            $itemsById = $order->items->mapWithKeys(function ($item) {
+                $qty = $item->received_qty !== null
+                    ? (float) $item->received_qty
+                    : (float) $item->order_qty;
+
+                return [$item->id => [
+                    'id' => $item->id,
+                    'received_qty' => $qty,
+                    'unit_cost' => (float) $item->unit_cost,
+                ]];
+            });
+
             if (!$alreadyApplied) {
-                $itemsById = $order->items->mapWithKeys(function ($item) {
-                    $qty = $item->received_qty !== null
-                        ? (float) $item->received_qty
-                        : (float) $item->order_qty;
-
-                    return [$item->id => [
-                        'id' => $item->id,
-                        'received_qty' => $qty,
-                        'unit_cost' => (float) $item->unit_cost,
-                    ]];
-                });
-
                 if ($order->source_type === 'main_stock') {
                     app(ReceiveTransferOrder::class)->receive($order, $itemsById);
                 } else {
@@ -156,8 +156,28 @@ class StockOrderService
                 }
             }
 
+            $order->load(['items.product']);
+            $totalCost = 0;
+            foreach ($order->items as $item) {
+                $qty = $item->received_qty !== null
+                    ? (float) $item->received_qty
+                    : (float) ($itemsById[$item->id]['received_qty'] ?? $item->order_qty);
+                $unitCost = (float) $item->unit_cost;
+                if ($unitCost <= 0) {
+                    $unitCost = (float) ($item->product->supply_price ?? 0);
+                }
+                $lineTotal = round($qty * $unitCost, 2);
+                $totalCost += $lineTotal;
+                $item->update([
+                    'received_qty' => $qty,
+                    'unit_cost' => $unitCost,
+                    'line_total' => $lineTotal,
+                ]);
+            }
+
             $order->update([
                 'status' => StockOrder::STATUS_RECEPTION_RECEIVE,
+                'total_cost' => round($totalCost, 2),
             ]);
 
             return $order->fresh(['items.product.translation', 'branches.translation', 'supplier']);

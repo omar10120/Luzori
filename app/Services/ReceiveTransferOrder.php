@@ -105,9 +105,7 @@ class ReceiveTransferOrder
                 }
 
                 $item->update([
-                'received_qty' => $receivedQuantity,
-                'unit_cost' => 0,
-                'line_total' => 0,
+                    'received_qty' => $receivedQuantity,
                 ]);
             }
         });
