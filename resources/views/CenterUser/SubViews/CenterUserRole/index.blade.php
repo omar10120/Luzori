@@ -124,15 +124,54 @@
         }
         .lz-role-form-page .lz-commission-rates {
             display: none;
+            align-items: center;
             gap: .4rem;
+            flex-wrap: wrap;
         }
-        .lz-role-form-page .lz-commission-rates span {
+        .lz-role-form-page .lz-rate-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: .25rem;
             background: #efe2d0;
             color: #7a5a2f;
             border-radius: 999px;
-            padding: .28rem .7rem;
+            padding: .28rem .45rem .28rem .7rem;
             font-size: .78rem;
             font-weight: 700;
+        }
+        .lz-role-form-page .lz-rate-remove {
+            border: 0;
+            background: transparent;
+            color: #7a5a2f;
+            font-size: 1rem;
+            line-height: 1;
+            padding: 0 .15rem;
+            cursor: pointer;
+        }
+        .lz-role-form-page .lz-rate-add {
+            display: inline-flex;
+            align-items: center;
+            gap: .25rem;
+        }
+        .lz-role-form-page .lz-rate-input {
+            width: 4.5rem;
+            border: 1px solid #e4d7c4;
+            border-radius: 999px;
+            background: #fff;
+            padding: .25rem .55rem;
+            font-size: .78rem;
+            font-weight: 700;
+            color: #002b26;
+        }
+        .lz-role-form-page .lz-rate-add-btn {
+            border: 0;
+            background: #002b26;
+            color: #fff;
+            border-radius: 999px;
+            width: 1.7rem;
+            height: 1.7rem;
+            font-weight: 700;
+            line-height: 1;
         }
         .lz-role-form-page #senderEmailModal .modal-content {
             border: none;
@@ -270,9 +309,21 @@
                                                                         </div>
                                                                     @endif
                                                                 </div>
-                                                                <div class="lz-commission-rates" data-commission-rates="commission_{{ $kind }}_type">
-                                                                    <span>10%</span>
-                                                                    <span>6.6%</span>
+                                                                <div class="lz-commission-rates" data-commission-rates="commission_{{ $kind }}_type" data-kind="{{ $kind }}">
+                                                                    <div class="lz-rate-chips">
+                                                                        @foreach(get_allowed_commission_rates($kind) as $rate)
+                                                                            @php $rateLabel = rtrim(rtrim(number_format($rate, 2, '.', ''), '0'), '.'); @endphp
+                                                                            <span class="lz-rate-chip">
+                                                                                {{ $rateLabel }}%
+                                                                                <button type="button" class="lz-rate-remove" aria-label="{{ __('general.delete') }}">&times;</button>
+                                                                                <input type="hidden" name="commission_rates[{{ $kind }}][]" value="{{ $rateLabel }}">
+                                                                            </span>
+                                                                        @endforeach
+                                                                    </div>
+                                                                    <div class="lz-rate-add">
+                                                                        <input type="number" class="lz-rate-input" min="0.01" max="100" step="0.01" placeholder="{{ __('field.percentage') }}">
+                                                                        <button type="button" class="lz-rate-add-btn">+</button>
+                                                                    </div>
                                                                 </div>
                                                                 @if($percentPerm)
                                                                     <input type="checkbox" class="commission-permission-checkbox" name="permissions[]" value="{{ $percentName }}"
@@ -463,6 +514,59 @@
                     box.style.display = show ? 'flex' : 'none';
                 });
             }
+
+            function formatCommissionRate(value) {
+                var rounded = Math.round(value * 100) / 100;
+                return String(rounded).replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '');
+            }
+
+            document.addEventListener('keydown', function (event) {
+                if (event.key === 'Enter' && event.target.classList.contains('lz-rate-input')) {
+                    event.preventDefault();
+                    event.target.closest('.lz-rate-add').querySelector('.lz-rate-add-btn').click();
+                }
+            });
+
+            document.addEventListener('click', function (event) {
+                var addButton = event.target.closest('.lz-rate-add-btn');
+                if (addButton) {
+                    var box = addButton.closest('.lz-commission-rates');
+                    var input = box.querySelector('.lz-rate-input');
+                    var value = parseFloat(input.value);
+                    if (!value || value <= 0 || value > 100) {
+                        input.focus();
+                        return;
+                    }
+                    var label = formatCommissionRate(value);
+                    var exists = Array.from(box.querySelectorAll('input[type="hidden"]')).some(function (field) {
+                        return Math.abs(parseFloat(field.value) - value) < 0.001;
+                    });
+                    if (exists) {
+                        input.value = '';
+                        return;
+                    }
+                    var chip = document.createElement('span');
+                    chip.className = 'lz-rate-chip';
+                    chip.append(document.createTextNode(label + '%'));
+                    var remove = document.createElement('button');
+                    remove.type = 'button';
+                    remove.className = 'lz-rate-remove';
+                    remove.textContent = '×';
+                    var hidden = document.createElement('input');
+                    hidden.type = 'hidden';
+                    hidden.name = 'commission_rates[' + box.dataset.kind + '][]';
+                    hidden.value = label;
+                    chip.append(remove, hidden);
+                    box.querySelector('.lz-rate-chips').appendChild(chip);
+                    input.value = '';
+                    input.focus();
+                }
+
+                var removeButton = event.target.closest('.lz-rate-remove');
+                if (removeButton) {
+                    removeButton.closest('.lz-rate-chip').remove();
+                }
+            });
 
             // Check on page load if VIEW_COMMISSION is already checked
             document.addEventListener('DOMContentLoaded', function() {

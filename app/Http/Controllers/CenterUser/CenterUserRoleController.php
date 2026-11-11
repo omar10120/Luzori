@@ -6,6 +6,7 @@ use App\Datatables\CenterUser\CenterUserRoleDataTable;
 use App\Helpers\MyHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CenterUser\RoleRequest;
+use App\Models\Setting;
 use App\Services\RoleService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -95,10 +96,34 @@ class CenterUserRoleController extends Controller
         }
 
         if ($item) {
+            $this->saveCommissionRates($request);
             // return MyHelper::responseJSON(__('admin.operation_done_successfully'), $responseCode, $item);
             return MyHelper::responseJSON('redirect_to_home', Response::HTTP_CREATED, route($this->indexRoute));
         } else {
             return MyHelper::responseJSON(__('admin.an_error_occurred'), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
+    }
+
+    private function saveCommissionRates(Request $request): void
+    {
+        if (!$request->exists('commission_rates')) {
+            return;
+        }
+
+        $input = $request->input('commission_rates', []);
+        $clean = [];
+        foreach (['booking', 'coupon', 'product'] as $kind) {
+            $clean[$kind] = collect($input[$kind] ?? [])
+                ->map(fn ($value) => round((float) $value, 2))
+                ->filter(fn ($value) => $value > 0 && $value <= 100)
+                ->unique()
+                ->values()
+                ->all();
+        }
+
+        Setting::query()->updateOrCreate(
+            ['key' => 'commission_percentage_rates'],
+            ['value' => json_encode($clean)]
+        );
     }
 }

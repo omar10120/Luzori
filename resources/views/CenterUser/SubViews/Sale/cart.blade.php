@@ -1093,7 +1093,7 @@
                                                 @else
                                                     <select class="form-control" name="commission" id="product-commission">
                                                         <option value="">{{ __('field.select_commission') }}</option>
-                                                        @foreach(get_allowed_commission_rates() as $rate)
+                                                        @foreach(get_allowed_commission_rates('product') as $rate)
                                                             <option value="{{ $rate }}">{{ $rate }}%</option>
                                                         @endforeach
                                                     </select>
@@ -1794,7 +1794,7 @@
                                     @else
                                         <select class="form-control" name="commission" id="modal-wallet-commission">
                                             <option value="">{{ __('field.select_commission') }}</option>
-                                            @foreach(get_allowed_commission_rates() as $rate)
+                                            @foreach(get_allowed_commission_rates('coupon') as $rate)
                                                 <option value="{{ $rate }}">{{ $rate }}%</option>
                                             @endforeach
                                         </select>
@@ -1894,7 +1894,7 @@
                 allowedCommissionType: '{{ get_allowed_commission_type("booking") }}',
                 allowedProductType: '{{ get_allowed_commission_type("product") }}',
                 allowedCouponType: '{{ get_allowed_commission_type("coupon") }}',
-                allowedRates: @json(get_allowed_commission_rates()),
+                allowedRates: @json(get_allowed_commission_rates('booking')),
                 currency: '{{ get_currency() }}',
                 translations: {
                     max_commission: '{{ __("field.max_commission") }}',
