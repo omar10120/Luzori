@@ -1089,8 +1089,8 @@
                                                         <option value="{{ $i }}">{{ $i }}%</option>
                                                     @endfor -->
                                                     <option value="10">10</option>
-                                                    <option value="10">7.2</option>
-                                                    <option value="10">2.5</option>
+                                                    <option value="7.2">7.2</option>
+                                                    <option value="2.5">2.5</option> 
                                                 </select>
                                             </div>
                                         </div>
@@ -1780,12 +1780,12 @@
                                     <label for="modal-wallet-commission" class="form-label">{{ __('field.commission') }} <span class="text-danger">*</span></label>
                                     <select class="form-control" name="commission" id="modal-wallet-commission" required>
                                         <option value="">{{ __('field.select_commission') }}</option>
-                                        <!-- @for ($i = 1; $i <= 100; $i++)
-                                            <option value="{{ $i }}">{{ $i }}%</option>
-                                        @endfor -->
-                                        <option value="10">10</option>
-                                        <option value="7.2">7.2</option>   
-                                        <option value="2.5">2.5</option>
+                                        @for ($i = 1; $i <= 100; $i++)
+                                                        <option value="{{ $i }}">{{ $i }}</option>
+                                        @endfor
+                                                    <!-- <option value="10">10</option>-->
+                                        <option value="7.2">7.2</option>
+                                        <option value="2.5">2.5</option> 
                                     </select>
                                 </div>
                             </div>
