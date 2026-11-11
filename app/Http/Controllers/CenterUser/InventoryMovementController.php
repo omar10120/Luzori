@@ -31,7 +31,7 @@ class InventoryMovementController extends Controller
         }
 
         $title = __('locale.' . $this->plural);
-        $branches = Branch::with('translation')->orderBy('id')->get();
+        $branches = $this->availableBranches();
 
         return $dataTable->render('CenterUser.SubViews.InventoryMovement.list', compact('title', 'branches'));
     }
@@ -43,10 +43,11 @@ class InventoryMovementController extends Controller
             return abort(403);
         }
 
-        $branchId = $request->integer('branch_id') ?: null;
+        $branchId = $this->resolveBranchId($request);
 
         $products = Product::query()
             ->with('translation')
+            ->when($branchId, fn ($q) => $q->whereHas('productBranches', fn ($pq) => $pq->where('branch_id', $branchId)))
             ->withSum([
                 'productBranches as current_stock' => function ($q) use ($branchId) {
                     if ($branchId) {
@@ -109,8 +110,8 @@ class InventoryMovementController extends Controller
         }
 
         $product = Product::with('translation')->findOrFail($productId);
-        $branchId = $request->integer('branch_id') ?: null;
-        $branches = Branch::with('translation')->get();
+        $branchId = $this->resolveBranchId($request);
+        $branches = $this->availableBranches();
 
         $movements = InventoryMovement::query()
             ->with(['branch.translation'])
@@ -149,7 +150,7 @@ class InventoryMovementController extends Controller
             ->map(fn ($id) => (int) $id)
             ->unique()
             ->values();
-        $branchId = $request->integer('branch_id') ?: null;
+        $branchId = $this->resolveBranchId($request);
 
         $movements = InventoryMovement::query()
             ->with(['product.translation', 'branch.translation'])
@@ -196,5 +197,35 @@ class InventoryMovementController extends Controller
         }, 'inventory-movements-' . now()->format('YmdHis') . '.csv', [
             'Content-Type' => 'text/csv; charset=UTF-8',
         ]);
+    }
+
+    private function availableBranches()
+    {
+        $query = Branch::with('translation')->orderBy('id');
+        $branchId = $this->lockedBranchId();
+        if ($branchId) {
+            $query->where('id', $branchId);
+        }
+
+        return $query->get();
+    }
+
+    private function resolveBranchId(Request $request): ?int
+    {
+        $locked = $this->lockedBranchId();
+        if ($locked) {
+            return $locked;
+        }
+
+        return $request->integer('branch_id') ?: null;
+    }
+
+    private function lockedBranchId(): ?int
+    {
+        if ((int) get_user_role() === 1) {
+            return null;
+        }
+
+        return auth('center_user')->user()?->branch_id ? (int) auth('center_user')->user()->branch_id : null;
     }
 }

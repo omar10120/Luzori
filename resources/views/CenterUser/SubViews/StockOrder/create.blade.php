@@ -144,17 +144,20 @@
                 <div class="mb-4 d-none" id="branches-selection">
                     <label class="lz-field-label d-block">{{ __('locale.branches') }} <span class="text-danger">*</span></label>
                     <div class="border rounded p-3" id="branches-checkbox-list">
+                        @if ((int) get_user_role() === 1)
                         <div class="form-check mb-2">
                             <input class="form-check-input" type="checkbox" id="check-all-branches">
                             <label class="form-check-label fw-semibold" for="check-all-branches">{{ __('field.select_all_branches') }}</label>
                         </div>
                         <hr class="my-2">
+                        @endif
                         <div class="row g-2">
                             @forelse ($branches as $branch)
                                 <div class="col-md-4 col-sm-6">
                                     <div class="form-check">
                                         <input class="form-check-input branch-check" type="checkbox"
-                                               id="branch_{{ $branch->id }}" value="{{ $branch->id }}">
+                                               id="branch_{{ $branch->id }}" value="{{ $branch->id }}"
+                                               @checked((int) get_user_role() !== 1)>
                                         <label class="form-check-label" for="branch_{{ $branch->id }}">{{ $branch->name }}</label>
                                     </div>
                                 </div>
@@ -255,6 +258,7 @@ $(function () {
     const productsUrl = @json(route('center_user.stockorders.products'));
     const saveUrl = @json($requestUrl);
     const sourceType = () => $('#source_type').val();
+    const lockUserBranch = {{ (int) get_user_role() !== 1 ? 'true' : 'false' }};
     let selectedItems = {};
     let pickerProducts = [];
     let searchTimer = null;
@@ -294,6 +298,9 @@ $(function () {
             : @json(__('field.stock_order_supplier_flow_hint')));
         if (!isTransfer) {
             $('.branch-check, #check-all-branches').prop('checked', false);
+        } else if (lockUserBranch) {
+            $('.branch-check').prop('checked', true);
+            $('#check-all-branches').prop('checked', true);
         }
         syncAddProductsBtn();
     }
@@ -486,19 +493,6 @@ $(function () {
             $('#listError').append(`<li>{{ __('field.please_complete_order_fields') }}</li>`);
             $('#alertError').removeClass('d-none');
             return;
-        }
-
-        if (currentSource === 'main_stock') {
-            const insufficientItem = items.find(function (item) {
-                return Number(item.order_qty) * branchIds.length > Number(item.available_quantity);
-            });
-            if (insufficientItem) {
-                $('#listError').append($('<li>').text(
-                    '{{ __('field.stock_order_main_stock_insufficient') }}: ' + insufficientItem.name
-                ));
-                $('#alertError').removeClass('d-none');
-                return;
-            }
         }
 
         $btn.prop('disabled', true);

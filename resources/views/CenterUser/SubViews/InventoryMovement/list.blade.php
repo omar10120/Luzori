@@ -73,9 +73,13 @@
             </div>
             <div class="lz-page-actions" id="lz-inventory-actions">
                 <select id="inventoryBranchFilter" class="form-select form-select-sm lz-branch-filter" aria-label="{{ __('field.branch') }}">
-                    <option value="">{{ __('general.all') }} {{ __('field.branch') }}</option>
+                    @if ((int) get_user_role() === 1)
+                        <option value="">{{ __('general.all') }} {{ __('field.branch') }}</option>
+                    @endif
                     @foreach ($branches as $branch)
-                        <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                        <option value="{{ $branch->id }}" @selected((int) get_user_role() !== 1 && (int) $branch->id === (int) (auth('center_user')->user()->branch_id ?? 0))>
+                            {{ $branch->name }}
+                        </option>
                     @endforeach
                 </select>
             </div>

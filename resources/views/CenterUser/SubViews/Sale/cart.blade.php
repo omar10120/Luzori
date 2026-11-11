@@ -5,6 +5,14 @@
 @section('vendor-style')
     @vite(['resources/assets/vendor/libs/select2/select2.scss', 'resources/assets/vendor/libs/bootstrap-select/bootstrap-select.scss', 'resources/assets/vendor/libs/tagify/tagify.scss', 'resources/assets/vendor/libs/bs-stepper/bs-stepper.scss'])
     <style>
+        .lz-sales-cart-page .select2-results__option.loading-results,
+        #selectCustomerModal .select2-results__option.loading-results {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #7a8582;
+            font-weight: 600;
+        }
         .lz-sales-cart-page .lz-form-card {
             border: none !important;
             border-radius: 18px !important;
@@ -422,6 +430,20 @@
             overflow-x: hidden;
             padding: 0.75rem;
             scroll-behavior: smooth;
+        }
+        .lz-sales-cart-page .lz-pick-pager {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            padding: 0.7rem 1.1rem;
+            background: #fff;
+            border-top: 1px solid #efe6d8;
+        }
+        .lz-sales-cart-page .lz-pick-pager-info {
+            color: #7a8582;
+            font-size: 0.82rem;
+            font-weight: 600;
         }
         .lz-sales-cart-page .lz-pick-scroll::-webkit-scrollbar {
             width: 8px;
@@ -1023,7 +1045,8 @@
                                                     <option value="">{{ __('field.select_products') }}</option>
                                                     @foreach ($products as $product)
                                                         @php
-                                                            $stock = (int) (optional($product->productBranches->firstWhere('branch_id', $destinationBranchId))->stock_quantity ?? 0);
+                                                            // Calculate the total stock across ALL branches for this product
+                                                                $stock = (int) $product->productBranches->sum('stock_quantity');
                                                         @endphp
                                                         <option value="{{ $product->id }}" data-stock="{{ $stock }}">
                                                             {{ $product->name }} - {{ $stock }}{{ $stock <= 0 ? ' ('.__('field.out_of_stock').')' : '' }}
@@ -1116,6 +1139,15 @@
                                             <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
                                             {{ __('general.loading') ?? 'Loading...' }}
                                         </div>
+                                    </div>
+                                    <div class="lz-pick-pager" id="wallets-pager" style="display: none;">
+                                        <button type="button" class="btn btn-sm btn-luzori-beige" id="wallets-prev-btn">
+                                            <i class="ti ti-chevron-left me-1"></i>{{ __('field.previous') }}
+                                        </button>
+                                        <span class="lz-pick-pager-info" id="wallets-page-info"></span>
+                                        <button type="button" class="btn btn-sm btn-luzori-beige" id="wallets-next-btn">
+                                            {{ __('field.next') }}<i class="ti ti-chevron-right ms-1"></i>
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -1890,9 +1922,14 @@
                 return items.map((item) => `<span class="badge ${cls} mb-1">${escapeHtml(item)}</span>`).join(' ');
             };
 
-            function loadCartWalletsTab(force) {
-                if (walletsTabLoaded && !force) return;
+            let walletsPage = 1;
+            let walletsLastPage = 1;
+
+            function loadCartWalletsTab(force, page) {
+                if (walletsTabLoaded && !force && !page) return;
+                walletsPage = page || walletsPage || 1;
                 const $body = $('#wallets-table-body');
+                const $pager = $('#wallets-pager');
                 $body.html(`
                     <div class="lz-pick-loading wallets-loading-row">
                         <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
@@ -1900,12 +1937,17 @@
                     </div>
                 `);
 
-                $.getJSON('{{ route('center_user.sales.cart.wallets') }}')
+                $.getJSON('{{ route('center_user.sales.cart.wallets') }}', { page: walletsPage, per_page: 10 })
                     .done(function (res) {
                         const rows = res.data || [];
+                        const meta = res.meta || {};
+                        walletsPage = meta.current_page || walletsPage;
+                        walletsLastPage = meta.last_page || 1;
+                        walletsTabLoaded = true;
+
                         if (!rows.length) {
                             $body.html(`<div class="lz-pick-empty">{{ __('field.no_coupons_available') }}</div>`);
-                            walletsTabLoaded = true;
+                            $pager.hide();
                             return;
                         }
 
@@ -1945,12 +1987,35 @@
                             </div>
                         `).join('');
                         $body.html(html);
-                        walletsTabLoaded = true;
+
+                        if (walletsLastPage > 1) {
+                            const from = meta.from || 0;
+                            const to = meta.to || 0;
+                            const total = meta.total || 0;
+                            $('#wallets-page-info').text(from + '–' + to + ' / ' + total);
+                            $('#wallets-prev-btn').prop('disabled', walletsPage <= 1);
+                            $('#wallets-next-btn').prop('disabled', walletsPage >= walletsLastPage);
+                            $pager.show();
+                        } else {
+                            $pager.hide();
+                        }
                     })
                     .fail(function () {
+                        $pager.hide();
                         $body.html(`<div class="lz-pick-empty text-danger">{{ __('api.unknownError') ?? 'Failed to load' }}</div>`);
                     });
             }
+
+            $(document).on('click', '#wallets-prev-btn', function () {
+                if (walletsPage > 1) {
+                    loadCartWalletsTab(true, walletsPage - 1);
+                }
+            });
+            $(document).on('click', '#wallets-next-btn', function () {
+                if (walletsPage < walletsLastPage) {
+                    loadCartWalletsTab(true, walletsPage + 1);
+                }
+            });
 
             function loadCartPackagesTab(force) {
                 if (packagesTabLoaded && !force) return;
@@ -5568,10 +5633,7 @@
                                 toastr.success('{{ __('admin.operation_done_successfully') }}');
                             }
                             
-                            // Reload page to refresh wallets table
-                            setTimeout(function() {
-                                location.reload();
-                            }, 1000);
+                            loadCartWalletsTab(true, 1);
                         } else {
                             if (typeof toastr !== 'undefined') {
                                 toastr.error(response.message || '{{ __('admin.an_error_occurred') }}');

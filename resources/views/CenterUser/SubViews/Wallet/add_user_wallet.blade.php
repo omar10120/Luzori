@@ -68,7 +68,9 @@
                                 <!-- @for ($i = 1; $i <= 100; $i++) -->
                                     <!-- <option value="{{ $i }}">{{ $i }}</option> -->
                                 <!-- @endfor -->
-                                <option value="10">10%</option>
+                                <option value="10">10</option>
+                                <option value="7.2">7.2</option>
+                                <option value="2.5">2.5</option>
                             </select>
                         </div>
                     </div>

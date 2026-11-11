@@ -106,14 +106,26 @@ class CustomerSearchService
             return ['status' => false];
         }
 
-        $cacheKey = 'customer_booking_profile_' . md5($phone);
+        $branchId = $this->lockedCenterUserBranchId();
+        $cacheKey = 'customer_booking_profile_' . md5($phone . '|branch:' . ($branchId ?? 'all'));
 
-        return Cache::remember($cacheKey, 180, function () use ($phone) {
-            return $this->buildBookingProfile($phone);
+        return Cache::remember($cacheKey, 180, function () use ($phone, $branchId) {
+            return $this->buildBookingProfile($phone, $branchId);
         });
     }
 
-    private function buildBookingProfile(string $phone): array
+    private function lockedCenterUserBranchId(): ?int
+    {
+        if ((int) get_user_role() === 1) {
+            return null;
+        }
+
+        $branchId = auth('center_user')->user()?->branch_id;
+
+        return $branchId ? (int) $branchId : null;
+    }
+
+    private function buildBookingProfile(string $phone, ?int $branchId = null): array
     {
         $digits = preg_replace('/\D+/', '', $phone);
 
@@ -132,7 +144,12 @@ class CustomerSearchService
             })
             ->with([
                 'memberships:id,user_id,membership_no,percent',
-                'wallets.wallet',
+                'wallets' => function ($q) use ($branchId) {
+                    $q->with('wallet');
+                    if ($branchId) {
+                        $q->where('users_wallets.branch_id', $branchId);
+                    }
+                },
                 'packages' => function ($q) {
                     $q->where('status', 'active')->with([
                         'package.packageServicePaid.service.translation',

@@ -146,12 +146,14 @@ class SalesController extends Controller
                 ],
             ];
         });
-
-        $productsData = $products->mapWithKeys(function ($product) use ($destinationBranchId) {
+        $productsData = $products->mapWithKeys(function ($product) {
             $price = $product->retail_price && $product->retail_price > 0
                 ? (float) $product->retail_price
                 : (float) ($product->supply_price ?? 0);
-            $branchStock = $product->productBranches->firstWhere('branch_id', $destinationBranchId);
+            
+            // Calculate total stock across ALL branches
+            $totalStock = (int) $product->productBranches->sum('stock_quantity');
+            
             return [
                 $product->id => [
                     'id' => $product->id,
@@ -159,8 +161,7 @@ class SalesController extends Controller
                     'price' => $price,
                     'supply_price' => (float) ($product->supply_price ?? 0),
                     'retail_price' => (float) ($product->retail_price ?? 0),
-                    'stock_quantity' => $branchStock?->stock_quantity ?? 0,
-
+                    'stock_quantity' => $totalStock,
                 ],
             ];
         });
@@ -251,7 +252,7 @@ class SalesController extends Controller
     /**
      * Lazy-load coupons for the cart wallet tab.
      */
-    public function cartWallets()
+    public function cartWallets(Request $request)
     {
         $can = 'CREATE_' . Str::upper($this->plural);
         if (!auth('center_user')->user()->can($can, 'center_api')) {
@@ -263,11 +264,12 @@ class SalesController extends Controller
     
         // Role 1 = admin / super admin → see ALL wallets (no branch filter)
         $isAdmin = ((int) get_user_role() === 1);
+        $perPage = max(1, min(50, (int) $request->input('per_page', 10)));
     
-        $wallets  = $this->salesService->getCartWallets($centerUser, $isAdmin);
+        $wallets  = $this->salesService->getCartWallets($centerUser, $isAdmin, $perPage);
         $currency = get_currency();
     
-        $rows = $wallets->map(function ($wallet) use ($currency) {
+        $rows = $wallets->getCollection()->map(function ($wallet) use ($currency) {
             $clients = $wallet->users
                 ->map(fn ($uw) => $uw->user->name ?? null)
                 ->filter()
@@ -293,7 +295,17 @@ class SalesController extends Controller
             ];
         });
     
-        return response()->json(['data' => $rows]);
+        return response()->json([
+            'data' => $rows,
+            'meta' => [
+                'current_page' => $wallets->currentPage(),
+                'last_page' => $wallets->lastPage(),
+                'per_page' => $wallets->perPage(),
+                'total' => $wallets->total(),
+                'from' => $wallets->firstItem(),
+                'to' => $wallets->lastItem(),
+            ],
+        ]);
     }
     /**
      * Lazy-load packages for the cart package tab.
@@ -401,12 +413,10 @@ class SalesController extends Controller
 
         // Validate stock when tracking is enabled or branch stock exists
         $productBranch = \App\Models\ProductBranch::where('product_id', $product->id)
-            ->where('branch_id', $branchId)
-            ->first();
-
+        ->where('branch_id', $branchId)
+        ->first();
         if ($product->track_stock || $productBranch) {
             if (!$productBranch || $productBranch->stock_quantity < $request->quantity) {
-                $available = $productBranch?->stock_quantity ?? 0;
                 return MyHelper::responseJSON("Insufficient stock. Available: {$available}", Response::HTTP_BAD_REQUEST);
             }
         }

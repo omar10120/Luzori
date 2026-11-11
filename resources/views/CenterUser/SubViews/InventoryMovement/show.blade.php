@@ -23,7 +23,9 @@
                     <div class="col-md-4">
                         <label class="form-label">{{ __('field.branch') }}</label>
                         <select name="branch_id" class="form-select" onchange="this.form.submit()">
-                            <option value="">{{ __('general.all') ?? 'All' }}</option>
+                            @if ((int) get_user_role() === 1)
+                                <option value="">{{ __('general.all') ?? 'All' }}</option>
+                            @endif
                             @foreach ($branches as $branch)
                                 <option value="{{ $branch->id }}" @selected((int) $branchId === (int) $branch->id)>
                                     {{ $branch->name }}

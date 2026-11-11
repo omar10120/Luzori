@@ -507,6 +507,8 @@ return [
     'expire_date'                     => 'ُExpire date',
     'available'                       => 'Available',
     'received_hint_main_stock'        => 'Hint: Available in warehouse for transfer orders',
+    'reception_receive'               => 'Reception receive',
+    'reception_receive_confirm'       => 'Confirm reception receive and update product quantities?',
     'support_chat_admin_hint'         => 'Select a center to open the live conversation',
     'support_chat_center_hint'        => 'Chat live with Luzori admin support',
     'support_chat_empty'              => 'No messages yet — say hello!',

@@ -60,15 +60,16 @@ class SalesService
 
         
         $products = Product::with([
-                'translation',
-                'productBranches' => function ($q) use ($branchId) {
-                    if ($branchId) {
-                        $q->where('branch_id', $branchId);
-                    }
-                },
-            ])
-            ->orderBy('id')
-            ->get(['id', 'supply_price', 'retail_price']);
+            'translation',
+            'productBranches', // Load ALL branches for stock calculation
+        ])
+        ->orderBy('id')
+        ->get(['id', 'supply_price', 'retail_price'])
+        ->filter(function ($product) {
+            // Only keep products that have stock > 0 in AT LEAST ONE branch
+            return $product->productBranches->sum('stock_quantity') > 0;
+        })
+        ->values(); // Reset collection keys
 
         $discounts = Discount::query()
             ->select('id', 'code', 'type', 'amount', 'start_at', 'end_at')
@@ -131,7 +132,7 @@ class SalesService
      * @param  mixed  $centerUser  The authenticated center user (API or web guard)
      * @param  bool   $isAdmin     When true, skip the branch scope (see all wallets)
      */
-    public function getCartWallets($centerUser, bool $isAdmin = false)
+    public function getCartWallets($centerUser, bool $isAdmin = false, int $perPage = 10)
     {
         $query = Wallet::with([
             'created_by_user:id,name',
@@ -149,7 +150,7 @@ class SalesService
             $query->forCenterUserBranch($centerUser);
         }
 
-        return $query->get([
+        return $query->paginate($perPage, [
             'id', 'code', 'amount', 'invoiced_amount',
             'used', 'start_at', 'end_at', 'created_by',
         ]);

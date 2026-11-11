@@ -85,6 +85,17 @@
         overflow-wrap: anywhere;
         padding: 0.75rem 0;
     }
+    #lzRowDetailsDrawer .lz-order-item {
+        padding: 0.55rem 0;
+        border-bottom: 1px solid #efe6d8;
+    }
+    #lzRowDetailsDrawer .lz-order-item:last-child {
+        border-bottom: 0;
+        padding-bottom: 0;
+    }
+    #lzRowDetailsDrawer .lz-order-item:first-child {
+        padding-top: 0;
+    }
     #lzRowDetailsDrawer .lz-row-details-table img,
     #lzRowDetailsDrawer .lz-row-drawer-body img {
         display: block !important;
@@ -236,29 +247,8 @@
             if (!title || isActionsHeader(title, $header)) return;
 
             const prefer = isNoneColumn($header, $cell, this);
-            let hidden = prefer;
-
-            if ($cell.length && !$cell.is(':visible') && (!$header.is(':visible') || prefer)) {
-                hidden = true;
-            }
-
-            if (!hidden) return;
             upsertDetail(rows, indexByTitle, title, cellDisplay(api, rowIdx, colIdx), prefer);
         });
-
-        if (!rows.length) {
-            api.columns().every(function (colIdx) {
-                const $header = $(this.header());
-                const $cell = $(api.cell(rowIdx, colIdx).node());
-                if (isDetailsSkip($header, $cell)) return;
-
-                const title = ($header.text() || '').replace(/\s+/g, ' ').trim();
-                if (!title || isActionsHeader(title, $header)) return;
-
-                const prefer = isNoneColumn($header, $cell, this);
-                upsertDetail(rows, indexByTitle, title, cellDisplay(api, rowIdx, colIdx), prefer);
-            });
-        }
 
         return rows.map(function (row) {
             return { title: row.title, value: row.value };
@@ -364,6 +354,7 @@
         api.rows({ page: 'current' }).every(function () {
             const $tr = $(this.node());
             if (!$tr.length || $tr.hasClass('child')) return;
+            if ($tr.find('.lz-no-auto-details').length) return;
             if ($tr.find('.lz-open-row-details, .view-sale-side-details, .lz-view-side-details').length) return;
 
             const btn = detailsButtonHtml();

@@ -47,13 +47,62 @@ class StocktakeDataTable extends DataTable
             ->editColumn('name', function ($row) {
                 return \App\Helpers\MyHelper::truncateWithReadMore($row->name ?: 'Stocktake #' . $row->id);
             })
-            ->rawColumns(['action', 'status', 'name'])
+            ->editColumn('status', function ($row) {
+                return e($row->status ?: '—');
+            })
+            ->editColumn('started_at', function ($row) {
+                return $row->started_at ?: '—';
+            })
+            ->editColumn('completed_at', function ($row) {
+                return $row->completed_at ?: '—';
+            })
+            ->addColumn('branch_name', function ($row) {
+                $names = $row->branches->map(fn ($b) => $b->name)->filter()->values();
+                return $names->isEmpty() ? '—' : e($names->implode(', '));
+            })
+            ->addColumn('order_items', function ($row) {
+                $products = $row->stocktakeProducts;
+                if ($products->isEmpty()) {
+                    return '—';
+                }
+
+                $html = '<div class="lz-order-items">';
+                foreach ($products as $item) {
+                    $sku = $item->product?->primarySku?->sku;
+                    $counted = $item->counted_qty !== null ? number_format((float) $item->counted_qty, 2) : '—';
+                    $html .= '<div class="lz-order-item">';
+                    $html .= '<div class="fw-semibold">' . e($item->product->name ?? '-') . '</div>';
+                    if ($sku) {
+                        $html .= '<small class="text-muted">SKU: ' . e($sku) . '</small>';
+                    }
+                    $html .= '<div class="small text-muted">';
+                    $html .= e(__('field.expected')) . ': ' . number_format((float) $item->expected_qty, 2);
+                    $html .= ' · Counted: ' . $counted;
+                    if ($item->counted_qty !== null) {
+                        $html .= ' · Difference: ' . number_format((float) $item->difference, 2);
+                    }
+                    $html .= '</div></div>';
+                }
+                $html .= '</div>';
+
+                return $html;
+            })
+            ->rawColumns(['action', 'status', 'name', 'order_items'])
             ->setRowId('id');
     }
 
     public function query(Stocktake $model): QueryBuilder
     {
-        return $model->query()->withTrashed()->with(['startedBy', 'reviewedBy', 'branches.translation'])->orderBy($this->plural . '.id', 'DESC');
+        return $model->query()
+            ->withTrashed()
+            ->with([
+                'startedBy',
+                'reviewedBy',
+                'branches.translation',
+                'stocktakeProducts.product.translation',
+                'stocktakeProducts.product.primarySku',
+            ])
+            ->orderBy($this->plural . '.id', 'DESC');
     }
 
     public function html(): HtmlBuilder
@@ -124,6 +173,8 @@ class StocktakeDataTable extends DataTable
             Column::computed('started_at')->searchable(false)->title('Started on'),
             Column::computed('completed_at')->searchable(false)->title('Completed on'),
             Column::make('created_at')->searchable(true)->title(__('field.created_at')),
+            Column::computed('branch_name')->searchable(false)->title(__('field.branch'))->visible(false),
+            Column::computed('order_items')->searchable(false)->orderable(false)->title(__('locale.products'))->visible(false),
         ];
     }
 

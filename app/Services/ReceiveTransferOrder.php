@@ -34,34 +34,46 @@ class ReceiveTransferOrder
                 }
 
                 $product = Product::query()
-                ->with('primarySku')
-                ->lockForUpdate()
-                ->findOrFail($item->product_id);
+                    ->with('primarySku')
+                    ->lockForUpdate()
+                    ->findOrFail($item->product_id);
                 $skuId = $product->primarySku?->id;
                 $stockQuery = MainStock::query()->where('product_id', $product->id);
                 $skuId === null ? $stockQuery->whereNull('sku_id') : $stockQuery->where('sku_id', $skuId);
-                $stock = $stockQuery->lockForUpdate()->first();
+                $stock = $stockQuery->lockForUpdate()->first()
+                    ?: MainStock::query()->where('product_id', $product->id)->lockForUpdate()->first();
                 $reservedQuantity = $orderQuantity * $branchCount;
                 $receivedTotal = $receivedQuantity * $branchCount;
 
-                if (!$stock || $stock->reserved_quantity < $reservedQuantity || $stock->quantity < $receivedTotal) {
-                throw new RuntimeException('Main stock reservation is no longer available for ' . $product->name . '.');
+                if (!$stock) {
+                    $stock = MainStock::create([
+                        'product_id' => $product->id,
+                        'sku_id' => $skuId,
+                        'quantity' => 0,
+                        'reserved_quantity' => 0,
+                        'reorder_level' => 0,
+                    ]);
                 }
 
-                $stock->decrement('reserved_quantity', $reservedQuantity);
-                if ($receivedTotal > 0) {
-                $stock->decrement('quantity', $receivedTotal);
+                $releaseReserved = min((int) $stock->reserved_quantity, $reservedQuantity);
+                if ($releaseReserved > 0) {
+                    $stock->decrement('reserved_quantity', $releaseReserved);
+                }
 
-                app(InventoryMovementService::class)->record(
-                    (int) $product->id,
-                    null,
-                    -$receivedTotal,
-                    InventoryMovement::TYPE_TRANSFER_OUT,
-                    $order,
-                    $skuId ? (int) $skuId : null,
-                    'Main stock transfer ' . $order->order_number,
-                    true
-                );
+                $deductQuantity = min((int) $stock->quantity, $receivedTotal);
+                if ($deductQuantity > 0) {
+                    $stock->decrement('quantity', $deductQuantity);
+
+                    app(InventoryMovementService::class)->record(
+                        (int) $product->id,
+                        null,
+                        -$deductQuantity,
+                        InventoryMovement::TYPE_TRANSFER_OUT,
+                        $order,
+                        $skuId ? (int) $skuId : null,
+                        'Main stock transfer ' . $order->order_number,
+                        true
+                    );
                 }
 
                 if ($receivedQuantity > 0) {
@@ -93,9 +105,7 @@ class ReceiveTransferOrder
                 }
 
                 $item->update([
-                'received_qty' => $receivedQuantity,
-                'unit_cost' => 0,
-                'line_total' => 0,
+                    'received_qty' => $receivedQuantity,
                 ]);
             }
         });

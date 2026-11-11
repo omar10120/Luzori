@@ -96,6 +96,16 @@
         searching: function () {
           return searching;
         }
+      },
+      templateResult: function (item) {
+        if (item.loading) {
+          var $wrap = $('<span class="select2-searching-status d-inline-flex align-items-center py-1"></span>');
+          $wrap.append('<span class="spinner-border spinner-border-sm text-primary me-2" role="status" aria-hidden="true"></span>');
+          $wrap.append($('<span></span>').text(searching || item.text || ''));
+          return $wrap;
+        }
+
+        return item.text;
       }
     });
 

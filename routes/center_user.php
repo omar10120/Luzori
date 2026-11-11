@@ -321,6 +321,7 @@ Route::group(['middleware' => 'auth_center_user:center_user'], function () {
             Route::get('products', 'products')->name('products');
             Route::get('receive/{id}', 'receive')->name('receive');
             Route::post('receive/{id}', 'receiveStore')->name('receive.store');
+            Route::post('reception-receive/{id}', 'receptionReceive')->name('receptionReceive');
             Route::get('show/{id}', 'show')->name('show');
         });
     });

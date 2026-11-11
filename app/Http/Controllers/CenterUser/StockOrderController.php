@@ -51,7 +51,12 @@ class StockOrderController extends Controller
         $menu_link = route($this->indexRoute);
         $title = __('general.add') . ' ' . __('locale.stockorder');
         $requestUrl = route('center_user.stockorders.updateOrCreate');
-        $branches = Branch::with('translation')->get();
+        $branchesQuery = Branch::with('translation')->orderBy('id');
+        $lockedBranchId = $this->lockedBranchId();
+        if ($lockedBranchId) {
+            $branchesQuery->where('id', $lockedBranchId);
+        }
+        $branches = $branchesQuery->get();
         $suppliers = ProductSupplier::query()->orderBy('name')->get(['id', 'name']);
 
         return view('CenterUser.SubViews.StockOrder.create', compact(
@@ -119,6 +124,10 @@ class StockOrderController extends Controller
         $sourceType = (string) $request->get('source_type', 'supplier');
         $search = trim((string) $request->get('q', ''));
         $branchIds = array_filter(array_map('intval', (array) $request->get('branch_ids', [])));
+        $lockedBranchId = $this->lockedBranchId();
+        if ($lockedBranchId) {
+            $branchIds = [$lockedBranchId];
+        }
 
         if (!in_array($sourceType, ['supplier', 'main_stock'], true)) {
             return response()->json(['message' => __('field.invalid_stock_order_source')], Response::HTTP_UNPROCESSABLE_ENTITY);
@@ -138,8 +147,6 @@ class StockOrderController extends Controller
 
         if ($sourceType === 'supplier') {
             $query->whereHas('productSuppliers', fn ($q) => $q->where('product_suppliers.id', $supplierId));
-        } else {
-            $query->whereHas('mainStocks', fn ($q) => $q->available());
         }
 
         if ($search !== '') {
@@ -156,13 +163,6 @@ class StockOrderController extends Controller
         }
 
         $products = $query->orderBy('id')->limit(100)->get();
-        if ($sourceType === 'main_stock') {
-            $products = $products->filter(function ($product) {
-                $skuId = $product->primarySku?->id;
-                $mainStock = $product->mainStocks->first(fn ($stock) => $stock->sku_id == $skuId);
-                return ($mainStock?->available_quantity ?? 0) > 0;
-            })->values();
-        }
 
         $data = $products->map(function ($product) use ($branchIds, $sourceType) {
             $branches = $product->productBranches;
@@ -192,17 +192,22 @@ class StockOrderController extends Controller
 
     public function receive($id)
     {
+        if ((int) get_user_role() !== 1) {
+            return abort(403);
+        }
+
         $can = 'UPDATE_' . Str::upper($this->plural);
         if (!auth('center_user')->user()->can($can, 'center_api')) {
             return abort(403);
         }
 
-        $order = StockOrder::with([
-            'items.product.translation',
-            'items.product.primarySku',
-            'branches.translation',
-            'supplier',
-        ])->findOrFail($id);
+        $order = $this->stockOrdersQuery()
+            ->with([
+                'items.product.translation',
+                'items.product.primarySku',
+                'branches.translation',
+                'supplier',
+            ])->findOrFail($id);
 
         if ($order->status !== 'ordered') {
             return redirect()->route('center_user.stockorders.show', ['id' => $order->id]);
@@ -224,12 +229,16 @@ class StockOrderController extends Controller
 
     public function receiveStore(StockOrderReceiveRequest $request, $id)
     {
+        if ((int) get_user_role() !== 1) {
+            return abort(403);
+        }
+
         $can = 'UPDATE_' . Str::upper($this->plural);
         if (!auth('center_user')->user()->can($can, 'center_api')) {
             return abort(403);
         }
 
-        $order = StockOrder::with(['items', 'branches'])->findOrFail($id);
+        $order = $this->stockOrdersQuery()->with(['items', 'branches'])->findOrFail($id);
 
         try {
             $order = $this->stockOrderService->receive($order, $request->validated()['items']);
@@ -244,6 +253,39 @@ class StockOrderController extends Controller
         }
     }
 
+    public function receptionReceive($id)
+    {
+        $user = auth('center_user')->user();
+        $can = $user?->can('RECEPTION_RECEIVE_STOCKORDERS', 'center_api')
+            || $user?->can('UPDATE_STOCKORDERS', 'center_api')
+            || $user?->can('UPDATE_STOCKTAKES', 'center_api');
+        if (!$can) {
+            return abort(403);
+        }
+
+        $order = $this->stockOrdersQuery()->with(['items', 'branches'])->findOrFail($id);
+
+        try {
+            $order = $this->stockOrderService->receptionReceive($order);
+
+            if (request()->ajax() || request()->expectsJson()) {
+                return MyHelper::responseJSON(
+                    __('admin.operation_done_successfully'),
+                    Response::HTTP_OK,
+                    ['id' => $order->id, 'redirect_url' => route($this->indexRoute)]
+                );
+            }
+
+            return redirect()->route($this->indexRoute)->with('success', __('admin.operation_done_successfully'));
+        } catch (\Exception $e) {
+            if (request()->ajax() || request()->expectsJson()) {
+                return MyHelper::responseJSON($e->getMessage() ?: __('admin.an_error_occurred'), Response::HTTP_BAD_REQUEST);
+            }
+
+            return redirect()->back()->with('error', $e->getMessage() ?: __('admin.an_error_occurred'));
+        }
+    }
+
     public function show($id)
     {
         $can = 'SHOW_' . Str::upper($this->plural);
@@ -251,13 +293,15 @@ class StockOrderController extends Controller
             return abort(403);
         }
 
-        $order = StockOrder::with([
-            'items.product.translation',
-            'items.product.primarySku',
-            'branches.translation',
-            'supplier',
-            'createdBy',
-        ])->withTrashed()->findOrFail($id);
+        $order = $this->stockOrdersQuery()
+            ->withTrashed()
+            ->with([
+                'items.product.translation',
+                'items.product.primarySku',
+                'branches.translation',
+                'supplier',
+                'createdBy',
+            ])->findOrFail($id);
 
         $menu = __('locale.' . $this->plural);
         $menu_link = route($this->indexRoute);
@@ -269,5 +313,27 @@ class StockOrderController extends Controller
             'menu',
             'menu_link'
         ));
+    }
+
+    private function stockOrdersQuery()
+    {
+        $query = StockOrder::query();
+        $branchId = $this->lockedBranchId();
+        if ($branchId) {
+            $query->whereHas('branches', fn ($q) => $q->where('branches.id', $branchId));
+        }
+
+        return $query;
+    }
+
+    private function lockedBranchId(): ?int
+    {
+        if ((int) get_user_role() === 1) {
+            return null;
+        }
+
+        $branchId = auth('center_user')->user()?->branch_id;
+
+        return $branchId ? (int) $branchId : null;
     }
 }

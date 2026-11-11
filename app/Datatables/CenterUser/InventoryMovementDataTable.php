@@ -52,9 +52,20 @@ class InventoryMovementDataTable extends DataTable
     public function query(Product $model): QueryBuilder
     {
         $branchId = request()->integer('branch_id') ?: null;
+        if ((int) get_user_role() !== 1) {
+            $branchId = auth('center_user')->user()?->branch_id
+                ? (int) auth('center_user')->user()->branch_id
+                : $branchId;
+        }
 
-        return $model->query()
-            ->with(['translation'])
+        $query = $model->query()
+            ->with(['translation']);
+
+        if ($branchId) {
+            $query->whereHas('productBranches', fn ($q) => $q->where('branch_id', $branchId));
+        }
+
+        return $query
             ->withSum([
                 'productBranches as current_stock' => function ($q) use ($branchId) {
                     if ($branchId) {

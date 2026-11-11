@@ -36,10 +36,14 @@ class CreateTransferOrder
                 $stock = $stockQuery->lockForUpdate()->first();
                 $requiredQuantity = (int) $orderQuantity * $branchCount;
 
-                if (!$stock || $stock->available_quantity < $requiredQuantity) {
-                    throw new RuntimeException(
-                        'Insufficient main stock for ' . $product->name . '. Required: ' . $requiredQuantity
-                    );
+                if (!$stock) {
+                    $stock = MainStock::create([
+                        'product_id' => $product->id,
+                        'sku_id' => $skuId,
+                        'quantity' => 0,
+                        'reserved_quantity' => 0,
+                        'reorder_level' => 0,
+                    ]);
                 }
 
                 $stock->increment('reserved_quantity', $requiredQuantity);

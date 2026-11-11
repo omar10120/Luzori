@@ -833,6 +833,12 @@ class CenterUserPermissionSeeder extends Seeder
             'group' => 'Stock Orders',
             'guard_name' => 'center_api',
         ]);
+        Permission::create([
+            'name' => 'RECEPTION_RECEIVE_STOCKORDERS',
+            'name_ar' => 'استلام الاستقبال لطلب المخزون',
+            'group' => 'Stock Orders',
+            'guard_name' => 'center_api',
+        ]);
         // END STOCKORDERS
 
         // START MAIN STOCK

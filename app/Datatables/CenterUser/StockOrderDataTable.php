@@ -23,15 +23,32 @@ class StockOrderDataTable extends DataTable
                 $route = 'center_user.' . $this->plural;
                 $id = $item->id;
                 $model = $this->model;
+                $user = auth('center_user')->user();
+                $isSuperAdmin = (int) get_user_role() === 1;
+                $canShow = $user?->can('SHOW_STOCKORDERS', 'center_api') || $user?->can('SHOW_STOCKTAKES', 'center_api');
+                $canUpdate = $user?->can('UPDATE_STOCKORDERS', 'center_api') || $user?->can('UPDATE_STOCKTAKES', 'center_api');
+                $canReceptionReceive = $user?->can('RECEPTION_RECEIVE_STOCKORDERS', 'center_api') || $canUpdate;
+                $canDelete = $user?->can('DELETE_STOCKORDERS', 'center_api') || $user?->can('DELETE_STOCKTAKES', 'center_api');
                 $options = [
-                    'show' => true,
-                    'delete' => true,
+                    'row_details' => false,
                     'operation' => DeleteActionEnum::FORCE_DELETE->value,
                     'with_trashed' => 1,
                 ];
 
-                if ($item->status === 'ordered') {
+                if ($canShow) {
+                    $options['show'] = true;
+                }
+
+                if ($canDelete) {
+                    $options['delete'] = true;
+                }
+
+                if ($isSuperAdmin && $canUpdate && $item->status === StockOrder::STATUS_ORDERED) {
                     $options['receive_url'] = route('center_user.stockorders.receive', ['id' => $id]);
+                }
+
+                if ($canReceptionReceive && $item->status === StockOrder::STATUS_RECEIVED) {
+                    $options['reception_receive_url'] = route('center_user.stockorders.receptionReceive', ['id' => $id]);
                 }
 
                 return view()->make('_partials.center_action_icons', compact('id', 'route', 'options', 'model'))->render();
@@ -58,25 +75,71 @@ class StockOrderDataTable extends DataTable
                 return '<span class="lz-cost">' . number_format((float) $row->total_cost, 2) . ' ' . e(get_currency()) . '</span>';
             })
             ->editColumn('status', function ($row) {
-                $class = $row->status === 'received' ? 'is-received' : 'is-ordered';
-                $label = $row->status === 'received'
-                    ? __('field.received')
-                    : __('field.ordered');
-                return '<span class="lz-status-badge ' . $class . '">' . e($label) . '</span>';
+                $map = [
+                    StockOrder::STATUS_RECEIVED => ['class' => 'is-received', 'label' => __('field.received')],
+                    StockOrder::STATUS_RECEPTION_RECEIVE => ['class' => 'is-reception-receive', 'label' => __('field.reception_receive')],
+                    StockOrder::STATUS_ORDERED => ['class' => 'is-ordered', 'label' => __('field.ordered')],
+                ];
+                $status = $map[$row->status] ?? $map[StockOrder::STATUS_ORDERED];
+                return '<span class="lz-status-badge ' . $status['class'] . '">' . e($status['label']) . '</span>';
             })
             ->editColumn('created_at', function ($row) {
                 return $row->created_at ?: '—';
             })
-            ->rawColumns(['action', 'status', 'order_number', 'total_cost'])
+            ->addColumn('source_type_label', function ($row) {
+                return $row->source_type === 'main_stock'
+                    ? e(__('field.main_stock'))
+                    : e(__('locale.suppliers'));
+            })
+            ->addColumn('order_items', function ($row) {
+                if ($row->items->isEmpty()) {
+                    return '—';
+                }
+
+                $hideCost = $row->source_type === 'main_stock';
+                $html = '<div class="lz-order-items">';
+                foreach ($row->items as $item) {
+                    $sku = $item->product?->primarySku?->sku;
+                    $received = $item->received_qty !== null
+                        ? number_format((float) $item->received_qty, 2)
+                        : '—';
+                    $html .= '<div class="lz-order-item">';
+                    $html .= '<div class="fw-semibold">' . e($item->product->name ?? '-') . '</div>';
+                    if ($sku) {
+                        $html .= '<small class="text-muted">SKU: ' . e($sku) . '</small>';
+                    }
+                    $html .= '<div class="small text-muted">';
+                    $html .= e(__('field.ordered')) . ': ' . number_format((float) $item->order_qty, 2);
+                    $html .= ' · ' . e(__('field.received')) . ': ' . $received;
+                    if (!$hideCost) {
+                        $html .= '<br>' . e(__('field.unit_cost')) . ': ' . number_format((float) $item->unit_cost, 2) . ' ' . e(get_currency());
+                        $html .= ' · ' . e(__('field.total_cost')) . ': ' . number_format((float) $item->line_total, 2) . ' ' . e(get_currency());
+                    }
+                    $html .= '</div></div>';
+                }
+                $html .= '</div>';
+
+                return $html;
+            })
+            ->rawColumns(['action', 'status', 'order_number', 'total_cost', 'order_items'])
             ->setRowId('id');
     }
 
     public function query(StockOrder $model): QueryBuilder
     {
-        return $model->query()
+        $query = $model->query()
             ->withTrashed()
-            ->with(['supplier', 'branches.translation'])
+            ->with(['supplier', 'branches.translation', 'items.product.translation', 'items.product.primarySku'])
             ->orderBy('stock_orders.id', 'DESC');
+
+        if ((int) get_user_role() !== 1) {
+            $branchId = auth('center_user')->user()?->branch_id;
+            if ($branchId) {
+                $query->whereHas('branches', fn ($q) => $q->where('branches.id', $branchId));
+            }
+        }
+
+        return $query;
     }
 
     public function html(): HtmlBuilder
@@ -147,10 +210,12 @@ class StockOrderDataTable extends DataTable
             Column::make('order_number')->searchable(true)->title(__('field.order_number'))->responsivePriority(1)->addClass('dtr-control all'),
             Column::make('created_at')->searchable(true)->title(__('field.created'))->responsivePriority(2)->addClass('all'),
             Column::make('expected_at')->searchable(false)->title(__('field.expected'))->responsivePriority(3)->addClass('all'),
-            Column::computed('branch_name')->searchable(false)->title(__('field.branch'))->responsivePriority(2)->addClass('all'),
+            // Column::computed('branch_name')->searchable(false)->title(__('field.branch'))->responsivePriority(2)->addClass('all'),
             Column::make('deliver_from')->searchable(true)->title(__('field.deliver_from'))->responsivePriority(3)->addClass('all'),
             Column::make('total_cost')->searchable(false)->title(__('field.total_cost'))->responsivePriority(2)->addClass('all'),
             Column::computed('status')->searchable(false)->title(__('field.status'))->responsivePriority(1)->addClass('all'),
+            Column::computed('source_type_label')->searchable(false)->title(__('field.stock_order_source'))->visible(false),
+            Column::computed('order_items')->searchable(false)->orderable(false)->title(__('locale.products'))->visible(false),
         ];
     }
 

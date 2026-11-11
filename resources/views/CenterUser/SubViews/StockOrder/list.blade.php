@@ -45,6 +45,10 @@
             background: #f3ebe0;
             color: #8a6a3d;
         }
+        .lz-stockorders-table .lz-status-badge.is-reception-receive {
+            background: #e8eef7;
+            color: #2f4d7a;
+        }
         table.dataTable.dtr-column > tbody > tr > td.dtr-control:before,
         table.dataTable.dtr-column.collapsed > tbody > tr > td.dtr-control:before {
             border-radius: 50%;
@@ -74,7 +78,11 @@
                 </div>
                 <h1 class="lz-page-title">{{ __('general.manage') }} {{ $title }}</h1>
             </div>
-            <div class="lz-page-actions" id="lz-stockorders-actions"><a href="{{ route('center_user.stockorders.create') }}" class="btn btn-luzori-primary btn-sm mx-1 px-3 py-2 lz-btn-add-new">{{ __('general.add_new') }} <i class="ti ti-plus"></i></a></div>
+            <div class="lz-page-actions" id="lz-stockorders-actions">
+                @if(auth('center_user')->user()?->can('CREATE_STOCKORDERS', 'center_api'))
+                    <a href="{{ route('center_user.stockorders.create') }}" class="btn btn-luzori-primary btn-sm mx-1 px-3 py-2 lz-btn-add-new">{{ __('general.add_new') }} <i class="ti ti-plus"></i></a>
+                @endif
+            </div>
         </div>
 
         <div class="card lz-table-card">
