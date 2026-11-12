@@ -521,7 +521,7 @@ class SalesController extends Controller
         }
         
         // Filter workers by branch
-        $workers = Worker::when($branchId, function($query) use ($branchId) {
+        $workers = Worker::when($branchId && get_user_role() != 1, function($query) use ($branchId) {
             return $query->where('branch_id', $branchId);
         })->select('id', 'name', 'phone', 'is_center_user')->get();
 
@@ -625,7 +625,7 @@ class SalesController extends Controller
         }
 
         $branchId = $sale->branch_id ?? auth('center_user')->user()->branch_id ?? null;
-        $workers = Worker::when($branchId, fn ($q) => $q->where('branch_id', $branchId))
+        $workers = Worker::when($branchId && get_user_role() != 1, fn ($q) => $q->where('branch_id', $branchId))
             ->orderBy('name')
             ->get(['id', 'name', 'phone', 'is_center_user']);
 

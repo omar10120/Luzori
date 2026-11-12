@@ -540,8 +540,7 @@ return [
     'unsupported_attachment'          => 'Unsupported file type. Use an image or video.',
     'attachment_too_large'            => 'File is too large',
     'message_or_attachment_required'  => 'Write a message or attach a file',
-
-    'allow_notification'              => 'allow notification'
-    
+    'allow_notification'              => 'allow notification',
+    'comment'                         => 'comment',
 
 ];

@@ -65,7 +65,7 @@ trait HasMediaTrait
         $host = request()->getHost();
 
         if (in_array($host, ['127.0.0.1', 'localhost'], true)) {
-            return Center::where('domain', 'center')->first()
+            return Center::where('domain', 'meenscare')->first()
                 ?? Center::where('database', config('database.connections.mysql.database'))->first();
         }
 

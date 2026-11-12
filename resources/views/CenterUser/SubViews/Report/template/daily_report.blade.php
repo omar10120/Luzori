@@ -165,6 +165,9 @@
                                                                         {{ $with_price['detailsArr'][$key]->full_name }}
                                                                         <br>
                                                                         {{ $with_price['detailsArr'][$key]->mobile }}
+                                                                        @if (!empty($with_price['notes'][$key]))
+                                                                            <br>Comment : {{ $with_price['notes']}}
+                                                                        @endif
                                                                     </span>
                                                                     @if (!$loop->last)
                                                                         <hr style="margin-top:5px;margin-bottom:5px;">
@@ -409,6 +412,9 @@
                                                                             {{ $with_price['detailsArr'][$key]->full_name }}
                                                                             <br>
                                                                             {{ $with_price['detailsArr'][$key]->mobile }}
+                                                                            @if (!empty($with_price['notes'][$key]))
+                                                                                <br>Comment : {{ $with_price['notes'][$key] }}
+                                                                            @endif
                                                                         </span>
                                                                         @if (!$loop->last)
                                                                             <hr
@@ -645,8 +651,11 @@
                                                                         @endif
                                                                         <br>
                                                                         {{ $with_price['detailsArr'][$key]->full_name }}
-                                                                        <br>
+                                                                       
                                                                         {{ $with_price['detailsArr'][$key]->mobile }}
+                                                                        @if (!empty($with_price['notes'][$key]))
+                                                                            <br>Comment : {{ $with_price['notes']}}
+                                                                        @endif
                                                                     </span>
                                                                     @if (!$loop->last)
                                                                         <hr style="margin-top:5px;margin-bottom:5px;">

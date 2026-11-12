@@ -948,6 +948,10 @@
                                                                 <input class="form-check-input" type="checkbox" id="booking-multiple_payments_toggle">
                                                                 <label class="form-check-label" for="booking-multiple_payments_toggle">{{ __('field.multiple_payment_methods') }}</label>
                                                             </div>
+                                                            <div class="mb-2">
+                                                                <label for="booking-notes" class="form-label">{{ __('field.comment') }}</label>
+                                                                <textarea class="form-control" id="booking-notes" name="notes" rows="3" placeholder="{{ __('field.notes') }}"></textarea>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                     <div class="row mb-4" id="booking-payment-method-container">
@@ -2891,6 +2895,8 @@
                     bookingWizardData.mobile = selectedCustomerPhone;
                 }
                 
+                bookingWizardData.notes = ($('#booking-notes').val() || '').trim();
+
                 var paymentType = $('#booking-payment_type').val();
                 const $paymentTypeField = $('#booking-payment_type');
 
@@ -3145,6 +3151,7 @@
                     client_mobile: bookingWizardData.mobile,
                     payment_type: bookingWizardData.payment_type || null,
                     payment_methods: bookingWizardData.payment_methods || null,
+                    notes: bookingWizardData.notes || null,
                     wallet_id: bookingWizardData.wallet_id || null,
                     membership_id: bookingWizardData.membership_id || null,
                     discount_id: bookingWizardData.discount_id || null,
@@ -3212,6 +3219,7 @@
                 // So we don't clear global selectedCustomer vars, just the wizard local usage
                 
                 $('#booking-payment_type').val('');
+                $('#booking-notes').val('');
                 $('#booking-service-container, #booking-review-content').empty();
                 // Clear the loaded wallet/membership HTML to prevent stale data
                 $('#booking-servicesTable, #booking-walletsElement, #booking-membershipsElement').empty();

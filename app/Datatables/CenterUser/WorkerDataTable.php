@@ -84,7 +84,7 @@ class WorkerDataTable extends DataTable
             $q->with(['translation']);
         }]);
 
-        if ($branchId !== null) {
+        if ($branchId !== null && get_user_role() != 1) {
             $query->where('branch_id', $branchId);
         }
 
