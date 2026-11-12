@@ -316,8 +316,10 @@
                                     </div>
 
                                     @if($group == 'Commission' && $permission->contains(function($p) { return in_array($p->name, ['COMMISSION_BOOKING_PERCENTAGE', 'COMMISSION_BOOKING_FIXED', 'COMMISSION_PRODUCT_PERCENTAGE', 'COMMISSION_PRODUCT_FIXED', 'COMMISSION_COUPON_PERCENTAGE', 'COMMISSION_COUPON_FIXED']); }))
-                                        <!-- Commission Type Settings within Commission section -->
-                                        <div class="col-md-12 p-0" id="commissionTypeSettingsInline" style="display: none;">
+                                        @php
+                                            $commissionPanelOpen = $item && $item->permissions->contains(fn ($assigned) => $assigned->name === 'VIEW_COMMISSION');
+                                        @endphp
+                                        <div class="col-md-12 p-0" id="commissionTypeSettingsInline" @unless($commissionPanelOpen) style="display: none;" @endunless>
                                             <div class="card lz-commission-card mt-2">
                                                 <div class="card-body">
                                                     <h5 class="lz-field-label mb-1">{{ __('field.commission') }} {{ __('field.types') }}</h5>
@@ -553,7 +555,17 @@
             });
 
             var commissionModalEl = document.getElementById('commissionValuesModal');
-            var commissionModal = commissionModalEl ? bootstrap.Modal.getOrCreateInstance(commissionModalEl) : null;
+            var commissionModal = null;
+
+            function commissionDialog() {
+                if (!commissionModalEl || typeof bootstrap === 'undefined' || !bootstrap.Modal) return null;
+                if (!commissionModal) {
+                    commissionModal = bootstrap.Modal.getOrCreateInstance
+                        ? bootstrap.Modal.getOrCreateInstance(commissionModalEl)
+                        : new bootstrap.Modal(commissionModalEl);
+                }
+                return commissionModal;
+            }
 
             function commissionMode(value) {
                 return value && value.indexOf('PERCENTAGE') !== -1 ? 'percentage' : 'fixed';
@@ -562,7 +574,7 @@
             function openCommissionDialog(kind, mode) {
                 var picker = document.querySelector('.lz-commission-picker[data-kind="' + kind + '"][data-mode="' + mode + '"]');
                 var body = document.getElementById('commissionValuesBody');
-                if (!picker || !body || !commissionModal) return;
+                if (!picker || !body || !commissionDialog()) return;
                 body.querySelectorAll('.lz-commission-picker').forEach(function (openPicker) {
                     var row = document.querySelector('.lz-commission-row[data-kind="' + openPicker.dataset.kind + '"]');
                     if (row) row.appendChild(openPicker);
@@ -570,7 +582,7 @@
                 document.getElementById('commissionValuesTitle').textContent = picker.dataset.title || '';
                 body.appendChild(picker);
                 document.body.appendChild(commissionModalEl);
-                commissionModal.show();
+                commissionDialog().show();
             }
 
             function refreshCommissionSummaries() {
@@ -657,26 +669,26 @@
                 });
             });
 
-            // Check on page load if VIEW_COMMISSION is already checked
-            document.addEventListener('DOMContentLoaded', function() {
+            function showCommissionTypes() {
                 var commissionCheckbox = document.querySelector('.permission-checkbox[data-perm-name="VIEW_COMMISSION"]');
-                if (commissionCheckbox && commissionCheckbox.checked) {
-                    var commissionSettings = document.getElementById('commissionTypeSettingsInline');
-                    if (commissionSettings) {
-                        commissionSettings.style.display = 'block';
-                    }
+                var commissionSettings = document.getElementById('commissionTypeSettingsInline');
+                if (commissionCheckbox && commissionCheckbox.checked && commissionSettings) {
+                    commissionSettings.style.display = 'block';
                 }
-
-                // Sync radio buttons with existing hidden permission checkboxes
                 document.querySelectorAll('.commission-booking-type, .commission-product-type, .commission-coupon-type').forEach(function(radio) {
-                    var permissionName = radio.value;
-                    var permissionCheckbox = document.getElementById('perm_' + permissionName);
+                    var permissionCheckbox = document.getElementById('perm_' + radio.value);
                     if (permissionCheckbox && permissionCheckbox.checked) {
                         radio.checked = true;
                     }
                 });
                 refreshCommissionSummaries();
-            });
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', showCommissionTypes);
+            } else {
+                showCommissionTypes();
+            }
         })();
     </script>
 @endsection
