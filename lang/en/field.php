@@ -542,5 +542,7 @@ return [
     'message_or_attachment_required'  => 'Write a message or attach a file',
     'allow_notification'              => 'allow notification',
     'comment'                         => 'comment',
+    'total_prices_5_percent'          => '5% of total prices',
+    'total_tips_7_5_percent'          => '7.5% of total tips',
 
 ];
