@@ -2342,9 +2342,15 @@
                             });
                             service_info += `</select>`;
                         } else {
+                            
+                                    
+
                             service_info += `
-                                    <select class="form-control commission-fixed-input" name="service[${service.id}][commission]" id="booking-commission_fixed_${service.id}">
+                                    <select class="form-control commission-fixed-input" name="service[${service.id}][commission]" id="booking-commission_fixed_${service.id}" data-service-price="${servicePrice}">
                                         <option value="">${posConfig.translations.select_commission}</option>`;
+
+
+
                             posConfig.allowedFixedRates.forEach(function (rate) {
                                 service_info += `<option value="${rate}">${rate}</option>`;
                             });
