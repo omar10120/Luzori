@@ -106,24 +106,34 @@ class CenterUserRoleController extends Controller
 
     private function saveCommissionRates(Request $request): void
     {
-        if (!$request->exists('commission_rates')) {
+        if (!$request->exists('commission_rates_present')) {
             return;
         }
 
-        $input = $request->input('commission_rates', []);
+        $percentInput = $request->input('commission_rates', []);
+        $fixedInput = $request->input('commission_fixed', []);
         $clean = [];
         foreach (['booking', 'coupon', 'product'] as $kind) {
-            $clean[$kind] = collect($input[$kind] ?? [])
-                ->map(fn ($value) => round((float) $value, 2))
-                ->filter(fn ($value) => $value > 0 && $value <= 100)
-                ->unique()
-                ->values()
-                ->all();
+            $clean[$kind] = [
+                'percentage' => $this->cleanCommissionSteps($percentInput[$kind] ?? []),
+                'fixed' => $this->cleanCommissionSteps($fixedInput[$kind] ?? []),
+            ];
         }
 
         Setting::query()->updateOrCreate(
             ['key' => 'commission_percentage_rates'],
             ['value' => json_encode($clean)]
         );
+    }
+
+    private function cleanCommissionSteps(array $values): array
+    {
+        return collect($values)
+            ->map(fn ($value) => round((float) $value, 2))
+            ->filter(fn ($value) => $value >= 1 && $value <= 100 && abs(($value * 2) - round($value * 2)) < 0.001)
+            ->unique()
+            ->sort()
+            ->values()
+            ->all();
     }
 }

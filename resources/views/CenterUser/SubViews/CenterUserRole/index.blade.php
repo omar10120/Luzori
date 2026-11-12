@@ -122,56 +122,67 @@
             background: #002b26;
             color: #fff;
         }
-        .lz-role-form-page .lz-commission-rates {
+        .lz-role-form-page .lz-commission-picker {
             display: none;
+            width: 100%;
+            margin-top: .75rem;
+        }
+        .lz-role-form-page .lz-range-row {
+            display: flex;
             align-items: center;
             gap: .4rem;
             flex-wrap: wrap;
+            margin-bottom: .55rem;
         }
-        .lz-role-form-page .lz-rate-chip {
-            display: inline-flex;
-            align-items: center;
-            gap: .25rem;
-            background: #efe2d0;
-            color: #7a5a2f;
-            border-radius: 999px;
-            padding: .28rem .45rem .28rem .7rem;
-            font-size: .78rem;
-            font-weight: 700;
-        }
-        .lz-role-form-page .lz-rate-remove {
-            border: 0;
-            background: transparent;
-            color: #7a5a2f;
-            font-size: 1rem;
-            line-height: 1;
-            padding: 0 .15rem;
-            cursor: pointer;
-        }
-        .lz-role-form-page .lz-rate-add {
-            display: inline-flex;
-            align-items: center;
-            gap: .25rem;
-        }
-        .lz-role-form-page .lz-rate-input {
-            width: 4.5rem;
+        .lz-role-form-page .lz-range-row select {
             border: 1px solid #e4d7c4;
-            border-radius: 999px;
-            background: #fff;
-            padding: .25rem .55rem;
-            font-size: .78rem;
-            font-weight: 700;
+            border-radius: 8px;
+            padding: .3rem .45rem;
             color: #002b26;
+            background: #fff;
         }
-        .lz-role-form-page .lz-rate-add-btn {
+        .lz-role-form-page .lz-range-apply {
             border: 0;
             background: #002b26;
             color: #fff;
             border-radius: 999px;
-            width: 1.7rem;
-            height: 1.7rem;
+            padding: .32rem .8rem;
+            font-size: .75rem;
             font-weight: 700;
-            line-height: 1;
+        }
+        .lz-role-form-page .lz-value-grid {
+            display: grid;
+            grid-template-columns: repeat(10, minmax(0, 1fr));
+            gap: .28rem;
+            max-height: 220px;
+            overflow: auto;
+            padding: .15rem;
+        }
+        .lz-role-form-page .lz-value-grid label {
+            position: relative;
+            margin: 0;
+            cursor: pointer;
+        }
+        .lz-role-form-page .lz-value-grid input {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .lz-role-form-page .lz-value-grid span {
+            display: block;
+            text-align: center;
+            border: 1px solid #efe6d8;
+            border-radius: 8px;
+            background: #fff;
+            color: #002b26;
+            font-size: .72rem;
+            font-weight: 700;
+            padding: .32rem 0;
+        }
+        .lz-role-form-page .lz-value-grid input:checked + span {
+            background: #002b26;
+            border-color: #002b26;
+            color: #fff;
         }
         .lz-role-form-page #senderEmailModal .modal-content {
             border: none;
@@ -309,22 +320,39 @@
                                                                         </div>
                                                                     @endif
                                                                 </div>
-                                                                <div class="lz-commission-rates" data-commission-rates="commission_{{ $kind }}_type" data-kind="{{ $kind }}">
-                                                                    <div class="lz-rate-chips">
-                                                                        @foreach(get_allowed_commission_rates($kind) as $rate)
-                                                                            @php $rateLabel = rtrim(rtrim(number_format($rate, 2, '.', ''), '0'), '.'); @endphp
-                                                                            <span class="lz-rate-chip">
-                                                                                {{ $rateLabel }}%
-                                                                                <button type="button" class="lz-rate-remove" aria-label="{{ __('general.delete') }}">&times;</button>
-                                                                                <input type="hidden" name="commission_rates[{{ $kind }}][]" value="{{ $rateLabel }}">
-                                                                            </span>
-                                                                        @endforeach
+                                                                <input type="hidden" name="commission_rates_present" value="1">
+                                                                @foreach (['percentage' => '%', 'fixed' => __('field.fixed_value')] as $mode => $modeLabel)
+                                                                    @php
+                                                                        $selectedValues = get_allowed_commission_rates($kind, $mode);
+                                                                        $fieldName = $mode === 'fixed' ? 'commission_fixed' : 'commission_rates';
+                                                                    @endphp
+                                                                    <div class="lz-commission-picker" data-group="commission_{{ $kind }}_type" data-mode="{{ $mode }}">
+                                                                        <div class="lz-range-row">
+                                                                            <span>{{ $modeLabel }}</span>
+                                                                            <select class="lz-range-from" aria-label="{{ __('field.from') }}">
+                                                                                @foreach (commission_value_steps() as $step)
+                                                                                    <option value="{{ $step }}">{{ $step == floor($step) ? (int) $step : $step }}</option>
+                                                                                @endforeach
+                                                                            </select>
+                                                                            <span>{{ __('field.to') }}</span>
+                                                                            <select class="lz-range-to" aria-label="{{ __('field.to') }}">
+                                                                                @foreach (commission_value_steps() as $step)
+                                                                                    <option value="{{ $step }}" @selected($step == 100)>{{ $step == floor($step) ? (int) $step : $step }}</option>
+                                                                                @endforeach
+                                                                            </select>
+                                                                            <button type="button" class="lz-range-apply">{{ __('field.apply_range') }}</button>
+                                                                        </div>
+                                                                        <div class="lz-value-grid">
+                                                                            @foreach (commission_value_steps() as $step)
+                                                                                @php $stepLabel = $step == floor($step) ? (int) $step : $step; @endphp
+                                                                                <label>
+                                                                                    <input type="checkbox" name="{{ $fieldName }}[{{ $kind }}][]" value="{{ $step }}" @checked(in_array((float) $step, array_map('floatval', $selectedValues), true))>
+                                                                                    <span>{{ $stepLabel }}{{ $mode === 'percentage' ? '%' : '' }}</span>
+                                                                                </label>
+                                                                            @endforeach
+                                                                        </div>
                                                                     </div>
-                                                                    <div class="lz-rate-add">
-                                                                        <input type="number" class="lz-rate-input" min="0.01" max="100" step="0.01" placeholder="{{ __('field.percentage') }}">
-                                                                        <button type="button" class="lz-rate-add-btn">+</button>
-                                                                    </div>
-                                                                </div>
+                                                                @endforeach
                                                                 @if($percentPerm)
                                                                     <input type="checkbox" class="commission-permission-checkbox" name="permissions[]" value="{{ $percentName }}"
                                                                         id="perm_{{ $percentName }}" style="display: none;"
@@ -507,65 +535,29 @@
             });
 
             function syncCommissionRates() {
-                document.querySelectorAll('.lz-commission-rates').forEach(function (box) {
-                    var groupName = box.getAttribute('data-commission-rates');
-                    var selected = document.querySelector('input[name="' + groupName + '"]:checked');
-                    var show = selected && selected.value.indexOf('PERCENTAGE') !== -1;
-                    box.style.display = show ? 'flex' : 'none';
+                document.querySelectorAll('.lz-commission-picker').forEach(function (box) {
+                    var selected = document.querySelector('input[name="' + box.dataset.group + '"]:checked');
+                    var isPercentage = selected && selected.value.indexOf('PERCENTAGE') !== -1;
+                    var isFixed = selected && selected.value.indexOf('FIXED') !== -1;
+                    var show = (box.dataset.mode === 'percentage' && isPercentage) || (box.dataset.mode === 'fixed' && isFixed);
+                    box.style.display = show ? 'block' : 'none';
                 });
             }
 
-            function formatCommissionRate(value) {
-                var rounded = Math.round(value * 100) / 100;
-                return String(rounded).replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '');
-            }
-
-            document.addEventListener('keydown', function (event) {
-                if (event.key === 'Enter' && event.target.classList.contains('lz-rate-input')) {
-                    event.preventDefault();
-                    event.target.closest('.lz-rate-add').querySelector('.lz-rate-add-btn').click();
-                }
-            });
-
             document.addEventListener('click', function (event) {
-                var addButton = event.target.closest('.lz-rate-add-btn');
-                if (addButton) {
-                    var box = addButton.closest('.lz-commission-rates');
-                    var input = box.querySelector('.lz-rate-input');
+                var apply = event.target.closest('.lz-range-apply');
+                if (!apply) return;
+                var picker = apply.closest('.lz-commission-picker');
+                var from = parseFloat(picker.querySelector('.lz-range-from').value);
+                var to = parseFloat(picker.querySelector('.lz-range-to').value);
+                var start = Math.min(from, to);
+                var end = Math.max(from, to);
+                picker.querySelectorAll('.lz-value-grid input').forEach(function (input) {
                     var value = parseFloat(input.value);
-                    if (!value || value <= 0 || value > 100) {
-                        input.focus();
-                        return;
+                    if (value >= start - 0.001 && value <= end + 0.001) {
+                        input.checked = true;
                     }
-                    var label = formatCommissionRate(value);
-                    var exists = Array.from(box.querySelectorAll('input[type="hidden"]')).some(function (field) {
-                        return Math.abs(parseFloat(field.value) - value) < 0.001;
-                    });
-                    if (exists) {
-                        input.value = '';
-                        return;
-                    }
-                    var chip = document.createElement('span');
-                    chip.className = 'lz-rate-chip';
-                    chip.append(document.createTextNode(label + '%'));
-                    var remove = document.createElement('button');
-                    remove.type = 'button';
-                    remove.className = 'lz-rate-remove';
-                    remove.textContent = '×';
-                    var hidden = document.createElement('input');
-                    hidden.type = 'hidden';
-                    hidden.name = 'commission_rates[' + box.dataset.kind + '][]';
-                    hidden.value = label;
-                    chip.append(remove, hidden);
-                    box.querySelector('.lz-rate-chips').appendChild(chip);
-                    input.value = '';
-                    input.focus();
-                }
-
-                var removeButton = event.target.closest('.lz-rate-remove');
-                if (removeButton) {
-                    removeButton.closest('.lz-rate-chip').remove();
-                }
+                });
             });
 
             // Check on page load if VIEW_COMMISSION is already checked

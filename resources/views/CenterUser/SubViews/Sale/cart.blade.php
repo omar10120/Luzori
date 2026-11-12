@@ -1089,11 +1089,16 @@
                                             <div class="mb-1 mt-2">
                                                 <label for="product-commission" class="form-label">{{ __('field.commission') }} <span class="text-danger">*</span></label>
                                                 @if(get_allowed_commission_type('product') === 'fixed')
-                                                    <input type="number" class="form-control" name="commission" id="product-commission" step="0.01" min="0" placeholder="{{ __('field.commission') }}">
+                                                    <select class="form-control" name="commission" id="product-commission">
+                                                        <option value="">{{ __('field.select_commission') }}</option>
+                                                        @foreach(get_allowed_commission_rates('product', 'fixed') as $rate)
+                                                            <option value="{{ $rate }}">{{ $rate }}</option>
+                                                        @endforeach
+                                                    </select>
                                                 @else
                                                     <select class="form-control" name="commission" id="product-commission">
                                                         <option value="">{{ __('field.select_commission') }}</option>
-                                                        @foreach(get_allowed_commission_rates('product') as $rate)
+                                                        @foreach(get_allowed_commission_rates('product', 'percentage') as $rate)
                                                             <option value="{{ $rate }}">{{ $rate }}%</option>
                                                         @endforeach
                                                     </select>
@@ -1790,11 +1795,16 @@
                                 <div class="mb-1 mt-2">
                                     <label for="modal-wallet-commission" class="form-label">{{ __('field.commission') }} <span class="text-danger">*</span></label>
                                     @if(get_allowed_commission_type('coupon') === 'fixed')
-                                        <input type="number" class="form-control" name="commission" id="modal-wallet-commission" step="0.01" min="0" placeholder="{{ __('field.commission') }}">
+                                        <select class="form-control" name="commission" id="modal-wallet-commission">
+                                            <option value="">{{ __('field.select_commission') }}</option>
+                                            @foreach(get_allowed_commission_rates('coupon', 'fixed') as $rate)
+                                                <option value="{{ $rate }}">{{ $rate }}</option>
+                                            @endforeach
+                                        </select>
                                     @else
                                         <select class="form-control" name="commission" id="modal-wallet-commission">
                                             <option value="">{{ __('field.select_commission') }}</option>
-                                            @foreach(get_allowed_commission_rates('coupon') as $rate)
+                                            @foreach(get_allowed_commission_rates('coupon', 'percentage') as $rate)
                                                 <option value="{{ $rate }}">{{ $rate }}%</option>
                                             @endforeach
                                         </select>
@@ -1894,7 +1904,8 @@
                 allowedCommissionType: '{{ get_allowed_commission_type("booking") }}',
                 allowedProductType: '{{ get_allowed_commission_type("product") }}',
                 allowedCouponType: '{{ get_allowed_commission_type("coupon") }}',
-                allowedRates: @json(get_allowed_commission_rates('booking')),
+                allowedRates: @json(get_allowed_commission_rates('booking', 'percentage')),
+                allowedFixedRates: @json(get_allowed_commission_rates('booking', 'fixed')),
                 currency: '{{ get_currency() }}',
                 translations: {
                     max_commission: '{{ __("field.max_commission") }}',
@@ -2328,8 +2339,12 @@
                             service_info += `</select>`;
                         } else {
                             service_info += `
-                                    <input type="number" class="form-control commission-fixed-input" name="service[${service.id}][commission]" id="booking-commission_fixed_${service.id}" placeholder="{{ __('field.commission') }}" step="0.01" min="0" max="${servicePrice}" data-service-price="${servicePrice}">
-                                    <small class="text-muted commission-max-hint" id="booking-commission_max_hint_${service.id}">${posConfig.translations.max_commission}: ${parseFloat(servicePrice).toFixed(2)} ${posConfig.currency}</small>`;
+                                    <select class="form-control commission-fixed-input" name="service[${service.id}][commission]" id="booking-commission_fixed_${service.id}">
+                                        <option value="">${posConfig.translations.select_commission}</option>`;
+                            posConfig.allowedFixedRates.forEach(function (rate) {
+                                service_info += `<option value="${rate}">${rate}</option>`;
+                            });
+                            service_info += `</select>`;
                         }
                         service_info += `
                                 </div>`;
@@ -2366,7 +2381,7 @@
                             var $hint = $('#booking-commission_max_hint_' + currentServiceId);
                             
                             if ($fixedInput.length) {
-                                $fixedInput.on('input', function() {
+                                $fixedInput.on('input change', function() {
                                     var commissionValue = parseFloat($(this).val()) || 0;
                                     
                                     if (commissionValue > currentServicePrice) {

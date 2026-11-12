@@ -172,42 +172,55 @@ function get_allowed_commission_type($type = 'booking')
     }
 }
 
-function get_allowed_commission_rates(?string $type = null): array
+function commission_value_steps(): array
 {
-    $fallback = [10, 6.6];
+    $steps = [];
+    for ($half = 2; $half <= 200; $half++) {
+        $steps[] = $half / 2;
+    }
+
+    return $steps;
+}
+
+function get_allowed_commission_rates(?string $type = null, string $mode = 'percentage'): array
+{
+    $mode = $mode === 'fixed' ? 'fixed' : 'percentage';
 
     try {
         $raw = \App\Models\Setting::query()->where('key', 'commission_percentage_rates')->value('value');
         if ($raw === null || $raw === '') {
-            return $fallback;
+            return [];
         }
 
         $stored = json_decode((string) $raw, true);
         if (!is_array($stored)) {
-            return $fallback;
+            return [];
         }
 
-        $values = $stored;
+        $values = [];
         if ($type !== null) {
-            $values = $stored[strtolower($type)] ?? null;
-            if (!is_array($values)) {
-                $values = array_is_list($stored) ? $stored : $fallback;
+            $bucket = $stored[strtolower($type)] ?? null;
+            if (is_array($bucket) && isset($bucket[$mode]) && is_array($bucket[$mode])) {
+                $values = $bucket[$mode];
+            } elseif ($mode === 'percentage' && is_array($bucket) && array_is_list($bucket)) {
+                $values = $bucket;
             }
         }
 
         $rates = [];
         foreach ($values as $value) {
             $rate = round((float) $value, 2);
-            if ($rate > 0 && $rate <= 100) {
+            if ($rate >= 1 && $rate <= 100 && abs(($rate * 2) - round($rate * 2)) < 0.001) {
                 $rates[] = $rate;
             }
         }
 
         $rates = array_values(array_unique($rates, SORT_REGULAR));
+        sort($rates);
 
         return $rates;
     } catch (\Throwable $e) {
-        return $fallback;
+        return [];
     }
 }
 

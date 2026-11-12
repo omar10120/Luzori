@@ -257,7 +257,7 @@ return [
     'commission_services'            => 'عمولة الخدمات',
     'commission_coupon'              => 'عمولة الكوبون',
     'commission_product'             => 'عمولة المنتجات',
-    'allowed_percentages'            => 'النسب المسموحة',
+    'apply_range'                    => 'تطبيق النطاق',
     'fixed_value'                    => 'القيمة الثابتة',
     'max_commission'                 => 'العمولة الأقصى',
     'commission_cannot_exceed_service_price' => 'العمولة لا يمكن أن تتجاوز قيمة الخدمة',
