@@ -533,8 +533,8 @@ return [
     'message_or_attachment_required'  => 'اكتب رسالة أو أرفق ملفاً',
     'allow_notification'              => ' سماح للاشعارات',
     'comment'                         => 'التعليق',
-    'total_prices_5_percent'          => '5% مجموع الأسعار',
-    'total_tips_7_5_percent'          => '7.5% مجموع البقشيش',
+    'total_prices_5_percent'          => '5 مجموع الأسعار',
+    'total_tips_7_5_percent'          => '7.5 مجموع البقشيش',
     
     
 

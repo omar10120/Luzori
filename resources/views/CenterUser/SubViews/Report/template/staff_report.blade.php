@@ -91,7 +91,7 @@
                 </td>
                 @foreach ($firstusers_last_total_price as $index => $value)
                     <td style="background-color: #666;color: #fff;text-align: center"><strong>AED
-                            {{ number_format((float) $value * 0.05, 2, '.', '') }}</strong></td>
+                            {{ number_format((float) $value * 0.95, 2, '.', '') }}</strong></td>
                 @endforeach
             </tr>
             <tr>
@@ -103,11 +103,11 @@
                 @endforeach
             </tr>
             <tr>
-                <td style="background-color: #666;color: #fff;text-align: center"><strong>{{ __('field.total_tips_7_5_percent') }}</strong>
+            <td style="background-color: #666;color: #fff;text-align: center"><strong>{{ __('field.total_tips_7_5_percent') }}</strong>
                 </td>
                 @foreach ($firstusers_last_total_tips as $index => $value)
                     <td style="background-color: #666;color: #fff;text-align: center"><strong>AED
-                            {{ number_format((float) $value * 0.075, 2, '.', '') }}</strong></td>
+                            {{ number_format((float) $value * 0.925, 2, '.', '') }}</strong></td>
                 @endforeach
             </tr>
             <tr>
@@ -193,7 +193,7 @@
                 </td>
                 @foreach ($secondusers_last_total_price as $index => $value)
                     <td style="background-color: #666;color: #fff;text-align: center"><strong>AED
-                            {{ number_format((float) $value * 0.05, 2, '.', '') }}</strong></td>
+                            {{ number_format((float) $value * 0.95, 2, '.', '') }}</strong></td>
                 @endforeach
             </tr>
             <tr>
@@ -209,7 +209,7 @@
                 </td>
                 @foreach ($secondusers_last_total_tips as $index => $value)
                     <td style="background-color: #666;color: #fff;text-align: center"><strong>AED
-                            {{ number_format((float) $value * 0.075, 2, '.', '') }}</strong></td>
+                            {{ number_format((float) $value * 0.925, 2, '.', '') }}</strong></td>
                 @endforeach
             </tr>
             <tr>
