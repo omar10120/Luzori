@@ -530,8 +530,8 @@ return [
     'unsupported_attachment'          => 'نوع الملف غير مدعوم. استخدم صورة أو فيديو.',
     'attachment_too_large'            => 'حجم الملف كبير جداً',
     'message_or_attachment_required'  => 'اكتب رسالة أو أرفق ملفاً',
-
     'allow_notification'              => ' سماح للاشعارات',
+    'comment'                         => 'التعليق',
     
     
 

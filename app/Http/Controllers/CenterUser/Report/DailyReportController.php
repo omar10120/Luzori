@@ -212,6 +212,7 @@ class DailyReportController extends Controller
                 foreach ($report as $value) {
                     $full_name = $value->full_name;
                     $mobile = $value->mobile;
+                    $notes = $value->notes;
                     $price = 0;
                     if (!empty($value->details)) {
                         foreach ($value->details as $detail) {
@@ -299,6 +300,7 @@ class DailyReportController extends Controller
                                     $temp['detailsArr'] = $discountUsers[$detail->worker_id]['detailsArr'];
                                     $temp['codesArr'] = $discountUsers[$detail->worker_id]['codesArr'];
                                     $temp['client_name'] = $mobile;
+                                    $temp['notes'] = $notes;
                                     $payments_with_prices["free"][$detail->worker_id][] = $temp;
                                     array_push($selected_discountUsers, $detail->worker_id);
                                 }
@@ -309,6 +311,7 @@ class DailyReportController extends Controller
                                     $temp['type'] = "free_service";
                                     $temp['code'] = "";
                                     $temp['client_name'] = $mobile;
+                                    $temp['notes'] = $notes;
                                     $payments_with_prices["free"][$detail->worker_id][] = $temp;
                                 }
                             }
