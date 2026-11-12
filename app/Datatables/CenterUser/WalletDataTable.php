@@ -84,6 +84,37 @@ class WalletDataTable extends DataTable
                 // CreatedAtTrait already returns a formatted string
                 return e((string) ($row->created_at ?: '—'));
             })
+            ->filterColumn('users_list', function ($query, $keyword) {
+                $keyword = trim((string) $keyword);
+                if ($keyword === '') {
+                    return;
+                }
+
+                $like = '%' . mb_strtolower($keyword) . '%';
+                $digits = preg_replace('/\D+/', '', $keyword);
+
+                $query->whereHas('users', function ($walletUserQ) use ($like, $digits) {
+                    $walletUserQ->where(function ($q) use ($like, $digits) {
+                        $q->whereRaw('LOWER(users_wallets.serial_number) LIKE ?', [$like])
+                            ->orWhereHas('user', function ($userQ) use ($like, $digits) {
+                                $userQ->whereRaw('LOWER(email) LIKE ?', [$like])
+                                    ->orWhereRaw('LOWER(first_name) LIKE ?', [$like])
+                                    ->orWhereRaw('LOWER(last_name) LIKE ?', [$like])
+                                    ->orWhereRaw('LOWER(CONCAT(IFNULL(first_name, ""), " ", IFNULL(last_name, ""))) LIKE ?', [$like])
+                                    ->orWhereRaw('LOWER(phone) LIKE ?', [$like])
+                                    ->orWhereRaw('LOWER(CONCAT(IFNULL(country_code, ""), IFNULL(phone, ""))) LIKE ?', [$like]);
+
+                                if ($digits !== '') {
+                                    $userQ->orWhere('phone', 'like', '%' . $digits . '%')
+                                        ->orWhereRaw(
+                                            "CONCAT(IFNULL(REPLACE(country_code, '+', ''), ''), IFNULL(phone, '')) LIKE ?",
+                                            ['%' . $digits . '%']
+                                        );
+                                }
+                            });
+                    });
+                });
+            })
             ->rawColumns(['action', 'users_list', 'status', 'code', 'amount', 'used_label'])
             ->setRowId('id');
     }
@@ -179,7 +210,7 @@ class WalletDataTable extends DataTable
             Column::computed('used_label')->searchable(false)->orderable(false)->title(__('field.used'))->responsivePriority(2)->addClass('all'),
             Column::computed('status')->searchable(false)->orderable(false)->title(__('field.status'))->responsivePriority(2)->addClass('all'),
             Column::make('serial_number')->searchable(true)->title(__('field.serial_number'))->visible(false),
-            Column::computed('users_list')->searchable(false)->orderable(false)->title(__('field.users'))->visible(false),
+            Column::computed('users_list')->searchable(true)->orderable(false)->title(__('field.users'))->visible(false),
             Column::make('invoiced_amount')->searchable(true)->title(__('field.invoiced_amount'))->visible(false),
             Column::make('start_at')->searchable(true)->title(__('field.start_at'))->visible(false),
             Column::make('end_at')->searchable(true)->title(__('field.end_at'))->visible(false),

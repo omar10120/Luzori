@@ -15,7 +15,7 @@ class WorkerService
         $workerList = collect();
         foreach ($workers as $worker) {
             $query = Worker::select('id', 'name', 'phone', 'is_center_user', 'is_professional', 'salary', 'visa_start_date', 'visa_end_date', 'percentage')->where('id', $worker);
-            if ($branch_id) {
+            if ($branch_id && get_user_role() != 1) {
                 $query->where('branch_id', $branch_id);
             }
             $workerInfo = $query->first();
