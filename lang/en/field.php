@@ -256,6 +256,7 @@ return [
     'commission_coupon'              => 'Commission coupon',
     'commission_product'             => 'Commission product',
     'apply_range'                    => 'Apply range',
+    'edit_values'                    => 'Edit values',
     'fixed_value'                    => 'Fixed Value',
     'max_commission'                 => 'Max Commission',
     'commission_cannot_exceed_service_price' => 'Commission cannot exceed service price',

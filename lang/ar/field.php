@@ -258,6 +258,7 @@ return [
     'commission_coupon'              => 'عمولة الكوبون',
     'commission_product'             => 'عمولة المنتجات',
     'apply_range'                    => 'تطبيق النطاق',
+    'edit_values'                    => 'تعديل القيم',
     'fixed_value'                    => 'القيمة الثابتة',
     'max_commission'                 => 'العمولة الأقصى',
     'commission_cannot_exceed_service_price' => 'العمولة لا يمكن أن تتجاوز قيمة الخدمة',

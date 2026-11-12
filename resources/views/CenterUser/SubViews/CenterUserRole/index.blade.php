@@ -122,26 +122,49 @@
             background: #002b26;
             color: #fff;
         }
+        .lz-role-form-page .lz-commission-actions {
+            display: flex;
+            align-items: center;
+            gap: .6rem;
+            flex-wrap: wrap;
+            width: 100%;
+        }
+        .lz-role-form-page .lz-commission-edit {
+            border: 1px solid #002b26;
+            background: #fff;
+            color: #002b26;
+            border-radius: 999px;
+            padding: .32rem .8rem;
+            font-size: .75rem;
+            font-weight: 700;
+        }
+        .lz-role-form-page .lz-commission-summary {
+            color: #7a5a2f;
+            font-size: .78rem;
+            font-weight: 700;
+        }
         .lz-role-form-page .lz-commission-picker {
             display: none;
-            width: 100%;
-            margin-top: .75rem;
         }
-        .lz-role-form-page .lz-range-row {
+        #commissionValuesBody .lz-commission-picker {
+            display: block;
+            width: 100%;
+        }
+        #commissionValuesModal .lz-range-row {
             display: flex;
             align-items: center;
             gap: .4rem;
             flex-wrap: wrap;
             margin-bottom: .55rem;
         }
-        .lz-role-form-page .lz-range-row select {
+        #commissionValuesModal .lz-range-row select {
             border: 1px solid #e4d7c4;
             border-radius: 8px;
             padding: .3rem .45rem;
             color: #002b26;
             background: #fff;
         }
-        .lz-role-form-page .lz-range-apply {
+        #commissionValuesModal .lz-range-apply {
             border: 0;
             background: #002b26;
             color: #fff;
@@ -150,25 +173,25 @@
             font-size: .75rem;
             font-weight: 700;
         }
-        .lz-role-form-page .lz-value-grid {
+        #commissionValuesModal .lz-value-grid {
             display: grid;
             grid-template-columns: repeat(10, minmax(0, 1fr));
             gap: .28rem;
-            max-height: 220px;
+            max-height: 360px;
             overflow: auto;
             padding: .15rem;
         }
-        .lz-role-form-page .lz-value-grid label {
+        #commissionValuesModal .lz-value-grid label {
             position: relative;
             margin: 0;
             cursor: pointer;
         }
-        .lz-role-form-page .lz-value-grid input {
+        #commissionValuesModal .lz-value-grid input {
             position: absolute;
             opacity: 0;
             pointer-events: none;
         }
-        .lz-role-form-page .lz-value-grid span {
+        #commissionValuesModal .lz-value-grid span {
             display: block;
             text-align: center;
             border: 1px solid #efe6d8;
@@ -179,7 +202,7 @@
             font-weight: 700;
             padding: .32rem 0;
         }
-        .lz-role-form-page .lz-value-grid input:checked + span {
+        #commissionValuesModal .lz-value-grid input:checked + span {
             background: #002b26;
             border-color: #002b26;
             color: #fff;
@@ -197,9 +220,23 @@
             color: #002b26;
             font-weight: 700;
         }
-        .lz-role-form-page #senderEmailModal .btn-primary {
+        .lz-role-form-page #senderEmailModal .btn-primary,
+        #commissionValuesModal .btn-primary {
             background: #002b26;
             border-color: #002b26;
+        }
+        #commissionValuesModal .modal-content {
+            border: none;
+            border-radius: 16px;
+            overflow: hidden;
+        }
+        #commissionValuesModal .modal-header {
+            background: #f7f3ec;
+            border-bottom: 1px solid #efe6d8;
+        }
+        #commissionValuesModal .modal-title {
+            color: #002b26;
+            font-weight: 700;
         }
     </style>
 @endsection
@@ -300,7 +337,7 @@
                                                             $fixedPerm = $permission->firstWhere('name', $fixedName);
                                                         @endphp
                                                         @if($percentPerm || $fixedPerm)
-                                                            <div class="lz-commission-row">
+                                                            <div class="lz-commission-row" data-kind="{{ $kind }}">
                                                                 <div class="lz-commission-row-label">{{ $kindLabel }}</div>
                                                                 <div class="lz-commission-switch">
                                                                     @if($fixedPerm)
@@ -320,13 +357,17 @@
                                                                         </div>
                                                                     @endif
                                                                 </div>
+                                                                <div class="lz-commission-actions">
+                                                                    <button type="button" class="lz-commission-edit" data-kind="{{ $kind }}" hidden>{{ __('field.edit_values') }}</button>
+                                                                    <span class="lz-commission-summary" data-kind="{{ $kind }}"></span>
+                                                                </div>
                                                                 <input type="hidden" name="commission_rates_present" value="1">
                                                                 @foreach (['percentage' => '%', 'fixed' => __('field.fixed_value')] as $mode => $modeLabel)
                                                                     @php
                                                                         $selectedValues = get_allowed_commission_rates($kind, $mode);
                                                                         $fieldName = $mode === 'fixed' ? 'commission_fixed' : 'commission_rates';
                                                                     @endphp
-                                                                    <div class="lz-commission-picker" data-group="commission_{{ $kind }}_type" data-mode="{{ $mode }}">
+                                                                    <div class="lz-commission-picker" data-kind="{{ $kind }}" data-mode="{{ $mode }}" data-title="{{ $kindLabel }} - {{ $modeLabel }}">
                                                                         <div class="lz-range-row">
                                                                             <span>{{ $modeLabel }}</span>
                                                                             <select class="lz-range-from" aria-label="{{ __('field.from') }}">
@@ -383,6 +424,20 @@
                         <i class="ti ti-check me-1"></i>
                         <span>{{ __('general.save') }}</span>
                     </button>
+                </div>
+            </div>
+            <div class="modal fade" id="commissionValuesModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="commissionValuesTitle"></h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('general.cancel') }}"></button>
+                        </div>
+                        <div class="modal-body" id="commissionValuesBody"></div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" data-bs-dismiss="modal">{{ __('general.save') }}</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </form>
@@ -484,63 +539,105 @@
                             if (!el.checked) {
                                 document.querySelectorAll('.commission-booking-type, .commission-product-type, .commission-coupon-type').forEach(function(radio) {
                                     radio.checked = false;
-                                    // Uncheck hidden permission checkboxes
                                     var permissionName = radio.value;
                                     var permissionCheckbox = document.getElementById('perm_' + permissionName);
                                     if (permissionCheckbox) {
                                         permissionCheckbox.checked = false;
                                     }
                                 });
+                                refreshCommissionSummaries();
                             }
                         }
                     }
                 });
+            });
 
-                // Handle commission type radio buttons - sync with hidden permission checkboxes
-                document.querySelectorAll('.commission-booking-type, .commission-product-type, .commission-coupon-type').forEach(function(radio) {
-                    radio.addEventListener('change', function() {
-                        var permissionName = this.value;
-                        var isChecked = this.checked;
+            var commissionModalEl = document.getElementById('commissionValuesModal');
+            var commissionModal = commissionModalEl ? bootstrap.Modal.getOrCreateInstance(commissionModalEl) : null;
 
-                        if (isChecked) {
-                            // Uncheck all other radios in the same group
-                            var allRadios = document.querySelectorAll('[name="' + this.name + '"]');
-                            allRadios.forEach(function(r) {
-                                if (r !== radio) {
-                                    r.checked = false;
-                                    // Uncheck the corresponding hidden permission checkbox
-                                    var otherPermissionName = r.value;
-                                    var otherCheckbox = document.getElementById('perm_' + otherPermissionName);
-                                    if (otherCheckbox) {
-                                        otherCheckbox.checked = false;
-                                    }
-                                }
-                            });
+            function commissionMode(value) {
+                return value && value.indexOf('PERCENTAGE') !== -1 ? 'percentage' : 'fixed';
+            }
 
-                            // Check the corresponding hidden permission checkbox
-                            var permissionCheckbox = document.getElementById('perm_' + permissionName);
-                            if (permissionCheckbox) {
-                                permissionCheckbox.checked = true;
+            function openCommissionDialog(kind, mode) {
+                var picker = document.querySelector('.lz-commission-picker[data-kind="' + kind + '"][data-mode="' + mode + '"]');
+                var body = document.getElementById('commissionValuesBody');
+                if (!picker || !body || !commissionModal) return;
+                body.querySelectorAll('.lz-commission-picker').forEach(function (openPicker) {
+                    var row = document.querySelector('.lz-commission-row[data-kind="' + openPicker.dataset.kind + '"]');
+                    if (row) row.appendChild(openPicker);
+                });
+                document.getElementById('commissionValuesTitle').textContent = picker.dataset.title || '';
+                body.appendChild(picker);
+                document.body.appendChild(commissionModalEl);
+                commissionModal.show();
+            }
+
+            function refreshCommissionSummaries() {
+                document.querySelectorAll('.lz-commission-edit').forEach(function (button) {
+                    var kind = button.dataset.kind;
+                    var selected = document.querySelector('input[name="commission_' + kind + '_type"]:checked');
+                    var summary = document.querySelector('.lz-commission-summary[data-kind="' + kind + '"]');
+                    if (!selected) {
+                        button.hidden = true;
+                        if (summary) summary.textContent = '';
+                        return;
+                    }
+                    var mode = commissionMode(selected.value);
+                    button.hidden = false;
+                    button.dataset.mode = mode;
+                    var picker = document.querySelector('.lz-commission-picker[data-kind="' + kind + '"][data-mode="' + mode + '"]');
+                    var values = picker ? Array.from(picker.querySelectorAll('input:checked')).map(function (input) {
+                        return input.nextElementSibling.textContent;
+                    }) : [];
+                    if (summary) {
+                        summary.textContent = values.length > 12 ? values.slice(0, 12).join('، ') + '…' : values.join('، ');
+                    }
+                });
+            }
+
+            document.querySelectorAll('.commission-booking-type, .commission-product-type, .commission-coupon-type').forEach(function(radio) {
+                radio.addEventListener('change', function() {
+                    var permissionName = this.value;
+                    var isChecked = this.checked;
+
+                    if (isChecked) {
+                        var allRadios = document.querySelectorAll('[name="' + this.name + '"]');
+                        allRadios.forEach(function(r) {
+                            if (r !== radio) {
+                                r.checked = false;
+                                var otherCheckbox = document.getElementById('perm_' + r.value);
+                                if (otherCheckbox) otherCheckbox.checked = false;
                             }
-                        } else {
-                            // Uncheck the corresponding hidden permission checkbox
-                            var permissionCheckbox = document.getElementById('perm_' + permissionName);
-                            if (permissionCheckbox) {
-                                permissionCheckbox.checked = false;
-                            }
-                        }
-                        syncCommissionRates();
-                    });
+                        });
+
+                        var permissionCheckbox = document.getElementById('perm_' + permissionName);
+                        if (permissionCheckbox) permissionCheckbox.checked = true;
+                        var kind = this.name.replace('commission_', '').replace('_type', '');
+                        refreshCommissionSummaries();
+                        openCommissionDialog(kind, commissionMode(permissionName));
+                    } else {
+                        var permissionCheckbox = document.getElementById('perm_' + permissionName);
+                        if (permissionCheckbox) permissionCheckbox.checked = false;
+                        refreshCommissionSummaries();
+                    }
                 });
             });
 
-            function syncCommissionRates() {
-                document.querySelectorAll('.lz-commission-picker').forEach(function (box) {
-                    var selected = document.querySelector('input[name="' + box.dataset.group + '"]:checked');
-                    var isPercentage = selected && selected.value.indexOf('PERCENTAGE') !== -1;
-                    var isFixed = selected && selected.value.indexOf('FIXED') !== -1;
-                    var show = (box.dataset.mode === 'percentage' && isPercentage) || (box.dataset.mode === 'fixed' && isFixed);
-                    box.style.display = show ? 'block' : 'none';
+            document.addEventListener('click', function (event) {
+                var editButton = event.target.closest('.lz-commission-edit');
+                if (!editButton || editButton.hidden) return;
+                openCommissionDialog(editButton.dataset.kind, editButton.dataset.mode);
+            });
+
+            if (commissionModalEl) {
+                commissionModalEl.addEventListener('hidden.bs.modal', function () {
+                    var body = document.getElementById('commissionValuesBody');
+                    body.querySelectorAll('.lz-commission-picker').forEach(function (picker) {
+                        var row = document.querySelector('.lz-commission-row[data-kind="' + picker.dataset.kind + '"]');
+                        if (row) row.appendChild(picker);
+                    });
+                    refreshCommissionSummaries();
                 });
             }
 
@@ -578,7 +675,7 @@
                         radio.checked = true;
                     }
                 });
-                syncCommissionRates();
+                refreshCommissionSummaries();
             });
         })();
     </script>
