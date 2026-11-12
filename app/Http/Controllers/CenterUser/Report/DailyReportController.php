@@ -367,7 +367,8 @@ class DailyReportController extends Controller
                                 $product_details_prices[$BuyProduct_item->payment_type] = 0;
                             }
 
-                            $product_price = $detail->product?->supply_price ?? $detail->product?->retail_price;
+                            // $product_price = $detail->product?->supply_price ?? $detail->product?->retail_price;
+                            $product_price = $detail->product?->retail_price ?? $detail->product?->supply_price;
                             if (!empty($BuyProduct_item->discount)) {
                                 $product_price -= ($product_price * $BuyProduct_item->discount) / 100;
                             }
