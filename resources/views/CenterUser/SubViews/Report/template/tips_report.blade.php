@@ -80,14 +80,14 @@
 
             <tr>
                 <td style="background-color: #666;color: #fff;text-align: center">
-                    <strong>tips - {{ $tips }}%</strong>
+                    <strong>tips - 7.5%</strong>
                 </td>
                 @php
                     $total_ = 0;
                 @endphp
                 @foreach ($firstusers_last_total as $index => $value)
                     @php
-                        $value_ = $value - ($tips / 100) * $value;
+                        $value_ = $value - (7.5 / 100) * $value;
                         $total_ += $value_;
                     @endphp
                     <td style="background-color: #666;color: #fff;text-align: center"><strong>AED
@@ -115,7 +115,7 @@
                 <td colspan="{{ count($firstusers) + 1 }}"
                     style="background-color: #666;color: #fff;text-align: center">
 
-                    <strong>tips - {{ $tips }}% : AED {{ number_format($total_, 2, '.', '') }}</strong>
+                    <strong>tips - 7.5% : AED {{ number_format($total_, 2, '.', '') }}</strong>
                 </td>
             </tr>
         </tfoot>
@@ -167,14 +167,14 @@
                 @endforeach
             </tr>
             <tr>
-                <td style="background-color: #666;color: #fff;text-align: center"><strong>tips - {{ $tips }}%</strong>
+                <td style="background-color: #666;color: #fff;text-align: center"><strong>tips - 7.5%</strong>
                 </td>
                 @php
                     $total_ = 0;
                 @endphp
                 @foreach ($secondusers_last_total as $index => $value)
                     @php
-                        $value_ = $value - ($tips / 100) * $value;
+                        $value_ = $value - (7.5 / 100) * $value;
                         $total_ += $value_;
                     @endphp
                     <td style="background-color: #666;color: #fff;text-align: center"><strong>AED
@@ -198,7 +198,7 @@
                 <td colspan="{{ count($secondusers) + 1 }}"
                     style="background-color: #666;color: #fff;text-align: center">
 
-                    <strong>tips - {{ $tips }}% : AED
+                    <strong>tips - 7.5% : AED
                         {{ number_format($total_, 2, '.', '') }}</strong>
 
                 </td>
