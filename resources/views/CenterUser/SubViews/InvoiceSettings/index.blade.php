@@ -326,7 +326,36 @@
                 event.preventDefault();
                 const button = form.querySelector('.submitFrom');
                 button.disabled = true;
-                fetch(@json($requestUrl), { method: 'POST', headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken }, body: new FormData(form) })
+
+                const formData = new FormData(form);
+
+                // Format OTP phones to prepend 971 and strip any leading zeros or 971s
+                const otpPhones = formData.getAll('otp_phones[]');
+                formData.delete('otp_phones[]');
+
+                otpPhones.forEach(phone => {
+                    let cleanPhone = (phone || '').replace(/\D/g, ''); 
+                    if (cleanPhone) {
+                        if (cleanPhone.startsWith('971')) {
+                            cleanPhone = cleanPhone.substring(3);
+                        }
+                        if (cleanPhone.startsWith('0')) {
+                            cleanPhone = cleanPhone.substring(1);
+                        }
+                        formData.append('otp_phones[]', '971' + cleanPhone);
+                    } else {
+                        formData.append('otp_phones[]', '');
+                    }
+                });
+
+                fetch(@json($requestUrl), { 
+                    method: 'POST', 
+                    headers: { 
+                        'Accept': 'application/json', 
+                        'X-CSRF-TOKEN': csrfToken 
+                    }, 
+                    body: formData 
+                })
                     .then(function(result) { return result.json().then(function(data) { return { result: result, data: data }; }); })
                     .then(function(response) {
                         if (response.result.status === 402 && response.data.requires_sms_payment) {
