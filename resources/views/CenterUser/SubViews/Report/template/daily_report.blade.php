@@ -159,8 +159,10 @@
                                                         <div
                                                             style="color: {{ get_color_type($with_price['type']) }};border-bottom: 1px solid">
                                                             @if (optional($with_price)['details'])
+                                                            $isFree
+                                                            
                                                                 @foreach ($with_price['details'] as $key => $amountItem)
-                                                                    <span style="color: red;">
+                                                                    <span style="color: {{ $mainColor }};">
                                                                 
                                                                         {{ $amountItem }}
                                                                         {{ get_symbol_type($with_price['type']) }}
