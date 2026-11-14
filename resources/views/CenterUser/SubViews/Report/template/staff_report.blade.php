@@ -106,8 +106,8 @@
                 <td style="background-color: #666;color: #fff;text-align: center"><strong>{{ __('field.total_tips_7_5_percent') }}</strong>
                 </td>
                 @foreach ($firstusers_last_total_tips as $index => $value)
-                    <td style="background-color: #666;color: #fff;text-align: center"><strong>
-                            {{ round((float) $value * 0.075, 2) }}</strong></td>
+                    <td style="background-color: #666;color: #fff;text-align: center"><strong>AED
+                            {{ number_format((float) $value * 0.075, 2, '.', '') }}</strong></td>
                 @endforeach
             </tr>
             <tr>
@@ -208,8 +208,8 @@
                 <td style="background-color: #666;color: #fff;text-align: center"><strong>{{ __('field.total_tips_7_5_percent') }}</strong>
                 </td>
                 @foreach ($secondusers_last_total_tips as $index => $value)
-                    <td style="background-color: #666;color: #fff;text-align: center"><strong>
-                            {{ round((float) $value * 0.075, 2) }}</strong></td>
+                    <td style="background-color: #666;color: #fff;text-align: center"><strong>AED
+                            {{ number_format((float) $value * 0.075, 2, '.', '') }}</strong></td>
                 @endforeach
             </tr>
             <tr>
