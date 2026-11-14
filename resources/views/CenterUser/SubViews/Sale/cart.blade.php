@@ -1057,7 +1057,7 @@
                                                         </option>
                                                     @endforeach
                                                 </select>
-                                                <div id="product-out-of-stock-panel" class="alert alert-warning mt-2 mb-0" style="display: none;"></div>
+                                                <!-- <div id="product-out-of-stock-panel" class="alert alert-warning mt-2 mb-0" style="display: none;"></div> -->
                                             </div>
                                         </div>
                                         <div class="col-md-12 mb-2">
