@@ -80,7 +80,7 @@
 
             <tr>
                 <td style="background-color: #666;color: #fff;text-align: center">
-                    <strong>{{ $tips }}</strong>
+                    <strong>tips - {{ $tips }}%</strong>
                 </td>
                 @php
                     $total_ = 0;
@@ -115,7 +115,7 @@
                 <td colspan="{{ count($firstusers) + 1 }}"
                     style="background-color: #666;color: #fff;text-align: center">
 
-                    <strong>Total {{ $tips }}% : AED {{ number_format($total_, 2, '.', '') }}</strong>
+                    <strong>tips - {{ $tips }}% : AED {{ number_format($total_, 2, '.', '') }}</strong>
                 </td>
             </tr>
         </tfoot>
@@ -167,8 +167,7 @@
                 @endforeach
             </tr>
             <tr>
-                <td style="background-color: #666;color: #fff;text-align: center"><strong> Total
-                        {{ $tips }}% </strong>
+                <td style="background-color: #666;color: #fff;text-align: center"><strong>tips - {{ $tips }}%</strong>
                 </td>
                 @php
                     $total_ = 0;
@@ -194,15 +193,15 @@
                     @endforeach
                     <strong>AED {{ number_format($footer_total, 2, '.', '') }}</strong>
                 </td>
+            </tr>
             <tr>
-                <td colspan="{{ count($firstusers) + 1 }}"
+                <td colspan="{{ count($secondusers) + 1 }}"
                     style="background-color: #666;color: #fff;text-align: center">
 
-                    <strong>Total {{ $tips }} % : AED
+                    <strong>tips - {{ $tips }}% : AED
                         {{ number_format($total_, 2, '.', '') }}</strong>
 
                 </td>
-            </tr>
             </tr>
         </tfoot>
     </table>
