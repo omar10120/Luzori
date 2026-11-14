@@ -162,9 +162,9 @@
                                                                             <br>{{ $with_price['codesArr'][$key] }}
                                                                         @endif
                                                                         <br>
-                                                                        {{ $with_price['detailsArr'][$key]->full_name }}
+                                                                        <!-- {{ $with_price['detailsArr'][$key]->full_name }}
                                                                         <br>
-                                                                        {{ $with_price['detailsArr'][$key]->mobile }}
+                                                                        {{ $with_price['detailsArr'][$key]->mobile }} -->
                                                                         @if (!empty($with_price['notes']))
                                                                             <br><span style="color: #0066cc;">Comment : {{ is_array($with_price['notes']) ? ($with_price['notes'][$key] ?? '') : $with_price['notes'] }}</span>
                                                                         @endif
@@ -651,9 +651,9 @@
                                                                             <br>{{ $with_price['codesArr'][$key] }}
                                                                         @endif
                                                                         <br>
-                                                                        {{ $with_price['detailsArr'][$key]->full_name }}
+                                                                        <!-- {{ $with_price['detailsArr'][$key]->full_name }}
                                                                        
-                                                                        {{ $with_price['detailsArr'][$key]->mobile }}
+                                                                        {{ $with_price['detailsArr'][$key]->mobile }} -->
                                                                         
                                                                         @if (!empty($with_price['notes']))
                                                                             <br><span style="color: #0066cc;">Comment : {{ is_array($with_price['notes']) ? ($with_price['notes'][$key] ?? '') : $with_price['notes'] }}</span>
