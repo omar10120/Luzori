@@ -413,7 +413,7 @@
                                                                             <br>
                                                                             {{ $with_price['detailsArr'][$key]->mobile }}
                                                                             @if (!empty($with_price['notes'][$key]))
-                                                                                <br>Comment : {{ $with_price['notes'][$key] }}
+                                                                                <br><span style="color: blue;">Comment : {{ $with_price['notes'][$key] }}</span>
                                                                             @endif
                                                                         </span>
                                                                         @if (!$loop->last)
@@ -654,7 +654,7 @@
                                                                        
                                                                         {{ $with_price['detailsArr'][$key]->mobile }}
                                                                         @if (!empty($with_price['notes'][$key]))
-                                                                            <br>Comment : {{ $with_price['notes']}}
+                                                                            <br><span style="color: blue;">Comment : {{ $with_price['notes'][$key]}}</span>
                                                                         @endif
                                                                     </span>
                                                                     @if (!$loop->last)
