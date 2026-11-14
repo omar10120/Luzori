@@ -156,11 +156,13 @@
                                                             $isFree = ($typeVal === 'F' || $typeVal === 'free' || $typeVal === 'free_service');
                                                             $mainColor = $isFree ? 'red' : '#0066cc';
                                                         @endphp
+
+                                                        typeVal: {{ $typeVal }}
+                                                        isFree: {{ $isFree }}
+                                                        mainColor: {{ $mainColor }}
                                                         <div
                                                             style="color: {{ get_color_type($with_price['type']) }};border-bottom: 1px solid">
                                                             @if (optional($with_price)['details'])
-                                                            $isFree
-                                                            
                                                                 @foreach ($with_price['details'] as $key => $amountItem)
                                                                     <span style="color: {{ $mainColor }};">
                                                                 
