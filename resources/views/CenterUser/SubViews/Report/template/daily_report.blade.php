@@ -422,9 +422,9 @@
                                                                                 <br>{{ $with_price['codesArr'][$key] }}
                                                                             @endif
                                                                             <br>
-                                                                            <span style="color: #0066cc;">{{ $with_price['detailsArr'][$key]->full_name }}</span>
+                                                                            {{ $with_price['detailsArr'][$key]->full_name }}
                                                                             <br>
-                                                                            <span style="color: #0066cc;">{{ $with_price['detailsArr'][$key]->mobile }}</span>
+                                                                            {{ $with_price['detailsArr'][$key]->mobile }}
                                                                             
                                                                             @if (!empty($with_price['notes']))
                                                                                 <br>Comment : {{ is_array($with_price['notes']) ? ($with_price['notes'][$key] ?? '') : $with_price['notes'] }}
