@@ -80,6 +80,34 @@
                             </div>
                         </div>
                     </div>
+                    <div class="row mb-2">
+                        <div class="col-md-12 mb-3">
+                            <label class="lz-field-label">{{ __('field.otp_phones') }}</label>
+                            <div id="otp-phones-list">
+                                @php
+                                    $otpPhones = is_array($item->otp_phones) ? array_values(array_filter($item->otp_phones)) : [];
+                                    if (empty($otpPhones)) {
+                                        $otpPhones = [''];
+                                    }
+                                @endphp
+                                @foreach ($otpPhones as $otpPhone)
+                                    <div class="input-group mb-2 otp-phone-row">
+                                        <span class="input-group-text"><i class="ti ti-phone"></i></span>
+                                        <input type="text" class="form-control" name="otp_phones[]"
+                                            placeholder="{{ __('field.phone_number') }}"
+                                            value="{{ $otpPhone }}" />
+                                        <button type="button" class="btn btn-outline-danger otp-phone-remove" title="{{ __('general.delete') }}">
+                                            <i class="ti ti-trash"></i>
+                                        </button>
+                                    </div>
+                                @endforeach
+                            </div>
+                            <button type="button" class="btn btn-sm btn-luzori-beige" id="otp-phone-add">
+                                <i class="ti ti-plus me-1"></i>{{ __('general.add') }}
+                            </button>
+                            <small class="form-text text-muted d-block mt-1">{{ __('field.otp_phones_help') }}</small>
+                        </div>
+                    </div>
 
                     <hr class="my-2" />
 
@@ -258,6 +286,33 @@
             let scriptPromise = null;
             let encryptionKey = null;
             let selectedPackage = null;
+            const otpList = document.getElementById('otp-phones-list');
+            const otpAddBtn = document.getElementById('otp-phone-add');
+
+            function otpPhoneRowHtml() {
+                return '<div class="input-group mb-2 otp-phone-row">' +
+                    '<span class="input-group-text"><i class="ti ti-phone"></i></span>' +
+                    '<input type="text" class="form-control" name="otp_phones[]" placeholder="{{ __('field.phone_number') }}" value="" />' +
+                    '<button type="button" class="btn btn-outline-danger otp-phone-remove" title="{{ __('general.delete') }}">' +
+                    '<i class="ti ti-trash"></i></button></div>';
+            }
+
+            if (otpAddBtn && otpList) {
+                otpAddBtn.addEventListener('click', function() {
+                    otpList.insertAdjacentHTML('beforeend', otpPhoneRowHtml());
+                });
+                otpList.addEventListener('click', function(event) {
+                    const btn = event.target.closest('.otp-phone-remove');
+                    if (!btn) return;
+                    const rows = otpList.querySelectorAll('.otp-phone-row');
+                    if (rows.length <= 1) {
+                        const input = rows[0].querySelector('input');
+                        if (input) input.value = '';
+                        return;
+                    }
+                    btn.closest('.otp-phone-row').remove();
+                });
+            }
 
             function showModal(element) {
                 element.classList.add('is-visible', 'show');

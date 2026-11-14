@@ -18,6 +18,7 @@ class InvoiceSettingsResource extends JsonResource
         $res['phone_number_1'] = $this->phone_number_1;
         $res['phone_number_2'] = $this->phone_number_2;
         $res['phone_number_3'] = $this->phone_number_3;
+        $res['otp_phones'] = $this->otp_phones ?? [];
         $res['emirate'] = $this->emirate;
         $res['tax_number'] = $this->tax_number;
         $res['allow_notification'] = $this->allow_notification;

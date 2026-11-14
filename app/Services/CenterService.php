@@ -1008,7 +1008,7 @@ class CenterService
             }
 
             $center->assignRole($request['role']);
-
+            
             if ($center->status == 'approve') {
                 $this->setupCenterDatabase($center);
 
@@ -1188,7 +1188,7 @@ class CenterService
                     }
                 }
             }
-    
+
             if (isset($request['primary_image'])) {
                 $images = is_array($request['primary_image'])
                     ? $request['primary_image']
@@ -1197,25 +1197,25 @@ class CenterService
                     $center->addMedia($img)->toMediaCollection('PrimaryImage');
                 }
             }
-    
+
             if (isset($request['password']) && empty($request['password'])) {
                 unset($request['password']);
             }
-    
+
             $oldEmail = $center->email;
             $center->update($request);
-    
+            
             if (isset($request['role'])) {
                 $center->roles()->detach();
                 $center->assignRole($request['role']);
             }
-    
+
             if ($center->status == 'approve' && !$center->is_setup) {
                 $this->setupCenterDatabase($center);
             }
     
             $this->syncTenantCenterUser($center, $oldEmail, $request);
-    
+
             DB::commit();
     
             // === Notify AFTER commit (best-effort, never blocks the response) ===
