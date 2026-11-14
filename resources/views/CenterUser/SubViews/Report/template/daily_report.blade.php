@@ -153,7 +153,7 @@
                                                     @if (is_array($with_price))
                                                         @php
                                                             $typeVal = strtolower(trim($with_price['type'] ?? ''));
-                                                            $isFree = ($typeVal === 'f' || $typeVal === 'free' || $typeVal === 'free_service');
+                                                            $isFree = ($typeVal === 'F' || $typeVal === 'free' || $typeVal === 'free_service');
                                                             $mainColor = $isFree ? 'red' : '#0066cc';
                                                         @endphp
                                                         <div
