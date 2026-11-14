@@ -155,7 +155,8 @@
                                                             style="color: {{ get_color_type($with_price['type']) }};border-bottom: 1px solid">
                                                             @if (optional($with_price)['details'])
                                                                 @foreach ($with_price['details'] as $key => $amountItem)
-                                                                    <span style="color: #0066cc;">
+                                                                    
+                                                                    <span @if ($with_price['type'] != 'F') style="color: #0066cc;" @endif>
                                                               
                                                                         {{ $amountItem }}
                                                                         {{ get_symbol_type($with_price['type']) }}
@@ -405,8 +406,10 @@
                                                                 @if (optional($with_price)['details'])
                                                                     @foreach ($with_price['details'] as $key => $amountItem)
                                                                         <span>
-                                                                            <span style="color: #0066cc;">{{ $amountItem }}</span>
-                                                                            <span style="color: #0066cc;">{{ get_symbol_type($with_price['type']) }}</span> 
+                                                                            {{-- ✅ F-TYPE CONDITIONAL --}}
+                                                                            <span @if ($with_price['type'] != 'F') style="color: #0066cc;" @endif>{{ $amountItem }}</span>
+                                                                            {{-- ✅ F-TYPE CONDITIONAL --}}
+                                                                            <span @if ($with_price['type'] != 'F') style="color: #0066cc;" @endif>{{ get_symbol_type($with_price['type']) }}</span>
                                                                             @if (!empty($with_price['codesArr'][$key]))
                                                                                 <br>{{ $with_price['codesArr'][$key] }}
                                                                             @endif
@@ -416,7 +419,8 @@
                                                                             {{ $with_price['detailsArr'][$key]->mobile }}
                                                                             
                                                                             @if (!empty($with_price['notes']))
-                                                                                <br><span style="color: #0066cc;">Comment : {{ is_array($with_price['notes']) ? ($with_price['notes'][$key] ?? '') : $with_price['notes'] }}</span>
+                                                                                {{-- ✅ F-TYPE CONDITIONAL --}}
+                                                                                <br><span @if ($with_price['type'] != 'F') style="color: #0066cc;" @endif>Comment : {{ is_array($with_price['notes']) ? ($with_price['notes'][$key] ?? '') : $with_price['notes'] }}</span>
                                                                             @endif
                                                                         </span>
                                                                         @if (!$loop->last)
@@ -426,7 +430,8 @@
                                                                     @endforeach
                                                                 @else
                                                                     {{ $with_price['amount'] }}
-                                                                    <span style="color: #0066cc;">{{ get_symbol_type($with_price['type']) }}</span> 
+                                                                    {{-- ✅ F-TYPE CONDITIONAL --}}
+                                                                    <span @if ($with_price['type'] != 'F') style="color: #0066cc;" @endif>{{ get_symbol_type($with_price['type']) }}</span>
                                                                     @if (!empty($with_price['code']))
                                                                         <br> {{ $with_price['code'] }}
                                                                     @endif
@@ -646,7 +651,8 @@
                                                         <div style="color: {{ get_color_type($with_price['type']) }};border-bottom: 1px solid">
                                                             @if (optional($with_price)['details'])
                                                                 @foreach ($with_price['details'] as $key => $amountItem)
-                                                                    <span style="color: #0066cc;">
+                                                                    {{-- ✅ F-TYPE CONDITIONAL --}}
+                                                                    <span @if ($with_price['type'] != 'F') style="color: #0066cc;" @endif>
                                                                        {{ $amountItem }}
                                                                          {{ get_symbol_type($with_price['type']) }}
                                                                         @if (!empty($with_price['codesArr'][$key]))
@@ -666,8 +672,10 @@
                                                                     @endif
                                                                 @endforeach
                                                             @else
-                                                                <span style="color: #0066cc;">{{ $with_price['amount'] }}</span>
-                                                                <span style="color: #0066cc;">{{ get_symbol_type($with_price['type']) }}</span> 
+                                                                {{-- ✅ F-TYPE CONDITIONAL --}}
+                                                                <span @if ($with_price['type'] != 'F') style="color: #0066cc;" @endif>{{ $with_price['amount'] }}</span>
+                                                                {{-- ✅ F-TYPE CONDITIONAL --}}
+                                                                <span @if ($with_price['type'] != 'F') style="color: #0066cc;" @endif>{{ get_symbol_type($with_price['type']) }}</span>
                                                                 @if (!empty($with_price['code']))
                                                                     <br> {{ $with_price['code'] }}
                                                                 @endif
