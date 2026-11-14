@@ -155,9 +155,11 @@
                                                             style="color: {{ get_color_type($with_price['type']) }};border-bottom: 1px solid">
                                                             @if (optional($with_price)['details'])
                                                                 @foreach ($with_price['details'] as $key => $amountItem)
-                                                                    <span>
+                                                                    <span style="color: #0066cc;">
+                                                              
                                                                         {{ $amountItem }}
                                                                         {{ get_symbol_type($with_price['type']) }}
+                                                                  
                                                                         @if (!empty($with_price['codesArr'][$key]))
                                                                             <br>{{ $with_price['codesArr'][$key] }}
                                                                         @endif
@@ -166,7 +168,7 @@
                                                                         <br>
                                                                         {{ $with_price['detailsArr'][$key]->mobile }} -->
                                                                         @if (!empty($with_price['notes']))
-                                                                            <br><span style="color: #0066cc;">Comment : {{ is_array($with_price['notes']) ? ($with_price['notes'][$key] ?? '') : $with_price['notes'] }}</span>
+                                                                            <br>Comment : {{ is_array($with_price['notes']) ? ($with_price['notes'][$key] ?? '') : $with_price['notes'] }}
                                                                         @endif
                                                                     </span>
                                                                     @if (!$loop->last)
@@ -403,8 +405,8 @@
                                                                 @if (optional($with_price)['details'])
                                                                     @foreach ($with_price['details'] as $key => $amountItem)
                                                                         <span>
-                                                                            {{ $amountItem }}
-                                                                            {{ get_symbol_type($with_price['type']) }}
+                                                                            <span style="color: #0066cc;">{{ $amountItem }}</span>
+                                                                            <span style="color: #0066cc;">{{ get_symbol_type($with_price['type']) }}</span> 
                                                                             @if (!empty($with_price['codesArr'][$key]))
                                                                                 <br>{{ $with_price['codesArr'][$key] }}
                                                                             @endif
@@ -424,7 +426,7 @@
                                                                     @endforeach
                                                                 @else
                                                                     {{ $with_price['amount'] }}
-                                                                    {{ get_symbol_type($with_price['type']) }}
+                                                                    <span style="color: #0066cc;">{{ get_symbol_type($with_price['type']) }}</span> 
                                                                     @if (!empty($with_price['code']))
                                                                         <br> {{ $with_price['code'] }}
                                                                     @endif
@@ -644,9 +646,9 @@
                                                         <div style="color: {{ get_color_type($with_price['type']) }};border-bottom: 1px solid">
                                                             @if (optional($with_price)['details'])
                                                                 @foreach ($with_price['details'] as $key => $amountItem)
-                                                                    <span>
-                                                                        {{ $amountItem }}
-                                                                        {{ get_symbol_type($with_price['type']) }}
+                                                                    <span style="color: #0066cc;">
+                                                                       {{ $amountItem }}
+                                                                         {{ get_symbol_type($with_price['type']) }}
                                                                         @if (!empty($with_price['codesArr'][$key]))
                                                                             <br>{{ $with_price['codesArr'][$key] }}
                                                                         @endif
@@ -656,7 +658,7 @@
                                                                         {{ $with_price['detailsArr'][$key]->mobile }} -->
                                                                         
                                                                         @if (!empty($with_price['notes']))
-                                                                            <br><span style="color: #0066cc;">Comment : {{ is_array($with_price['notes']) ? ($with_price['notes'][$key] ?? '') : $with_price['notes'] }}</span>
+                                                                            <br>Comment : {{ is_array($with_price['notes']) ? ($with_price['notes'][$key] ?? '') : $with_price['notes'] }}
                                                                         @endif
                                                                     </span>
                                                                     @if (!$loop->last)
@@ -664,8 +666,8 @@
                                                                     @endif
                                                                 @endforeach
                                                             @else
-                                                                {{ $with_price['amount'] }}
-                                                                {{ get_symbol_type($with_price['type']) }}
+                                                                <span style="color: #0066cc;">{{ $with_price['amount'] }}</span>
+                                                                <span style="color: #0066cc;">{{ get_symbol_type($with_price['type']) }}</span> 
                                                                 @if (!empty($with_price['code']))
                                                                     <br> {{ $with_price['code'] }}
                                                                 @endif
