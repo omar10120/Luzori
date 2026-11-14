@@ -151,11 +151,16 @@
                                                         $user_total += $with_price_sum;
                                                     @endphp
                                                     @if (is_array($with_price))
+                                                        @php
+                                                            $typeVal = strtolower(trim($with_price['type'] ?? ''));
+                                                            $isFree = ($typeVal === 'f' || $typeVal === 'free' || $typeVal === 'free_service');
+                                                            $mainColor = $isFree ? 'red' : '#0066cc';
+                                                        @endphp
                                                         <div
                                                             style="color: {{ get_color_type($with_price['type']) }};border-bottom: 1px solid">
                                                             @if (optional($with_price)['details'])
                                                                 @foreach ($with_price['details'] as $key => $amountItem)
-                                                                    <span style="color: {{ ($with_price['type'] === 'F') ? 'red' : '#0066cc' }};">
+                                                                    <span style="color: {{ $mainColor }};">
                                                                 
                                                                         {{ $amountItem }}
                                                                         {{ get_symbol_type($with_price['type']) }}
@@ -176,10 +181,10 @@
                                                                     @endif
                                                                 @endforeach
                                                             @else
-                                                                <span style="color: {{ ($with_price['type'] === 'F') ? 'red' : '#0066cc' }};">{{ $with_price['amount'] }}</span>
-                                                                <span style="color: {{ ($with_price['type'] === 'F') ? 'red' : '#0066cc' }};">{{ get_symbol_type($with_price['type']) }}</span>
+                                                                <span style="color: {{ $mainColor }};">{{ $with_price['amount'] }}</span>
+                                                                <span style="color: {{ $mainColor }};">{{ get_symbol_type($with_price['type']) }}</span>
                                                                 @if (!empty($with_price['code']))
-                                                                    <br> <span style="color: {{ ($with_price['type'] === 'F') ? 'red' : '#0066cc' }};">{{ $with_price['code'] }}</span>
+                                                                    <br> <span style="color: {{ $mainColor }};">{{ $with_price['code'] }}</span>
                                                                 @endif
                                                                 <br><span style="color: #0066cc;">{{ $with_price['client_name'] }}</span>
                                                             @endif
@@ -401,10 +406,15 @@
                                                             $user_total += $with_price_sum;
                                                         @endphp
                                                         @if (is_array($with_price))
+                                                            @php
+                                                                $typeVal = strtolower(trim($with_price['type'] ?? ''));
+                                                                $isFree = ($typeVal === 'f' || $typeVal === 'free' || $typeVal === 'free_service');
+                                                                $mainColor = $isFree ? 'red' : '#0066cc';
+                                                            @endphp
                                                             <div style="color: {{ get_color_type($with_price['type']) }};border-bottom: 1px solid">
                                                                 @if (optional($with_price)['details'])
                                                                     @foreach ($with_price['details'] as $key => $amountItem)
-                                                                        <span style="color: {{ ($with_price['type'] === 'F') ? 'red' : '#0066cc' }};">
+                                                                        <span style="color: {{ $mainColor }};">
                                                                             {{ $amountItem }}
                                                                             {{ get_symbol_type($with_price['type']) }}
                                                                             @if (!empty($with_price['codesArr'][$key]))
@@ -425,10 +435,10 @@
                                                                         @endif
                                                                     @endforeach
                                                                 @else
-                                                                    <span style="color: {{ ($with_price['type'] === 'F') ? 'red' : '#0066cc' }};">{{ $with_price['amount'] }}</span>
-                                                                    <span style="color: {{ ($with_price['type'] === 'F') ? 'red' : '#0066cc' }};">{{ get_symbol_type($with_price['type']) }}</span> 
+                                                                    <span style="color: {{ $mainColor }};">{{ $with_price['amount'] }}</span>
+                                                                    <span style="color: {{ $mainColor }};">{{ get_symbol_type($with_price['type']) }}</span> 
                                                                     @if (!empty($with_price['code']))
-                                                                        <br> <span style="color: {{ ($with_price['type'] === 'F') ? 'red' : '#0066cc' }};">{{ $with_price['code'] }}</span>
+                                                                        <br> <span style="color: {{ $mainColor }};">{{ $with_price['code'] }}</span>
                                                                     @endif
                                                                     <br><span style="color: #0066cc;">{{ $with_price['client_name'] }}</span>
                                                                 @endif
@@ -643,10 +653,15 @@
                                                         $user_total += $with_price_sum;
                                                     @endphp
                                                     @if (is_array($with_price))
+                                                        @php
+                                                            $typeVal = strtolower(trim($with_price['type'] ?? ''));
+                                                            $isFree = ($typeVal === 'f' || $typeVal === 'free' || $typeVal === 'free_service');
+                                                            $mainColor = $isFree ? 'red' : '#0066cc';
+                                                        @endphp
                                                         <div style="color: {{ get_color_type($with_price['type']) }};border-bottom: 1px solid">
                                                             @if (optional($with_price)['details'])
                                                                 @foreach ($with_price['details'] as $key => $amountItem)
-                                                                    <span style="color: {{ ($with_price['type'] === 'F') ? 'red' : '#0066cc' }};">
+                                                                    <span style="color: {{ $mainColor }};">
                                                                        {{ $amountItem }}
                                                                          {{ get_symbol_type($with_price['type']) }}
                                                                         @if (!empty($with_price['codesArr'][$key]))
@@ -666,10 +681,10 @@
                                                                     @endif
                                                                 @endforeach
                                                             @else
-                                                                <span style="color: {{ ($with_price['type'] === 'F') ? 'red' : '#0066cc' }};">{{ $with_price['amount'] }}</span>
-                                                                <span style="color: {{ ($with_price['type'] === 'F') ? 'red' : '#0066cc' }};">{{ get_symbol_type($with_price['type']) }}</span>
+                                                                <span style="color: {{ $mainColor }};">{{ $with_price['amount'] }}</span>
+                                                                <span style="color: {{ $mainColor }};">{{ get_symbol_type($with_price['type']) }}</span>
                                                                 @if (!empty($with_price['code']))
-                                                                    <br> <span style="color: {{ ($with_price['type'] === 'F') ? 'red' : '#0066cc' }};">{{ $with_price['code'] }}</span>
+                                                                    <br> <span style="color: {{ $mainColor }};">{{ $with_price['code'] }}</span>
                                                                 @endif
                                                                 <br><span style="color: #0066cc;">{{ $with_price['client_name'] }}</span>
                                                             @endif
