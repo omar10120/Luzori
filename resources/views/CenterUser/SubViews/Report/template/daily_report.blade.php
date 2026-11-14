@@ -154,15 +154,17 @@
                                                         @php
                                                             $typeVal = strtolower(trim($with_price['type'] ?? ''));
                                                             $symbolVal = strtoupper(trim(strip_tags(get_symbol_type($with_price['type']))));
-                                                            $isRed = in_array($typeVal, ['f', 'free', 'free_service', 'discount_code', 'member_ship', 'wallet']) || strpos($symbolVal, 'F') !== false;
+                                                            $isRed = in_array($typeVal, ['f', 'free', 'free_service']) || strpos($symbolVal, 'F') !== false;
                                                             $mainColor = $isRed ? 'red' : '#0066cc';
                                                         @endphp
                                                         <div style="color: {{ $mainColor }};border-bottom: 1px solid">
                                                             @if (optional($with_price)['details'])
                                                                 @foreach ($with_price['details'] as $key => $amountItem)
                                                                     <span>
+                                                                
                                                                         {{ $amountItem }}
                                                                         {{ get_symbol_type($with_price['type']) }}
+                                                                
                                                                         @if (!empty($with_price['codesArr'][$key]))
                                                                             <br>{{ $with_price['codesArr'][$key] }}
                                                                         @endif
@@ -407,7 +409,7 @@
                                                             @php
                                                                 $typeVal = strtolower(trim($with_price['type'] ?? ''));
                                                                 $symbolVal = strtoupper(trim(strip_tags(get_symbol_type($with_price['type']))));
-                                                                $isRed = in_array($typeVal, ['f', 'free', 'free_service', 'discount_code', 'member_ship', 'wallet']) || strpos($symbolVal, 'F') !== false;
+                                                                $isRed = in_array($typeVal, ['f', 'free', 'free_service']) || strpos($symbolVal, 'F') !== false;
                                                                 $mainColor = $isRed ? 'red' : '#0066cc';
                                                             @endphp
                                                             <div style="color: {{ $mainColor }};border-bottom: 1px solid">
@@ -655,7 +657,7 @@
                                                         @php
                                                             $typeVal = strtolower(trim($with_price['type'] ?? ''));
                                                             $symbolVal = strtoupper(trim(strip_tags(get_symbol_type($with_price['type']))));
-                                                            $isRed = in_array($typeVal, ['f', 'free', 'free_service', 'discount_code', 'member_ship', 'wallet']) || strpos($symbolVal, 'F') !== false;
+                                                            $isRed = in_array($typeVal, ['f', 'free', 'free_service']) || strpos($symbolVal, 'F') !== false;
                                                             $mainColor = $isRed ? 'red' : '#0066cc';
                                                         @endphp
                                                         <div style="color: {{ $mainColor }};border-bottom: 1px solid">
