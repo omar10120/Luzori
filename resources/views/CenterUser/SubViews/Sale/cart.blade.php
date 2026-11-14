@@ -1091,7 +1091,7 @@
                                                 <input type="hidden" id="product-commission-type" value="{{ get_allowed_commission_type('product') }}">
                                             </div>
                                             <div class="mb-1 mt-2">
-                                                <label for="product-commission" class="form-label">{{ __('field.commission') }} <span class="text-danger">*</span></label>
+                                                <label for="product-commission" class="form-label">{{ __('field.commission') }}</label>
                                                 @if(get_allowed_commission_type('product') === 'fixed')
                                                     <select class="form-control" name="commission" id="product-commission">
                                                         <option value="">{{ __('field.select_commission') }}</option>
@@ -3322,16 +3322,6 @@
                     return;
                 }
 
-
-                // Commission is required if worker is selected
-                if (workerId && workerId != '' && !commission) {
-                    if (typeof toastr !== 'undefined') {
-                        toastr.error('{{ __('field.commission_is_required_when_worker_selected') }}');
-                    }
-                    $('#product-commission').focus();
-                    return;
-                }
-
                 // Validate payment method
                 if (!paymentType || paymentType === '') {
                     $paymentTypeField.addClass('is-invalid');
@@ -4466,7 +4456,7 @@
                     $commissionField.val('');
                 } else {
                     $commissionDiv.show();
-                    $commissionField.prop('required', true);
+                    $commissionField.prop('required', false);
                 }
             });
 
