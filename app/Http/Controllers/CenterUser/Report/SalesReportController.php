@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Booking;
 use App\Models\Branch;
+use App\Models\Sale; // Added for tips
 use App\Models\UserUsedCard;
 use App\Models\UserUsedDiscount;
 use App\Models\BuyProduct;
@@ -23,7 +24,7 @@ class SalesReportController extends Controller
             return abort(403);
         }
 
-        // ── Distinct years, latest first (so index 0 is the "last one", e.g. 2026) ──
+        // ── Distinct years, latest first ──
         $years = Booking::select(DB::raw('DISTINCT YEAR(booking_date) as year'))
             ->orderByDesc('year')
             ->get();
@@ -31,8 +32,7 @@ class SalesReportController extends Controller
         // ── Default selected year = latest year in the list ──
         $selected_year = $request->get('year') ?? optional($years->first())->year;
 
-        // ── Default selected month = latest booking's month within the year,
-        //    fallback to current month ──
+        // ── Default selected month = latest booking's month within the year ──
         $selected_month = $request->get('month');
         if ($selected_month === null || $selected_month === '') {
             $latestInYear = Booking::whereYear('booking_date', $selected_year)
@@ -43,7 +43,7 @@ class SalesReportController extends Controller
                 : now()->month;
         }
 
-        // ── Role-aware branch filter (single source of truth) ──
+        // ── Role-aware branch filter ──
         $user     = auth('center_user')->user();
         $userRole = get_user_role();
 
@@ -105,12 +105,19 @@ class SalesReportController extends Controller
                     $payments_type[$walletTypeName] = ucfirst(str_replace('_', ' ', $walletTypeName));
                 }
             }
+            
             $last_total = [];
             foreach ($payments_type as $index => $value) {
                 $last_total[$index] = 0;
             }
+            
+            // ADDED: Commission and Tips columns
             $payments_type['commission'] = __('field.commission');
             $last_total['commission'] = 0;
+            
+            $payments_type['tip'] = __('field.tip');
+            $last_total['tip'] = 0;
+            
             $last_total['total_without_free'] = 0;
             $result = [];
             $days = cal_days_in_month(CAL_GREGORIAN, (int) $selected_month, (int) $selected_year);
@@ -123,6 +130,7 @@ class SalesReportController extends Controller
                     $temp[$index] = 0;
                 }
                 $temp['commission'] = 0;
+                $temp['tip'] = 0; // ADDED
                 $result[$date] = $temp;
             }
             if (!$report->isEmpty()) {
@@ -327,7 +335,6 @@ class SalesReportController extends Controller
             $users_wallets = $temp_users_wallets->get();
             if (!empty($users_wallets)) {
                 foreach ($users_wallets as $users_wallet) {
-                    // FIX: Safely parse the date whether it's a string or Carbon object
                     $date = \Carbon\Carbon::parse($users_wallet->created_at)->format('Y-m-d');
                     $walletKey = ($users_wallet->wallet_type ?? 'wallet');
                     if (!isset($result[$date][$walletKey])) {
@@ -338,6 +345,11 @@ class SalesReportController extends Controller
                     if (!empty($users_wallet->commission)) {
                         $walletBase = floatval($users_wallet->invoiced_amount ?? $users_wallet->amount ?? 0);
                         $result[$date]['commission'] += resolve_stored_commission($users_wallet->commission, $users_wallet->commission_type, $walletBase, false);
+                    }
+                    
+                    // ADDED: Wallet Tips
+                    if (!empty($users_wallet->tip)) {
+                        $result[$date]['tip'] += $users_wallet->tip;
                     }
                 }
             }
@@ -352,12 +364,28 @@ class SalesReportController extends Controller
             $users_packages = $temp_users_packages->get();
             if (!empty($users_packages)) {
                 foreach ($users_packages as $users_package) {
-                    // FIX: Safely parse the date
                     $date = \Carbon\Carbon::parse($users_package->created_at)->format('Y-m-d');
                     if (!isset($result[$date]['package'])) {
                         $result[$date]['package'] = 0;
                     }
                     $result[$date]['package'] += $users_package->price;
+                }
+            }
+
+            // ADDED: Booking/Sales Tips (From Sales Table)
+            $temp_sales_tips = Sale::query()
+                ->whereRaw('YEAR(created_at)="' . $selected_year . '" and MONTH(created_at)="' . $selected_month . '"')
+                ->where('tip', '>', 0);
+
+            if ($branch_id_filter) {
+                $temp_sales_tips->where('branch_id', $branch_id_filter);
+            }
+
+            $sales_tips = $temp_sales_tips->get();
+            foreach ($sales_tips as $sale) {
+                $date = \Carbon\Carbon::parse($sale->created_at)->format('Y-m-d');
+                if (isset($result[$date])) {
+                    $result[$date]['tip'] = ($result[$date]['tip'] ?? 0) + $sale->tip;
                 }
             }
 
@@ -373,7 +401,6 @@ class SalesReportController extends Controller
             $BuyProduct = $temp_BuyProduct->get();
             if (!empty($BuyProduct)) {
                 foreach ($BuyProduct as $BuyProduct_item) {
-                    // FIX: Safely parse the date
                     $date = \Carbon\Carbon::parse($BuyProduct_item->created_at)->format('Y-m-d');
                     $orderPrice = 0;
                     if (!$BuyProduct_item->details->isEmpty()) {
@@ -395,6 +422,11 @@ class SalesReportController extends Controller
 
                     if (!empty($BuyProduct_item->commission)) {
                         $result[$date]['commission'] += resolve_stored_commission($BuyProduct_item->commission, $BuyProduct_item->commission_type, $orderPrice, false);
+                    }
+                    
+                    // ADDED: Buy Product Tips
+                    if (!empty($BuyProduct_item->tip)) {
+                        $result[$date]['tip'] += $BuyProduct_item->tip;
                     }
                 }
             }
