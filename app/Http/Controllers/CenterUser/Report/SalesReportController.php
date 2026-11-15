@@ -24,8 +24,10 @@ class SalesReportController extends Controller
         }
 
         $branch_id = $request->get('branch_id');
-        $years = Booking::select(DB::raw('DISTINCT YEAR(booking_date) as year'))->get();
-        $selected_year = $request->get('year');
+        $years = Booking::select(DB::raw('DISTINCT YEAR(booking_date) as year'))->orderByDesc('year')->get();
+        // $selected_year = $request->get('year');
+        // $selected_month = $request->get('month');
+        $selected_year  = $request->get('year') ?? optional($years->first())->year;
         $selected_month = $request->get('month');
         $temp_branches = Branch::query();
         if (get_user_role() != 1) {
