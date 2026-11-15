@@ -213,6 +213,11 @@ class DailyReportController extends Controller
                     $full_name = $value->full_name;
                     $mobile = $value->mobile;
                     $notes = $value->notes;
+                    
+                    $is_default = $value->is_default 
+                    ?? $value->client?->is_default 
+                    ?? $value->user?->is_default 
+                    ?? false;
                     $price = 0;
                     if (!empty($value->details)) {
                         foreach ($value->details as $detail) {
@@ -287,6 +292,7 @@ class DailyReportController extends Controller
                                     $temp['type'] = "member_ship";
                                     $temp['code'] = $memberShipCardsUsers[$detail->worker_id]['code'];
                                     $temp['client_name'] = $full_name;
+                                    $temp['is_default'] = $is_default;
                                     $payments_with_prices["free"][$detail->worker_id][] = $temp;
                                     array_push($selected_memberShipCardsUsers, $detail->worker_id);
                                 }
@@ -300,6 +306,7 @@ class DailyReportController extends Controller
                                     $temp['detailsArr'] = $discountUsers[$detail->worker_id]['detailsArr'];
                                     $temp['codesArr'] = $discountUsers[$detail->worker_id]['codesArr'];
                                     $temp['client_name'] = $mobile;
+                                    $temp['is_default'] = $is_default;
                                     $temp['notes'] = $notes;
                                     $payments_with_prices["free"][$detail->worker_id][] = $temp;
                                     array_push($selected_discountUsers, $detail->worker_id);
@@ -311,6 +318,7 @@ class DailyReportController extends Controller
                                     $temp['type'] = "free_service";
                                     $temp['code'] = "";
                                     $temp['client_name'] = $mobile;
+                                    $temp['is_default'] = $is_default;
                                     $temp['notes'] = $notes;
                                     $payments_with_prices["free"][$detail->worker_id][] = $temp;
                                 }
