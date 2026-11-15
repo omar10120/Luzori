@@ -212,19 +212,19 @@ class BuyProductController extends Controller
         $request->validate([
             'center_id' => 'required|integer|exists:central.centers,id',
         ]);
-
+    
         $appUser = auth('sanctum')->user();
         if (!$appUser) {
             return MyHelper::responseJSON('Unauthorized', Response::HTTP_UNAUTHORIZED);
         }
-
+    
         $switched = $this->switchToCenter((int) $request->center_id);
         if ($switched instanceof \Illuminate\Http\JsonResponse) {
             return $switched;
         }
-
+    
         $allowedPayments = array_unique(array_merge(get_payment_method_names(), ['wallet']));
-
+    
         $validated = $request->validate([
             'branch_id' => 'required|integer|exists:branches,id,deleted_at,NULL',
             'products' => 'required|array|min:1',
@@ -233,71 +233,82 @@ class BuyProductController extends Controller
             'payment_type' => 'required|string|in:' . implode(',', $allowedPayments),
             'commission' => 'nullable|numeric',
             'discount' => 'nullable|numeric',
-            'sales_worker_id' => 'required|exists:workers,id,deleted_at,NULL',
-            'worker_id' => 'nullable|exists:workers,id,deleted_at,NULL',
+            'sales_worker_id' => [
+                'required',
+                \Illuminate\Validation\Rule::exists('workers', 'id')->whereNull('deleted_at'),
+            ],
+            'worker_id' => [
+                'nullable',
+                \Illuminate\Validation\Rule::exists('workers', 'id')->whereNull('deleted_at'),
+            ],
             'clear_cart' => 'nullable|boolean',
             'cart_item_ids' => 'nullable|array',
             'cart_item_ids.*' => 'integer',
         ]);
-
+    
         $branchId         = (int) $validated['branch_id'];
         $centerId         = (int) $request->center_id;
         $isPaidFromWallet = ($validated['payment_type'] === 'wallet');
         $totalPrice       = 0.0;
         $totalQty         = 0;
         $walletDeducted   = false;
-
+    
+        // Resolve workers ONCE, before touching the wallet, so a bad ID
+        // fails fast without deducting (and later refunding) money.
+        $resolvedSalesWorkerId = $this->resolveDefaultWorkerId($validated['sales_worker_id'] ?? null);
+        $resolvedWorkerId      = $this->resolveDefaultWorkerId($validated['worker_id'] ?? null);
+    
         try {
             // ── 1. Validate stock + build priced lines ──
             $pricedLines = [];
             foreach ($validated['products'] as $line) {
                 $productId = (int) $line['id'];
                 $qty       = (int) $line['qty'];
-
+    
                 $this->validateProductStock($productId, $qty, $branchId);
-
+    
                 $product = Product::select(['id', 'retail_price', 'supply_price'])
                     ->with('primarySku')
                     ->findOrFail($productId);
-
+    
                 $unitPrice = ($product->retail_price && $product->retail_price > 0)
                     ? (float) $product->retail_price
                     : (float) ($product->supply_price ?? 0);
-
+    
                 if (!empty($validated['discount'])) {
                     $unitPrice -= ($unitPrice * (float) $validated['discount']) / 100;
                 }
-
+    
                 $totalPrice += $unitPrice * $qty;
                 $totalQty   += $qty;
-
+    
                 $pricedLines[] = [
                     'product'    => $product,
                     'qty'        => $qty,
                     'unit_price' => $unitPrice,
                 ];
             }
-
+    
             // ── 2. Deduct wallet (central DB) ──
             if ($isPaidFromWallet) {
                 $centralUser = DB::connection('central')->table('users')->where('id', $appUser->id)->first();
-
+    
                 if (!$centralUser || (float) $centralUser->wallet < $totalPrice) {
                     return MyHelper::responseJSON(
                         __('api.insufficient_balance') ?? 'Insufficient wallet balance',
                         Response::HTTP_BAD_REQUEST
                     );
                 }
-
+    
                 DB::connection('central')->table('users')
                     ->where('id', $appUser->id)
                     ->decrement('wallet', $totalPrice);
-
+    
                 $walletDeducted = true;
             }
-
+    
             $tenantUser = $this->resolveTenantUser($appUser);
-
+    
             // ── 3. Sale + BuyProduct + BuyProductDetail + SaleItem, all atomic ──
             $item = DB::transaction(function () use (
                 $appUser,
@@ -307,6 +318,8 @@ class BuyProductController extends Controller
                 $pricedLines,
                 $totalPrice,
                 $totalQty,
+                $resolvedSalesWorkerId,
+                $resolvedWorkerId,
             ) {
                 $vatSplit = Sale::splitInclusiveVat((float) $totalPrice);
                 $sale = Sale::create([
@@ -314,37 +327,31 @@ class BuyProductController extends Controller
                     'tax'        => $vatSplit['vat'],
                     'tip'        => 0,
                     'total'      => $vatSplit['inclusive'],
-                    // 'worker_id'  => $validated['worker_id'] ?? $validated['sales_worker_id'],
-                    'worker_id'  => $this->resolveDefaultWorkerId($validated['worker_id'] ?? null),
+                    'worker_id'  => $resolvedWorkerId,
                     'client_id'  => $tenantUser->id,
                     'branch_id'  => $branchId,
                     'created_by' => $tenantUser->id,
                 ]);
-
+    
                 $buyProduct = BuyProduct::create([
                     'payment_type'    => $validated['payment_type'],
                     'commission'      => $validated['commission'] ?? null,
                     'discount'        => $validated['discount'] ?? null,
-                    // 'sales_worker_id' => $validated['sales_worker_id'],
-                    // 'worker_id'       => $validated['worker_id'] ?? null,
-                    // 'worker_id'       => 1,
-                    'sales_worker_id' => $this->resolveDefaultWorkerId($validated['sales_worker_id'] ?? null),
-                    'worker_id'       => $this->resolveDefaultWorkerId($validated['worker_id'] ?? null),
-                    'sales_worker_id' => $validated['sales_worker_id'],
-                    'worker_id'       => 1,
+                    'sales_worker_id' => $resolvedSalesWorkerId,
+                    'worker_id'       => $resolvedWorkerId,
                     'global_user_id'  => $appUser->id,
                     'created_by'      => $tenantUser->id,
                     'sale_id'         => $sale->id,
                 ]);
-
+    
                 foreach ($pricedLines as $line) {
                     $product = $line['product'];
                     $qty     = $line['qty'];
-
+    
                     $detailPrice = ($product->retail_price && $product->retail_price > 0)
                         ? $product->retail_price
                         : ($product->supply_price ?? 0);
-
+    
                     for ($i = 0; $i < $qty; $i++) {
                         BuyProductDetail::create([
                             'buy_product_id' => $buyProduct->id,
@@ -352,10 +359,10 @@ class BuyProductController extends Controller
                             'price'          => $detailPrice,
                         ]);
                     }
-
+    
                     $this->decrementProductStock($product, $qty, $branchId, $buyProduct);
                 }
-
+    
                 SaleItem::create([
                     'sale_id'       => $sale->id,
                     'item_type'     => 'buy_product',
@@ -365,12 +372,12 @@ class BuyProductController extends Controller
                     'price'         => $totalQty > 0 ? $totalPrice / $totalQty : 0,
                     'subtotal'      => $totalPrice,
                 ]);
-
+    
                 return $buyProduct;
             });
-
+    
             $item->load(['worker', 'sales_worker', 'details.product.translation']);
-
+    
             // ── 4. Clear matching central cart product lines after success ──
             if (!empty($validated['clear_cart'])) {
                 if (!empty($validated['cart_item_ids'])) {
@@ -388,10 +395,10 @@ class BuyProductController extends Controller
                     );
                 }
             }
-
+    
             // ── 4b. Notify the center about the new product order (best-effort) ──
             $this->notifyBuyProductCreated($item, $tenantUser, $appUser, $totalPrice, $totalQty);
-
+    
             return MyHelper::responseJSON(
                 __('api.addSuccessfully'),
                 Response::HTTP_CREATED,
@@ -403,7 +410,7 @@ class BuyProductController extends Controller
                     ->where('id', $appUser->id)
                     ->increment('wallet', $totalPrice);
             }
-
+    
             Log::error('AppAPI BuyProduct add: ' . $e->getMessage());
             $message = strtolower($e->getMessage());
             $status = str_contains($message, 'stock')
@@ -412,7 +419,7 @@ class BuyProductController extends Controller
                 || str_contains($message, 'balance')
                 ? Response::HTTP_UNPROCESSABLE_ENTITY
                 : Response::HTTP_INTERNAL_SERVER_ERROR;
-
+    
             return MyHelper::responseJSON($e->getMessage(), $status);
         }
     }
