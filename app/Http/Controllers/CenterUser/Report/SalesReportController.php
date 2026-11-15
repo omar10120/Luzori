@@ -44,8 +44,6 @@ class SalesReportController extends Controller
         }
 
         // ── Role-aware branch filter (single source of truth) ──
-        //    Role 1  → selected branch, or null (all branches)
-        //    Role ≠1 → ALWAYS their own branch, ignore request
         $user     = auth('center_user')->user();
         $userRole = get_user_role();
 
@@ -63,10 +61,7 @@ class SalesReportController extends Controller
         }
 
         $branches = $temp_branches->get();
-
-        // Keep the dropdown highlighted on whatever is actually being filtered
         $selected_branch = $branch_id_filter;
-
         $template = "";
 
         if (!empty($selected_year)) {
@@ -90,11 +85,9 @@ class SalesReportController extends Controller
                 $payments_type['package'] = __('locale.packages');
             }
 
-            // Merge dynamic wallet methods used in the selected month so columns exist
             $dynamicWalletTypesQuery = UserWallet::select('users_wallets.wallet_type')
                 ->whereRaw('YEAR(users_wallets.created_at)="' . $selected_year . '" and MONTH(users_wallets.created_at)="' . $selected_month . '"');
             
-            // FIX #1: Match DailyReport branch filter logic for dynamic wallet types
             if ($branch_id_filter) {
                 $dynamicWalletTypesQuery->where(function ($q) use ($branch_id_filter) {
                     $q->where('users_wallets.branch_id', $branch_id_filter)
@@ -319,7 +312,6 @@ class SalesReportController extends Controller
             // ── Wallets ──
             $temp_users_wallets = UserWallet::whereRaw('YEAR(users_wallets.created_at)="' . $selected_year . '" and MONTH(users_wallets.created_at)="' . $selected_month . '"');
             
-            // FIX #2: Match DailyReport branch filter logic for wallets
             if ($branch_id_filter) {
                 $temp_users_wallets->where(function ($q) use ($branch_id_filter) {
                     $q->where('users_wallets.branch_id', $branch_id_filter)
@@ -335,8 +327,8 @@ class SalesReportController extends Controller
             $users_wallets = $temp_users_wallets->get();
             if (!empty($users_wallets)) {
                 foreach ($users_wallets as $users_wallet) {
-                    // FIX #3: Use Carbon format for consistent timezone date parsing
-                    $date = $users_wallet->created_at->format('Y-m-d');
+                    // FIX: Safely parse the date whether it's a string or Carbon object
+                    $date = \Carbon\Carbon::parse($users_wallet->created_at)->format('Y-m-d');
                     $walletKey = ($users_wallet->wallet_type ?? 'wallet');
                     if (!isset($result[$date][$walletKey])) {
                         $result[$date][$walletKey] = 0;
@@ -360,8 +352,8 @@ class SalesReportController extends Controller
             $users_packages = $temp_users_packages->get();
             if (!empty($users_packages)) {
                 foreach ($users_packages as $users_package) {
-                    // FIX #4: Use Carbon format for consistent timezone date parsing
-                    $date = $users_package->created_at->format('Y-m-d');
+                    // FIX: Safely parse the date
+                    $date = \Carbon\Carbon::parse($users_package->created_at)->format('Y-m-d');
                     if (!isset($result[$date]['package'])) {
                         $result[$date]['package'] = 0;
                     }
@@ -381,8 +373,8 @@ class SalesReportController extends Controller
             $BuyProduct = $temp_BuyProduct->get();
             if (!empty($BuyProduct)) {
                 foreach ($BuyProduct as $BuyProduct_item) {
-                    // FIX #5: Use Carbon format for consistent timezone date parsing
-                    $date = $BuyProduct_item->created_at->format('Y-m-d');
+                    // FIX: Safely parse the date
+                    $date = \Carbon\Carbon::parse($BuyProduct_item->created_at)->format('Y-m-d');
                     $orderPrice = 0;
                     if (!$BuyProduct_item->details->isEmpty()) {
                         foreach ($BuyProduct_item->details as $detail) {
