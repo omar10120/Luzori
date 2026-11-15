@@ -153,7 +153,7 @@
                                                     @if (is_array($with_price))
                                                         @php
                                                             $typeVal = strtolower(trim($with_price['type'] ?? ''));
-                                                            $symbolVal = strtoupper(trim(strip_tags(get_symbol_type($with_price['type']))));
+                                                            $symbolVal = strtoupper(trim(strip_tags(get_symbol_type($with_price['type'] ?? ''))));
                                                             $isRed = in_array($typeVal, ['f', 'free', 'free_service']) || strpos($symbolVal, 'F') !== false;
                                                             $mainColor = $isRed ? 'red' : '#0066cc';
                                                         @endphp
@@ -163,7 +163,7 @@
                                                                     <span>
                                                                 
                                                                         {{ $amountItem }}
-                                                                        {{ get_symbol_type($with_price['type']) }}
+                                                                        {{ get_symbol_type($with_price['type'] ?? '') }}
                                                                 
                                                                         @if (!empty($with_price['codesArr'][$key]))
                                                                             <br>{{ $with_price['codesArr'][$key] }}
@@ -182,7 +182,7 @@
                                                                 @endforeach
                                                             @else
                                                                 <span>{{ $with_price['amount'] }}</span>
-                                                                <span>{{ get_symbol_type($with_price['type']) }}</span>
+                                                                <span>{{ get_symbol_type($with_price['type'] ?? '') }}</span>
                                                                 @if (!empty($with_price['code']))
                                                                     <br> <span>{{ $with_price['code'] }}</span>
                                                                 @endif
@@ -408,7 +408,7 @@
                                                         @if (is_array($with_price))
                                                             @php
                                                                 $typeVal = strtolower(trim($with_price['type'] ?? ''));
-                                                                $symbolVal = strtoupper(trim(strip_tags(get_symbol_type($with_price['type']))));
+                                                                $symbolVal = strtoupper(trim(strip_tags(get_symbol_type($with_price['type'] ?? ''))));
                                                                 $isRed = in_array($typeVal, ['f', 'free', 'free_service']) || strpos($symbolVal, 'F') !== false;
                                                                 $mainColor = $isRed ? 'red' : '#0066cc';
                                                             @endphp
@@ -417,7 +417,7 @@
                                                                     @foreach ($with_price['details'] as $key => $amountItem)
                                                                         <span>
                                                                             {{ $amountItem }}
-                                                                            {{ get_symbol_type($with_price['type']) }}
+                                                                            {{ get_symbol_type($with_price['type'] ?? '') }}
                                                                             @if (!empty($with_price['codesArr'][$key]))
                                                                                 <br>{{ $with_price['codesArr'][$key] }}
                                                                             @endif
@@ -437,7 +437,7 @@
                                                                     @endforeach
                                                                 @else
                                                                     <span>{{ $with_price['amount'] }}</span>
-                                                                    <span>{{ get_symbol_type($with_price['type']) }}</span> 
+                                                                    <span>{{ get_symbol_type($with_price['type'] ?? '') }}</span> 
                                                                     @if (!empty($with_price['code']))
                                                                         <br> <span>{{ $with_price['code'] }}</span>
                                                                     @endif
@@ -656,7 +656,7 @@
                                                     @if (is_array($with_price))
                                                         @php
                                                             $typeVal = strtolower(trim($with_price['type'] ?? ''));
-                                                            $symbolVal = strtoupper(trim(strip_tags(get_symbol_type($with_price['type']))));
+                                                            $symbolVal = strtoupper(trim(strip_tags(get_symbol_type($with_price['type'] ?? ''))));
                                                             $isRed = in_array($typeVal, ['f', 'free', 'free_service']) || strpos($symbolVal, 'F') !== false;
                                                             $mainColor = $isRed ? 'red' : '#0066cc';
                                                         @endphp
@@ -665,7 +665,7 @@
                                                                 @foreach ($with_price['details'] as $key => $amountItem)
                                                                     <span>
                                                                        {{ $amountItem }}
-                                                                         {{ get_symbol_type($with_price['type']) }}
+                                                                         {{ get_symbol_type($with_price['type'] ?? '') }}
                                                                         @if (!empty($with_price['codesArr'][$key]))
                                                                             <br>{{ $with_price['codesArr'][$key] }}
                                                                         @endif
@@ -684,7 +684,7 @@
                                                                 @endforeach
                                                             @else
                                                                 <span>{{ $with_price['amount'] }}</span>
-                                                                <span>{{ get_symbol_type($with_price['type']) }}</span>
+                                                                <span>{{ get_symbol_type($with_price['type'] ?? '') }}</span>
                                                                 @if (!empty($with_price['code']))
                                                                     <br> <span>{{ $with_price['code'] }}</span>
                                                                 @endif
