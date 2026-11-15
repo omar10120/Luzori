@@ -20,39 +20,59 @@ class StaffReportController extends Controller
             return abort(403);
         }
 
-        $branch_id = $request->get('branch_id');
-        $years = Booking::select(DB::raw('DISTINCT YEAR(booking_date) as year'))->get();
-        $selected_year = $request->get('year');
-        $selected_month = $request->get('month');
+        // ── Distinct years, latest first ──
+        $years = Booking::select(DB::raw('DISTINCT YEAR(booking_date) as year'))
+            ->orderByDesc('year')
+            ->get();
+
+        // ── Default selected year = latest year in the list ──
+        $selected_year = $request->get('year') ?? optional($years->first())->year;
+
+        // ── Default selected month = current month ──
+        $selected_month = $request->get('month') ?? now()->month;
+
+        // ── Role-aware branch filter ──
+        $user     = auth('center_user')->user();
+        $userRole = get_user_role();
+
+        if ($userRole == 1) {
+            $branch_id_filter = !empty($request->get('branch_id')) ? (int) $request->get('branch_id') : null;
+        } else {
+            $branch_id_filter = $user->branch_id ? (int) $user->branch_id : null;
+        }
+
+        $selected_branch = $branch_id_filter;
         $template = "";
+
         $temp_branches = Branch::query();
-        if (get_user_role() != 1) {
-            $temp_branches->where('id', auth('center_user')->user()->branch_id);
+        if ($userRole != 1) {
+            $temp_branches->where('id', $user->branch_id);
         }
         $branches = $temp_branches->get();
-        $selected_branch = $request->get('branch_id');
+
         $vacationsWorkerDays = Vacation::get()->toArray();
         $vacationsWorkerIds = [];
-        if (!empty($request->year)) {
-            $temp_report = Booking::whereYear('booking_date', $request->get('year'))
-                ->whereMonth('booking_date', $request->get('month'))
+
+        if (!empty($selected_year)) {
+            $temp_report = Booking::whereYear('booking_date', $selected_year)
+                ->whereMonth('booking_date', $selected_month)
                 ->whereHas('details', function ($query) {
                     $query->where('status', 'confirmed');
                 })
                 ->with(['details' => function ($query) {
                     $query->where('status', 'confirmed');
                 }]);
-            if (!empty($request->get('branch_id'))) {
-                $temp_report->where('branch_id', $request->get('branch_id'));
+
+            if ($branch_id_filter) {
+                $temp_report->where('branch_id', $branch_id_filter);
             }
             $report = $temp_report->get();
+            
             $temp_users = Worker::query();
-            if (get_user_role() != 1) {
-                $temp_users->where('branch_id', auth('center_user')->user()->branch_id);
+            if ($branch_id_filter) {
+                $temp_users->where('branch_id', $branch_id_filter);
             }
-            if (!empty($branch_id)) {
-                $temp_users->where('branch_id', $branch_id);
-            }
+
             // Clone the builder for each group so skip/take don't leak between them.
             $firstusers  = (clone $temp_users)->skip(0)->take(16)->get();                // workers 0–15
             $firstusers_last_total = [];
@@ -68,6 +88,7 @@ class StaffReportController extends Controller
             $restusers_last_total = [];
             $restusers_last_total_price = [];
             $restusers_last_total_tips = [];
+
             foreach ($firstusers as $index => $value) {
                 $firstusers_last_total[$value->id] = 0;
                 $firstusers_last_total_price[$value->id] = 0;
@@ -83,14 +104,15 @@ class StaffReportController extends Controller
                 $restusers_last_total_price[$value->id] = 0;
                 $restusers_last_total_tips[$value->id] = 0;
             }
+
             $result = [];
             $memberShipCardsUsers = [];
             $discountUsers = [];
-            $days = cal_days_in_month(CAL_GREGORIAN, $request->get('month'), $request->get('year'));
+            $days = cal_days_in_month(CAL_GREGORIAN, (int) $selected_month, (int) $selected_year);
             for ($i = 1; $i <= $days; $i++) {
-                $month = ($request->get('month') <= 9) ? "0" . $request->get('month') : $request->get('month');
+                $month = ($selected_month <= 9) ? "0" . $selected_month : $selected_month;
                 $day = ($i <= 9) ? "0" . $i : $i;
-                $date = $request->get('year') . "-" . $month . "-" . $day;
+                $date = $selected_year . "-" . $month . "-" . $day;
                 $temp = [];
                 foreach ($firstusers as $index => $value) {
                     $temp[$value->id] = 0;
@@ -149,6 +171,7 @@ class StaffReportController extends Controller
                     }
                 }
             }
+
             $template = (string)view('CenterUser.SubViews.Report.template.staff_report', compact(
                 'result',
                 'firstusers',
@@ -165,6 +188,7 @@ class StaffReportController extends Controller
                 'restusers_last_total_tips',
                 'vacationsWorkerIds'
             ));
+
             if (isset($request->is_pdf)) {
                 $options = [
                     'format' => 'A4',
@@ -181,6 +205,7 @@ class StaffReportController extends Controller
                 return $pdf->stream('staff_report.pdf');
             }
         }
+
         return view('CenterUser.SubViews.Report.staff_report', compact(
             'years',
             'template',
