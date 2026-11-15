@@ -165,6 +165,9 @@ return [
     'salary'                        => 'Salary',
     'fast_expense'                  => 'Fast Expense',
     'phone_number'                  => 'Phone Number',
+    'otp_phones'                    => 'OTP phone list',
+    'otp_phones_placeholder'        => 'One phone per line',
+    'otp_phones_help'               => 'Extra numbers that also receive sale OTP, in addition to Super Admin phones.',
     'emirate'                       => 'Emirate',
     'tax_number'                    => 'Tax Number',
     'select_branch'                 => 'Select Branch',
@@ -401,7 +404,7 @@ return [
     'sales_cash'                      => 'Sales Cash',
     'sales_visa'                      => 'Sales Visa',
     'tips_visa'                       => 'Tips visa',
-    'tips'                            => 'Ttips',
+    'tips'                            => 'Tips',
     'general_cash'                    => 'General Cash',
     'Commission'                      => 'Commission',
     'open_time '                      => 'Open Time',
@@ -543,5 +546,7 @@ return [
     'message_or_attachment_required'  => 'Write a message or attach a file',
     'allow_notification'              => 'allow notification',
     'comment'                         => 'comment',
+    'total_prices_5_percent'          => '5 of total prices',
+    'total_tips_7_5_percent'          => '%7.5 of total tips',
 
 ];

@@ -412,9 +412,9 @@ class SalesController extends Controller
         }
 
         // Validate stock when tracking is enabled or branch stock exists
-        $productBranch = \App\Models\ProductBranch::where('product_id', $product->id)
-        ->where('branch_id', $branchId)
-        ->first();
+            $productBranch = \App\Models\ProductBranch::where('product_id', $product->id)
+                ->where('branch_id', $branchId)
+                ->first();
         if ($product->track_stock || $productBranch) {
             if (!$productBranch || $productBranch->stock_quantity < $request->quantity) {
                 return MyHelper::responseJSON("Insufficient stock. Available: {$available}", Response::HTTP_BAD_REQUEST);
@@ -903,9 +903,9 @@ class SalesController extends Controller
 
         // PDF only when explicitly requested
         if (request()->query('format') === 'pdf') {
-            $options = [
-                'format' => [80, 200],
-                'orientation' => 'portrait',
+        $options = [
+            'format' => [80, 200],
+            'orientation' => 'portrait',
                 'margin_top' => 2,
                 'margin_bottom' => 12,
                 'margin_left' => 3,

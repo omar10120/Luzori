@@ -1057,7 +1057,7 @@
                                                         </option>
                                                     @endforeach
                                                 </select>
-                                                <div id="product-out-of-stock-panel" class="alert alert-warning mt-2 mb-0" style="display: none;"></div>
+                                                <!-- <div id="product-out-of-stock-panel" class="alert alert-warning mt-2 mb-0" style="display: none;"></div> -->
                                             </div>
                                         </div>
                                         <div class="col-md-12 mb-2">
@@ -1091,7 +1091,7 @@
                                                 <input type="hidden" id="product-commission-type" value="{{ get_allowed_commission_type('product') }}">
                                             </div>
                                             <div class="mb-1 mt-2">
-                                                <label for="product-commission" class="form-label">{{ __('field.commission') }} <span class="text-danger">*</span></label>
+                                                <label for="product-commission" class="form-label">{{ __('field.commission') }}</label>
                                                 @if(get_allowed_commission_type('product') === 'fixed')
                                                     <select class="form-control" name="commission" id="product-commission">
                                                         <option value="">{{ __('field.select_commission') }}</option>
@@ -2342,9 +2342,15 @@
                             });
                             service_info += `</select>`;
                         } else {
+                            
+                                    
+
                             service_info += `
-                                    <select class="form-control commission-fixed-input" name="service[${service.id}][commission]" id="booking-commission_fixed_${service.id}">
+                                    <select class="form-control commission-fixed-input" name="service[${service.id}][commission]" id="booking-commission_fixed_${service.id}" data-service-price="${servicePrice}">
                                         <option value="">${posConfig.translations.select_commission}</option>`;
+
+
+
                             posConfig.allowedFixedRates.forEach(function (rate) {
                                 service_info += `<option value="${rate}">${rate}</option>`;
                             });
@@ -3313,16 +3319,6 @@
                     if (typeof toastr !== 'undefined') {
                         toastr.error('{{ __('field.please_select_product') }}');
                     }
-                    return;
-                }
-
-
-                // Commission is required if worker is selected
-                if (workerId && workerId != '' && !commission) {
-                    if (typeof toastr !== 'undefined') {
-                        toastr.error('{{ __('field.commission_is_required_when_worker_selected') }}');
-                    }
-                    $('#product-commission').focus();
                     return;
                 }
 
@@ -4460,7 +4456,7 @@
                     $commissionField.val('');
                 } else {
                     $commissionDiv.show();
-                    $commissionField.prop('required', true);
+                    $commissionField.prop('required', false);
                 }
             });
 

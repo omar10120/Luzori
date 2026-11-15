@@ -20,18 +20,19 @@ use App\Models\CartItem;
 use App\Services\CartService;
 use App\Services\CRUDService;
 use App\Services\InventoryMovementService;
-use App\Services\NotifiesCenter;          
+use App\Services\NotifiesCenter;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 
 
 class BuyProductController extends Controller
 {
-    use NotifiesCenter;    
+    use NotifiesCenter;
     private CRUDService $crudService;
     private string $model = 'BuyProduct';
 
@@ -40,7 +41,6 @@ class BuyProductController extends Controller
         $this->crudService = $crudService;
     }
 
-    
     public function all(Request $request)
     {
         $request->validate([
@@ -48,42 +48,42 @@ class BuyProductController extends Controller
             'per_page'  => 'nullable|integer|min:1|max:100',
             'page'      => 'nullable|integer|min:1',
         ]);
-    
+
         $appUser = auth('sanctum')->user();
         if (!$appUser) {
             return MyHelper::responseJSON('Unauthorized', Response::HTTP_UNAUTHORIZED);
         }
-    
+
         $relations = [
             'worker',
             'sales_worker',
-            'saleItem',                 // ← added: pulls qty/subtotal from sale_items
+            'saleItem',
             'details' => function ($q) {
                 $q->with(['product' => function ($q1) {
                     $q1->with(['translation', 'media']);
                 }]);
             },
         ];
-    
+
         $originalDb = Config::get('database.connections.mysql.database');
-    
+
         try {
             // ═══════════════════════════════════════════════════════════
             // Case A — center_id provided
             // ═══════════════════════════════════════════════════════════
             if ($request->filled('center_id')) {
                 $requestedCenterId = (int) $request->center_id;
-    
+
                 $center = $this->switchToCenter($requestedCenterId);
                 if ($center instanceof \Illuminate\Http\JsonResponse) {
                     return $center;
                 }
-    
+
                 $items = BuyProduct::with($relations)
                     ->where('global_user_id', $appUser->id)
                     ->latest('id')
                     ->paginate((int) $request->input('per_page', 10));
-    
+
                 $collection = $items->getCollection()->map(function (BuyProduct $item) use ($center) {
                     $item->setAttribute('center', [
                         'id'     => $center->id,
@@ -93,7 +93,7 @@ class BuyProductController extends Controller
                     return $item;
                 });
                 $items->setCollection($collection);
-    
+
                 return MyHelper::responseJSON(
                     __('api.doneSuccessfully'),
                     Response::HTTP_OK,
@@ -101,39 +101,39 @@ class BuyProductController extends Controller
                     PaginateDateResource::make($items)
                 );
             }
-    
+
             // ═══════════════════════════════════════════════════════════
             // Case B — no center_id → aggregate across all centers
             // ═══════════════════════════════════════════════════════════
             $allItems = [];
-    
+
             $centers = Center::whereNotNull('database')
                 ->get(['id', 'name', 'domain', 'database', 'expire_date', 'status']);
-    
+
             Log::info('[BuyProduct all] Case B centers', [
                 'ids' => $centers->pluck('id')->all(),
             ]);
-    
+
             foreach ($centers as $center) {
                 if ($center->expire_date && now()->gt($center->expire_date)) {
                     continue;
                 }
-    
+
                 try {
                     Config::set('database.connections.mysql.database', $center->database);
                     DB::purge('mysql');
                     DB::reconnect('mysql');
-    
+
                     $rows = BuyProduct::with($relations)
                         ->where('global_user_id', $appUser->id)
                         ->latest('id')
                         ->get();
-    
+
                     Log::info('[BuyProduct all] center fetched', [
                         'center_id' => $center->id,
                         'rows'      => $rows->count(),
                     ]);
-    
+
                     foreach ($rows as $row) {
                         $row->setAttribute('center', [
                             'id'     => $center->id,
@@ -141,8 +141,7 @@ class BuyProductController extends Controller
                             'domain' => $center->domain,
                             'logo'   => $center->logo ? url('storage/' . $center->logo) : null,
                         ]);
-    
-                        // Serialize now while still connected to this tenant DB
+
                         $allItems[] = json_decode(json_encode(new BuyProductResource($row)), true);
                     }
                 } catch (\Throwable $e) {
@@ -156,21 +155,21 @@ class BuyProductController extends Controller
                     continue;
                 }
             }
-    
+
             // Restore central
             Config::set('database.connections.mysql.database', $originalDb);
             DB::purge('mysql');
             DB::reconnect('mysql');
-    
+
             usort($allItems, function ($a, $b) {
                 return strcmp((string) ($b['created_at'] ?? ''), (string) ($a['created_at'] ?? ''));
             });
-    
+
             $perPage = (int) $request->input('per_page', 15);
             $page    = (int) $request->input('page', 1);
             $total   = count($allItems);
             $slice   = array_slice($allItems, ($page - 1) * $perPage, $perPage);
-    
+
             $paginator = new LengthAwarePaginator(
                 $slice,
                 $total,
@@ -178,28 +177,28 @@ class BuyProductController extends Controller
                 $page,
                 ['path' => $request->url(), 'query' => $request->query()]
             );
-    
+
             return MyHelper::responseJSON(
                 __('api.doneSuccessfully'),
                 Response::HTTP_OK,
                 $slice,
                 PaginateDateResource::make($paginator)
             );
-    
+
         } catch (\Throwable $e) {
             try {
                 Config::set('database.connections.mysql.database', $originalDb);
                 DB::purge('mysql');
                 DB::reconnect('mysql');
             } catch (\Throwable $ignore) {}
-    
+
             Log::error('AppAPI BuyProduct all FAILED', [
                 'message' => $e->getMessage(),
                 'file'    => $e->getFile(),
                 'line'    => $e->getLine(),
                 'trace'   => $e->getTraceAsString(),
             ]);
-    
+
             return MyHelper::responseJSON(
                 $e->getMessage() . ' @ ' . basename($e->getFile()) . ':' . $e->getLine(),
                 Response::HTTP_INTERNAL_SERVER_ERROR
@@ -233,8 +232,14 @@ class BuyProductController extends Controller
             'payment_type' => 'required|string|in:' . implode(',', $allowedPayments),
             'commission' => 'nullable|numeric',
             'discount' => 'nullable|numeric',
-            'sales_worker_id' => 'required|exists:workers,id,deleted_at,NULL',
-            'worker_id' => 'nullable|exists:workers,id,deleted_at,NULL',
+            'sales_worker_id' => [
+                'required',
+                Rule::exists('workers', 'id')->whereNull('deleted_at'),
+            ],
+            'worker_id' => [
+                'nullable',
+                Rule::exists('workers', 'id')->whereNull('deleted_at'),
+            ],
             'clear_cart' => 'nullable|boolean',
             'cart_item_ids' => 'nullable|array',
             'cart_item_ids.*' => 'integer',
@@ -246,6 +251,13 @@ class BuyProductController extends Controller
         $totalPrice       = 0.0;
         $totalQty         = 0;
         $walletDeducted   = false;
+
+        // Inline worker resolution (no more resolveDefaultWorkerId()).
+        // Sale.worker_id falls back to sales_worker_id, matching the original intent.
+        $salesWorkerId = (int) $validated['sales_worker_id'];
+        $workerId      = isset($validated['worker_id']) && $validated['worker_id'] !== null
+            ? (int) $validated['worker_id']
+            : $salesWorkerId;
 
         try {
             // ── 1. Validate stock + build priced lines ──
@@ -307,6 +319,8 @@ class BuyProductController extends Controller
                 $pricedLines,
                 $totalPrice,
                 $totalQty,
+                $salesWorkerId,
+                $workerId,
             ) {
                 $vatSplit = Sale::splitInclusiveVat((float) $totalPrice);
                 $sale = Sale::create([
@@ -314,8 +328,7 @@ class BuyProductController extends Controller
                     'tax'        => $vatSplit['vat'],
                     'tip'        => 0,
                     'total'      => $vatSplit['inclusive'],
-                    // 'worker_id'  => $validated['worker_id'] ?? $validated['sales_worker_id'],
-                    'worker_id'  => $this->resolveDefaultWorkerId($validated['worker_id'] ?? null),
+                    'worker_id'  => $workerId,
                     'client_id'  => $tenantUser->id,
                     'branch_id'  => $branchId,
                     'created_by' => $tenantUser->id,
@@ -325,13 +338,8 @@ class BuyProductController extends Controller
                     'payment_type'    => $validated['payment_type'],
                     'commission'      => $validated['commission'] ?? null,
                     'discount'        => $validated['discount'] ?? null,
-                    // 'sales_worker_id' => $validated['sales_worker_id'],
-                    // 'worker_id'       => $validated['worker_id'] ?? null,
-                    // 'worker_id'       => 1,
-                    'sales_worker_id' => $this->resolveDefaultWorkerId($validated['sales_worker_id'] ?? null),
-                    'worker_id'       => $this->resolveDefaultWorkerId($validated['worker_id'] ?? null),
-                    'sales_worker_id' => $validated['sales_worker_id'],
-                    'worker_id'       => 1,
+                    'sales_worker_id' => $salesWorkerId,
+                    'worker_id'       => $workerId,
                     'global_user_id'  => $appUser->id,
                     'created_by'      => $tenantUser->id,
                     'sale_id'         => $sale->id,
@@ -374,9 +382,9 @@ class BuyProductController extends Controller
             // ── 4. Clear matching central cart product lines after success ──
             if (!empty($validated['clear_cart'])) {
                 if (!empty($validated['cart_item_ids'])) {
-                    \App\Models\CartItem::query()
+                    CartItem::query()
                         ->where('user_id', $appUser->id)
-                        ->where('item_type', \App\Models\CartItem::TYPE_PRODUCT)
+                        ->where('item_type', CartItem::TYPE_PRODUCT)
                         ->whereIn('id', $validated['cart_item_ids'])
                         ->delete();
                 } else {
@@ -384,7 +392,7 @@ class BuyProductController extends Controller
                         $appUser,
                         $centerId,
                         $branchId,
-                        \App\Models\CartItem::TYPE_PRODUCT
+                        CartItem::TYPE_PRODUCT
                     );
                 }
             }
@@ -397,14 +405,24 @@ class BuyProductController extends Controller
                 Response::HTTP_CREATED,
                 BuyProductResource::make($item)
             );
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             if ($walletDeducted) {
                 DB::connection('central')->table('users')
                     ->where('id', $appUser->id)
                     ->increment('wallet', $totalPrice);
             }
 
-            Log::error('AppAPI BuyProduct add: ' . $e->getMessage());
+            Log::error('AppAPI BuyProduct add FAILED', [
+                'center_id' => $centerId,
+                'branch_id' => $branchId,
+                'user_id'   => $appUser->id ?? null,
+                'class'     => get_class($e),
+                'message'   => $e->getMessage(),
+                'file'      => $e->getFile(),
+                'line'      => $e->getLine(),
+                'trace'     => $e->getTraceAsString(),
+            ]);
+
             $message = strtolower($e->getMessage());
             $status = str_contains($message, 'stock')
                 || str_contains($message, 'available')
@@ -413,10 +431,14 @@ class BuyProductController extends Controller
                 ? Response::HTTP_UNPROCESSABLE_ENTITY
                 : Response::HTTP_INTERNAL_SERVER_ERROR;
 
-            return MyHelper::responseJSON($e->getMessage(), $status);
+            return MyHelper::responseJSON(
+                config('app.debug')
+                    ? get_class($e) . ': ' . $e->getMessage() . ' @ ' . basename($e->getFile()) . ':' . $e->getLine()
+                    : $e->getMessage(),
+                $status
+            );
         }
     }
-
 
     public function delete(Request $request)
     {
@@ -441,7 +463,7 @@ class BuyProductController extends Controller
             }
 
             return MyHelper::responseJSON(__('api.unknownError'), Response::HTTP_INTERNAL_SERVER_ERROR);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('AppAPI BuyProduct delete: ' . $e->getMessage());
             return MyHelper::responseJSON(__('api.unknownError'), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
@@ -475,7 +497,7 @@ class BuyProductController extends Controller
                 Response::HTTP_OK,
                 PrintBuyProductResource::make($buyProduct)
             );
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('AppAPI BuyProduct printInvoice: ' . $e->getMessage());
             return MyHelper::responseJSON(__('api.unknownError'), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
@@ -581,7 +603,6 @@ class BuyProductController extends Controller
         ]);
     }
 
-    
     /**
      * Send a "new product order" notification to the center that owns the tenant DB.
      * Best-effort: the NotifiesCenter trait already catches + logs every error internally.
@@ -636,7 +657,6 @@ class BuyProductController extends Controller
                 ]
             );
         } catch (\Throwable $e) {
-            // Extra safety net — the trait itself already catches errors.
             Log::warning('notifyBuyProductCreated failed', [
                 'buy_product_id' => $buyProduct->id ?? null,
                 'error'          => $e->getMessage(),

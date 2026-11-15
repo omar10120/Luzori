@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\CenterUser;
+use App\Models\Invoice_Settings;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -39,6 +40,11 @@ class SMSGatewayService
             ->values()
             ->all();
 
+        $phones = array_values(array_unique(array_filter(array_merge(
+            $phones,
+            $this->getInvoiceOtpPhones()
+        ))));
+
         if (!empty($phones)) {
             return $phones;
         }
@@ -47,6 +53,25 @@ class SMSGatewayService
         return array_values(array_unique(array_filter(array_map(function ($phone) {
             return $this->formatPhoneNumber((string) $phone);
         }, $fallback))));
+    }
+
+    private function getInvoiceOtpPhones(): array
+    {
+        try {
+            $settings = Invoice_Settings::query()->first();
+        } catch (\Throwable $e) {
+            return [];
+        }
+
+        $phones = $settings?->otp_phones ?? [];
+        if (!is_array($phones)) {
+            return [];
+        }
+
+        return array_values(array_filter(array_map(function ($phone) {
+            $phone = trim((string) $phone);
+            return $phone !== '' ? $this->formatPhoneNumber($phone) : null;
+        }, $phones)));
     }
 
     public function formatPhoneNumber(string $mobile): string

@@ -162,6 +162,9 @@ return [
     'salary'                        => 'الراتب',
     'fast_expense'                  => 'مصروف سريع',
     'phone_number'                  => 'رقم الهاتف',
+    'otp_phones'                    => 'قائمة هواتف رمز التحقق',
+    'otp_phones_placeholder'        => 'رقم واحد في كل سطر',
+    'otp_phones_help'               => 'أرقام إضافية تستلم رمز التحقق مع هواتف مدير النظام.',
     'emirate'                       => 'الإمارة',
     'tax_number'                    => 'الرقم الضريبي',
     'select_branch'                 => 'اختر الفرع',
@@ -533,6 +536,8 @@ return [
     'message_or_attachment_required'  => 'اكتب رسالة أو أرفق ملفاً',
     'allow_notification'              => ' سماح للاشعارات',
     'comment'                         => 'التعليق',
+    'total_prices_5_percent'          => '5 مجموع الأسعار',
+    'total_tips_7_5_percent'          => '%7.5 مجموع البقشيش',
     
     
 

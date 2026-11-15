@@ -17,6 +17,7 @@ class Invoice_Settings extends Model
 		'phone_number_1',
 		'phone_number_2',
 		'phone_number_3',
+		'otp_phones',
 		'emirate',
 		'tax_number',
 		'auto_print_sale',
@@ -25,6 +26,7 @@ class Invoice_Settings extends Model
 	];
 
 	protected $casts = [
+		'otp_phones' => 'array',
 		'auto_print_sale' => 'boolean',
 		'sms_allow' => 'boolean',
 	];

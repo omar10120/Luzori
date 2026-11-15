@@ -205,11 +205,11 @@ class WalletDataTable extends DataTable
     {
         return [
             Column::make('id')->searchable(true)->title('#')->responsivePriority(1)->addClass('all'),
+            Column::make('serial_number')->searchable(true)->title(__('field.serial_number'))->visible(true),
             Column::make('code')->searchable(true)->title(__('field.code'))->responsivePriority(1)->addClass('all'),
             Column::make('amount')->searchable(true)->title(__('field.amount'))->responsivePriority(2)->addClass('all'),
             Column::computed('used_label')->searchable(false)->orderable(false)->title(__('field.used'))->responsivePriority(2)->addClass('all'),
             Column::computed('status')->searchable(false)->orderable(false)->title(__('field.status'))->responsivePriority(2)->addClass('all'),
-            Column::make('serial_number')->searchable(true)->title(__('field.serial_number'))->visible(false),
             Column::computed('users_list')->searchable(true)->orderable(false)->title(__('field.users'))->visible(false),
             Column::make('invoiced_amount')->searchable(true)->title(__('field.invoiced_amount'))->visible(false),
             Column::make('start_at')->searchable(true)->title(__('field.start_at'))->visible(false),

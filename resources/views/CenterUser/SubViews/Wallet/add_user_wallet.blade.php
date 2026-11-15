@@ -61,18 +61,22 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-4 mb-3" style="display: none;" id="commission-div">
-                            <label for="commission" class="lz-field-label">{{ __('field.commission') }}</label>
-                            <select class="form-select" name="commission" id="commission">
-                                <option value="">{{ __('admin.Choose Commission') }}</option>
-                                <!-- @for ($i = 1; $i <= 100; $i++) -->
-                                    <!-- <option value="{{ $i }}">{{ $i }}</option> -->
-                                <!-- @endfor -->
-                                <option value="10">10</option>
-                                <option value="7.2">7.2</option>
-                                <option value="2.5">2.5</option>
-                            </select>
-                        </div>
+                        @php $couponCommissionType = get_allowed_commission_type('coupon'); @endphp
+                        @if($couponCommissionType)
+                            <div class="col-md-4 mb-3" style="display: none;" id="commission-div">
+                                <input type="hidden" name="commission_type" value="{{ $couponCommissionType }}">
+                                <label for="commission" class="lz-field-label">
+                                    {{ __('field.commission') }}
+                                    {{ $couponCommissionType === 'fixed' ? '(' . __('Fixed') . ')' : '%' }}
+                                </label>
+                                <select class="form-select" name="commission" id="commission">
+                                    <option value="">{{ __('admin.Choose Commission') }}</option>
+                                    @foreach(get_allowed_commission_rates('coupon', $couponCommissionType) as $rate)
+                                        <option value="{{ $rate }}">{{ $rate }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        @endif
                     </div>
                 </div>
                 <div class="card-footer d-flex justify-content-end gap-2">

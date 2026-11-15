@@ -34,10 +34,8 @@
                                     @if (!empty($years))
                                         @foreach ($years as $year)
                                             @php
-                                                $selected = '';
-                                                if ($year == $selected_year) {
-                                                    $selected = "selected=''";
-                                                }
+                                                // $year is a Booking model — compare its attribute, not the object
+                                                $selected = ((int) $year->year === (int) $selected_year) ? 'selected' : '';
                                             @endphp
                                             <option {{ $selected }} value="{{ $year->year }}">{{ $year->year }}</option>
                                         @endforeach
@@ -49,10 +47,7 @@
                                 <select class="form-control select" name="month" required>
                                     @for ($i = 1; $i <= 12; $i++)
                                         @php
-                                            $selected = '';
-                                            if ($i == $selected_month) {
-                                                $selected = "selected=''";
-                                            }
+                                            $selected = ((int) $i === (int) $selected_month) ? 'selected' : '';
                                         @endphp
                                         <option {{ $selected }} value="{{ $i }}">
                                             {{ date('F', mktime(0, 0, 0, $i, 10)) }}</option>
@@ -62,16 +57,13 @@
                             <div class="col-md-3">
                                 <label class="lz-field-label">{{ __('field.branch') }}</label>
                                 <select class="form-control" name="branch_id">
-                                    @if (get_user_role() == 1 || get_user_role() == 3)
+                                    @if (get_user_role() == 1 )
                                         <option value="">{{ __('field.all_branches') }}</option>
                                     @endif
                                     @if (!empty($branches))
                                         @foreach ($branches as $branch)
                                             @php
-                                                $selected = '';
-                                                if ($branch->id == $selected_branch) {
-                                                    $selected = 'selected=""';
-                                                }
+                                                $selected = ($branch->id == $selected_branch) ? 'selected' : '';
                                             @endphp
                                             <option {{ $selected }} value="{{ $branch->id }}">{{ $branch->name }}
                                             </option>
@@ -84,9 +76,9 @@
                                     <button class="btn btn-luzori-primary">
                                         <i class="ti ti-eye me-1"></i>{{ __('field.view') }}
                                     </button>
-                                    @if (isset($request) && !empty($request->has('year')))
+                                    @if (!empty($selected_year))
                                         <a target="_blank"
-                                            href="{{ route('center_user.reports.sales-report') }}?year={{ $request->get('year') }}&month={{ $request->get('month') }}&branch_id={{ $request->get('branch_id') }}&is_pdf=true"
+                                            href="{{ route('center_user.reports.sales-report') }}?year={{ $selected_year }}&month={{ $selected_month }}&branch_id={{ $selected_branch }}&is_pdf=true"
                                             class="btn btn-luzori-gold">
                                             <i class="ti ti-file-type-pdf me-1"></i>PDF
                                         </a>

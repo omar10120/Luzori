@@ -87,6 +87,14 @@
                 @endforeach
             </tr>
             <tr>
+                <td style="background-color: #666;color: #fff;text-align: center"><strong>{{ __('field.total_prices_5_percent') }}</strong>
+                </td>
+                @foreach ($firstusers_last_total_price as $index => $value)
+                    <td style="background-color: #666;color: #fff;text-align: center"><strong>
+                            {{ round((float) $value * 0.05, 2) }}</strong></td>
+                @endforeach
+            </tr>
+            <tr>
                 <td style="background-color: #666;color: #fff;text-align: center"><strong>{{ 'Total tips' }}</strong>
                 </td>
                 @foreach ($firstusers_last_total_tips as $index => $value)
@@ -95,13 +103,21 @@
                 @endforeach
             </tr>
             <tr>
+                <td style="background-color: #666;color: #fff;text-align: center"><strong>{{ __('field.total_tips_7_5_percent') }}</strong>
+                </td>
+                @foreach ($firstusers_last_total_tips as $index => $value)
+                    <td style="background-color: #666;color: #fff;text-align: center"><strong>
+                            {{ round((float) $value * 0.925, 2) }}</strong></td>
+                @endforeach
+            </tr>
+            <!-- <tr>
                 <td style="background-color: #666;color: #fff;text-align: center"><strong>{{ 'Total' }}</strong>
                 </td>
                 @foreach ($firstusers_last_total as $index => $value)
                     <td style="background-color: #666;color: #fff;text-align: center"><strong>AED
                             {{ number_format($value, 2, '.', '') }}</strong></td>
                 @endforeach
-            </tr>
+            </tr> -->
             <tr>
                 <td colspan="{{ count($firstusers) + 1 }}"
                     style="background-color: #666;color: #fff;text-align: center">
@@ -173,6 +189,14 @@
                 @endforeach
             </tr>
             <tr>
+                <td style="background-color: #666;color: #fff;text-align: center"><strong>{{ __('field.total_prices_5_percent') }}</strong>
+                </td>
+                @foreach ($secondusers_last_total_price as $index => $value)
+                    <td style="background-color: #666;color: #fff;text-align: center"><strong>
+                            {{ round((float) $value * 0.05, 2) }}</strong></td>
+                @endforeach
+            </tr>
+            <tr>
                 <td style="background-color: #666;color: #fff;text-align: center"><strong>{{ 'Total tips' }}</strong>
                 </td>
                 @foreach ($secondusers_last_total_tips as $index => $value)
@@ -181,13 +205,21 @@
                 @endforeach
             </tr>
             <tr>
+                <td style="background-color: #666;color: #fff;text-align: center"><strong>{{ __('field.total_tips_7_5_percent') }}</strong>
+                </td>
+                @foreach ($secondusers_last_total_tips as $index => $value)
+                    <td style="background-color: #666;color: #fff;text-align: center"><strong>
+                            {{ round((float) $value * 0.925, 2) }}</strong></td>
+                @endforeach
+            </tr>
+            <!-- <tr>
                 <td style="background-color: #666;color: #fff;text-align: center"><strong>{{ 'Total' }}</strong>
                 </td>
                 @foreach ($secondusers_last_total as $index => $value)
                     <td style="background-color: #666;color: #fff;text-align: center"><strong>AED
                             {{ number_format($value, 2, '.', '') }}</strong></td>
                 @endforeach
-            </tr>
+            </tr> -->
             <tr>
                 <td colspan="{{ count($secondusers) + 1 }}"
                     style="background-color: #666;color: #fff;text-align: center">
