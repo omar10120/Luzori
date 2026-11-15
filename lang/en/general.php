@@ -37,6 +37,7 @@ return [
     'export'                    => 'Export',
     'actions'                   => 'Actions',
     'permissions'               => 'Permissions',
+    'download_database'         => 'Download database',
     'select_all'                => 'Select all',
     'overview'                  => 'Overview',
     'print'                     => 'Print',

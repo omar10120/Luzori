@@ -37,6 +37,9 @@ class CenterDataTable extends DataTable
                 if (!$item->is_supplier) {
                     $options['create_supplier_url'] = route('admin.centers.create-supplier', ['id' => $item->id]);
                 }
+                if ($item->database) {
+                    $options['download_database_url'] = route('admin.centers.download-database', ['id' => $item->id]);
+                }
                 return view()->make('_partials.actions', compact('id', 'route', 'options', 'model'))->render();
             })
             ->editColumn('status', function ($row) {

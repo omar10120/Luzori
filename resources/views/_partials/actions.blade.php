@@ -63,6 +63,12 @@
             <i class="ti ti-building-store"></i>
         </a>
     @endif
+    @if(!empty($options['download_database_url']))
+        <a class="lz-action-btn" href="{{ $options['download_database_url'] }}"
+            title="{{ __('general.download_database') }}">
+            <i class="ti ti-database-export"></i>
+        </a>
+    @endif
     @if(!empty($options['delete']))
         <a class="lz-action-btn lz-action-danger" href="javascript:void(0)"
             title="{{ __('general.delete') }}"

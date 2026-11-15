@@ -69,6 +69,7 @@ Route::group(['middleware' => 'auth:admin'], function () {
             Route::post('updateOrCreate', 'updateOrCreate')->name('updateOrCreate');
             Route::get('permissions', 'permissions')->name('permissions');
             Route::post('update-permissions', 'updatePermissions')->name('update.permissions');
+            Route::get('{id}/download-database', 'downloadDatabase')->name('download-database')->can('VIEW_CENTERS');
             Route::post('{id}/create-supplier', 'createSupplier')->name('create-supplier');
         });
     });

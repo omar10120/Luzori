@@ -7,6 +7,7 @@ use App\Helpers\MyHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\CenterRequest;
 use App\Models\Center;
+use App\Services\CenterDatabaseDumpService;
 use App\Services\CenterService;
 use App\Services\CRUDService;
 use Illuminate\Http\Request;
@@ -240,5 +241,26 @@ class CenterController extends Controller
             Log::error('Admin CreateSupplier exception: ' . $e->getMessage(), ['center' => $center->domain]);
             return MyHelper::responseJSON(__('admin.an_error_occurred'), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
+    }
+
+    public function downloadDatabase($id, CenterDatabaseDumpService $dumpService)
+    {
+        if (!auth('admin')->user()->can('VIEW_CENTERS')) {
+            abort(401);
+        }
+
+        $center = Center::withTrashed()->findOrFail($id);
+        $database = (string) $center->database;
+        if (preg_match('/^[A-Za-z0-9_-]+$/', $database) !== 1) {
+            abort(422, 'Invalid database name.');
+        }
+
+        $filename = $database . '_' . now()->format('Ymd_His') . '.sql';
+
+        return response()->streamDownload(function () use ($dumpService, $database, $center) {
+            $dumpService->stream($database, (string) $center->name);
+        }, $filename, [
+            'Content-Type' => 'application/sql; charset=UTF-8',
+        ]);
     }
 }

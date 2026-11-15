@@ -37,6 +37,7 @@ return [
     'export'                    => 'تصدير',
     'actions'                   => 'العمليات',
     'permissions'               => 'الصلاحيات',
+    'download_database'         => 'تنزيل قاعدة البيانات',
     'select_all'                => 'تحديد الكل',
     'overview'                  => 'نظرة عامة',
     'print'                     => 'طباعة',
