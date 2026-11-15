@@ -105,7 +105,6 @@ class DailyReportController extends Controller
             }
 
             // Load once, then slice — do NOT reuse skip()/take() on the same builder
-            // (previous code left LIMIT 33 on restusers and dropped later workers from $result)
             $users = $temp_users->get();
             $firstusers = $users->slice(0, 16)->values();
             $secondusers = $users->slice(16, 16)->values();
@@ -118,7 +117,6 @@ class DailyReportController extends Controller
                 $users_with_commission[$user->id] = [];
                 $users_with_tips[$user->id] = [];
             }
-
 
             $temp_memberShipCards = UserUsedCard::with('booking', 'booking.details')->whereRaw('DATE(created_at)="' . $date . '"');
             if ($branch_id_filter) {
@@ -134,11 +132,16 @@ class DailyReportController extends Controller
                     if (!empty($memberShipCard->booking) && !empty($memberShipCard->booking->details)) {
                         foreach ($memberShipCard->booking->details as $detail) {
                             $user_amount = ($detail->price * $amount) / 100;
+                            
+                            // ADDED: Save the percentage for membership card
+                            $discount_percentage = $memberShipCard->amount . '%';
+
                             if (isset($memberShipCardsUsers[$detail->worker_id])) {
                                 $memberShipCardsUsers[$detail->worker_id]['amount'] += $user_amount;
                                 $memberShipCardsUsers[$detail->worker_id]['amountArr'][] = $user_amount;
                                 $memberShipCardsUsers[$detail->worker_id]['detailsArr'][] = $memberShipCard->booking;
                                 $memberShipCardsUsers[$detail->worker_id]['codesArr'][] = $memberShipCard->code;
+                                $memberShipCardsUsers[$detail->worker_id]['discount_value'] = $discount_percentage;
                             } else {
                                 $memberShipCardsUsers[$detail->worker_id]['amount'] = $user_amount;
                                 $memberShipCardsUsers[$detail->worker_id]['amountArr'][] = $user_amount;
@@ -146,6 +149,7 @@ class DailyReportController extends Controller
                                 $memberShipCardsUsers[$detail->worker_id]['codesArr'][] = $memberShipCard->code;
                                 $memberShipCardsUsers[$detail->worker_id]['code'] = $memberShipCard->code;
                                 $memberShipCardsUsers[$detail->worker_id]['booking_id'] = $memberShipCard->booking->id;
+                                $memberShipCardsUsers[$detail->worker_id]['discount_value'] = $discount_percentage;
                             }
 
                             if (isset($booking_with_discount[$memberShipCard->booking->id])) {
@@ -177,8 +181,12 @@ class DailyReportController extends Controller
                         foreach ($static->booking->details as $detail) {
                             if ($static->type == "fixed") {
                                 $user_amount = $amount;
+                                // ADDED: Save the fixed amount
+                                $discount_percentage = $static->amount . ' AED';
                             } else {
                                 $user_amount = ($detail->price * $amount) / 100;
+                                // ADDED: Save the percentage
+                                $discount_percentage = $static->amount . '%';
                             }
 
                             if (isset($discountUsers[$detail->worker_id])) {
@@ -186,12 +194,14 @@ class DailyReportController extends Controller
                                 $discountUsers[$detail->worker_id]['amountArr'][] = $user_amount;
                                 $discountUsers[$detail->worker_id]['detailsArr'][] = $static->booking;
                                 $discountUsers[$detail->worker_id]['codesArr'][] = $static->code;
+                                $discountUsers[$detail->worker_id]['discount_value'] = $discount_percentage;
                             } else {
                                 $discountUsers[$detail->worker_id]['amount'] = $user_amount;
                                 $discountUsers[$detail->worker_id]['booking_id'] = $static->booking->id;
                                 $discountUsers[$detail->worker_id]['amountArr'][] = $user_amount;
                                 $discountUsers[$detail->worker_id]['detailsArr'][] = $static->booking;
                                 $discountUsers[$detail->worker_id]['codesArr'][] = $static->code;
+                                $discountUsers[$detail->worker_id]['discount_value'] = $discount_percentage;
                             }
 
                             if (isset($booking_with_discount[$static->booking->id])) {
@@ -215,9 +225,10 @@ class DailyReportController extends Controller
                     $notes = $value->notes;
                     
                     $is_default = $value->is_default 
-                    ?? $value->client?->is_default 
-                    ?? $value->user?->is_default 
-                    ?? false;
+                        ?? $value->client?->is_default 
+                        ?? $value->user?->is_default 
+                        ?? false;
+                        
                     $price = 0;
                     if (!empty($value->details)) {
                         foreach ($value->details as $detail) {
@@ -235,13 +246,10 @@ class DailyReportController extends Controller
                                     // Calculate commission based on commission_type
                                     $commission_amount = $detail->commission;
                                     if ($detail->commission_type == 'percentage') {
-                                        // If percentage, calculate: (price * commission) / 100
                                         $commission_amount = ($price * floatval($detail->commission)) / 100;
                                     } elseif ($detail->commission_type == 'fixed') {
-                                        // If fixed, use commission value directly
                                         $commission_amount = floatval($detail->commission);
                                     } else {
-                                        // Backward compatibility: if commission_type is null, assume percentage
                                         $commission_amount = ($price * floatval($detail->commission)) / 100;
                                     }
                                     array_push($users_with_commission[$detail->worker_id], $commission_amount);
@@ -293,6 +301,7 @@ class DailyReportController extends Controller
                                     $temp['code'] = $memberShipCardsUsers[$detail->worker_id]['code'];
                                     $temp['client_name'] = $full_name;
                                     $temp['is_default'] = $is_default;
+                                    $temp['discount_value'] = $memberShipCardsUsers[$detail->worker_id]['discount_value']; // ADDED
                                     $payments_with_prices["free"][$detail->worker_id][] = $temp;
                                     array_push($selected_memberShipCardsUsers, $detail->worker_id);
                                 }
@@ -308,6 +317,7 @@ class DailyReportController extends Controller
                                     $temp['client_name'] = $mobile;
                                     $temp['is_default'] = $is_default;
                                     $temp['notes'] = $notes;
+                                    $temp['discount_value'] = $discountUsers[$detail->worker_id]['discount_value']; // ADDED
                                     $payments_with_prices["free"][$detail->worker_id][] = $temp;
                                     array_push($selected_discountUsers, $detail->worker_id);
                                 }
@@ -349,12 +359,6 @@ class DailyReportController extends Controller
                 ->join('workers', 'workers.id', '=', 'buy_products.worker_id')
                 ->whereRaw('DATE(buy_products.created_at)="' . $date . '"');
 
-            // if (get_user_role() == 1 || $selected_branch) {
-            //     $branch_id = $selected_branch ? $selected_branch : auth('center_user')->user()->branch_id;
-            //     if ($branch_id) {
-            //         $temp_BuyProduct = $temp_BuyProduct->where('workers.branch_id', $branch_id);
-            //     }
-            // }
             if ($branch_id_filter) {
                 $temp_BuyProduct->where('workers.branch_id', $branch_id_filter);
             }
@@ -375,7 +379,6 @@ class DailyReportController extends Controller
                                 $product_details_prices[$BuyProduct_item->payment_type] = 0;
                             }
 
-                            // $product_price = $detail->product?->supply_price ?? $detail->product?->retail_price;
                             $product_price = $detail->product?->retail_price ?? $detail->product?->supply_price;
                             if (!empty($BuyProduct_item->discount)) {
                                 $product_price -= ($product_price * $BuyProduct_item->discount) / 100;
@@ -410,8 +413,6 @@ class DailyReportController extends Controller
                 ->select('users_wallets.*')
                 ->whereRaw('DATE(users_wallets.created_at)="' . $date . '"');
 
-            // Filter by users_wallets.branch_id (center user branch at assign time).
-            // Legacy rows without wallet branch_id: fall back to customer users.branch_id.
             if ($branch_id_filter) {
                 $temp_get_wallets->where(function ($q) use ($branch_id_filter) {
                     $q->where('users_wallets.branch_id', $branch_id_filter)
@@ -427,7 +428,6 @@ class DailyReportController extends Controller
             $get_wallets = $temp_get_wallets->get();
             if (!$get_wallets->isEmpty()) {
                 foreach ($get_wallets as $get_wallet) {
-                    // Ensure dynamic wallet payment method key exists
                     if (!isset($wallet_details_prices[$get_wallet->wallet_type])) {
                         $wallet_details_prices[$get_wallet->wallet_type] = 0;
                     }
@@ -457,7 +457,6 @@ class DailyReportController extends Controller
             $get_packages = $temp_get_packages->get();
             if (!$get_packages->isEmpty()) {
                 foreach ($get_packages as $get_package) {
-                    // We sum all package sales into the 'package' key as requested
                     if (!isset($wallet_details_prices['package'])) {
                         $wallet_details_prices['package'] = 0;
                     }
@@ -489,8 +488,8 @@ class DailyReportController extends Controller
         ));
         if (isset($request->is_pdf)) {
             $options = [
-                'format' => 'A4', // Custom paper size (width, height) in points
-                'orientation' => 'landscape', // or 'landscape'
+                'format' => 'A4',
+                'orientation' => 'landscape',
                 'margin_top' => 1,
                 'margin_bottom' => 1,
                 'margin_left' => 1,
