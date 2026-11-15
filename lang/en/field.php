@@ -404,7 +404,7 @@ return [
     'sales_cash'                      => 'Sales Cash',
     'sales_visa'                      => 'Sales Visa',
     'tips_visa'                       => 'Tips visa',
-    'tips'                            => 'Ttips',
+    'tips'                            => 'Tips',
     'general_cash'                    => 'General Cash',
     'Commission'                      => 'Commission',
     'open_time '                      => 'Open Time',
