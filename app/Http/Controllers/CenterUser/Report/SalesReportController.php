@@ -89,12 +89,21 @@ class SalesReportController extends Controller
             if (!isset($payments_type['package'])) {
                 $payments_type['package'] = __('locale.packages');
             }
+
             // Merge dynamic wallet methods used in the selected month so columns exist
             $dynamicWalletTypesQuery = UserWallet::select('users_wallets.wallet_type')
                 ->whereRaw('YEAR(users_wallets.created_at)="' . $selected_year . '" and MONTH(users_wallets.created_at)="' . $selected_month . '"');
+            
+            // FIX #1: Match DailyReport branch filter logic for dynamic wallet types
             if ($branch_id_filter) {
-                $dynamicWalletTypesQuery->whereHas('user', function ($query) use ($branch_id_filter) {
-                    $query->where('branch_id', $branch_id_filter);
+                $dynamicWalletTypesQuery->where(function ($q) use ($branch_id_filter) {
+                    $q->where('users_wallets.branch_id', $branch_id_filter)
+                        ->orWhere(function ($legacy) use ($branch_id_filter) {
+                            $legacy->whereNull('users_wallets.branch_id')
+                                ->whereHas('user', function ($userQ) use ($branch_id_filter) {
+                                    $userQ->where('branch_id', $branch_id_filter);
+                                });
+                        });
                 });
             }
             $dynamicWalletTypes = $dynamicWalletTypesQuery->pluck('wallet_type')->unique()->toArray();
@@ -265,13 +274,10 @@ class SalesReportController extends Controller
                             }
 
                             if ($static->type == 'fixed') {
-
                                 $user_amount = $bookingTotal > 0
                                     ? ($detail->price / $bookingTotal) * $amount
                                     : 0;
-
                             } else {
-
                                 $user_amount = ($detail->price * $amount) / 100;
                             }
 
@@ -312,15 +318,25 @@ class SalesReportController extends Controller
 
             // ── Wallets ──
             $temp_users_wallets = UserWallet::whereRaw('YEAR(users_wallets.created_at)="' . $selected_year . '" and MONTH(users_wallets.created_at)="' . $selected_month . '"');
+            
+            // FIX #2: Match DailyReport branch filter logic for wallets
             if ($branch_id_filter) {
-                $temp_users_wallets->whereHas('user', function ($query) use ($branch_id_filter) {
-                    $query->where('branch_id', $branch_id_filter);
+                $temp_users_wallets->where(function ($q) use ($branch_id_filter) {
+                    $q->where('users_wallets.branch_id', $branch_id_filter)
+                        ->orWhere(function ($legacy) use ($branch_id_filter) {
+                            $legacy->whereNull('users_wallets.branch_id')
+                                ->whereHas('user', function ($userQ) use ($branch_id_filter) {
+                                    $userQ->where('branch_id', $branch_id_filter);
+                                });
+                        });
                 });
             }
+
             $users_wallets = $temp_users_wallets->get();
             if (!empty($users_wallets)) {
                 foreach ($users_wallets as $users_wallet) {
-                    $date = date('Y-m-d', strtotime($users_wallet->created_at));
+                    // FIX #3: Use Carbon format for consistent timezone date parsing
+                    $date = $users_wallet->created_at->format('Y-m-d');
                     $walletKey = ($users_wallet->wallet_type ?? 'wallet');
                     if (!isset($result[$date][$walletKey])) {
                         $result[$date][$walletKey] = 0;
@@ -344,7 +360,8 @@ class SalesReportController extends Controller
             $users_packages = $temp_users_packages->get();
             if (!empty($users_packages)) {
                 foreach ($users_packages as $users_package) {
-                    $date = date('Y-m-d', strtotime($users_package->created_at));
+                    // FIX #4: Use Carbon format for consistent timezone date parsing
+                    $date = $users_package->created_at->format('Y-m-d');
                     if (!isset($result[$date]['package'])) {
                         $result[$date]['package'] = 0;
                     }
@@ -364,7 +381,8 @@ class SalesReportController extends Controller
             $BuyProduct = $temp_BuyProduct->get();
             if (!empty($BuyProduct)) {
                 foreach ($BuyProduct as $BuyProduct_item) {
-                    $date = date('Y-m-d', strtotime($BuyProduct_item->created_at));
+                    // FIX #5: Use Carbon format for consistent timezone date parsing
+                    $date = $BuyProduct_item->created_at->format('Y-m-d');
                     $orderPrice = 0;
                     if (!$BuyProduct_item->details->isEmpty()) {
                         foreach ($BuyProduct_item->details as $detail) {
