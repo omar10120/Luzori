@@ -23,18 +23,16 @@ class SalesReportController extends Controller
             return abort(403);
         }
 
-        $branch_id = $request->get('branch_id');
-
-        // Distinct years, latest first (so index 0 is the "last one", e.g. 2026)
+        // ── Distinct years, latest first (so index 0 is the "last one", e.g. 2026) ──
         $years = Booking::select(DB::raw('DISTINCT YEAR(booking_date) as year'))
             ->orderByDesc('year')
             ->get();
 
-        // Default selected year = latest year in the list (2026 in your case)
+        // ── Default selected year = latest year in the list ──
         $selected_year = $request->get('year') ?? optional($years->first())->year;
 
-        // Default selected month = latest booking's month within the selected year,
-        // fallback to current month. Only applied when caller did not supply one.
+        // ── Default selected month = latest booking's month within the year,
+        //    fallback to current month ──
         $selected_month = $request->get('month');
         if ($selected_month === null || $selected_month === '') {
             $latestInYear = Booking::whereYear('booking_date', $selected_year)
@@ -45,14 +43,30 @@ class SalesReportController extends Controller
                 : now()->month;
         }
 
+        // ── Role-aware branch filter (single source of truth) ──
+        //    Role 1  → selected branch, or null (all branches)
+        //    Role ≠1 → ALWAYS their own branch, ignore request
+        $user     = auth('center_user')->user();
+        $userRole = get_user_role();
+
+        if ($userRole == 1) {
+            $branch_id_filter = !empty($request->get('branch_id'))
+                ? (int) $request->get('branch_id')
+                : null;
+        } else {
+            $branch_id_filter = $user->branch_id ? (int) $user->branch_id : null;
+        }
+
         $temp_branches = Branch::query();
-        if (get_user_role() != 1) {
-            $temp_branches->where('id', auth('center_user')->user()->branch_id);
+        if ($userRole != 1) {
+            $temp_branches->where('id', $user->branch_id);
         }
 
         $branches = $temp_branches->get();
-        $selected_branch = $request->get('branch_id');
-        $branch_id_filter = !empty($selected_branch) ? $selected_branch : null;
+
+        // Keep the dropdown highlighted on whatever is actually being filtered
+        $selected_branch = $branch_id_filter;
+
         $template = "";
 
         if (!empty($selected_year)) {
@@ -296,9 +310,7 @@ class SalesReportController extends Controller
                 }
             }
 
-            // ── Wallets ────────────────────────────────────────────────────────
-            // FIX: filter was applied to $dynamicWalletTypesQuery (dead at this point)
-            // instead of $temp_users_wallets → wallet totals ignored the branch filter.
+            // ── Wallets ──
             $temp_users_wallets = UserWallet::whereRaw('YEAR(users_wallets.created_at)="' . $selected_year . '" and MONTH(users_wallets.created_at)="' . $selected_month . '"');
             if ($branch_id_filter) {
                 $temp_users_wallets->whereHas('user', function ($query) use ($branch_id_filter) {
@@ -322,10 +334,7 @@ class SalesReportController extends Controller
                 }
             }
 
-            // ── Packages ──────────────────────────────────────────────────────
-            // FIX: use $branch_id_filter (like every other block) instead of the
-            // role-1/`$selected_branch` condition, which silently skipped filtering
-            // for branch users and used the admin's own branch when no branch was chosen.
+            // ── Packages ──
             $temp_users_packages = UserPackage::whereRaw('YEAR(users_packages.created_at)="' . $selected_year . '" and MONTH(users_packages.created_at)="' . $selected_month . '"');
             if ($branch_id_filter) {
                 $temp_users_packages->whereHas('user', function ($query) use ($branch_id_filter) {
@@ -343,6 +352,7 @@ class SalesReportController extends Controller
                 }
             }
 
+            // ── Buy products ──
             $temp_BuyProduct = BuyProduct::select('buy_products.*')
                 ->whereRaw('YEAR(buy_products.created_at)="' . $selected_year . '" and MONTH(buy_products.created_at)="' . $selected_month . '"')
                 ->with('details')
@@ -401,6 +411,7 @@ class SalesReportController extends Controller
                 return $pdf->stream('sales_report.pdf');
             }
         }
+
         return view('CenterUser.SubViews.Report.sales_report', compact(
             'years',
             'template',

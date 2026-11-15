@@ -57,7 +57,7 @@
                             <div class="col-md-3">
                                 <label class="lz-field-label">{{ __('field.branch') }}</label>
                                 <select class="form-control" name="branch_id">
-                                    @if (get_user_role() == 1 || get_user_role() == 3)
+                                    @if (get_user_role() == 1 )
                                         <option value="">{{ __('field.all_branches') }}</option>
                                     @endif
                                     @if (!empty($branches))
