@@ -34,10 +34,8 @@
                                     @if (!empty($years))
                                         @foreach ($years as $year)
                                             @php
-                                                $selected = '';
-                                                if ($year == $selected_year) {
-                                                    $selected = 'selected=""';
-                                                }
+                                                // $year is a Booking model — compare its attribute, not the object
+                                                $selected = ((int) $year->year === (int) $selected_year) ? 'selected' : '';
                                             @endphp
                                             <option {{ $selected }} value="{{ $year->year }}">{{ $year->year }}</option>
                                         @endforeach
@@ -49,13 +47,11 @@
                                 <select class="form-control select" name="month" required>
                                     @for ($i = 1; $i <= 12; $i++)
                                         @php
-                                            $selected = '';
-                                            if ($i == $selected_month) {
-                                                $selected = 'selected=""';
-                                            }
+                                            $selected = ((int) $i === (int) $selected_month) ? 'selected' : '';
                                         @endphp
                                         <option {{ $selected }} value="{{ $i }}">
-                                            {{ date('F', mktime(0, 0, 0, $i, 10)) }}</option>
+                                            {{ date('F', mktime(0, 0, 0, $i, 10)) }}
+                                        </option>
                                     @endfor
                                 </select>
                             </div>
