@@ -253,12 +253,13 @@ class BuyProductController extends Controller
         $totalQty         = 0;
         $walletDeducted   = false;
     
-        // Resolve workers ONCE, before touching the wallet, so a bad ID
-        // fails fast without deducting (and later refunding) money.
-        $resolvedSalesWorkerId = $this->resolveDefaultWorkerId($validated['sales_worker_id'] ?? null);
-        $resolvedWorkerId      = $this->resolveDefaultWorkerId($validated['worker_id'] ?? null);
-    
         try {
+            // ── 0. Resolve workers (inside try so failures are logged, not 500'd) ──
+            $resolvedSalesWorkerId = $this->resolveDefaultWorkerId($validated['sales_worker_id'] ?? null)
+                ?? ($validated['sales_worker_id'] ?? null);
+            $resolvedWorkerId = $this->resolveDefaultWorkerId($validated['worker_id'] ?? null)
+                ?? ($validated['worker_id'] ?? $resolvedSalesWorkerId);
+    
             // ── 1. Validate stock + build priced lines ──
             $pricedLines = [];
             foreach ($validated['products'] as $line) {
@@ -404,23 +405,40 @@ class BuyProductController extends Controller
                 Response::HTTP_CREATED,
                 BuyProductResource::make($item)
             );
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {   // ← Throwable, not Exception
             if ($walletDeducted) {
                 DB::connection('central')->table('users')
                     ->where('id', $appUser->id)
                     ->increment('wallet', $totalPrice);
             }
     
-            Log::error('AppAPI BuyProduct add: ' . $e->getMessage());
+            Log::error('AppAPI BuyProduct add FAILED', [
+                'center_id' => $centerId,
+                'branch_id' => $branchId,
+                'user_id'   => $appUser->id ?? null,
+                'class'     => get_class($e),
+                'message'   => $e->getMessage(),
+                'file'      => $e->getFile(),
+                'line'      => $e->getLine(),
+                'trace'     => $e->getTraceAsString(),
+            ]);
+    
             $message = strtolower($e->getMessage());
             $status = str_contains($message, 'stock')
                 || str_contains($message, 'available')
                 || str_contains($message, 'wallet')
                 || str_contains($message, 'balance')
+                || str_contains($message, 'undefined method')
                 ? Response::HTTP_UNPROCESSABLE_ENTITY
                 : Response::HTTP_INTERNAL_SERVER_ERROR;
     
-            return MyHelper::responseJSON($e->getMessage(), $status);
+            // Surface the real message so you can debug — remove later if you don't want it leaking.
+            return MyHelper::responseJSON(
+                config('app.debug')
+                    ? get_class($e) . ': ' . $e->getMessage() . ' @ ' . basename($e->getFile()) . ':' . $e->getLine()
+                    : $e->getMessage(),
+                $status
+            );
         }
     }
 
