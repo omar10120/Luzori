@@ -130,12 +130,19 @@ class DailyReportController extends Controller
                 foreach ($memberShipCards as $memberShipCard) {
                     $amount = $memberShipCard->amount;
                     if (!empty($memberShipCard->booking) && !empty($memberShipCard->booking->details)) {
+                        
+                        // ADDED: Try to get live amount from Card/Membership relation, fallback to historical amount
+                        $liveCardAmount = $amount;
+                        if (isset($memberShipCard->card)) {
+                            $liveCardAmount = $memberShipCard->card->amount;
+                        } elseif (isset($memberShipCard->membership)) {
+                            $liveCardAmount = $memberShipCard->membership->amount;
+                        }
+                        $discount_percentage = $liveCardAmount . '%';
+
                         foreach ($memberShipCard->booking->details as $detail) {
                             $user_amount = ($detail->price * $amount) / 100;
                             
-                            // ADDED: Save the percentage for membership card
-                            $discount_percentage = $memberShipCard->amount . '%';
-
                             if (isset($memberShipCardsUsers[$detail->worker_id])) {
                                 $memberShipCardsUsers[$detail->worker_id]['amount'] += $user_amount;
                                 $memberShipCardsUsers[$detail->worker_id]['amountArr'][] = $user_amount;
@@ -178,15 +185,18 @@ class DailyReportController extends Controller
                 foreach ($discount as $static) {
                     $amount = $static->amount;
                     if (!empty($static->booking) && !empty($static->booking->details)) {
+                        
+                        // ADDED: Fetch live discount amount from the `discounts` table
+                        $liveDiscount = \App\Models\Discount::where('code', $static->code)->first();
+                        $liveAmount = $liveDiscount ? $liveDiscount->amount : $static->amount;
+
                         foreach ($static->booking->details as $detail) {
                             if ($static->type == "fixed") {
                                 $user_amount = $amount;
-                                // ADDED: Save the fixed amount
-                                $discount_percentage = $static->amount . ' AED';
+                                $discount_percentage = $liveAmount . ' AED';
                             } else {
                                 $user_amount = ($detail->price * $amount) / 100;
-                                // ADDED: Save the percentage
-                                $discount_percentage = $static->amount . '%';
+                                $discount_percentage = $liveAmount . '%';
                             }
 
                             if (isset($discountUsers[$detail->worker_id])) {
@@ -301,7 +311,7 @@ class DailyReportController extends Controller
                                     $temp['code'] = $memberShipCardsUsers[$detail->worker_id]['code'];
                                     $temp['client_name'] = $full_name;
                                     $temp['is_default'] = $is_default;
-                                    $temp['discount_value'] = $memberShipCardsUsers[$detail->worker_id]['discount_value']; // ADDED
+                                    $temp['discount_value'] = $memberShipCardsUsers[$detail->worker_id]['discount_value']; 
                                     $payments_with_prices["free"][$detail->worker_id][] = $temp;
                                     array_push($selected_memberShipCardsUsers, $detail->worker_id);
                                 }
@@ -317,7 +327,7 @@ class DailyReportController extends Controller
                                     $temp['client_name'] = $mobile;
                                     $temp['is_default'] = $is_default;
                                     $temp['notes'] = $notes;
-                                    $temp['discount_value'] = $discountUsers[$detail->worker_id]['discount_value']; // ADDED
+                                    $temp['discount_value'] = $discountUsers[$detail->worker_id]['discount_value'];
                                     $payments_with_prices["free"][$detail->worker_id][] = $temp;
                                     array_push($selected_discountUsers, $detail->worker_id);
                                 }
