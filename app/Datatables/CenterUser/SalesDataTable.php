@@ -490,6 +490,13 @@ class SalesDataTable extends DataTable
             $query->where('branch_id', request()->input('branch_id'));
         });
 
+        if (request()->filled('date_from')) {
+            $query->whereDate('sales.created_at', '>=', request()->input('date_from'));
+        }
+        if (request()->filled('date_to')) {
+            $query->whereDate('sales.created_at', '<=', request()->input('date_to'));
+        }
+
         $source = request()->input('booking_source');
         if ($source === 'inside_booking' || $source === 'outside_booking') {
             $query->whereHas('bookings.details', function ($q) use ($source) {
@@ -536,6 +543,10 @@ JS;
                 'data' => 'function(d) {
                     var $f = $("#booking_source_filter");
                     d.booking_source = $f.length ? ($f.val() || "") : "";
+                    var from = $("#sales_date_from");
+                    var to = $("#sales_date_to");
+                    d.date_from = from.length ? (from.val() || "") : "";
+                    d.date_to = to.length ? (to.val() || "") : "";
                 }',
             ])
             ->orderBy(1)

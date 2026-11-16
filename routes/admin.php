@@ -132,6 +132,9 @@ Route::group(['middleware' => 'auth:admin'], function () {
         Route::controller(SettingController::class)->group(function () {
             Route::get('index', 'index')->name('index')->can('VIEW_SETTINGS');
             Route::post('updateOrCreate', 'updateOrCreate')->name('updateOrCreate')->can('UPDATE_SETTINGS');
+            Route::post('drive', 'saveDrive')->name('drive.save')->can('UPDATE_SETTINGS');
+            Route::get('drive/connect', 'connectDrive')->name('drive.connect')->can('UPDATE_SETTINGS');
+            Route::get('drive/callback', 'connectDriveCallback')->name('drive.callback')->can('UPDATE_SETTINGS');
         });
     });
 
