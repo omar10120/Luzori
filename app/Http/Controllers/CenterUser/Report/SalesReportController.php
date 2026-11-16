@@ -390,18 +390,29 @@ class SalesReportController extends Controller
             }
 
             // ── Buy products ──
-            $temp_BuyProduct = BuyProduct::select('buy_products.*')
-                ->whereRaw('YEAR(buy_products.created_at)="' . $selected_year . '" and MONTH(buy_products.created_at)="' . $selected_month . '"')
-                ->with('details')
-                ->join('workers', 'workers.id', '=', 'buy_products.worker_id');
+            $temp_BuyProduct = BuyProduct::query()
+                ->with(['details.product', 'sale'])
+                ->whereYear('created_at', $selected_year)
+                ->whereMonth('created_at', $selected_month);
 
             if ($branch_id_filter) {
-                $temp_BuyProduct->where('workers.branch_id', $branch_id_filter);
+                $temp_BuyProduct->where(function ($q) use ($branch_id_filter) {
+                    $q->whereHas('sale', function ($saleQ) use ($branch_id_filter) {
+                        $saleQ->where('branch_id', $branch_id_filter);
+                    })->orWhereHas('worker', function ($workerQ) use ($branch_id_filter) {
+                        $workerQ->where('branch_id', $branch_id_filter);
+                    })->orWhereHas('sales_worker', function ($workerQ) use ($branch_id_filter) {
+                        $workerQ->where('branch_id', $branch_id_filter);
+                    });
+                });
             }
             $BuyProduct = $temp_BuyProduct->get();
-            if (!empty($BuyProduct)) {
+            if (!$BuyProduct->isEmpty()) {
                 foreach ($BuyProduct as $BuyProduct_item) {
                     $date = \Carbon\Carbon::parse($BuyProduct_item->created_at)->format('Y-m-d');
+                    if (!isset($result[$date])) {
+                        continue;
+                    }
                     $orderPrice = 0;
                     if (!$BuyProduct_item->details->isEmpty()) {
                         foreach ($BuyProduct_item->details as $detail) {
@@ -409,24 +420,19 @@ class SalesReportController extends Controller
                                 $result[$date][$BuyProduct_item->payment_type] = 0;
                             }
 
-                            $product_price = $detail->price ?? ($detail->product?->retail_price && $detail->product->retail_price > 0
-                                ? $detail->product->retail_price
-                                : ($detail->product?->supply_price ?? 0));
-                            if (!empty($BuyProduct_item->discount)) {
-                                $product_price -= ($product_price * $BuyProduct_item->discount) / 100;
-                            }
+                            $product_price = $BuyProduct_item->detailSalePrice($detail);
                             $result[$date][$BuyProduct_item->payment_type] += $product_price;
                             $orderPrice += $product_price;
                         }
                     }
 
-                    if (!empty($BuyProduct_item->commission)) {
-                        $result[$date]['commission'] += resolve_stored_commission($BuyProduct_item->commission, $BuyProduct_item->commission_type, $orderPrice, false);
+                    $commissionAmount = $BuyProduct_item->resolvedCommissionAmount((float) $orderPrice);
+                    if ($commissionAmount != 0) {
+                        $result[$date]['commission'] = ($result[$date]['commission'] ?? 0) + $commissionAmount;
                     }
-                    
-                    // ADDED: Buy Product Tips
+
                     if (!empty($BuyProduct_item->tip)) {
-                        $result[$date]['tip'] += $BuyProduct_item->tip;
+                        $result[$date]['tip'] = ($result[$date]['tip'] ?? 0) + $BuyProduct_item->tip;
                     }
                 }
             }

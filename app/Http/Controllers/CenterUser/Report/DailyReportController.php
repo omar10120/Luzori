@@ -432,19 +432,20 @@ class DailyReportController extends Controller
                 }
             }
 
-            $temp_BuyProduct = BuyProduct::select('buy_products.*')
-                ->with('details')
-                ->join('workers', 'workers.id', '=', 'buy_products.worker_id')
-                ->whereRaw('DATE(buy_products.created_at)="' . $date . '"');
+            $temp_BuyProduct = BuyProduct::query()
+                ->with(['details.product', 'sale'])
+                ->whereDate('created_at', $date);
 
-            // if (get_user_role() == 1 || $selected_branch) {
-            //     $branch_id = $selected_branch ? $selected_branch : auth('center_user')->user()->branch_id;
-            //     if ($branch_id) {
-            //         $temp_BuyProduct = $temp_BuyProduct->where('workers.branch_id', $branch_id);
-            //     }
-            // }
             if ($branch_id_filter) {
-                $temp_BuyProduct->where('workers.branch_id', $branch_id_filter);
+                $temp_BuyProduct->where(function ($q) use ($branch_id_filter) {
+                    $q->whereHas('sale', function ($saleQ) use ($branch_id_filter) {
+                        $saleQ->where('branch_id', $branch_id_filter);
+                    })->orWhereHas('worker', function ($workerQ) use ($branch_id_filter) {
+                        $workerQ->where('branch_id', $branch_id_filter);
+                    })->orWhereHas('sales_worker', function ($workerQ) use ($branch_id_filter) {
+                        $workerQ->where('branch_id', $branch_id_filter);
+                    });
+                });
             }
 
             $BuyProduct = $temp_BuyProduct->get();
@@ -455,41 +456,37 @@ class DailyReportController extends Controller
                         "products" => []
                     ];
                     $orderPrice = 0;
+                    $reportWorkerId = $BuyProduct_item->reportWorkerId();
 
                     if (!$BuyProduct_item->details->isEmpty()) {
                         foreach ($BuyProduct_item->details as $detail) {
-                            // Ensure dynamic payment method key exists
                             if (!isset($product_details_prices[$BuyProduct_item->payment_type])) {
                                 $product_details_prices[$BuyProduct_item->payment_type] = 0;
                             }
 
-                            // $product_price = $detail->product?->supply_price ?? $detail->product?->retail_price;
-                            $product_price = $detail->product?->retail_price ?? $detail->product?->supply_price;
-                            if (!empty($BuyProduct_item->discount)) {
-                                $product_price -= ($product_price * $BuyProduct_item->discount) / 100;
-                            }
-
+                            $product_price = $BuyProduct_item->detailSalePrice($detail);
                             $product_details_prices[$BuyProduct_item->payment_type] += $product_price;
                             $orderPrice += $product_price;
                             $temp["products"][] = $detail;
                         }
 
-                        if (isset($result[$BuyProduct_item->sales_worker_id][$BuyProduct_item->payment_type])) {
-                            $result[$BuyProduct_item->sales_worker_id][$BuyProduct_item->payment_type] += $orderPrice;
+                        if ($reportWorkerId && isset($result[$reportWorkerId][$BuyProduct_item->payment_type])) {
+                            $result[$reportWorkerId][$BuyProduct_item->payment_type] += $orderPrice;
                             $temp["amount"] = $orderPrice;
-                            $payments_with_prices[$BuyProduct_item->payment_type][$BuyProduct_item->sales_worker_id][] = $temp;
+                            $payments_with_prices[$BuyProduct_item->payment_type][$reportWorkerId][] = $temp;
                         }
                     }
 
-                    if (isset($users_with_commission[$BuyProduct_item->worker_id]) && $BuyProduct_item->commission !== null && $BuyProduct_item->commission !== '') {
-                        array_push(
-                            $users_with_commission[$BuyProduct_item->worker_id],
-                            resolve_stored_commission($BuyProduct_item->commission, $BuyProduct_item->commission_type, $orderPrice, false)
-                        );
+                    $commissionAmount = $BuyProduct_item->resolvedCommissionAmount((float) $orderPrice);
+                    if ($reportWorkerId && $commissionAmount != 0) {
+                        if (!isset($users_with_commission[$reportWorkerId])) {
+                            $users_with_commission[$reportWorkerId] = [];
+                        }
+                        $users_with_commission[$reportWorkerId][] = $commissionAmount;
                     }
 
-                    if (isset($users_with_tips[$BuyProduct_item->worker_id])) {
-                        array_push($users_with_tips[$BuyProduct_item->worker_id], $BuyProduct_item->tip);
+                    if ($reportWorkerId && isset($users_with_tips[$reportWorkerId]) && !empty($BuyProduct_item->tip)) {
+                        $users_with_tips[$reportWorkerId][] = $BuyProduct_item->tip;
                     }
                 }
             }

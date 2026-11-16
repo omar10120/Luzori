@@ -855,8 +855,8 @@ class SalesService
             'discount' => $firstProduct['discount'] ?? null,
             'commission' => $commissionValue,
             'commission_type' => $commissionTypeValue,
-            'sales_worker_id' => $firstProduct['sales_worker_id'] ?? null,
-            'worker_id' => $firstProduct['worker_id'] ?? null,
+            'sales_worker_id' => $firstProduct['sales_worker_id'] ?? $firstProduct['worker_id'] ?? null,
+            'worker_id' => $firstProduct['worker_id'] ?? $firstProduct['sales_worker_id'] ?? null,
             'created_by' => auth('center_user')->id() ?? auth('center_api')->id(),
             'sale_id' => $saleId,
         ]);
