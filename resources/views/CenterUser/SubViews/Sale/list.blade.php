@@ -16,6 +16,15 @@
             background: #e8f2ef !important;
             box-shadow: inset 3px 0 0 #0a3a34;
         }
+        .lz-sales-page .lz-date-filter {
+            width: 150px;
+            border: 1px solid #c5a070;
+            background: #fff;
+            color: #002b26;
+            font-size: 0.875rem;
+            height: 38px;
+            border-radius: 10px;
+        }
         .lz-sales-page .lz-branch-filter {
             min-width: 180px;
             max-width: 240px;
@@ -377,6 +386,8 @@
                     <option value="inside_booking">{{ __('api.inside_booking') ?? 'Inside Booking' }}</option>
                     <option value="outside_booking">{{ __('api.outside_booking') ?? 'Outside Booking' }}</option>
                 </select>
+                <input type="date" id="sales_date_from" class="form-control form-control-sm lz-date-filter" aria-label="{{ __('field.from') }}" title="{{ __('field.from') }}">
+                <input type="date" id="sales_date_to" class="form-control form-control-sm lz-date-filter" aria-label="{{ __('field.to') }}" title="{{ __('field.to') }}">
             </div>
         </div>
 
@@ -453,8 +464,8 @@
             }
 
             // Extra filter binding (works even if initComplete is delayed by module scripts)
-            $(document).off('change.lzSalesFilter', '#booking_source_filter')
-                .on('change.lzSalesFilter', '#booking_source_filter', function () {
+            $(document).off('change.lzSalesFilter', '#booking_source_filter, #sales_date_from, #sales_date_to')
+                .on('change.lzSalesFilter', '#booking_source_filter, #sales_date_from, #sales_date_to', function () {
                     var table = document.getElementById('sales-table');
                     if (!table || !window.jQuery || !jQuery.fn.dataTable) return;
                     if (jQuery.fn.dataTable.isDataTable(table)) {

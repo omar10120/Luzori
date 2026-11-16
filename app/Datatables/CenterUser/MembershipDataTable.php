@@ -18,7 +18,29 @@ class MembershipDataTable extends DataTable
 
     public function dataTable(QueryBuilder $query): EloquentDataTable
     {
-        return (new EloquentDataTable($query))
+        $dataTable = new EloquentDataTable($query);
+        $dataTable->filter(function ($query) {
+            $keyword = trim((string) request()->input('search.value'));
+            if ($keyword === '') {
+                return;
+            }
+
+            $like = '%' . $keyword . '%';
+            $phone = '%' . ltrim($keyword, '+') . '%';
+            $query->where(function ($inner) use ($like, $phone) {
+                $inner->where('memberships_cards.membership_no', 'like', $like)
+                    ->orWhereHas('user', function ($user) use ($like, $phone) {
+                        $user->where('first_name', 'like', $like)
+                            ->orWhere('last_name', 'like', $like)
+                            ->orWhereRaw('CONCAT(first_name, " ", last_name) LIKE ?', [$like])
+                            ->orWhere('phone', 'like', $phone)
+                            ->orWhereRaw('CONCAT(IFNULL(country_code, ""), phone) LIKE ?', [$like])
+                            ->orWhereRaw('CONCAT(REPLACE(IFNULL(country_code, ""), "+", ""), phone) LIKE ?', [$phone]);
+                    });
+            });
+        });
+
+        return $dataTable
             ->editColumn('action', function ($item) {
                 $route = 'center_user.' . $this->plural;
                 $id = $item->id;

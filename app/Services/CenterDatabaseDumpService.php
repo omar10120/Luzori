@@ -7,6 +7,23 @@ use RuntimeException;
 
 class CenterDatabaseDumpService
 {
+    /** @var resource|null */
+    private $handle = null;
+
+    public function writeTo(string $path, string $database, string $centerName = ''): void
+    {
+        $this->handle = fopen($path, 'wb');
+        if ($this->handle === false) {
+            throw new RuntimeException('Unable to create the backup file.');
+        }
+
+        try {
+            $this->stream($database, $centerName);
+        } finally {
+            fclose($this->handle);
+            $this->handle = null;
+        }
+    }
     public function stream(string $database, string $centerName = ''): void
     {
         if (preg_match('/^[A-Za-z0-9_-]+$/', $database) !== 1) {
@@ -237,7 +254,13 @@ class CenterDatabaseDumpService
 
     private function line(string $sql): void
     {
-        echo $sql . "\n";
+        $line = $sql . "\n";
+        if (is_resource($this->handle)) {
+            fwrite($this->handle, $line);
+            return;
+        }
+
+        echo $line;
         if (ob_get_level() > 0) {
             ob_flush();
         }

@@ -102,6 +102,48 @@
                 </div>
             </div>
         </form>
+
+        <form class="pt-3" method="POST" action="{{ route('admin.settings.drive.save') }}">
+            @csrf
+            <div class="card lz-form-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h2 class="mb-0">{{ __('field.google_drive') }}</h2>
+                    <span class="badge {{ $driveConnected ? 'bg-success' : 'bg-danger' }}">
+                        {{ $driveConnected ? __('field.drive_connected') : __('field.drive_disconnected') }}
+                    </span>
+                </div>
+                <div class="card-body">
+                    @if (session('success'))
+                        <div class="alert alert-success">{{ session('success') }}</div>
+                    @endif
+                    @if (session('error'))
+                        <div class="alert alert-danger">{{ session('error') }}</div>
+                    @endif
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label" for="google_drive_client_id">Client ID</label>
+                            <input type="text" class="form-control" id="google_drive_client_id" name="google_drive_client_id" value="{{ $driveClientId }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="google_drive_client_secret">Client Secret</label>
+                            <input type="password" class="form-control" id="google_drive_client_secret" name="google_drive_client_secret" placeholder="{{ $driveHasSecret ? '********' : '' }}" autocomplete="new-password">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Redirect URI</label>
+                            <input type="text" class="form-control" value="{{ $driveRedirect }}" readonly>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex justify-content-end gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="ti ti-check me-1"></i>{{ __('general.save') }}
+                    </button>
+                    <a href="{{ route('admin.settings.drive.connect') }}" class="btn btn-outline-primary">
+                        <i class="ti ti-brand-google-drive me-1"></i>{{ __('field.connect_drive') }}
+                    </a>
+                </div>
+            </div>
+        </form>
     </div>
 @endsection
 
