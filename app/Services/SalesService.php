@@ -59,17 +59,26 @@ class SalesService
         
 
         
+        $stockBranchId = $isAdmin ? null : ($centerUser->branch_id ?? null);
+
         $products = Product::with([
             'translation',
-            'productBranches', // Load ALL branches for stock calculation
+            'productBranches',
         ])
         ->orderBy('id')
         ->get(['id', 'supply_price', 'retail_price'])
+        ->map(function ($product) use ($stockBranchId) {
+            $branchRows = $product->productBranches;
+            $product->stock_quantity = $stockBranchId
+                ? (int) $branchRows->where('branch_id', (int) $stockBranchId)->sum('stock_quantity')
+                : (int) $branchRows->sum('stock_quantity');
+
+            return $product;
+        })
         ->filter(function ($product) {
-            // Only keep products that have stock > 0 in AT LEAST ONE branch
             return $product->productBranches->sum('stock_quantity') > 0;
         })
-        ->values(); // Reset collection keys
+        ->values();
 
         $discounts = Discount::query()
             ->select('id', 'code', 'type', 'amount', 'start_at', 'end_at')

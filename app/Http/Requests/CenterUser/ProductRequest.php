@@ -22,8 +22,7 @@ class ProductRequest extends FormRequest
      */
     protected function prepareForValidation(): void
     {
-
-            $this->merge([
+        $this->merge([
             'track_stock' => $this->input('track_stock', 0)
         ]);
 
@@ -47,11 +46,8 @@ class ProductRequest extends FormRequest
             $locales = array_merge($locales, [
                 'name_' . $locale => 'required|string',
                 'text_' . $locale => 'required|string'
-
             ]);
         }
-        
-        $productId = $this->id ?? null;
         
         if (isset($this->id)) {
             $validations = [
@@ -72,9 +68,9 @@ class ProductRequest extends FormRequest
                 'product_supplier_ids' => 'nullable|array',
                 'product_supplier_ids.*' => 'exists:product_suppliers,id',
                 'track_stock' => 'nullable|boolean',
-                'product_branches' => 'required|array|min:1',
-                'product_branches.*.branch_id' => 'required_with:product_branches.*.stock_quantity|exists:branches,id',
-                'product_branches.*.stock_quantity' => 'required_with:product_branches.*.branch_id|nullable|integer|min:0',
+                
+                // REMOVED product_branches validation rules here
+                
                 'image' => 'nullable|array',
                 'image.*' => 'image|mimes:jpg,jpeg,png,gif|max:4096',
                 'image_order' => 'nullable|string',
@@ -99,9 +95,9 @@ class ProductRequest extends FormRequest
                 'product_supplier_ids' => 'nullable|array',
                 'product_supplier_ids.*' => 'exists:product_suppliers,id',
                 'track_stock' => 'nullable|boolean',
-                'product_branches' => 'required|array|min:1',
-                'product_branches.*.branch_id' => 'required_with:product_branches.*.stock_quantity|exists:branches,id',
-                'product_branches.*.stock_quantity' => 'required_with:product_branches.*.branch_id|nullable|integer|min:0',
+                
+                // REMOVED product_branches validation rules here
+                
                 'image' => 'nullable|array',
                 'image.*' => 'image|mimes:jpg,jpeg,png,gif|max:4096',
                 'image_order' => 'nullable|string',
