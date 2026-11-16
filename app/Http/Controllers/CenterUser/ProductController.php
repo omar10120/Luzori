@@ -11,8 +11,6 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Str;
 use App\Models\Branch;
-
-
 use Illuminate\Support\Facades\Log;
 
 class ProductController extends Controller
@@ -60,15 +58,17 @@ class ProductController extends Controller
 
         $item = null;
         if ($request->id) {
-            $relations = ['media', 'translation', 'brand', 'category', 'productSuppliers', 'skus', 'productBranches.branch.translation'];
+            // Removed 'productBranches.branch.translation' from relations
+            $relations = ['media', 'translation', 'brand', 'category', 'productSuppliers', 'skus'];
             $item = $this->crudService->find($this->model, $request->id, $relations);
         }
 
-        // Get brands, categories, product suppliers, and branches for dropdowns
+        // Get brands, categories, product suppliers for dropdowns
         $brands = \App\Models\Brand::all();
         $categories = \App\Models\Category::all();
         $productSuppliers = \App\Models\ProductSupplier::all();
-        $branches = Branch::with('translation')->where('id', 1)->get();
+        
+        // REMOVED: $branches = Branch::with('translation')->where('id', 1)->get();
 
         if (is_null($item)) {
             $title = __('general.add');
@@ -79,7 +79,8 @@ class ProductController extends Controller
         }
 
         $view = 'CenterUser.SubViews.' . $this->model . '.index';
-        return view($view, compact('item', 'requestUrl', 'title', 'menu', 'menu_link', 'brands', 'categories', 'productSuppliers', 'branches'));
+        // REMOVED 'branches' from compact
+        return view($view, compact('item', 'requestUrl', 'title', 'menu', 'menu_link', 'brands', 'categories', 'productSuppliers'));
     }
 
     public function updateOrCreate(ProductRequest $request)
@@ -161,65 +162,7 @@ class ProductController extends Controller
             $item->productSuppliers()->detach();
         }
 
-        // Handle Product Branches
-        if ($item && $request->has('product_branches')) {
-            $productBranches = $request->input('product_branches', []);
-            $syncData = [];
-            $previousStocks = $item->productBranches()
-                ->get()
-                ->pluck('stock_quantity', 'branch_id')
-                ->map(fn ($qty) => (int) $qty)
-                ->all();
-            $hadAnyMovement = \App\Models\InventoryMovement::where('product_id', $item->id)->exists();
-            $movementService = app(\App\Services\InventoryMovementService::class);
-
-            foreach ($productBranches as $branchData) {
-                // Only process if branch_id is set and not empty
-                if (!empty($branchData['branch_id']) && isset($branchData['stock_quantity'])) {
-                    $stockQuantity = (int)($branchData['stock_quantity'] ?? 0);
-                    $syncData[$branchData['branch_id']] = [
-                        'stock_quantity' => $stockQuantity
-                    ];
-                }
-            }
-
-            // Sync branches with stock quantities (this will update existing or create new)
-            // If no branches selected, detach all
-            if (empty($syncData)) {
-                $item->branches()->detach();
-            } else {
-                $item->branches()->sync($syncData);
-                $item->loadMissing('primarySku');
-
-                foreach ($syncData as $branchId => $data) {
-                    $newQty = (int) ($data['stock_quantity'] ?? 0);
-                    $oldQty = array_key_exists($branchId, $previousStocks)
-                        ? (int) $previousStocks[$branchId]
-                        : null;
-                    $delta = $oldQty === null ? $newQty : ($newQty - $oldQty);
-
-                    if ($delta === 0) {
-                        continue;
-                    }
-
-                    $type = (!$hadAnyMovement && $oldQty === null)
-                        ? \App\Models\InventoryMovement::TYPE_INITIAL
-                        : \App\Models\InventoryMovement::TYPE_ADJUSTMENT;
-
-                    $movementService->record(
-                        (int) $item->id,
-                        (int) $branchId,
-                        $delta,
-                        $type,
-                        $item,
-                        $item->primarySku?->id,
-                        $type === \App\Models\InventoryMovement::TYPE_INITIAL
-                            ? 'Product branch stock initial'
-                            : 'Product branch stock adjustment'
-                    );
-                }
-            }
-        }
+        // REMOVED: Handle Product Branches logic entirely as requested
 
         // Handle Multiple Images
         if ($item) {

@@ -391,7 +391,7 @@
                         </div>
 
                         <!-- Product Branches Section -->
-                        <h5 class="lz-section-title mt-4">Product Branches & Stock</h5>
+                        <!-- <h5 class="lz-section-title mt-4">Product Branches & Stock</h5>
                         <p class="lz-field-help mb-3">Select branches and set stock quantity for each selected branch.</p>
                         
                         <div id="product-branches-container">
@@ -467,7 +467,7 @@
                         
                         <button type="button" class="btn btn-outline-primary btn-sm" id="add-branch-btn">
                             <i class="ti ti-plus"></i> Add another branch
-                        </button>
+                        </button> -->
                     </div>
                     <div class="card-footer d-flex justify-content-end gap-2">
                         <a href="{{ route('center_user.products.index') }}" class="btn btn-luzori-beige">
