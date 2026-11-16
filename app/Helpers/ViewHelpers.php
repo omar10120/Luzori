@@ -47,6 +47,10 @@ function get_symbol_type($type = "")
     if ($type == "free_service") {
         return "©";
     }
+
+    if ($type == "package") {
+        return "( P )";
+    }
     return "";
 }
 
@@ -62,6 +66,10 @@ function get_color_type($type = "")
 
     if ($type == "free_service") {
         return "#6B4A0F";
+    }
+
+    if ($type == "package") {
+        return "#1565C0";
     }
     return "#1A3A36";
 }
