@@ -25,59 +25,85 @@ class TipsReportController extends Controller
         }
 
         $all_users = [];
-        $years = Booking::select(DB::raw('DISTINCT YEAR(booking_date) as year'))->get();
-        $selected_year = $request->get('year');
-        $selected_month = $request->get('month');
-        $template = "";
+
+        // ── Distinct years, latest first ──
+        $years = Booking::select(DB::raw('DISTINCT YEAR(booking_date) as year'))
+            ->orderByDesc('year')
+            ->get();
+
+        // ── Default selected year = latest year in the list ──
+        $selected_year = $request->get('year') ?? optional($years->first())->year;
+
+        // ── Default selected month = current month ──
+        $selected_month = $request->get('month') ?? now()->month;
+
+        // ── Role-aware branch filter ──
+        $user     = auth('center_user')->user();
+        $userRole = get_user_role();
+
+        if ($userRole == 1) {
+            $branch_id_filter = !empty($request->get('branch_id')) ? (int) $request->get('branch_id') : null;
+        } else {
+            $branch_id_filter = $user->branch_id ? (int) $user->branch_id : null;
+        }
+
         $temp_branches = Branch::query();
-        if (get_user_role() != 1) {
-            $temp_branches->where('id', auth('center_user')->user()->branch_id);
+        if ($userRole != 1) {
+            $temp_branches->where('id', $user->branch_id);
         }
         $branches = $temp_branches->get();
-        $selected_branch = $request->get('branch_id');
+
+        $selected_branch = $branch_id_filter;
         $selected_worker = $request->get('worker_id');
+        $template = "";
 
         $vacationsWorkerDays = Vacation::get()->toArray();
         $vacationsWorkerIds = [];
-        if (!empty($request->year)) {
-            $temp_report = Booking::whereYear('booking_date', $request->get('year'))
-                ->whereMonth('booking_date', $request->get('month'))
+
+        if (!empty($selected_year)) {
+            $temp_report = Booking::whereYear('booking_date', $selected_year)
+                ->whereMonth('booking_date', $selected_month)
                 ->whereHas('details', function ($query) {
                     $query->where('status', 'confirmed');
                 })
                 ->with(['details' => function ($query) {
                     $query->where('status', 'confirmed');
                 }]);
-            if (!empty($request->get('branch_id'))) {
-                $temp_report->where('branch_id', $request->get('branch_id'));
+
+            if ($branch_id_filter) {
+                $temp_report->where('branch_id', $branch_id_filter);
             }
             $report = $temp_report->get();
+
             if (empty($selected_worker)) {
                 $temp_users = Worker::query();
-                if (get_user_role() != 1) {
-                    $temp_users->where('branch_id', auth('center_user')->user()->branch_id);
+                if ($branch_id_filter) {
+                    $temp_users->where('branch_id', $branch_id_filter);
                 }
             } else {
                 $temp_users = Worker::where('id', '=', $selected_worker);
-                if (get_user_role() != 1) {
-                    $temp_users->where('branch_id', auth('center_user')->user()->branch_id);
+                if ($branch_id_filter) {
+                    $temp_users->where('branch_id', $branch_id_filter);
                 }
             }
-            if (!empty($selected_branch)) {
-                $temp_users->where('branch_id', $selected_branch);
-            }
-            $firstusers = $temp_users->skip(0)->take(16)->get();
+
+            // Clone the builder for each group so skip/take don't leak between them.
+            $firstusers = (clone $temp_users)->skip(0)->take(16)->get();
             $firstusers_last_total = [];
             $firstusers_last_total_price = [];
             $firstusers_last_total_tips = [];
-            $secondusers = $temp_users->skip(16)->take(33)->get();
+            
+            $secondusers = (clone $temp_users)->skip(16)->take(33)->get();
             $secondusers_last_total = [];
             $secondusers_last_total_price = [];
             $secondusers_last_total_tips = [];
-            $restusers = $temp_users->skip(33)->get();
+            
+            // "Rest" starts at 49 (16 + 33).
+            $restusers = (clone $temp_users)->skip(49)->take(PHP_INT_MAX)->get();
             $restusers_last_total = [];
             $restusers_last_total_price = [];
             $restusers_last_total_tips = [];
+
             foreach ($firstusers as $index => $value) {
                 $firstusers_last_total[$value->id] = 0;
                 $firstusers_last_total_price[$value->id] = 0;
@@ -93,15 +119,16 @@ class TipsReportController extends Controller
                 $restusers_last_total_price[$value->id] = 0;
                 $restusers_last_total_tips[$value->id] = 0;
             }
-            $result = [];
 
+            $result = [];
             $memberShipCardsUsers = [];
             $discountUsers = [];
-            $days = cal_days_in_month(CAL_GREGORIAN, $request->get('month'), $request->get('year'));
+            
+            $days = cal_days_in_month(CAL_GREGORIAN, (int) $selected_month, (int) $selected_year);
             for ($i = 1; $i <= $days; $i++) {
-                $month = ($request->get('month') <= 9) ? "0" . $request->get('month') : $request->get('month');
+                $month = ($selected_month <= 9) ? "0" . $selected_month : $selected_month;
                 $day = ($i <= 9) ? "0" . $i : $i;
-                $date = $request->get('year') . "-" . $month . "-" . $day;
+                $date = $selected_year . "-" . $month . "-" . $day;
                 $temp = [];
                 foreach ($firstusers as $index => $value) {
                     $temp[$value->id] = 0;
@@ -145,15 +172,13 @@ class TipsReportController extends Controller
 
                 // Tips from sales.tip + sales.worker_id (not booking_details)
                 $temp_sales_tips = Sale::query()
-                    ->whereYear('created_at', $request->get('year'))
-                    ->whereMonth('created_at', $request->get('month'))
+                    ->whereYear('created_at', $selected_year)
+                    ->whereMonth('created_at', $selected_month)
                     ->whereNotNull('worker_id')
                     ->where('tip', '>', 0);
 
-                if (!empty($selected_branch)) {
-                    $temp_sales_tips->where('branch_id', $selected_branch);
-                } elseif (get_user_role() != 1 && auth('center_user')->user()->branch_id) {
-                    $temp_sales_tips->where('branch_id', auth('center_user')->user()->branch_id);
+                if ($branch_id_filter) {
+                    $temp_sales_tips->where('branch_id', $branch_id_filter);
                 }
 
                 if (!empty($selected_worker)) {
@@ -201,10 +226,11 @@ class TipsReportController extends Controller
                 'restusers_last_total_tips',
                 'vacationsWorkerIds'
             ));
+
             if (isset($request->is_pdf)) {
                 $options = [
-                    'format' => 'A4', // Custom paper size (width, height) in points
-                    'orientation' => 'landscape', // or 'landscape'
+                    'format' => 'A4',
+                    'orientation' => 'landscape',
                     'margin_top' => 1,
                     'margin_bottom' => 1,
                     'margin_left' => 1,
@@ -216,11 +242,11 @@ class TipsReportController extends Controller
                 ), [], $options);
                 return $pdf->stream('tips_report.pdf');
             }
+            
             if (isset($request->is_print)) {
-
                 $options = [
-                    'format' => [80, 160], // Custom paper size (width, height) in points
-                    'orientation' => 'portrait', // or 'landscape'
+                    'format' => [80, 160],
+                    'orientation' => 'portrait',
                     'margin-top' => 10,
                     'margin-bottom' => 10,
                     'margin-left' => 10,
@@ -243,13 +269,15 @@ class TipsReportController extends Controller
                 return $pdf->stream('worker_tips_report.pdf');
             }
         }
+
         if (empty($all_users)) {
             $temp_users = Worker::query();
-            if (get_user_role() != 1) {
-                $temp_users->where('branch_id', auth('center_user')->user()->branch_id);
+            if ($branch_id_filter) {
+                $temp_users->where('branch_id', $branch_id_filter);
             }
             $all_users = $temp_users->get();
         }
+
         return view('CenterUser.SubViews.Report.tips_report', compact(
             'years',
             'template',

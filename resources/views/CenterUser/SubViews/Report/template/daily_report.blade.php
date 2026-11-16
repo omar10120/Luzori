@@ -165,13 +165,25 @@
                                                                         {{ $amountItem }}
                                                                         {{ get_symbol_type($with_price['type'] ?? '') }}
                                                                 
+                                                                        @php
+                                                                            $lineDiscountValue = $with_price['discountValueArr'][$key] ?? $with_price['discount_value'] ?? null;
+                                                                        @endphp
+                                                                        @if (!empty($lineDiscountValue))
+                                                                            <br><span style="color: #ff5722; font-weight: bold;">({{ $lineDiscountValue }})</span>
+                                                                        @endif
+                                                                
                                                                         @if (!empty($with_price['codesArr'][$key]))
                                                                             <br>{{ $with_price['codesArr'][$key] }}
                                                                         @endif
+                                                                        
+                                                                        @if (empty($with_price['is_default']))
+                                                                            <br>
+                                                                            {{ $with_price['detailsArr'][$key]->full_name }}
+                                                                            <br>
+                                                                            {{ $with_price['detailsArr'][$key]->mobile }}
+                                                                        @endif
                                                                         <br>
-                                                                        {{ $with_price['detailsArr'][$key]->full_name }}
-                                                                        <br>
-                                                                        {{ $with_price['detailsArr'][$key]->mobile }}
+                                                                        
                                                                         @if (!empty($with_price['notes']))
                                                                             <br>Comment : {{ is_array($with_price['notes']) ? ($with_price['notes'][$key] ?? '') : $with_price['notes'] }}
                                                                         @endif
@@ -183,10 +195,15 @@
                                                             @else
                                                                 <span>{{ $with_price['amount'] }}</span>
                                                                 <span>{{ get_symbol_type($with_price['type'] ?? '') }}</span>
+                                                                @if (!empty($with_price['discount_value']))
+                                                                    <br><span style="color: #ff5722; font-weight: bold;">({{ $with_price['discount_value'] }})</span>
+                                                                @endif
                                                                 @if (!empty($with_price['code']))
                                                                     <br> <span>{{ $with_price['code'] }}</span>
                                                                 @endif
-                                                                <br>{{ $with_price['client_name'] }}
+                                                                @if (empty($with_price['is_default']))
+                                                                    <br>{{ $with_price['client_name'] }}
+                                                                @endif
                                                             @endif
                                                         </div>
                                                     @else
@@ -418,13 +435,23 @@
                                                                         <span>
                                                                             {{ $amountItem }}
                                                                             {{ get_symbol_type($with_price['type'] ?? '') }}
+                                                                            @php
+                                                                                $lineDiscountValue = $with_price['discountValueArr'][$key] ?? $with_price['discount_value'] ?? null;
+                                                                            @endphp
+                                                                            @if (!empty($lineDiscountValue))
+                                                                                <br><span style="color: #ff5722; font-weight: bold;">({{ $lineDiscountValue }})</span>
+                                                                            @endif
                                                                             @if (!empty($with_price['codesArr'][$key]))
                                                                                 <br>{{ $with_price['codesArr'][$key] }}
                                                                             @endif
+                                                                            
+                                                                            @if (empty($with_price['is_default']))
+                                                                                <br>
+                                                                                {{ $with_price['detailsArr'][$key]->full_name }}
+                                                                                <br>
+                                                                                {{ $with_price['detailsArr'][$key]->mobile }}
+                                                                            @endif
                                                                             <br>
-                                                                            {{ $with_price['detailsArr'][$key]->full_name }}
-                                                                            <br>
-                                                                            {{ $with_price['detailsArr'][$key]->mobile }}
                                                                             
                                                                             @if (!empty($with_price['notes']))
                                                                                 <br>Comment : {{ is_array($with_price['notes']) ? ($with_price['notes'][$key] ?? '') : $with_price['notes'] }}
@@ -438,10 +465,15 @@
                                                                 @else
                                                                     <span>{{ $with_price['amount'] }}</span>
                                                                     <span>{{ get_symbol_type($with_price['type'] ?? '') }}</span> 
+                                                                    @if (!empty($with_price['discount_value']))
+                                                                        <br><span style="color: #ff5722; font-weight: bold;">({{ $with_price['discount_value'] }})</span>
+                                                                    @endif
                                                                     @if (!empty($with_price['code']))
                                                                         <br> <span>{{ $with_price['code'] }}</span>
                                                                     @endif
-                                                                    <br>{{ $with_price['client_name'] }}
+                                                                    @if (empty($with_price['is_default']))
+                                                                        <br>{{ $with_price['client_name'] }}
+                                                                    @endif
                                                                 @endif
                                                             </div>
                                                         @else
@@ -666,13 +698,23 @@
                                                                     <span>
                                                                        {{ $amountItem }}
                                                                          {{ get_symbol_type($with_price['type'] ?? '') }}
+                                                                        @php
+                                                                            $lineDiscountValue = $with_price['discountValueArr'][$key] ?? $with_price['discount_value'] ?? null;
+                                                                        @endphp
+                                                                        @if (!empty($lineDiscountValue))
+                                                                            <br><span style="color: #ff5722; font-weight: bold;">({{ $lineDiscountValue }})</span>
+                                                                        @endif
                                                                         @if (!empty($with_price['codesArr'][$key]))
                                                                             <br>{{ $with_price['codesArr'][$key] }}
                                                                         @endif
+                                                                        
+                                                                        @if (empty($with_price['is_default']))
+                                                                            <br>
+                                                                            {{ $with_price['detailsArr'][$key]->full_name }}
+                                                                            <br>
+                                                                            {{ $with_price['detailsArr'][$key]->mobile }}
+                                                                        @endif
                                                                         <br>
-                                                                        {{ $with_price['detailsArr'][$key]->full_name }}
-                                                                        <br>
-                                                                        {{ $with_price['detailsArr'][$key]->mobile }}
                                                                         
                                                                         @if (!empty($with_price['notes']))
                                                                             <br>Comment : {{ is_array($with_price['notes']) ? ($with_price['notes'][$key] ?? '') : $with_price['notes'] }}
@@ -685,10 +727,15 @@
                                                             @else
                                                                 <span>{{ $with_price['amount'] }}</span>
                                                                 <span>{{ get_symbol_type($with_price['type'] ?? '') }}</span>
+                                                                @if (!empty($with_price['discount_value']))
+                                                                    <br><span style="color: #ff5722; font-weight: bold;">({{ $with_price['discount_value'] }})</span>
+                                                                @endif
                                                                 @if (!empty($with_price['code']))
                                                                     <br> <span>{{ $with_price['code'] }}</span>
                                                                 @endif
-                                                                <br>{{ $with_price['client_name'] }}
+                                                                @if (empty($with_price['is_default']))
+                                                                    <br>{{ $with_price['client_name'] }}
+                                                                @endif
                                                             @endif
                                                         </div>
                                                     @else

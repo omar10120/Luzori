@@ -11,6 +11,7 @@ use App\Models\Sale;
 use App\Models\Vacation;
 use App\Models\UserUsedCard;
 use App\Models\UserUsedDiscount;
+use App\Models\UserUsedPackage;
 use App\Models\BuyProduct;
 use App\Models\UserWallet;
 use App\Models\UserPackage;
@@ -51,6 +52,9 @@ class DailyReportController extends Controller
         $selected_memberShipCardsUsers = [];
         $discountUsers = [];
         $selected_discountUsers = [];
+        $packageUsers = [];
+        $selected_packageUsers = [];
+        $booking_package_usage = [];
 
         // Initialize product details prices dynamically from payment methods
         $paymentMethods = get_payment_method_names();
@@ -137,11 +141,13 @@ class DailyReportController extends Controller
                             if (isset($memberShipCardsUsers[$detail->worker_id])) {
                                 $memberShipCardsUsers[$detail->worker_id]['amount'] += $user_amount;
                                 $memberShipCardsUsers[$detail->worker_id]['amountArr'][] = $user_amount;
+                                $memberShipCardsUsers[$detail->worker_id]['discountValueArr'][] = $this->formatDiscountTableAmount($amount, 'percentage');
                                 $memberShipCardsUsers[$detail->worker_id]['detailsArr'][] = $memberShipCard->booking;
                                 $memberShipCardsUsers[$detail->worker_id]['codesArr'][] = $memberShipCard->code;
                             } else {
                                 $memberShipCardsUsers[$detail->worker_id]['amount'] = $user_amount;
                                 $memberShipCardsUsers[$detail->worker_id]['amountArr'][] = $user_amount;
+                                $memberShipCardsUsers[$detail->worker_id]['discountValueArr'][] = $this->formatDiscountTableAmount($amount, 'percentage');
                                 $memberShipCardsUsers[$detail->worker_id]['detailsArr'][] = $memberShipCard->booking;
                                 $memberShipCardsUsers[$detail->worker_id]['codesArr'][] = $memberShipCard->code;
                                 $memberShipCardsUsers[$detail->worker_id]['code'] = $memberShipCard->code;
@@ -162,7 +168,7 @@ class DailyReportController extends Controller
                 }
             }
 
-            $temp_discount = UserUsedDiscount::with('booking', 'booking.details')->whereRaw('DATE(created_at)="' . $date . '"');
+            $temp_discount = UserUsedDiscount::with('booking', 'booking.details', 'discount_code')->whereRaw('DATE(created_at)="' . $date . '"');
             if ($branch_id_filter) {
                 $temp_discount->whereHas('booking', function ($query) use ($branch_id_filter) {
                     return $query->where('branch_id', $branch_id_filter);
@@ -172,10 +178,12 @@ class DailyReportController extends Controller
             $discount = $temp_discount->get();
             if (!$discount->isEmpty()) {
                 foreach ($discount as $static) {
-                    $amount = $static->amount;
+                    $amount = $static->discount_code?->amount ?? $static->amount;
+                    $discountType = $static->discount_code?->type ?? $static->type;
+                    $tableDiscountValue = $this->formatDiscountTableAmount($amount, $discountType);
                     if (!empty($static->booking) && !empty($static->booking->details)) {
                         foreach ($static->booking->details as $detail) {
-                            if ($static->type == "fixed") {
+                            if ($discountType == "fixed") {
                                 $user_amount = $amount;
                             } else {
                                 $user_amount = ($detail->price * $amount) / 100;
@@ -184,12 +192,14 @@ class DailyReportController extends Controller
                             if (isset($discountUsers[$detail->worker_id])) {
                                 $discountUsers[$detail->worker_id]['amount'] += $user_amount;
                                 $discountUsers[$detail->worker_id]['amountArr'][] = $user_amount;
+                                $discountUsers[$detail->worker_id]['discountValueArr'][] = $tableDiscountValue;
                                 $discountUsers[$detail->worker_id]['detailsArr'][] = $static->booking;
                                 $discountUsers[$detail->worker_id]['codesArr'][] = $static->code;
                             } else {
                                 $discountUsers[$detail->worker_id]['amount'] = $user_amount;
                                 $discountUsers[$detail->worker_id]['booking_id'] = $static->booking->id;
                                 $discountUsers[$detail->worker_id]['amountArr'][] = $user_amount;
+                                $discountUsers[$detail->worker_id]['discountValueArr'][] = $tableDiscountValue;
                                 $discountUsers[$detail->worker_id]['detailsArr'][] = $static->booking;
                                 $discountUsers[$detail->worker_id]['codesArr'][] = $static->code;
                             }
@@ -208,11 +218,58 @@ class DailyReportController extends Controller
                 }
             }
 
+            $temp_used_packages = UserUsedPackage::with(['booking', 'booking.details', 'userPackage.package'])
+                ->whereRaw('DATE(created_at)="' . $date . '"');
+            if ($branch_id_filter) {
+                $temp_used_packages->whereHas('booking', function ($query) use ($branch_id_filter) {
+                    return $query->where('branch_id', $branch_id_filter);
+                });
+            }
+
+            foreach ($temp_used_packages->get() as $usedPackage) {
+                if (empty($usedPackage->booking) || empty($usedPackage->booking->details)) {
+                    continue;
+                }
+
+                $detail = $usedPackage->booking->details->first(function ($bookingDetail) use ($usedPackage) {
+                    return (int) $bookingDetail->service_id === (int) $usedPackage->service_id;
+                });
+                if (!$detail) {
+                    continue;
+                }
+
+                $user_amount = (float) $detail->price;
+                $packageCode = $usedPackage->userPackage?->package?->name ?? '';
+
+                if (isset($packageUsers[$detail->worker_id])) {
+                    $packageUsers[$detail->worker_id]['amount'] += $user_amount;
+                    $packageUsers[$detail->worker_id]['amountArr'][] = $user_amount;
+                    $packageUsers[$detail->worker_id]['discountValueArr'][] = $user_amount;
+                    $packageUsers[$detail->worker_id]['detailsArr'][] = $usedPackage->booking;
+                    $packageUsers[$detail->worker_id]['codesArr'][] = $packageCode;
+                } else {
+                    $packageUsers[$detail->worker_id]['amount'] = $user_amount;
+                    $packageUsers[$detail->worker_id]['booking_id'] = $usedPackage->booking->id;
+                    $packageUsers[$detail->worker_id]['amountArr'][] = $user_amount;
+                    $packageUsers[$detail->worker_id]['discountValueArr'][] = $user_amount;
+                    $packageUsers[$detail->worker_id]['detailsArr'][] = $usedPackage->booking;
+                    $packageUsers[$detail->worker_id]['codesArr'][] = $packageCode;
+                    $packageUsers[$detail->worker_id]['code'] = $packageCode;
+                }
+
+                $booking_package_usage[$usedPackage->booking->id][$detail->worker_id][$detail->service_id] = $user_amount;
+            }
+
             if (!$report->isEmpty()) {
                 foreach ($report as $value) {
                     $full_name = $value->full_name;
                     $mobile = $value->mobile;
                     $notes = $value->notes;
+                    
+                    $is_default = $value->is_default 
+                    ?? $value->client?->is_default 
+                    ?? $value->user?->is_default 
+                    ?? false;
                     $price = 0;
                     if (!empty($value->details)) {
                         foreach ($value->details as $detail) {
@@ -264,7 +321,13 @@ class DailyReportController extends Controller
 
                                                 if (isset($result[$detail->worker_id][$method])) {
                                                     $result[$detail->worker_id][$method] += $distributedPrice;
-                                                    $payments_with_prices[$method][$detail->worker_id][] = $distributedPrice - $distributedFreePrice;
+                                                    $payments_with_prices[$method][$detail->worker_id][] = $this->operationPaymentEntry(
+                                                        $distributedPrice,
+                                                        $distributedFreePrice,
+                                                        $mobile,
+                                                        $is_default,
+                                                        $notes
+                                                    );
                                                 }
                                             }
                                         }
@@ -275,7 +338,13 @@ class DailyReportController extends Controller
                                         $payments_with_prices[$payment_type_select] = $payments_with_prices[$payment_type_select] ?? [];
                                     }
                                     $result[$detail->worker_id][$payment_type_select] += $price;
-                                    $payments_with_prices[$payment_type_select][$detail->worker_id][] = $price - $free_price;
+                                    $payments_with_prices[$payment_type_select][$detail->worker_id][] = $this->operationPaymentEntry(
+                                        $price,
+                                        $free_price,
+                                        $mobile,
+                                        $is_default,
+                                        $notes
+                                    );
                                 }
 
                                 if (isset($memberShipCardsUsers[$detail->worker_id]) && $value->id == $memberShipCardsUsers[$detail->worker_id]['booking_id'] && !in_array($detail->worker_id, $selected_memberShipCardsUsers)) {
@@ -284,9 +353,12 @@ class DailyReportController extends Controller
                                     $temp['details'] = $memberShipCardsUsers[$detail->worker_id]['amountArr'];
                                     $temp['detailsArr'] = $memberShipCardsUsers[$detail->worker_id]['detailsArr'];
                                     $temp['codesArr'] = $memberShipCardsUsers[$detail->worker_id]['codesArr'];
+                                    $temp['discount_value'] = $memberShipCardsUsers[$detail->worker_id]['discountValueArr'][0] ?? null;
+                                    $temp['discountValueArr'] = $memberShipCardsUsers[$detail->worker_id]['discountValueArr'] ?? [];
                                     $temp['type'] = "member_ship";
                                     $temp['code'] = $memberShipCardsUsers[$detail->worker_id]['code'];
                                     $temp['client_name'] = $full_name;
+                                    $temp['is_default'] = $is_default;
                                     $payments_with_prices["free"][$detail->worker_id][] = $temp;
                                     array_push($selected_memberShipCardsUsers, $detail->worker_id);
                                 }
@@ -299,18 +371,42 @@ class DailyReportController extends Controller
                                     $temp['details'] = $discountUsers[$detail->worker_id]['amountArr'];
                                     $temp['detailsArr'] = $discountUsers[$detail->worker_id]['detailsArr'];
                                     $temp['codesArr'] = $discountUsers[$detail->worker_id]['codesArr'];
+                                    $temp['discount_value'] = $discountUsers[$detail->worker_id]['discountValueArr'][0] ?? null;
+                                    $temp['discountValueArr'] = $discountUsers[$detail->worker_id]['discountValueArr'] ?? [];
                                     $temp['client_name'] = $mobile;
+                                    $temp['is_default'] = $is_default;
                                     $temp['notes'] = $notes;
                                     $payments_with_prices["free"][$detail->worker_id][] = $temp;
                                     array_push($selected_discountUsers, $detail->worker_id);
                                 }
 
-                                if ($detail->is_free == 1) {
+                                $isPackageLine = isset($booking_package_usage[$value->id][$detail->worker_id][$detail->service_id]);
+
+                                if (isset($packageUsers[$detail->worker_id]) && $value->id == $packageUsers[$detail->worker_id]['booking_id'] && !in_array($detail->worker_id, $selected_packageUsers)) {
+                                    $temp = [];
+                                    $temp['amount'] = $packageUsers[$detail->worker_id]['amount'];
+                                    $temp['type'] = "package";
+                                    $temp['code'] = $packageUsers[$detail->worker_id]['code'] ?? '';
+                                    $temp['details'] = $packageUsers[$detail->worker_id]['amountArr'];
+                                    $temp['detailsArr'] = $packageUsers[$detail->worker_id]['detailsArr'];
+                                    $temp['codesArr'] = $packageUsers[$detail->worker_id]['codesArr'];
+                                    $temp['discount_value'] = $packageUsers[$detail->worker_id]['amount'];
+                                    $temp['discountValueArr'] = $packageUsers[$detail->worker_id]['discountValueArr'] ?? $packageUsers[$detail->worker_id]['amountArr'];
+                                    $temp['client_name'] = $mobile;
+                                    $temp['is_default'] = $is_default;
+                                    $temp['notes'] = $notes;
+                                    $payments_with_prices["free"][$detail->worker_id][] = $temp;
+                                    array_push($selected_packageUsers, $detail->worker_id);
+                                }
+
+                                if ($detail->is_free == 1 && !$isPackageLine) {
                                     $temp = [];
                                     $temp['amount'] = $detail->price;
                                     $temp['type'] = "free_service";
                                     $temp['code'] = "";
+                                    $temp['discount_value'] = $detail->price;
                                     $temp['client_name'] = $mobile;
+                                    $temp['is_default'] = $is_default;
                                     $temp['notes'] = $notes;
                                     $payments_with_prices["free"][$detail->worker_id][] = $temp;
                                 }
@@ -507,5 +603,24 @@ class DailyReportController extends Controller
             'selected_branch',
             'request',
         ));
+    }
+
+    private function operationPaymentEntry($price, $free_price, $mobile, $is_default, $notes)
+    {
+        return $price - $free_price;
+    }
+
+    private function formatDiscountTableAmount($amount, $type = 'percentage'): string
+    {
+        $value = rtrim(rtrim(number_format((float) $amount, 2, '.', ''), '0'), '.');
+        if ($value === '') {
+            $value = '0';
+        }
+
+        if (strtolower((string) $type) === 'percentage') {
+            return $value . '%';
+        }
+
+        return $value;
     }
 }

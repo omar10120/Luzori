@@ -115,7 +115,7 @@ class SalesReportController extends Controller
             $payments_type['commission'] = __('field.commission');
             $last_total['commission'] = 0;
             
-            $payments_type['tip'] = __('field.tip');
+            $payments_type['tip'] = __('field.tips');
             $last_total['tip'] = 0;
             
             $last_total['total_without_free'] = 0;
