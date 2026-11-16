@@ -209,8 +209,8 @@ class StockOrderDataTable extends DataTable
         return [
             Column::make('order_number')->searchable(true)->title(__('field.order_number'))->responsivePriority(1)->addClass('dtr-control all'),
             Column::make('created_at')->searchable(true)->title(__('field.created'))->responsivePriority(2)->addClass('all'),
+            Column::computed('branch_name')->searchable(false)->orderable(false)->title(__('field.branch'))->responsivePriority(2)->addClass('all'),
             Column::make('expected_at')->searchable(false)->title(__('field.expected'))->responsivePriority(3)->addClass('all'),
-            // Column::computed('branch_name')->searchable(false)->title(__('field.branch'))->responsivePriority(2)->addClass('all'),
             Column::make('deliver_from')->searchable(true)->title(__('field.deliver_from'))->responsivePriority(3)->addClass('all'),
             Column::make('total_cost')->searchable(false)->title(__('field.total_cost'))->responsivePriority(2)->addClass('all'),
             Column::computed('status')->searchable(false)->title(__('field.status'))->responsivePriority(1)->addClass('all'),
