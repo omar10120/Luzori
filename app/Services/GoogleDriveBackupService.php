@@ -95,17 +95,20 @@ class GoogleDriveBackupService
             Carbon::today()->subDays(2)->toDateString(),
         ];
 
-        Center::query()->whereNotNull('database')->orderBy('id')->each(function (Center $center) use (&$results, $rootId, $keep) {
+        $folders = [];
+        Center::query()->whereNotNull('database')->orderBy('id')->each(function (Center $center) use (&$results, &$folders, $rootId, $keep) {
             $database = (string) $center->database;
             if (preg_match('/^[A-Za-z0-9_-]+$/', $database) !== 1) {
                 $results[] = $database . ' skipped';
                 return;
             }
 
-            $folderId = $this->folderId($this->folderName($center), $rootId);
+            $folderName = $this->folderName($center);
+            $folderId = $this->folderId($folderName, $rootId);
+            $folders[$database] = $folderId;
             $date = Carbon::today()->toDateString();
-            $fileName = $database . '_' . $date . '.sql';
-            $path = storage_path('app/drive-backups/' . $fileName);
+            $fileName = $date . '.sql';
+            $path = storage_path('app/drive-backups/' . $database . '_' . $fileName);
 
             try {
                 if (!is_dir(dirname($path))) {
@@ -113,17 +116,20 @@ class GoogleDriveBackupService
                 }
                 app(CenterDatabaseDumpService::class)->writeTo($path, $database, (string) $center->name);
                 $this->deleteNamed($folderId, $fileName);
-                $this->upload($path, $fileName, $folderId);
+                $fileId = $this->upload($path, $fileName, $folderId);
+                $this->placeInsideFolder($fileId, $folderId);
                 $this->keepRecent($folderId, $keep);
-                $results[] = $database . ' uploaded';
+                $results[] = $folderName . ' uploaded';
             } catch (\Throwable $e) {
-                $results[] = $database . ' failed: ' . $e->getMessage();
+                $results[] = $folderName . ' failed: ' . $e->getMessage();
             } finally {
                 if (is_file($path)) {
                     @unlink($path);
                 }
             }
         });
+
+        $this->moveLooseFilesIntoCenterFolders($rootId, $folders, $keep);
 
         return $results;
     }
@@ -198,7 +204,7 @@ class GoogleDriveBackupService
         return $id;
     }
 
-    private function upload(string $path, string $name, string $parentId): void
+    private function upload(string $path, string $name, string $parentId): string
     {
         $start = Http::withToken($this->accessToken())
             ->withHeaders([
@@ -206,7 +212,7 @@ class GoogleDriveBackupService
                 'X-Upload-Content-Length' => (string) filesize($path),
                 'Content-Type' => 'application/json; charset=UTF-8',
             ])
-            ->send('POST', 'https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&fields=id', [
+            ->send('POST', 'https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&fields=id,parents', [
                 'body' => json_encode([
                     'name' => $name,
                     'parents' => [$parentId],
@@ -225,20 +231,85 @@ class GoogleDriveBackupService
             fclose($file);
         }
 
-        if (!$upload->successful()) {
+        $id = (string) $upload->json('id');
+        if (!$upload->successful() || $id === '') {
             throw new RuntimeException('Drive upload failed.');
         }
+
+        return $id;
+    }
+
+    private function placeInsideFolder(string $fileId, string $folderId): void
+    {
+        $current = Http::withToken($this->accessToken())
+            ->get('https://www.googleapis.com/drive/v3/files/' . $fileId, [
+                'fields' => 'id,parents',
+            ]);
+        $parents = $current->json('parents') ?: [];
+        if (in_array($folderId, $parents, true) && count($parents) === 1) {
+            return;
+        }
+
+        $remove = array_values(array_filter($parents, fn ($parent) => $parent !== $folderId));
+        $query = ['addParents' => $folderId, 'fields' => 'id,parents'];
+        if ($remove) {
+            $query['removeParents'] = implode(',', $remove);
+        }
+
+        $moved = Http::withToken($this->accessToken())
+            ->patch('https://www.googleapis.com/drive/v3/files/' . $fileId . '?' . http_build_query($query));
+
+        if (!$moved->successful()) {
+            throw new RuntimeException('Unable to place the backup inside the center folder.');
+        }
+    }
+
+    private function moveLooseFilesIntoCenterFolders(string $rootId, array $folders, array $keepDates): void
+    {
+        foreach ($this->children($rootId) as $file) {
+            $name = (string) ($file['name'] ?? '');
+            $mime = (string) ($file['mimeType'] ?? '');
+            if ($mime === 'application/vnd.google-apps.folder') {
+                continue;
+            }
+            if (!preg_match('/^([A-Za-z0-9_-]+)_(\d{4}-\d{2}-\d{2})\.sql$/', $name, $match)) {
+                continue;
+            }
+            $folderId = $folders[$match[1]] ?? null;
+            if (!$folderId) {
+                continue;
+            }
+
+            $targetName = $match[2] . '.sql';
+            if (!in_array($match[2], $keepDates, true)) {
+                $this->deleteFile((string) $file['id']);
+                continue;
+            }
+
+            $this->renameFile((string) $file['id'], $targetName);
+            $this->deleteNamed($folderId, $targetName);
+            $this->placeInsideFolder((string) $file['id'], $folderId);
+            $this->keepRecent($folderId, $keepDates);
+        }
+    }
+
+    private function renameFile(string $fileId, string $name): void
+    {
+        Http::withToken($this->accessToken())
+            ->patch('https://www.googleapis.com/drive/v3/files/' . $fileId, [
+                'name' => $name,
+            ]);
     }
 
     private function keepRecent(string $folderId, array $keepDates): void
     {
         foreach ($this->children($folderId) as $file) {
             $name = (string) ($file['name'] ?? '');
-            if (!preg_match('/_(\d{4}-\d{2}-\d{2})\.sql$/', $name, $match)) {
-                $this->deleteFile((string) $file['id']);
+            $mime = (string) ($file['mimeType'] ?? '');
+            if ($mime === 'application/vnd.google-apps.folder') {
                 continue;
             }
-            if (!in_array($match[1], $keepDates, true)) {
+            if (!preg_match('/(\d{4}-\d{2}-\d{2})\.sql$/', $name, $match) || !in_array($match[1], $keepDates, true)) {
                 $this->deleteFile((string) $file['id']);
             }
         }
@@ -258,7 +329,7 @@ class GoogleDriveBackupService
         $response = Http::withToken($this->accessToken())
             ->get('https://www.googleapis.com/drive/v3/files', [
                 'q' => sprintf("'%s' in parents and trashed = false", $folderId),
-                'fields' => 'files(id,name)',
+                'fields' => 'files(id,name,mimeType)',
                 'pageSize' => 100,
             ]);
 
@@ -301,9 +372,13 @@ class GoogleDriveBackupService
 
     private function folderName(Center $center): string
     {
-        $name = trim((string) ($center->name ?: $center->domain ?: $center->database));
+        $name = trim((string) $center->name);
+        $domain = trim((string) $center->domain);
+        if ($name !== '' && $domain !== '' && $name !== $domain) {
+            return $name . ' - ' . $domain;
+        }
 
-        return $name !== '' ? $name : (string) $center->database;
+        return $name !== '' ? $name : ($domain !== '' ? $domain : (string) $center->database);
     }
 
     private function secret(): string
