@@ -141,13 +141,13 @@ class DailyReportController extends Controller
                             if (isset($memberShipCardsUsers[$detail->worker_id])) {
                                 $memberShipCardsUsers[$detail->worker_id]['amount'] += $user_amount;
                                 $memberShipCardsUsers[$detail->worker_id]['amountArr'][] = $user_amount;
-                                $memberShipCardsUsers[$detail->worker_id]['discountValueArr'][] = $user_amount;
+                                $memberShipCardsUsers[$detail->worker_id]['discountValueArr'][] = $this->formatDiscountTableAmount($amount, 'percentage');
                                 $memberShipCardsUsers[$detail->worker_id]['detailsArr'][] = $memberShipCard->booking;
                                 $memberShipCardsUsers[$detail->worker_id]['codesArr'][] = $memberShipCard->code;
                             } else {
                                 $memberShipCardsUsers[$detail->worker_id]['amount'] = $user_amount;
                                 $memberShipCardsUsers[$detail->worker_id]['amountArr'][] = $user_amount;
-                                $memberShipCardsUsers[$detail->worker_id]['discountValueArr'][] = $user_amount;
+                                $memberShipCardsUsers[$detail->worker_id]['discountValueArr'][] = $this->formatDiscountTableAmount($amount, 'percentage');
                                 $memberShipCardsUsers[$detail->worker_id]['detailsArr'][] = $memberShipCard->booking;
                                 $memberShipCardsUsers[$detail->worker_id]['codesArr'][] = $memberShipCard->code;
                                 $memberShipCardsUsers[$detail->worker_id]['code'] = $memberShipCard->code;
@@ -168,7 +168,7 @@ class DailyReportController extends Controller
                 }
             }
 
-            $temp_discount = UserUsedDiscount::with('booking', 'booking.details')->whereRaw('DATE(created_at)="' . $date . '"');
+            $temp_discount = UserUsedDiscount::with('booking', 'booking.details', 'discount_code')->whereRaw('DATE(created_at)="' . $date . '"');
             if ($branch_id_filter) {
                 $temp_discount->whereHas('booking', function ($query) use ($branch_id_filter) {
                     return $query->where('branch_id', $branch_id_filter);
@@ -178,10 +178,12 @@ class DailyReportController extends Controller
             $discount = $temp_discount->get();
             if (!$discount->isEmpty()) {
                 foreach ($discount as $static) {
-                    $amount = $static->amount;
+                    $amount = $static->discount_code?->amount ?? $static->amount;
+                    $discountType = $static->discount_code?->type ?? $static->type;
+                    $tableDiscountValue = $this->formatDiscountTableAmount($amount, $discountType);
                     if (!empty($static->booking) && !empty($static->booking->details)) {
                         foreach ($static->booking->details as $detail) {
-                            if ($static->type == "fixed") {
+                            if ($discountType == "fixed") {
                                 $user_amount = $amount;
                             } else {
                                 $user_amount = ($detail->price * $amount) / 100;
@@ -190,14 +192,14 @@ class DailyReportController extends Controller
                             if (isset($discountUsers[$detail->worker_id])) {
                                 $discountUsers[$detail->worker_id]['amount'] += $user_amount;
                                 $discountUsers[$detail->worker_id]['amountArr'][] = $user_amount;
-                                $discountUsers[$detail->worker_id]['discountValueArr'][] = $user_amount;
+                                $discountUsers[$detail->worker_id]['discountValueArr'][] = $tableDiscountValue;
                                 $discountUsers[$detail->worker_id]['detailsArr'][] = $static->booking;
                                 $discountUsers[$detail->worker_id]['codesArr'][] = $static->code;
                             } else {
                                 $discountUsers[$detail->worker_id]['amount'] = $user_amount;
                                 $discountUsers[$detail->worker_id]['booking_id'] = $static->booking->id;
                                 $discountUsers[$detail->worker_id]['amountArr'][] = $user_amount;
-                                $discountUsers[$detail->worker_id]['discountValueArr'][] = $user_amount;
+                                $discountUsers[$detail->worker_id]['discountValueArr'][] = $tableDiscountValue;
                                 $discountUsers[$detail->worker_id]['detailsArr'][] = $static->booking;
                                 $discountUsers[$detail->worker_id]['codesArr'][] = $static->code;
                             }
@@ -351,8 +353,8 @@ class DailyReportController extends Controller
                                     $temp['details'] = $memberShipCardsUsers[$detail->worker_id]['amountArr'];
                                     $temp['detailsArr'] = $memberShipCardsUsers[$detail->worker_id]['detailsArr'];
                                     $temp['codesArr'] = $memberShipCardsUsers[$detail->worker_id]['codesArr'];
-                                    $temp['discount_value'] = $memberShipCardsUsers[$detail->worker_id]['amount'];
-                                    $temp['discountValueArr'] = $memberShipCardsUsers[$detail->worker_id]['discountValueArr'] ?? $memberShipCardsUsers[$detail->worker_id]['amountArr'];
+                                    $temp['discount_value'] = $memberShipCardsUsers[$detail->worker_id]['discountValueArr'][0] ?? null;
+                                    $temp['discountValueArr'] = $memberShipCardsUsers[$detail->worker_id]['discountValueArr'] ?? [];
                                     $temp['type'] = "member_ship";
                                     $temp['code'] = $memberShipCardsUsers[$detail->worker_id]['code'];
                                     $temp['client_name'] = $full_name;
@@ -369,8 +371,8 @@ class DailyReportController extends Controller
                                     $temp['details'] = $discountUsers[$detail->worker_id]['amountArr'];
                                     $temp['detailsArr'] = $discountUsers[$detail->worker_id]['detailsArr'];
                                     $temp['codesArr'] = $discountUsers[$detail->worker_id]['codesArr'];
-                                    $temp['discount_value'] = $discountUsers[$detail->worker_id]['amount'];
-                                    $temp['discountValueArr'] = $discountUsers[$detail->worker_id]['discountValueArr'] ?? $discountUsers[$detail->worker_id]['amountArr'];
+                                    $temp['discount_value'] = $discountUsers[$detail->worker_id]['discountValueArr'][0] ?? null;
+                                    $temp['discountValueArr'] = $discountUsers[$detail->worker_id]['discountValueArr'] ?? [];
                                     $temp['client_name'] = $mobile;
                                     $temp['is_default'] = $is_default;
                                     $temp['notes'] = $notes;
@@ -605,18 +607,20 @@ class DailyReportController extends Controller
 
     private function operationPaymentEntry($price, $free_price, $mobile, $is_default, $notes)
     {
-        $net = $price - $free_price;
-        if ($free_price > 0) {
-            return [
-                'amount' => $net,
-                'discount_value' => $free_price,
-                'type' => '',
-                'client_name' => $mobile,
-                'is_default' => $is_default,
-                'notes' => $notes,
-            ];
+        return $price - $free_price;
+    }
+
+    private function formatDiscountTableAmount($amount, $type = 'percentage'): string
+    {
+        $value = rtrim(rtrim(number_format((float) $amount, 2, '.', ''), '0'), '.');
+        if ($value === '') {
+            $value = '0';
         }
 
-        return $net;
+        if (strtolower((string) $type) === 'percentage') {
+            return $value . '%';
+        }
+
+        return $value;
     }
 }
