@@ -14,11 +14,6 @@
             padding-bottom: 0.5rem;
             border-bottom: 1px solid #efe6d8;
         }
-        .lz-product-form-page .product-branch-row {
-            background: #fbfaf7;
-            border: 1px solid #efe6d8 !important;
-            border-radius: 14px !important;
-        }
         .lz-product-form-page .btn-outline-primary {
             color: #002b26 !important;
             border-color: #002b26 !important;
@@ -389,85 +384,6 @@
                                 </div>
                             </div>
                         </div>
-
-                        <!-- Product Branches Section -->
-                        <!-- <h5 class="lz-section-title mt-4">Product Branches & Stock</h5>
-                        <p class="lz-field-help mb-3">Select branches and set stock quantity for each selected branch.</p>
-                        
-                        <div id="product-branches-container">
-                            @if($item && $item->productBranches && $item->productBranches->count() > 0)
-                                @foreach($item->productBranches as $index => $productBranch)
-                                    <div class="product-branch-row mb-3 border rounded p-3" data-branch-index="{{ $index }}">
-                                        <div class="row">
-                                            <div class="col-md-6 mb-3">
-                                                <label class="lz-field-label">Branch  <span class="text-danger">*</span></label>
-                                                <small class="text-muted">{{__('general.select_a_branch_from_the_list')}}</small>
-                                                <select class="form-control select2 branch-select" 
-                                                    name="product_branches[{{ $index }}][branch_id]" 
-                                                    data-select="true" required>
-                                                    <option value="">{{ __('general.choose') }} {{ __('field.branch') }}</option>
-                                                    @foreach($branches as $branch)
-                                                        <option value="{{ $branch->id }}" 
-                                                            {{ $productBranch->branch_id == $branch->id ? 'selected' : '' }}>
-                                                            {{ $branch->name }}
-                                                        </option>
-                                                    @endforeach
-                                                </select>
-                                            </div>
-                                            <div class="col-md-5 mb-3 stock-quantity-wrapper" style="{{ $productBranch->branch_id ? '' : 'display:none;' }}">
-                                                <label class="lz-field-label">Stock Quantity  <span class="text-danger">*</span></label>
-                                                <small class="text-muted">{{__('general.enter_the_stock_quantity_of_the_product')}}</small>
-                                                <input type="number" class="form-control stock-quantity-input" 
-                                                    name="product_branches[{{ $index }}][stock_quantity]" 
-                                                    placeholder="0" min="0" 
-                                                    value="{{ $productBranch->stock_quantity ?? 0 }}" />
-                                            </div>
-                                            <div class="col-md-1 mb-3">
-                                                <label class="lz-field-label">&nbsp;</label>
-                                                @if($index > 0)
-                                                    <button type="button" class="btn btn-sm btn-danger w-100 remove-branch-btn">
-                                                        <i class="ti ti-trash"></i>
-                                                    </button>
-                                                @endif
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endforeach
-                            @else
-                                <div class="product-branch-row mb-3 border rounded p-3" data-branch-index="0">
-                                    <div class="row">
-                                        <div class="col-md-6 mb-3">
-                                            <label class="lz-field-label">Branch  <span class="text-danger">*</span></label>
-                                            <small class="text-muted">{{__('general.select_a_branch_from_the_list')}}</small>
-                                            <select class="form-control select2 branch-select" 
-                                                name="product_branches[0][branch_id]" 
-                                                data-select="true">
-                                                <option value="">{{ __('general.choose') }} {{ __('field.branch') }}</option>
-                                                @foreach($branches as $branch)
-                                                    <option value="{{ $branch->id }}">
-                                                        {{ $branch->name }}
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-                                        <div class="col-md-5 mb-3 stock-quantity-wrapper" style="display:none;">
-                                            <label class="lz-field-label">Stock Quantity</label>
-                                            <input type="number" class="form-control stock-quantity-input" 
-                                                name="product_branches[0][stock_quantity]" 
-                                                placeholder="0" min="0" 
-                                                value="1" />
-                                        </div>
-                                        <div class="col-md-1 mb-3">
-                                            <label class="lz-field-label">&nbsp;</label>
-                                        </div>
-                                    </div>
-                                </div>
-                            @endif
-                        </div>
-                        
-                        <button type="button" class="btn btn-outline-primary btn-sm" id="add-branch-btn">
-                            <i class="ti ti-plus"></i> Add another branch
-                        </button> -->
                     </div>
                     <div class="card-footer d-flex justify-content-end gap-2">
                         <a href="{{ route('center_user.products.index') }}" class="btn btn-luzori-beige">
@@ -576,17 +492,6 @@
                     dropdownParent: $(this).parent()
                 });
             });
-            
-            // Initialize Select2 for branch selects specifically
-            $('.branch-select').each(function() {
-                if (!$(this).hasClass('select2-hidden-accessible')) {
-                    $(this).select2({
-                        placeholder: '{{ __('general.choose') }} {{ __('field.branch') }}',
-                        allowClear: true,
-                        dropdownParent: $(this).parent()
-                    });
-                }
-            });
 
             // Character counters
             @foreach (Config::get('translatable.locales') as $locale)
@@ -600,86 +505,6 @@
                 $('#short_desc_counter').text($(this).val().length);
             });
             $('#short_desc_counter').text($('#short_description').val().length);
-
-            // Product Branches Management
-            let branchIndex = {{ $item && $item->productBranches ? $item->productBranches->count() : 1 }};
-            
-            // Show/hide stock quantity input when branch is selected
-            $(document).on('change', '.branch-select', function() {
-                const $row = $(this).closest('.product-branch-row');
-                const $stockWrapper = $row.find('.stock-quantity-wrapper');
-                const $stockInput = $row.find('.stock-quantity-input');
-                
-                if ($(this).val() && $(this).val() !== '') {
-                    $stockWrapper.show();
-                    $stockInput.attr('required', 'required');
-                } else {
-                    $stockWrapper.hide();
-                    $stockInput.removeAttr('required');
-                    $stockInput.val('0');
-                }
-            });
-            
-            // Initialize stock visibility for existing branches
-            $('.branch-select').each(function() {
-                if ($(this).val() && $(this).val() !== '') {
-                    $(this).closest('.product-branch-row').find('.stock-quantity-wrapper').show();
-                }
-            });
-            
-            // Add branch
-            $('#add-branch-btn').on('click', function(e) {
-                e.preventDefault();
-                const branchRow = `
-                    <div class="product-branch-row mb-3 border rounded p-3" data-branch-index="${branchIndex}">
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="lz-field-label">Branch</label>
-                                <select class="form-control select2 branch-select" 
-                                    name="product_branches[${branchIndex}][branch_id]" 
-                                    data-select="true">
-                                    <option value="">{{ __('general.choose') }} {{ __('field.branch') }}</option>
-                                    @foreach($branches as $branch)
-                                        <option value="{{ $branch->id }}">
-                                            {{ $branch->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-5 mb-3 stock-quantity-wrapper" style="display:none;">
-                                <label class="lz-field-label">Stock Quantity  <span class="text-danger">*</span></label>
-                                <small class="text-muted">{{__('general.enter_the_stock_quantity_of_the_product')}}</small>
-                                <input type="number" class="form-control stock-quantity-input" 
-                                    name="product_branches[${branchIndex}][stock_quantity]" 
-                                    placeholder="0" min="0" 
-                                    value="0" />
-                            </div>
-                            <div class="col-md-1 mb-3">
-                                <label class="lz-field-label">&nbsp;</label>
-                                <button type="button" class="btn btn-sm btn-danger w-100 remove-branch-btn">
-                                    <i class="ti ti-trash"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                $('#product-branches-container').append(branchRow);
-                
-                // Initialize Select2 for the new branch select
-                $('#product-branches-container .branch-select').last().select2({
-                    placeholder: '{{ __('general.choose') }} {{ __('field.branch') }}',
-                    allowClear: true,
-                    dropdownParent: $('#product-branches-container .branch-select').last().parent()
-                });
-                
-                branchIndex++;
-            });
-            
-            // Remove branch
-            $(document).on('click', '.remove-branch-btn', function(e) {
-                e.preventDefault();
-                $(this).closest('.product-branch-row').remove();
-            });
 
             // Enable retail sales toggle
             function toggleRetailPricingFields() {

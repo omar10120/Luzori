@@ -55,4 +55,33 @@ class BuyProduct extends Model
     {
         return $this->belongsTo(Sale::class);
     }
+
+    public function reportWorkerId(): ?int
+    {
+        return $this->worker_id ?: $this->sales_worker_id;
+    }
+
+    public function detailSalePrice($detail): float
+    {
+        $price = (float) ($detail->price ?? 0);
+        if ($price <= 0) {
+            $price = (float) ($detail->product?->retail_price ?: $detail->product?->supply_price ?: 0);
+        }
+        if (!empty($this->discount)) {
+            $price -= ($price * (float) $this->discount) / 100;
+        }
+
+        return $price;
+    }
+
+    public function resolvedCommissionAmount(float $orderPrice): float
+    {
+        if ($this->commission === null || $this->commission === '') {
+            return 0;
+        }
+
+        $type = $this->commission_type ?: 'percentage';
+
+        return resolve_stored_commission($this->commission, $type, $orderPrice, true);
+    }
 }
