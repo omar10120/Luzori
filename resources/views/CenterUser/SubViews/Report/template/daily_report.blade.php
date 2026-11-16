@@ -169,7 +169,7 @@
                                                                             $lineDiscountValue = $with_price['discountValueArr'][$key] ?? $with_price['discount_value'] ?? null;
                                                                         @endphp
                                                                         @if (!empty($lineDiscountValue))
-                                                                            <br><span style="color: #ff5722; font-weight: bold;">({{ $lineDiscountValue }})</span>
+                                                                            <br><span style="color: #0066cc; font-weight: bold;">({{ $lineDiscountValue }})</span>
                                                                         @endif
                                                                 
                                                                         @if (!empty($with_price['codesArr'][$key]))
@@ -196,7 +196,7 @@
                                                                 <span>{{ $with_price['amount'] }}</span>
                                                                 <span>{{ get_symbol_type($with_price['type'] ?? '') }}</span>
                                                                 @if (!empty($with_price['discount_value']))
-                                                                    <br><span style="color: #ff5722; font-weight: bold;">({{ $with_price['discount_value'] }})</span>
+                                                                    <br><span style="color: #0066cc; font-weight: bold;">({{ $with_price['discount_value'] }})</span>
                                                                 @endif
                                                                 @if (!empty($with_price['code']))
                                                                     <br> <span>{{ $with_price['code'] }}</span>
@@ -439,7 +439,7 @@
                                                                                 $lineDiscountValue = $with_price['discountValueArr'][$key] ?? $with_price['discount_value'] ?? null;
                                                                             @endphp
                                                                             @if (!empty($lineDiscountValue))
-                                                                                <br><span style="color: #ff5722; font-weight: bold;">({{ $lineDiscountValue }})</span>
+                                                                                <br><span style="color: #0066cc; font-weight: bold;">({{ $lineDiscountValue }})</span>
                                                                             @endif
                                                                             @if (!empty($with_price['codesArr'][$key]))
                                                                                 <br>{{ $with_price['codesArr'][$key] }}
@@ -466,7 +466,7 @@
                                                                     <span>{{ $with_price['amount'] }}</span>
                                                                     <span>{{ get_symbol_type($with_price['type'] ?? '') }}</span> 
                                                                     @if (!empty($with_price['discount_value']))
-                                                                        <br><span style="color: #ff5722; font-weight: bold;">({{ $with_price['discount_value'] }})</span>
+                                                                        <br><span style="color: #0066cc; font-weight: bold;">({{ $with_price['discount_value'] }})</span>
                                                                     @endif
                                                                     @if (!empty($with_price['code']))
                                                                         <br> <span>{{ $with_price['code'] }}</span>
@@ -702,7 +702,7 @@
                                                                             $lineDiscountValue = $with_price['discountValueArr'][$key] ?? $with_price['discount_value'] ?? null;
                                                                         @endphp
                                                                         @if (!empty($lineDiscountValue))
-                                                                            <br><span style="color: #ff5722; font-weight: bold;">({{ $lineDiscountValue }})</span>
+                                                                            <br><span style="color: #0066cc; font-weight: bold;">({{ $lineDiscountValue }})</span>
                                                                         @endif
                                                                         @if (!empty($with_price['codesArr'][$key]))
                                                                             <br>{{ $with_price['codesArr'][$key] }}
@@ -728,7 +728,7 @@
                                                                 <span>{{ $with_price['amount'] }}</span>
                                                                 <span>{{ get_symbol_type($with_price['type'] ?? '') }}</span>
                                                                 @if (!empty($with_price['discount_value']))
-                                                                    <br><span style="color: #ff5722; font-weight: bold;">({{ $with_price['discount_value'] }})</span>
+                                                                    <br><span style="color: #0066cc; font-weight: bold;">({{ $with_price['discount_value'] }})</span>
                                                                 @endif
                                                                 @if (!empty($with_price['code']))
                                                                     <br> <span>{{ $with_price['code'] }}</span>
