@@ -122,7 +122,7 @@
                     <div class="col-md-4">
                         <label for="source_type" class="lz-field-label">{{ __('field.stock_order_source') }} <span class="text-danger">*</span></label>
                         <select id="source_type" class="form-control select2" required>
-                            <option value="supplier">{{ __('locale.suppliers') }}</option>
+                            <!-- <option value="supplier">{{ __('locale.suppliers') }}</option> -->
                             <option value="main_stock">{{ __('field.main_stock') }}</option>
                         </select>
                     </div>
