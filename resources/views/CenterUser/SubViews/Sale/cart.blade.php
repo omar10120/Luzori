@@ -1049,8 +1049,7 @@
                                                     <option value="">{{ __('field.select_products') }}</option>
                                                     @foreach ($products as $product)
                                                         @php
-                                                            // Calculate the total stock across ALL branches for this product
-                                                                $stock = (int) $product->productBranches->sum('stock_quantity');
+                                                            $stock = (int) ($product->stock_quantity ?? 0);
                                                         @endphp
                                                         <option value="{{ $product->id }}" data-stock="{{ $stock }}">
                                                             {{ $product->name }} - {{ $stock }}{{ $stock <= 0 ? ' ('.__('field.out_of_stock').')' : '' }}

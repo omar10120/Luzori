@@ -151,9 +151,6 @@ class SalesController extends Controller
                 ? (float) $product->retail_price
                 : (float) ($product->supply_price ?? 0);
             
-            // Calculate total stock across ALL branches
-            $totalStock = (int) $product->productBranches->sum('stock_quantity');
-            
             return [
                 $product->id => [
                     'id' => $product->id,
@@ -161,7 +158,7 @@ class SalesController extends Controller
                     'price' => $price,
                     'supply_price' => (float) ($product->supply_price ?? 0),
                     'retail_price' => (float) ($product->retail_price ?? 0),
-                    'stock_quantity' => $totalStock,
+                    'stock_quantity' => (int) ($product->stock_quantity ?? 0),
                 ],
             ];
         });
