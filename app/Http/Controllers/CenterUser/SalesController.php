@@ -113,6 +113,19 @@ class SalesController extends Controller
             'payment_type' => null,
         ]);
 
+        if (empty($cart['items'])) {
+            $defaultUserId = User::query()
+                ->where('is_default', true)
+                ->whereNull('deleted_at')
+                ->value('id');
+            $cart['client_id'] = $defaultUserId;
+            $cart['worker_id'] = null;
+            $cart['tip'] = 0;
+            $cart['tax'] = 0;
+            $cart['payment_type'] = null;
+            session(['sales_cart' => $cart]);
+        }
+
         $centerUser = auth('center_user')->user();
 
         $isAdmin = ((int) get_user_role() === 1);
