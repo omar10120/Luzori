@@ -87,6 +87,8 @@ class GoogleDriveBackupService
 
     public function backupCenters(): array
     {
+        @set_time_limit(0);
+
         $results = [];
         $rootId = $this->rootFolderId();
         $keep = [
@@ -109,19 +111,40 @@ class GoogleDriveBackupService
             $date = Carbon::today()->toDateString();
             $fileName = $date . '.sql';
             $path = storage_path('app/drive-backups/' . $database . '_' . $fileName);
+            $uploaded = false;
+            $lastError = 'unknown error';
 
             try {
                 if (!is_dir(dirname($path))) {
                     mkdir(dirname($path), 0755, true);
                 }
-                app(CenterDatabaseDumpService::class)->writeTo($path, $database, (string) $center->name);
-                $this->deleteNamed($folderId, $fileName);
-                $fileId = $this->upload($path, $fileName, $folderId);
-                $this->placeInsideFolder($fileId, $folderId);
-                $this->keepRecent($folderId, $keep);
-                $results[] = $folderName . ' uploaded';
-            } catch (\Throwable $e) {
-                $results[] = $folderName . ' failed: ' . $e->getMessage();
+
+                for ($attempt = 1; $attempt <= 3 && !$uploaded; $attempt++) {
+                    try {
+                        if (!is_file($path) || filesize($path) < 1) {
+                            app(CenterDatabaseDumpService::class)->writeTo($path, $database, (string) $center->name);
+                        }
+                        $fileId = $this->upload($path, $fileName, $folderId);
+                        $this->placeInsideFolder($fileId, $folderId);
+                        $this->deleteNamedExcept($folderId, $fileName, $fileId);
+                        $this->keepRecent($folderId, $keep);
+                        $results[] = $folderName . ' uploaded' . ($attempt > 1 ? ' after ' . $attempt . ' attempts' : '');
+                        $uploaded = true;
+                    } catch (\Throwable $e) {
+                        $lastError = $e->getMessage();
+                        $this->accessToken = null;
+                        if (!is_file($path) || filesize($path) < 1) {
+                            @unlink($path);
+                        }
+                        if ($attempt < 3) {
+                            sleep($attempt * 5);
+                        }
+                    }
+                }
+
+                if (!$uploaded) {
+                    $results[] = $folderName . ' failed: ' . $lastError;
+                }
             } finally {
                 if (is_file($path)) {
                     @unlink($path);
@@ -206,10 +229,58 @@ class GoogleDriveBackupService
 
     private function upload(string $path, string $name, string $parentId): string
     {
-        $start = Http::withToken($this->accessToken())
+        $size = (int) filesize($path);
+        if ($size < 1) {
+            throw new RuntimeException('The backup file is empty.');
+        }
+
+        $location = $this->startUploadSession($name, $parentId, $size);
+        $chunkSize = 8 * 1024 * 1024;
+        $handle = fopen($path, 'rb');
+        if ($handle === false) {
+            throw new RuntimeException('Unable to read the backup file.');
+        }
+
+        $offset = 0;
+        try {
+            while ($offset < $size) {
+                $length = (int) min($chunkSize, $size - $offset);
+                if (fseek($handle, $offset) !== 0) {
+                    throw new RuntimeException('Unable to read the backup file.');
+                }
+                $data = fread($handle, $length);
+                if ($data === false || strlen($data) !== $length) {
+                    throw new RuntimeException('Unable to read the backup file.');
+                }
+
+                $end = $offset + $length - 1;
+                $response = $this->sendChunk($location, $data, $offset, $end, $size);
+                if (in_array($response->status(), [200, 201], true)) {
+                    $id = (string) $response->json('id');
+                    if ($id === '') {
+                        throw new RuntimeException('Drive upload finished without a file id.');
+                    }
+
+                    return $id;
+                }
+
+                $offset = $end + 1;
+            }
+        } finally {
+            fclose($handle);
+        }
+
+        throw new RuntimeException('Drive upload did not finish.');
+    }
+
+    private function startUploadSession(string $name, string $parentId, int $size): string
+    {
+        $start = Http::timeout(60)
+            ->connectTimeout(20)
+            ->withToken($this->accessToken())
             ->withHeaders([
                 'X-Upload-Content-Type' => 'application/sql',
-                'X-Upload-Content-Length' => (string) filesize($path),
+                'X-Upload-Content-Length' => (string) $size,
                 'Content-Type' => 'application/json; charset=UTF-8',
             ])
             ->send('POST', 'https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&fields=id,parents', [
@@ -224,19 +295,75 @@ class GoogleDriveBackupService
             throw new RuntimeException('Drive upload did not start.');
         }
 
-        $file = fopen($path, 'rb');
-        $upload = Http::withHeaders(['Content-Type' => 'application/sql'])
-            ->send('PUT', $location, ['body' => $file]);
-        if (is_resource($file)) {
-            fclose($file);
+        return $location;
+    }
+
+    private function sendChunk(string $location, string $data, int $start, int $end, int $total)
+    {
+        $lastError = 'Drive chunk failed.';
+
+        for ($try = 1; $try <= 4; $try++) {
+            try {
+                $response = Http::timeout(180)
+                    ->connectTimeout(20)
+                    ->withHeaders([
+                        'Content-Range' => "bytes {$start}-{$end}/{$total}",
+                    ])
+                    ->withBody($data, 'application/octet-stream')
+                    ->put($location);
+
+                if (in_array($response->status(), [200, 201, 308], true)) {
+                    return $response;
+                }
+
+                $lastError = 'Drive chunk failed with status ' . $response->status();
+                if ($response->status() === 401 || $response->status() === 404) {
+                    break;
+                }
+            } catch (\Throwable $e) {
+                $lastError = $e->getMessage();
+            }
+
+            $received = $this->resumeUpload($location, $total);
+            if ($received && in_array($received->status(), [200, 201], true)) {
+                return $received;
+            }
+            if ($received && $received->status() === 308) {
+                $range = $received->header('Range');
+                if (is_string($range) && preg_match('/bytes=0-(\d+)/', $range, $match) && (int) $match[1] >= $end) {
+                    return $received;
+                }
+            }
+            if ($try < 4) {
+                sleep($try * 2);
+            }
         }
 
-        $id = (string) $upload->json('id');
-        if (!$upload->successful() || $id === '') {
-            throw new RuntimeException('Drive upload failed.');
-        }
+        throw new RuntimeException($lastError);
+    }
 
-        return $id;
+    private function resumeUpload(string $location, int $total)
+    {
+        try {
+            return Http::timeout(60)
+                ->connectTimeout(20)
+                ->withHeaders([
+                    'Content-Range' => "bytes */{$total}",
+                ])
+                ->withBody('', 'application/octet-stream')
+                ->put($location);
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }
+
+    private function deleteNamedExcept(string $folderId, string $name, string $keepId): void
+    {
+        foreach ($this->children($folderId) as $file) {
+            if (($file['name'] ?? '') === $name && (string) ($file['id'] ?? '') !== $keepId) {
+                $this->deleteFile((string) $file['id']);
+            }
+        }
     }
 
     private function placeInsideFolder(string $fileId, string $folderId): void
