@@ -22,7 +22,6 @@
     }
 
     .table-responsive {
-
         font-size: 12px;
     }
 </style>
@@ -62,14 +61,14 @@
                                     $total_prices += $result['price'][$date][$value->id];
                                     $total_tips += $result['tips'][$date][$value->id];
                                     $total += $result['price'][$date][$value->id];
-                                    $total += $result['tips'][$date][$value->id];
+                                    // Tips removed from row total
                                 }
                                 $firstusers_last_total_price[$value->id] += $result['price'][$date][$value->id];
                                 $firstusers_last_total_tips[$value->id] += $result['tips'][$date][$value->id];
                                 $firstusers_last_total[$value->id] += $result['price'][$date][$value->id];
-                                $firstusers_last_total[$value->id] += $result['tips'][$date][$value->id];
+                                // Tips removed from footer total
                             @endphp
-                            <td>{{ number_format($result['price'][$date][$value->id] + $result['tips'][$date][$value->id], 2, '.', '') }}
+                            <td>{{ number_format($result['price'][$date][$value->id], 2, '.', '') }}
                             </td>
                         @endforeach
                     </tr>
@@ -110,14 +109,6 @@
                             {{ round((float) $value * 0.925, 2) }}</strong></td>
                 @endforeach
             </tr>
-            <!-- <tr>
-                <td style="background-color: #666;color: #fff;text-align: center"><strong>{{ 'Total' }}</strong>
-                </td>
-                @foreach ($firstusers_last_total as $index => $value)
-                    <td style="background-color: #666;color: #fff;text-align: center"><strong>AED
-                            {{ number_format($value, 2, '.', '') }}</strong></td>
-                @endforeach
-            </tr> -->
             <tr>
                 <td colspan="{{ count($firstusers) + 1 }}"
                     style="background-color: #666;color: #fff;text-align: center">
@@ -163,16 +154,16 @@
                             @php
                                 if ($index != 'free') {
                                     $total += $result['price'][$date][$value->id];
-                                    $total += $result['tips'][$date][$value->id];
                                     $total_prices += $result['price'][$date][$value->id];
                                     $total_tips += $result['tips'][$date][$value->id];
+                                    // Tips removed from row total
                                 }
                                 $secondusers_last_total[$value->id] += $result['price'][$date][$value->id];
-                                $secondusers_last_total[$value->id] += $result['tips'][$date][$value->id];
                                 $secondusers_last_total_tips[$value->id] += $result['tips'][$date][$value->id];
                                 $secondusers_last_total_price[$value->id] += $result['price'][$date][$value->id];
+                                // Tips removed from footer total
                             @endphp
-                            <td>{{ number_format($result['price'][$date][$value->id] + $result['tips'][$date][$value->id], 2, '.', '') }}
+                            <td>{{ number_format($result['price'][$date][$value->id], 2, '.', '') }}
                             </td>
                         @endforeach
                     </tr>
@@ -212,14 +203,6 @@
                             {{ round((float) $value * 0.925, 2) }}</strong></td>
                 @endforeach
             </tr>
-            <!-- <tr>
-                <td style="background-color: #666;color: #fff;text-align: center"><strong>{{ 'Total' }}</strong>
-                </td>
-                @foreach ($secondusers_last_total as $index => $value)
-                    <td style="background-color: #666;color: #fff;text-align: center"><strong>AED
-                            {{ number_format($value, 2, '.', '') }}</strong></td>
-                @endforeach
-            </tr> -->
             <tr>
                 <td colspan="{{ count($secondusers) + 1 }}"
                     style="background-color: #666;color: #fff;text-align: center">
@@ -265,7 +248,7 @@
                                         $total += $result['price'][$date][$value->id];
                                     }
                                     $restusers_last_total[$value->id] += $result['price'][$date][$value->id];
-                                    $restusers_last_total[$value->id] += $result['tips'][$date][$value->id];
+                                    // Tips removed from footer total
                                 @endphp
                                 <td>{{ number_format($result['price'][$date][$value->id], 2, '.', '') }}</td>
                             @endforeach
@@ -289,8 +272,9 @@
                         @php
                             $footer_total = 0;
                         @endphp
-                        @if (isset($lasrestusers_last_totalt_total))
-                            @foreach ($lasrestusers_last_totalt_total as $index => $value)
+                        {{-- Fixed Typo: Changed $lasrestusers_last_totalt_total to $restusers_last_total --}}
+                        @if (isset($restusers_last_total))
+                            @foreach ($restusers_last_total as $index => $value)
                                 @php
                                     if ($index != 'total_without_free') {
                                         $footer_total += $value;
