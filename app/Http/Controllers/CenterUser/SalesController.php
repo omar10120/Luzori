@@ -57,7 +57,12 @@ class SalesController extends Controller
         }
 
         $title = __('locale.' . $this->plural);
-        return $dataTable->render('CenterUser.SubViews.Sale.list', compact('title'));
+        $isSuperAdmin = (int) get_user_role() === 1;
+        $branches = $isSuperAdmin
+            ? Branch::with('translation')->orderBy('id')->get()
+            : collect();
+
+        return $dataTable->render('CenterUser.SubViews.Sale.list', compact('title', 'isSuperAdmin', 'branches'));
     }
 
     /**

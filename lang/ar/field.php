@@ -360,6 +360,8 @@ return [
     'booking_status'                  => 'حالة الحجز',
     'booking_status_pending'          => 'قيد الانتظار',
     'booking_status_confirmed'        => 'مؤكد',
+    'deleted'                         => 'محذوف',
+    'transaction_status'              => 'حالة المعاملة',
     'booking_status_rejected'         => 'مرفوض',
     'booking_status_cancelled'        => 'ملغي',
     'admin_discount'                  => 'خصم الادمن',

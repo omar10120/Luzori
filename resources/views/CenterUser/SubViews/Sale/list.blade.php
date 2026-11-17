@@ -388,6 +388,19 @@
                 </select>
                 <input type="date" id="sales_date_from" class="form-control form-control-sm lz-date-filter" aria-label="{{ __('field.from') }}" title="{{ __('field.from') }}">
                 <input type="date" id="sales_date_to" class="form-control form-control-sm lz-date-filter" aria-label="{{ __('field.to') }}" title="{{ __('field.to') }}">
+                @if(!empty($isSuperAdmin))
+                    <select id="sales_branch_filter" class="form-select form-select-sm lz-branch-filter" aria-label="{{ __('field.branch') }}">
+                        <option value="">{{ __('general.all') }} — {{ __('field.branch') }}</option>
+                        @foreach($branches as $branch)
+                            <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                        @endforeach
+                    </select>
+                    <select id="sales_record_status" class="form-select form-select-sm lz-branch-filter" aria-label="{{ __('field.transaction_status') }}">
+                        <option value="">{{ __('general.all') }} — {{ __('field.transaction_status') }}</option>
+                        <option value="confirmed">{{ __('field.booking_status_confirmed') }}</option>
+                        <option value="deleted">{{ __('field.deleted') }}</option>
+                    </select>
+                @endif
             </div>
         </div>
 
@@ -464,8 +477,8 @@
             }
 
             // Extra filter binding (works even if initComplete is delayed by module scripts)
-            $(document).off('change.lzSalesFilter', '#booking_source_filter, #sales_date_from, #sales_date_to')
-                .on('change.lzSalesFilter', '#booking_source_filter, #sales_date_from, #sales_date_to', function () {
+            $(document).off('change.lzSalesFilter', '#booking_source_filter, #sales_date_from, #sales_date_to, #sales_branch_filter, #sales_record_status')
+                .on('change.lzSalesFilter', '#booking_source_filter, #sales_date_from, #sales_date_to, #sales_branch_filter, #sales_record_status', function () {
                     var table = document.getElementById('sales-table');
                     if (!table || !window.jQuery || !jQuery.fn.dataTable) return;
                     if (jQuery.fn.dataTable.isDataTable(table)) {

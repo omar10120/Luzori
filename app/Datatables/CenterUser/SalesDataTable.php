@@ -482,13 +482,22 @@ class SalesDataTable extends DataTable
             'buyProducts.worker' => fn ($q) => $q->withTrashed(),
         ])->withTrashed();
 
-        if ($branchId !== null) {
+        if ($branchId !== null && (int) get_user_role() !== 1) {
             $query->where('branch_id', $branchId);
         }
 
-        $query->when(request()->filled('branch_id'), function ($query) {
+        if ((int) get_user_role() === 1 && request()->filled('branch_id')) {
             $query->where('branch_id', request()->input('branch_id'));
-        });
+        }
+
+        if ((int) get_user_role() === 1) {
+            $recordStatus = request()->input('record_status');
+            if ($recordStatus === 'confirmed') {
+                $query->whereNull('sales.deleted_at');
+            } elseif ($recordStatus === 'deleted') {
+                $query->onlyTrashed();
+            }
+        }
 
         if (request()->filled('date_from')) {
             $query->whereDate('sales.created_at', '>=', request()->input('date_from'));
@@ -547,6 +556,10 @@ JS;
                     var to = $("#sales_date_to");
                     d.date_from = from.length ? (from.val() || "") : "";
                     d.date_to = to.length ? (to.val() || "") : "";
+                    var branch = $("#sales_branch_filter");
+                    var status = $("#sales_record_status");
+                    d.branch_id = branch.length ? (branch.val() || "") : "";
+                    d.record_status = status.length ? (status.val() || "") : "";
                 }',
             ])
             ->orderBy(1)

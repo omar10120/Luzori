@@ -364,6 +364,8 @@ return [
     'booking_status'                  => 'Status',
     'booking_status_pending'          => 'Pending',
     'booking_status_confirmed'        => 'Confirmed',
+    'deleted'                         => 'Deleted',
+    'transaction_status'              => 'Transaction status',
     'booking_status_rejected'         => 'Rejected',
     'booking_status_cancelled'        => 'Cancelled',
     'ID'                              => 'ID',
