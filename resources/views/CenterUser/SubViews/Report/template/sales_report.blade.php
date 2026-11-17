@@ -23,23 +23,41 @@
 
     .table-responsive {
         font-size: 12px;
-        overflow-x: auto; /* Ensure horizontal scroll */
+        overflow-x: auto; /* Enables horizontal scroll */
     }
 
-    /* ── Sticky Date Column ── */
-    .table-responsive table th:first-child,
-    .table-responsive table td:first-child {
+    /* ── Sticky Top Row (Headers) ── */
+    .table-responsive table thead th {
+        position: sticky;
+        top: 0;
+        background-color: #f8f9fa; /* Light background to cover content */
+        z-index: 2;
+        box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.15); /* Shadow for depth */
+    }
+
+    /* ── Sticky Top-Left Corner (Date Header) ── */
+    .table-responsive table thead th:first-child {
+        z-index: 4; /* Stays on top of everything */
+        left: 0;
+        background-color: #f8f9fa;
+    }
+
+    /* ── Sticky Left Column (Dates in body) ── */
+    .table-responsive table tbody td:first-child {
         position: sticky;
         left: 0;
-        background-color: #fff; /* Matches table background */
-        z-index: 2;
-        box-shadow: 2px 0 5px -2px rgba(0, 0, 0, 0.15); /* Shadow for depth */
+        background-color: #ffffff;
+        z-index: 3;
+        box-shadow: 2px 0 5px -2px rgba(0, 0, 0, 0.15);
     }
 
-    /* Ensure the footer date column stays dark */
+    /* ── Sticky Left Column (Dates in footer) ── */
     .table-responsive table tfoot td:first-child {
-        background-color: #666 !important;
-        z-index: 3; /* Stays above the body cells */
+        position: sticky;
+        left: 0;
+        background-color: #666 !important; /* Keeps dark background */
+        z-index: 3;
+        box-shadow: 2px 0 5px -2px rgba(0, 0, 0, 0.15);
     }
 </style>
 <br>
