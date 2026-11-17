@@ -22,23 +22,41 @@
 
     .table-responsive {
         font-size: 12px;
-        overflow-x: auto; /* Ensures horizontal scrolling works */
+        overflow-x: auto; /* Enables horizontal scroll */
     }
 
-    /* ── Sticky Date Column ── */
-    .daily-report-table th:first-child,
-    .daily-report-table td:first-child {
+    /* ── Sticky Top Row (Worker Names) ── */
+    .daily-report-table thead th {
+        position: sticky;
+        top: 0;
+        background-color: #f8f9fa; /* Light background to cover content behind it */
+        z-index: 2;
+        box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.15); /* Replaces border when scrolling */
+    }
+
+    /* ── Sticky Top-Left Corner (Date Header) ── */
+    .daily-report-table thead th:first-child {
+        z-index: 4; /* Highest z-index to stay on top of everything */
+        left: 0;
+        background-color: #f8f9fa;
+    }
+
+    /* ── Sticky Left Column (Dates in body) ── */
+    .daily-report-table tbody td:first-child {
         position: sticky;
         left: 0;
-        background-color: #ffffff; /* Matches table background */
-        z-index: 2;
-        box-shadow: 2px 0 5px -2px rgba(0, 0, 0, 0.15); /* Adds a subtle shadow on the right */
+        background-color: #ffffff;
+        z-index: 3;
+        box-shadow: 2px 0 5px -2px rgba(0, 0, 0, 0.15); /* Shadow on the right */
     }
 
-    /* Ensure the footer date column stays dark */
+    /* ── Sticky Left Column (Dates in footer) ── */
     .daily-report-table tfoot td:first-child {
-        background-color: #666 !important;
-        z-index: 3; /* Stays above the body cells */
+        position: sticky;
+        left: 0;
+        background-color: #666 !important; /* Keeps the dark background */
+        z-index: 3;
+        box-shadow: 2px 0 5px -2px rgba(0, 0, 0, 0.15);
     }
 </style>
 
