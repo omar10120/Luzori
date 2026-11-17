@@ -22,42 +22,77 @@ class CommissionReportController extends Controller
             return abort(403);
         }
 
-        $years = Booking::select(DB::raw('DISTINCT YEAR(booking_date) as year'))->get();
-        $selected_year = $request->get('year');
-        $selected_month = $request->get('month');
-        $temp_branches = Branch::query();
+        // ── Distinct years, latest first ──
+        $years = Booking::select(DB::raw('DISTINCT YEAR(booking_date) as year'))
+            ->orderByDesc('year')
+            ->get();
+
+        // ── Default selected year = latest year in the list ──
+        $selected_year = $request->get('year') ?? optional($years->first())->year;
+
+        // ── Default selected month = current month ──
+        $selected_month = $request->get('month') ?? now()->month;
+
+        // ── Role-aware branch filter ──
+        $user     = auth('center_user')->user();
+        $userRole = get_user_role();
+
+        if ($userRole == 1) {
+            $branch_id_filter = !empty($request->get('branch_id')) ? (int) $request->get('branch_id') : null;
+        } else {
+            $branch_id_filter = $user->branch_id ? (int) $user->branch_id : null;
+        }
+
+        $selected_branch = $branch_id_filter;
         $users_with_totals = [];
-        if (get_user_role() != 1) {
-            $temp_branches->where('id', auth('center_user')->user()->branch_id);
+
+        $temp_branches = Branch::query();
+        if ($userRole != 1) {
+            $temp_branches->where('id', $user->branch_id);
         }
         $branches = $temp_branches->get();
-        $selected_branch = $request->get('branch_id');
+        
         $template = "";
-        if (!empty($request->year)) {
+        if (!empty($selected_year)) {
             $temp_users = Worker::query()->orderBy('id');
 
-            // Role 1 + empty branch = ALL workers.
-            // Previous bug: role==1 still forced where(branch_id, auth.branch_id)
-            // and when auth.branch_id is null → 0 workers.
-            if (!empty($selected_branch)) {
-                $temp_users->where('branch_id', $selected_branch);
-            } elseif (get_user_role() != 1) {
-                $temp_users->where('branch_id', auth('center_user')->user()->branch_id);
+            // ✅ PATCH: Include workers who had sales or buy_product commissions in this branch
+            if ($branch_id_filter) {
+                $temp_users->where(function ($query) use ($branch_id_filter, $selected_year, $selected_month) {
+                    $query->where('branch_id', $branch_id_filter)
+                        // Include workers who made sales in this branch this month
+                        ->orWhereIn('id', function ($sub) use ($branch_id_filter, $selected_year, $selected_month) {
+                            $sub->select('worker_id')->from('sales')
+                                ->whereYear('created_at', $selected_year)
+                                ->whereMonth('created_at', $selected_month)
+                                ->where('branch_id', $branch_id_filter)
+                                ->whereNotNull('worker_id');
+                        })
+                        // Include workers who got commissions via buy_products in this branch this month
+                        ->orWhereIn('id', function ($sub) use ($branch_id_filter, $selected_year, $selected_month) {
+                            $sub->select('buy_products.worker_id')->from('buy_products')
+                                ->join('sales', 'sales.id', '=', 'buy_products.sale_id')
+                                ->whereYear('buy_products.created_at', $selected_year)
+                                ->whereMonth('buy_products.created_at', $selected_month)
+                                ->where('sales.branch_id', $branch_id_filter)
+                                ->whereNotNull('buy_products.worker_id');
+                        });
+                });
             }
 
             $users = $temp_users->get();
             Log::info('Commission report workers', [
                 'count' => $users->count(),
                 'ids' => $users->pluck('id')->all(),
-                'branch_id' => $selected_branch ?: 'all',
+                'branch_id' => $branch_id_filter ?: 'all',
             ]);
 
             $result = [];
-            $days = cal_days_in_month(CAL_GREGORIAN, $request->get('month'), $request->get('year'));
+            $days = cal_days_in_month(CAL_GREGORIAN, (int) $selected_month, (int) $selected_year);
             for ($i = 1; $i <= $days; $i++) {
-                $month = ($request->get('month') <= 9) ? "0" . $request->get('month') : $request->get('month');
+                $month = ($selected_month <= 9) ? "0" . $selected_month : $selected_month;
                 $day = ($i <= 9) ? "0" . $i : $i;
-                $date = $request->get('year') . "-" . $month . "-" . $day;
+                $date = $selected_year . "-" . $month . "-" . $day;
                 $temp = [];
                 foreach ($users as $value) {
                     $temp[$value->id] = 0;
@@ -67,18 +102,16 @@ class CommissionReportController extends Controller
                 $result[$date]["total"] = 0;
             }
 
-            $temp_report = Booking::whereYear('booking_date', $request->get('year'))
-                ->whereMonth('booking_date', $request->get('month'))
+            $temp_report = Booking::whereYear('booking_date', $selected_year)
+                ->whereMonth('booking_date', $selected_month)
                 ->whereHas('details', function ($query) {
                     $query->where('status', 'confirmed');
                 })
                 ->with(['details' => function ($query) {
                     $query->where('status', 'confirmed');
                 }]);
-            if (!empty($selected_branch)) {
-                $temp_report->where('branch_id', $selected_branch);
-            } elseif (get_user_role() != 1) {
-                $temp_report->where('branch_id', auth('center_user')->user()->branch_id);
+            if ($branch_id_filter) {
+                $temp_report->where('branch_id', $branch_id_filter);
             }
             $report = $temp_report->get();
             Log::info('Commission report bookings', [
@@ -112,17 +145,23 @@ class CommissionReportController extends Controller
                 }
             }
 
-            $temp_users_wallets = UserWallet::whereRaw('YEAR(created_at)="' . $request->get('year') . '" and MONTH(created_at)="' . $request->get('month') . '"');
-            if ($selected_branch) {
-                $branch_id = $selected_branch;
-                $temp_users_wallets->whereHas('created_by_user', function ($query) use ($branch_id) {
-                    return $query->where('branch_id', $branch_id);
+            // ── FIXED: Wallets Branch Filtering ──
+            $temp_users_wallets = UserWallet::whereRaw('YEAR(created_at)="' . $selected_year . '" and MONTH(created_at)="' . $selected_month . '"');
+            if ($branch_id_filter) {
+                $temp_users_wallets->where(function ($q) use ($branch_id_filter) {
+                    $q->where('users_wallets.branch_id', $branch_id_filter)
+                        ->orWhere(function ($legacy) use ($branch_id_filter) {
+                            $legacy->whereNull('users_wallets.branch_id')
+                                ->whereHas('user', function ($userQ) use ($branch_id_filter) {
+                                    $userQ->where('branch_id', $branch_id_filter);
+                                });
+                        });
                 });
             }
             $users_wallets = $temp_users_wallets->get();
             if (!$users_wallets->isEmpty()) {
                 foreach ($users_wallets as $users_wallet) {
-                    $date = date('Y-m-d', strtotime($users_wallet->created_at));
+                    $date = \Carbon\Carbon::parse($users_wallet->created_at)->format('Y-m-d');
                     if (!empty($users_wallet->commission) && isset($result[$date][$users_wallet->worker_id])) {
                         $walletBase = floatval($users_wallet->invoiced_amount ?? $users_wallet->amount ?? 0);
                         $commissionAmount = resolve_stored_commission($users_wallet->commission, $users_wallet->commission_type, $walletBase, false);
@@ -133,17 +172,25 @@ class CommissionReportController extends Controller
                 }
             }
 
-            $temp_BuyProduct = BuyProduct::whereRaw('YEAR(created_at)="' . $request->get('year') . '" and MONTH(created_at)="' . $request->get('month') . '"')->with('details');
-            if ($selected_branch) {
-                $branch_id = $selected_branch;
-                $temp_BuyProduct->whereHas('created_by_user', function ($query) use ($branch_id) {
-                    return $query->where('branch_id', $branch_id);
+            // ── FIXED: Buy Products Branch Filtering ──
+            $temp_BuyProduct = BuyProduct::whereRaw('YEAR(created_at)="' . $selected_year . '" and MONTH(created_at)="' . $selected_month . '"')->with('details');
+            
+            if ($branch_id_filter) {
+                $temp_BuyProduct->where(function ($q) use ($branch_id_filter) {
+                    $q->whereHas('sale', function ($saleQ) use ($branch_id_filter) {
+                        $saleQ->where('branch_id', $branch_id_filter);
+                    })->orWhereHas('worker', function ($workerQ) use ($branch_id_filter) {
+                        $workerQ->where('branch_id', $branch_id_filter);
+                    })->orWhereHas('sales_worker', function ($workerQ) use ($branch_id_filter) {
+                        $workerQ->where('branch_id', $branch_id_filter);
+                    });
                 });
             }
+            
             $BuyProduct = $temp_BuyProduct->get();
             if (!$BuyProduct->isEmpty()) {
                 foreach ($BuyProduct as $BuyProduct_item) {
-                    $date = date('Y-m-d', strtotime($BuyProduct_item->created_at));
+                    $date = \Carbon\Carbon::parse($BuyProduct_item->created_at)->format('Y-m-d');
                     $orderPrice = 0;
                     foreach ($BuyProduct_item->details as $detail) {
                         $linePrice = floatval($detail->price);
@@ -152,11 +199,15 @@ class CommissionReportController extends Controller
                         }
                         $orderPrice += $linePrice;
                     }
-                    if (!empty($BuyProduct_item->commission) && isset($result[$date][$BuyProduct_item->worker_id])) {
+                    
+                    // Match Daily Report fallback logic
+                    $reportWorkerId = $BuyProduct_item->worker_id ?: $BuyProduct_item->sales_worker_id;
+                    
+                    if (!empty($BuyProduct_item->commission) && isset($result[$date][$reportWorkerId])) {
                         $commissionAmount = resolve_stored_commission($BuyProduct_item->commission, $BuyProduct_item->commission_type, $orderPrice, false);
-                        $result[$date][$BuyProduct_item->worker_id] += $commissionAmount;
+                        $result[$date][$reportWorkerId] += $commissionAmount;
                         $result[$date]["total"] += $commissionAmount;
-                        $users_with_totals[$BuyProduct_item->worker_id] += $commissionAmount;
+                        $users_with_totals[$reportWorkerId] += $commissionAmount;
                     }
                 }
             }
@@ -173,6 +224,7 @@ class CommissionReportController extends Controller
                 'restusers',
                 'users_with_totals'
             ));
+            
             if (isset($request->is_pdf)) {
                 $options = [
                     'format' => 'A4',

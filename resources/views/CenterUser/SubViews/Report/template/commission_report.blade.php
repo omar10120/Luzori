@@ -3,12 +3,11 @@
 @endphp
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&family=Poppins:wght@400;700&display=swap" rel="stylesheet">
 <style>
-     .daily-report-table {
+    .daily-report-table {
         width: 100%;
         border-collapse: collapse;
         font-size: 10px;
-        font-family: '{{ $fontFamily }}',
-        sans-serif !important;
+        font-family: '{{ $fontFamily }}', sans-serif !important;
     }
 
     .daily-report-table td,
@@ -22,25 +21,45 @@
     }
 
     .table-responsive {
-
         font-size: 12px;
+        overflow-x: auto; /* Enables horizontal scroll */
     }
-</style><style>
-    .daily-report-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 10px; 
-        font-family: '{{ $fontFamily }}', sans-serif !important;
+
+    /* ── Sticky Top Row (Worker Names) ── */
+    .daily-report-table thead th {
+        position: sticky;
+        top: 0;
+        background-color: #f8f9fa; /* Light background to cover content behind it */
+        z-index: 2;
+        box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.15); /* Replaces border when scrolling */
     }
-    .daily-report-table td, .daily-report-table th {
-        vertical-align: top;
+
+    /* ── Sticky Top-Left Corner (Date Header) ── */
+    .daily-report-table thead th:first-child {
+        z-index: 4; /* Highest z-index to stay on top of everything */
+        left: 0;
+        background-color: #f8f9fa;
     }
- 
-    .daily-report-table strong {
-        font-weight: 300;
-        font-size:12px;
+
+    /* ── Sticky Left Column (Dates in body) ── */
+    .daily-report-table tbody td:first-child {
+        position: sticky;
+        left: 0;
+        background-color: #ffffff;
+        z-index: 3;
+        box-shadow: 2px 0 5px -2px rgba(0, 0, 0, 0.15); /* Shadow on the right */
+    }
+
+    /* ── Sticky Left Column (Dates in footer) ── */
+    .daily-report-table tfoot td:first-child {
+        position: sticky;
+        left: 0;
+        background-color: #666 !important; /* Keeps the dark background */
+        z-index: 3;
+        box-shadow: 2px 0 5px -2px rgba(0, 0, 0, 0.15);
     }
 </style>
+
 <br>
 <div class="table-responsive">
     <table class="table table-bordered daily-report-table">
@@ -98,7 +117,9 @@
             </tr>
         </tfoot>
     </table>
+    
     <br>
+    
     <table class="table table-bordered daily-report-table">
         <thead>
             <tr>
@@ -151,6 +172,7 @@
             </tr>
         </tfoot>
     </table>
+    
     <br>
 
     @if ($restusers != '[]')
