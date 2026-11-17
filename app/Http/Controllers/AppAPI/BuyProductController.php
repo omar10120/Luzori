@@ -230,6 +230,7 @@ class BuyProductController extends Controller
             'products.*.id' => 'required|integer|exists:products,id,deleted_at,NULL',
             'products.*.qty' => 'required|integer|min:1',
             'payment_type' => 'required|string|in:' . implode(',', $allowedPayments),
+            'comment' => 'nullable|string',
             'commission' => 'nullable|numeric',
             'discount' => 'nullable|numeric',
             'sales_worker_id' => [
@@ -336,6 +337,7 @@ class BuyProductController extends Controller
 
                 $buyProduct = BuyProduct::create([
                     'payment_type'    => $validated['payment_type'],
+                    'comment'         => $validated['comment'] ?? null,
                     'commission'      => $validated['commission'] ?? null,
                     'discount'        => $validated['discount'] ?? null,
                     'sales_worker_id' => $salesWorkerId,
@@ -663,4 +665,4 @@ class BuyProductController extends Controller
             ]);
         }
     }
-}
+}   

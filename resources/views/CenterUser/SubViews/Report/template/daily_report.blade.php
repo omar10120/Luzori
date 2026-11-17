@@ -142,6 +142,14 @@
                                                             <hr style="margin-top:5px;margin-bottom:5px;">
                                                         @endif
                                                     @endforeach
+                                                    
+                                                    {{-- ✅ PATCHED: Display Buy Product Comment --}}
+                                                    @if (!empty($with_price['comment']))
+                                                        <div style="color: #0066cc; margin-top: 5px;">
+                                                            <i>Comment: {{ $with_price['comment'] }}</i>
+                                                        </div>
+                                                    @endif
+                                                    
                                                     <br>
                                                 @else
                                                     @php
@@ -414,6 +422,14 @@
                                                                 <hr style="margin-top:5px;margin-bottom:5px;">
                                                             @endif
                                                         @endforeach
+                                                        
+                                                        {{-- ✅ PATCHED: Display Buy Product Comment --}}
+                                                        @if (!empty($with_price['comment']))
+                                                            <div style="color: #0066cc; margin-top: 5px;">
+                                                                <i>Comment: {{ $with_price['comment'] }}</i>
+                                                            </div>
+                                                        @endif
+                                                        
                                                         <br>
                                                     @else
                                                         @php
@@ -677,6 +693,14 @@
                                                             <hr style="margin-top:5px;margin-bottom:5px;">
                                                         @endif
                                                     @endforeach
+                                                    
+                                                    {{-- ✅ PATCHED: Display Buy Product Comment --}}
+                                                    @if (!empty($with_price['comment']))
+                                                        <div style="color: #0066cc; margin-top: 5px;">
+                                                            <i>Comment: {{ $with_price['comment'] }}</i>
+                                                        </div>
+                                                    @endif
+                                                    
                                                     <br>
                                                 @else
                                                     @php

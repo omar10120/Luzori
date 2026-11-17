@@ -473,6 +473,7 @@ class DailyReportController extends Controller
                         if ($reportWorkerId && isset($result[$reportWorkerId][$BuyProduct_item->payment_type])) {
                             $result[$reportWorkerId][$BuyProduct_item->payment_type] += $orderPrice;
                             $temp["amount"] = $orderPrice;
+                            $temp["comment"] = $BuyProduct_item->comment;
                             $payments_with_prices[$BuyProduct_item->payment_type][$reportWorkerId][] = $temp;
                         }
                     }
