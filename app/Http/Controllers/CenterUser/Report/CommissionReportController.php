@@ -56,8 +56,28 @@ class CommissionReportController extends Controller
         if (!empty($selected_year)) {
             $temp_users = Worker::query()->orderBy('id');
 
+            // ✅ PATCH: Include workers who had sales or buy_product commissions in this branch
             if ($branch_id_filter) {
-                $temp_users->where('branch_id', $branch_id_filter);
+                $temp_users->where(function ($query) use ($branch_id_filter, $selected_year, $selected_month) {
+                    $query->where('branch_id', $branch_id_filter)
+                        // Include workers who made sales in this branch this month
+                        ->orWhereIn('id', function ($sub) use ($branch_id_filter, $selected_year, $selected_month) {
+                            $sub->select('worker_id')->from('sales')
+                                ->whereYear('created_at', $selected_year)
+                                ->whereMonth('created_at', $selected_month)
+                                ->where('branch_id', $branch_id_filter)
+                                ->whereNotNull('worker_id');
+                        })
+                        // Include workers who got commissions via buy_products in this branch this month
+                        ->orWhereIn('id', function ($sub) use ($branch_id_filter, $selected_year, $selected_month) {
+                            $sub->select('buy_products.worker_id')->from('buy_products')
+                                ->join('sales', 'sales.id', '=', 'buy_products.sale_id')
+                                ->whereYear('buy_products.created_at', $selected_year)
+                                ->whereMonth('buy_products.created_at', $selected_month)
+                                ->where('sales.branch_id', $branch_id_filter)
+                                ->whereNotNull('buy_products.worker_id');
+                        });
+                });
             }
 
             $users = $temp_users->get();
