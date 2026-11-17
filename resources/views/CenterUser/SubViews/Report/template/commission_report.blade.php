@@ -3,12 +3,11 @@
 @endphp
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&family=Poppins:wght@400;700&display=swap" rel="stylesheet">
 <style>
-     .daily-report-table {
+    .daily-report-table {
         width: 100%;
         border-collapse: collapse;
         font-size: 10px;
-        font-family: '{{ $fontFamily }}',
-        sans-serif !important;
+        font-family: '{{ $fontFamily }}', sans-serif !important;
     }
 
     .daily-report-table td,
@@ -22,25 +21,27 @@
     }
 
     .table-responsive {
-
         font-size: 12px;
+        overflow-x: auto; /* Ensures horizontal scrolling works */
     }
-</style><style>
-    .daily-report-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 10px; 
-        font-family: '{{ $fontFamily }}', sans-serif !important;
+
+    /* ── Sticky Date Column ── */
+    .daily-report-table th:first-child,
+    .daily-report-table td:first-child {
+        position: sticky;
+        left: 0;
+        background-color: #ffffff; /* Matches table background */
+        z-index: 2;
+        box-shadow: 2px 0 5px -2px rgba(0, 0, 0, 0.15); /* Adds a subtle shadow on the right */
     }
-    .daily-report-table td, .daily-report-table th {
-        vertical-align: top;
-    }
- 
-    .daily-report-table strong {
-        font-weight: 300;
-        font-size:12px;
+
+    /* Ensure the footer date column stays dark */
+    .daily-report-table tfoot td:first-child {
+        background-color: #666 !important;
+        z-index: 3; /* Stays above the body cells */
     }
 </style>
+
 <br>
 <div class="table-responsive">
     <table class="table table-bordered daily-report-table">
@@ -98,7 +99,9 @@
             </tr>
         </tfoot>
     </table>
+    
     <br>
+    
     <table class="table table-bordered daily-report-table">
         <thead>
             <tr>
@@ -151,6 +154,7 @@
             </tr>
         </tfoot>
     </table>
+    
     <br>
 
     @if ($restusers != '[]')
