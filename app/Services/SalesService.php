@@ -852,6 +852,7 @@ class SalesService
         
         $buyProduct = BuyProduct::create([
             'payment_type' => $paymentType,
+            'comment' => $firstProduct['comment'] ?? null,
             'discount' => $firstProduct['discount'] ?? null,
             'commission' => $commissionValue,
             'commission_type' => $commissionTypeValue,

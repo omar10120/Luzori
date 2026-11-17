@@ -1120,6 +1120,12 @@
                                                 <div class="invalid-feedback"></div>
                                             </div>
                                         </div>
+                                        <div class="col-md-12 mb-2">
+                                        <div class="mb-1">
+                                            <label for="product-comment" class="form-label">{{ __('field.comment') ?? 'Comment' }}</label>
+                                            <textarea id="product-comment" class="form-control" rows="2" placeholder="{{ __('field.notes') ?? 'Add a note...' }}"></textarea>
+                                        </div>
+                                    </div>
                                         <div class="col-md-12">
                                             <button type="button" class="btn btn-primary" id="addProductBtn">
                                                 <i class="ti ti-shopping-cart me-1"></i>
@@ -3306,6 +3312,7 @@
             });
 
             $('#addProductBtn').on('click', function() {
+                const comment = $('#product-comment').val();
                 const selectedProducts = $('#product-products').val();
                 const discount = $('#product-discount').val();
                 const workerId = $('#product-worker').val();
@@ -3400,7 +3407,8 @@
                             worker_id: workerId || null,
                             worker_name: worker ? worker.name : '',
                             commission: commission || null,
-                            commission_type: $('#product-commission-type').val() || null
+                            commission_type: $('#product-commission-type').val() || null,
+                            comment: comment || null
                         });
     
                         productsAdded++;
@@ -3411,11 +3419,13 @@
                         renderCart();
                         // Reset form
                         $('#product-products').val(null).trigger('change');
+                        $('#product-comment').val('');
                         $('#product-discount').val('');
                         $('#product-payment_type').val('');
                         $('#product-sales_worker, #product-worker').val(null).trigger('change');
                         $('#product-commission-div').hide();
                         $('#product-commission').prop('required', false).val('');
+                        
     
                         if (typeof toastr !== 'undefined') {
                             toastr.success(productsAdded + ' {{ __('locale.products') }} added to cart');
@@ -3566,6 +3576,10 @@
                         }
                         if (item.commission) {
                             itemHtml += `<br>{{ __('field.commission') }}: ${item.commission}%`;
+                        }
+                         // ✅ ADD THIS to show the comment
+                        if (item.comment) {
+                            itemHtml += `<br>{{ __('field.comment') }}: ${item.comment}`;
                         }
                         itemHtml += `</small>`;
                     } else if (item.type === 'user_wallet') {

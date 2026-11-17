@@ -25,6 +25,7 @@ class BuyProduct extends Model
         'worker_id',
         'created_by',
         'sale_id',
+        'comment',
     ];
 
     public function sales_worker(): BelongsTo
