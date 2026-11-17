@@ -466,6 +466,7 @@ class SalesDataTable extends DataTable
         $branchId = $user->branch_id ?? null;
 
         // Do not eager-load saleItems.itemable — invalid morph types / soft-deletes can 500 the Ajax request.
+        // Base query naturally excludes soft-deleted sales now (no ->withTrashed() here).
         $query = $model->query()->with([
             'worker' => fn ($q) => $q->withTrashed(),
             'client',
@@ -480,7 +481,7 @@ class SalesDataTable extends DataTable
             'buyProducts.details.product.translation',
             'buyProducts.sales_worker' => fn ($q) => $q->withTrashed(),
             'buyProducts.worker' => fn ($q) => $q->withTrashed(),
-        ])->withTrashed();
+        ]);
 
         if ($branchId !== null && (int) get_user_role() !== 1) {
             $query->where('branch_id', $branchId);
@@ -492,11 +493,12 @@ class SalesDataTable extends DataTable
 
         if ((int) get_user_role() === 1) {
             $recordStatus = request()->input('record_status');
-            if ($recordStatus === 'confirmed') {
-                $query->whereNull('sales.deleted_at');
-            } elseif ($recordStatus === 'deleted') {
+            if ($recordStatus === 'deleted') {
                 $query->onlyTrashed();
+            } elseif ($recordStatus === 'all') {
+                $query->withTrashed();
             }
+            // 'confirmed' or empty relies on the default behavior (excludes deleted)
         }
 
         if (request()->filled('date_from')) {
@@ -1051,6 +1053,3 @@ JS;
         return $this->plural . '_' . date('YmdHis');
     }
 }
-
-
-

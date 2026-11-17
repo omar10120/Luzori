@@ -35,6 +35,8 @@ use App\Models\InventoryMovement;
 use App\Models\Invoice_Settings;
 use App\Models\Center;
 
+use App\Services\InventoryMovementService;
+
 
 
 class SalesService

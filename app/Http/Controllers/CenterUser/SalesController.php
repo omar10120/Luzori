@@ -1057,15 +1057,13 @@ class SalesController extends Controller
         // DELETE BRANCH
         // =================================================================
       // =================================================================
-// DELETE BRANCH
+// =================================================================
+// DELETE BRANCH (SOFT DELETE)
 // =================================================================
 if ($request->action === 'delete') {
 
-    // BuyProduct uses SoftDeletes → load withTrashed + details.
-    // Booking uses SoftDeletes → load withTrashed + details + user.
-    // BookingDetail has NO SoftDeletes → do not call withTrashed on it.
-    // client + saleItems loaded so we can include them in the notification
-    // before the sale is forceDeleted.
+    // Load necessary relationships. We use withTrashed() just in case a relation
+    // was previously deleted, so we can still process stock or notify.
     $sale->load([
         'client',
         'saleItems',
@@ -1078,7 +1076,7 @@ if ($request->action === 'delete') {
         },
     ]);
 
-    // Capture everything we need BEFORE forceDelete.
+    // Capture everything we need for the notification BEFORE delete
     $deletedSaleId    = (int) $sale->id;
     $deletedTotal     = (float) ($sale->total ?? 0);
     $deletedCustomer  = trim(
@@ -1127,27 +1125,15 @@ if ($request->action === 'delete') {
             }
         }
 
-        // ---- 2. Cascade-delete buy products + their details ----
+        // ---- 2. Cascade SOFT-delete buy products ----
         foreach ($sale->buyProducts as $buyProduct) {
-            $detailModel = $buyProduct->details()->getRelated();
-            $detailUsesSoftDeletes = in_array(
-                \Illuminate\Database\Eloquent\SoftDeletes::class,
-                class_uses_recursive($detailModel),
-                true
-            );
-
-            if ($detailUsesSoftDeletes) {
-                $buyProduct->details()->withTrashed()->forceDelete();
-            } else {
-                $buyProduct->details()->delete();
-            }
-
-            $buyProduct->forceDelete();
+            // We do NOT delete $buyProduct->details() because they don't have SoftDeletes.
+            // They will stay in the DB untouched, preserving history for potential restoration.
+            $buyProduct->delete(); 
         }
 
-        // ---- 3. Cascade-delete associated bookings ----
+        // ---- 3. Cascade SOFT-delete associated bookings ----
         foreach ($sale->bookings as $booking) {
-
             try {
                 app(\App\Services\BookingNotificationService::class)
                     ->notifyStatusChange($booking->fresh(['user', 'details']), 'cancelled');
@@ -1159,17 +1145,18 @@ if ($request->action === 'delete') {
                 ]);
             }
 
-            $booking->details()->delete();   // BookingDetail has no SoftDeletes
-            $booking->forceDelete();         // Booking has SoftDeletes
+            // We do NOT delete $booking->details() to preserve history.
+            $booking->delete(); 
         }
 
-        // ---- 4. Delete the sale (saleItems cascade via FK) ----
-        $sale->forceDelete();
+        // ---- 4. SOFT-delete the sale ----
+        // SaleItem does not use SoftDeletes, so these records remain linked to the soft-deleted Sale.
+        $sale->delete();
     });
 
     $saleOtpService->clear();
 
-    // ---- 5. Notify the center (OUTSIDE the transaction) ----
+    // ---- 5. Notify the center ----
     $this->notifySaleDeleted(
         $deletedSaleId,
         $deletedTotal,
@@ -1180,16 +1167,16 @@ if ($request->action === 'delete') {
         (string) ($pending['reason'] ?? '')
     );
 
-    Log::info('Sale deleted after OTP', [
+    Log::info('Sale soft-deleted after OTP', [
         'sale_id'              => $deletedSaleId,
         'reason'               => $pending['reason'] ?? null,
-        'bookings_deleted'     => $deletedBookings,
-        'buy_products_deleted' => $deletedBuyProds,
+        'bookings_soft_deleted'=> $deletedBookings,
+        'buy_products_soft_deleted' => $deletedBuyProds,
         'by'                   => auth('center_user')->id(),
     ]);
 
     return MyHelper::responseJSON(__('admin.done_delete_successfully'), Response::HTTP_OK);
-    }
+}
 
         
             //   pending (from OTP session or bypass) → request → error
