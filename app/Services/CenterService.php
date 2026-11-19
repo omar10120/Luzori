@@ -1020,7 +1020,7 @@ class CenterService
             }
 
             return $center;
-        } catch (Exception $e) {
+        } catch (\Throwable $e) { // Catch ALL errors
             // 🚨 CRITICAL: If DB creation or migration fails, remove the center record
             if (isset($center) && $center->exists) {
                 $center->forceDelete();
@@ -1053,17 +1053,15 @@ class CenterService
             $new_db = DB::statement(
                 "CREATE DATABASE IF NOT EXISTS `$dbName` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
             );
+            if (!$new_db) {
+                throw new \Exception("CREATE DATABASE statement returned false.");
+            }
         } catch (\Exception $dbError) {
             \Log::error('Database creation error', [
                 'dbName' => $dbName,
                 'error'  => $dbError->getMessage(),
-                'code'   => $dbError->getCode(),
             ]);
-            throw new Exception("Database creation failed: " . $dbError->getMessage());
-        }
-
-        if (!$new_db) {
-            throw new Exception("Database creation failed: Statement returned false.");
+            throw new \Exception("Database creation failed: " . $dbError->getMessage());
         }
 
         try {
@@ -1079,18 +1077,27 @@ class CenterService
             DB::reconnect('tenant');
             DB::reconnect('mysql');
 
-            // Run migrations with --force to prevent interactive prompts
-            Artisan::call('migrate', [
+            // 1. Run Migrations
+            $migrateExit = Artisan::call('migrate', [
                 '--path'     => 'database/migrations/centers',
                 '--database' => 'tenant',
                 '--force'    => true,
             ]);
             
-            // 🚨 VERIFY MIGRATIONS ACTUALLY RAN: Check if the main table exists
+            $migrateOutput = Artisan::output();
+            \Log::info('Migration output: ' . $migrateOutput);
+
+            // 🚨 Check if migration command failed (Exit code 1 = failed)
+            if ($migrateExit !== 0) {
+                throw new \Exception("Migration failed with exit code {$migrateExit}: " . $migrateOutput);
+            }
+
+            // 🚨 Check if the tables actually exist after running migrations
             if (!\Illuminate\Support\Facades\Schema::connection('tenant')->hasTable('center_users')) {
-                throw new Exception("Migrations ran but no tables were found. The database is empty.");
+                throw new \Exception("Migrations ran but no tables were found in the tenant database.");
             }
             
+            // 2. Run Seeders
             $seeders = [
                 'WeekDaySeeder',
                 'CenterUserPermissionSeeder',
@@ -1105,11 +1112,24 @@ class CenterService
             ];
 
             foreach ($seeders as $seeder) {
-                Artisan::call('db:seed', [
+                $seedExit = Artisan::call('db:seed', [
                     '--class'    => $seeder,
                     '--database' => 'tenant',
                     '--force'    => true,
                 ]);
+                
+                $seedOutput = Artisan::output();
+                
+                // 🚨 Check if the seeder failed
+                if ($seedExit !== 0) {
+                    throw new \Exception("Seeder {$seeder} failed with exit code {$seedExit}: " . $seedOutput);
+                }
+            }
+
+            // 🚨 3. Verify that the seeder actually created the default center user
+            $userCount = DB::connection('tenant')->table('center_users')->count();
+            if ($userCount === 0) {
+                throw new \Exception("Seeders ran but center_users table is empty.");
             }
 
             $this->seedDefaultBranchTranslations($center);
@@ -1117,7 +1137,7 @@ class CenterService
             $userData = $center->only(['name', 'email', 'country_code', 'phone', 'currency']);
             $userData['created_at'] = now();
             $userData['updated_at'] = now();
-            $userData['password']   = $center->password; // already hashed
+            $userData['password']   = $center->password;
 
             $centerUserId = DB::connection('tenant')
                 ->table('center_users')
@@ -1132,14 +1152,15 @@ class CenterService
             $center->update(['is_setup' => true]);
             \Log::info("Center setup completed successfully: " . $dbName);
             
-        } catch (\Throwable $e) {
+        } catch (\Throwable $e) { // Catch ALL errors
             \Log::error("Center setup failed for {$dbName}: " . $e->getMessage());
             
-            // 🚨 DROP THE FAILED/EMPTY DATABASE SO IT DOESN'T LEAVE JUNK
+            // Restore central DB connection BEFORE dropping the failed database
             Config::set('database.connections.mysql.database', $originalDb);
             DB::purge('mysql');
             DB::reconnect('mysql');
             
+            // 🚨 DROP THE FAILED/EMPTY DATABASE SO IT DOESN'T LEAVE JUNK
             try {
                 DB::statement("DROP DATABASE IF EXISTS `$dbName`");
                 \Log::info("Dropped empty/failed database: {$dbName}");
@@ -1147,15 +1168,17 @@ class CenterService
                 \Log::error("Failed to drop DB {$dbName}: " . $dropEx->getMessage());
             }
             
-            throw new Exception("Center DB setup failed: " . $e->getMessage());
+            throw new \Exception("Center DB setup failed: " . $e->getMessage());
             
         } finally {
-            // Always restore the main database
+            // Always restore the main database connection
             Config::set('database.connections.mysql.database', $originalDb);
             DB::purge('mysql');
             DB::reconnect('mysql');
         }
     }
+
+   
 
 
     public function edit($request)

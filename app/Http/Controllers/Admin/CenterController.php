@@ -102,10 +102,12 @@ class CenterController extends Controller
             } else {
                 return MyHelper::responseJSON(__('admin.an_error_occurred'), Response::HTTP_INTERNAL_SERVER_ERROR);
             }
-        } catch (\Throwable $e) {
+        } catch (\Throwable $e) { // Catch ALL errors
             Log::error('Center create/update failed', [
                 'error' => $e->getMessage(),
             ]);
+            
+            // Return the EXACT error message to the frontend so you know why it failed
             return MyHelper::responseJSON(
                 __('admin.an_error_occurred') . ': ' . $e->getMessage(), 
                 Response::HTTP_INTERNAL_SERVER_ERROR
