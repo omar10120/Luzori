@@ -1020,7 +1020,7 @@ class CenterService
             }
 
             return $center;
-        } catch (\Throwable $e) { // Catch ALL errors
+        } catch (\Throwable $e) { 
             // 🚨 CRITICAL: If DB creation or migration fails, remove the center record
             if (isset($center) && $center->exists) {
                 $center->forceDelete();
@@ -1087,7 +1087,7 @@ class CenterService
             $migrateOutput = Artisan::output();
             \Log::info('Migration output: ' . $migrateOutput);
 
-            // 🚨 Check if migration command failed (Exit code 1 = failed)
+            // 🚨 Check if migration command failed
             if ($migrateExit !== 0) {
                 throw new \Exception("Migration failed with exit code {$migrateExit}: " . $migrateOutput);
             }
@@ -1126,12 +1126,6 @@ class CenterService
                 }
             }
 
-            // 🚨 3. Verify that the seeder actually created the default center user
-            $userCount = DB::connection('tenant')->table('center_users')->count();
-            if ($userCount === 0) {
-                throw new \Exception("Seeders ran but center_users table is empty.");
-            }
-
             $this->seedDefaultBranchTranslations($center);
 
             $userData = $center->only(['name', 'email', 'country_code', 'phone', 'currency']);
@@ -1139,9 +1133,15 @@ class CenterService
             $userData['updated_at'] = now();
             $userData['password']   = $center->password;
 
+            // 3. Insert the default admin user
             $centerUserId = DB::connection('tenant')
                 ->table('center_users')
                 ->insertGetId($userData);
+
+            // 🚨 Check if the insert actually happened
+            if (!$centerUserId || !is_numeric($centerUserId)) {
+                throw new \Exception("Failed to insert the admin user into center_users table.");
+            }
 
             DB::connection('tenant')->table('model_has_roles')->insert([
                 'role_id'    => 1,
@@ -1152,7 +1152,7 @@ class CenterService
             $center->update(['is_setup' => true]);
             \Log::info("Center setup completed successfully: " . $dbName);
             
-        } catch (\Throwable $e) { // Catch ALL errors
+        } catch (\Throwable $e) { 
             \Log::error("Center setup failed for {$dbName}: " . $e->getMessage());
             
             // Restore central DB connection BEFORE dropping the failed database
@@ -1177,9 +1177,6 @@ class CenterService
             DB::reconnect('mysql');
         }
     }
-
-   
-
 
     public function edit($request)
     {
@@ -1245,7 +1242,6 @@ class CenterService
         }
 
         // 🚨 IMPORTANT: Move Setup DB and Sync outside the transaction
-        // Because setupCenterDatabase() purges/reconnects the connection, which breaks active transactions.
         try {
             if ($center->status == 'approve' && !$center->is_setup) {
                 $this->setupCenterDatabase($center);
@@ -1262,6 +1258,13 @@ class CenterService
     
         return $center;
     }
+
+ 
+
+   
+
+
+   
 
     private function seedDefaultBranchTranslations(Center $center): void
     {
