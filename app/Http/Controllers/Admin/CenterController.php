@@ -90,16 +90,26 @@ class CenterController extends Controller
             return abort(401);
         }
 
-        
-        if (isset($request->id)) {
-            $item = $centerService->edit($request->validated());
-        } else {
-            $item = $centerService->add($request->validated());
-        }
-        if ($item) {
-            return MyHelper::responseJSON(__('admin.operation_done_successfully'), $responseCode, $item);
-        } else {
-            return MyHelper::responseJSON(__('admin.an_error_occurred'), Response::HTTP_INTERNAL_SERVER_ERROR);
+        try {
+            if (isset($request->id)) {
+                $item = $centerService->edit($request->validated());
+            } else {
+                $item = $centerService->add($request->validated());
+            }
+            
+            if ($item) {
+                return MyHelper::responseJSON(__('admin.operation_done_successfully'), $responseCode, $item);
+            } else {
+                return MyHelper::responseJSON(__('admin.an_error_occurred'), Response::HTTP_INTERNAL_SERVER_ERROR);
+            }
+        } catch (\Throwable $e) {
+            Log::error('Center create/update failed', [
+                'error' => $e->getMessage(),
+            ]);
+            return MyHelper::responseJSON(
+                __('admin.an_error_occurred') . ': ' . $e->getMessage(), 
+                Response::HTTP_INTERNAL_SERVER_ERROR
+            );
         }
     }
 

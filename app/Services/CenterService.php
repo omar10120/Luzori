@@ -1012,8 +1012,6 @@ class CenterService
             if ($center->status == 'approve') {
                 $this->setupCenterDatabase($center);
 
-                // setupCenterDatabase() silently skips setting is_setup on failure,
-                // so only notify if the tenant DB was actually provisioned.
                 $center->refresh();
 
                 if ($center->is_setup) {
@@ -1023,6 +1021,11 @@ class CenterService
 
             return $center;
         } catch (Exception $e) {
+            // 🚨 CRITICAL: If DB creation fails, remove the center record from the central DB
+            if (isset($center) && $center->exists) {
+                $center->forceDelete();
+            }
+            
             \Log::error('Center creation failed', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
@@ -1056,102 +1059,85 @@ class CenterService
                 'error'  => $dbError->getMessage(),
                 'code'   => $dbError->getCode(),
             ]);
-            $new_db = false;
+            // 🚨 THROW EXCEPTION SO THE ADD() METHOD CAN ROLLBACK
+            throw new Exception("Database creation failed: " . $dbError->getMessage());
         }
 
-        if ($new_db) {
-            try {
-                Config::set('database.connections.tenant.database', $dbName);
-                Config::set('database.connections.tenant.host', env('DB_HOST', '127.0.0.1'));
-                Config::set('database.connections.tenant.port', env('DB_PORT', '3306'));
-                Config::set('database.connections.tenant.username', env('DB_USERNAME', 'luzori'));
-                Config::set('database.connections.tenant.password', env('DB_PASSWORD', 'LuzoriStrongPass'));
-                Config::set('database.connections.mysql.database', $dbName);
+        if (!$new_db) {
+            throw new Exception("Database creation failed: Statement returned false.");
+        }
 
-                DB::purge('tenant');
-                DB::purge('mysql');
-                DB::reconnect('tenant');
-                DB::reconnect('mysql');
+        try {
+            Config::set('database.connections.tenant.database', $dbName);
+            Config::set('database.connections.tenant.host', env('DB_HOST', '127.0.0.1'));
+            Config::set('database.connections.tenant.port', env('DB_PORT', '3306'));
+            Config::set('database.connections.tenant.username', env('DB_USERNAME', 'luzori'));
+            Config::set('database.connections.tenant.password', env('DB_PASSWORD', 'LuzoriStrongPass'));
+            Config::set('database.connections.mysql.database', $dbName);
 
-                Artisan::call('migrate', [
-                    '--path'     => 'database/migrations/centers',
+            DB::purge('tenant');
+            DB::purge('mysql');
+            DB::reconnect('tenant');
+            DB::reconnect('mysql');
+
+            $migrateExit = Artisan::call('migrate', [
+                '--path'     => 'database/migrations/centers',
+                '--database' => 'tenant',
+            ]);
+            
+            if ($migrateExit !== 0) {
+                throw new Exception("Migration failed with exit code: " . $migrateExit);
+            }
+            
+            $seeders = [
+                'WeekDaySeeder',
+                'CenterUserPermissionSeeder',
+                'CenterUserRoleSeeder',
+                'LanguageSeeder',
+                'InfoSeeder',
+                'PageSeeder',
+                'SettingSeeder',
+                'PaymentMethodSeeder',
+                'WorkerSeeder',
+                'BranchSeeder',
+            ];
+
+            foreach ($seeders as $seeder) {
+                $seedExit = Artisan::call('db:seed', [
+                    '--class'    => $seeder,
                     '--database' => 'tenant',
                 ]);
-                
-                $seeders = [
-                    'WeekDaySeeder',
-                    'CenterUserPermissionSeeder',
-                    'CenterUserRoleSeeder',
-                    'LanguageSeeder',
-                    'InfoSeeder',
-                    'PageSeeder',
-                    'SettingSeeder',
-                    'PaymentMethodSeeder',
-                    'WorkerSeeder',
-                    'BranchSeeder',
-                ];
-
-                foreach ($seeders as $seeder) {
-                    Artisan::call('db:seed', [
-                        '--class'    => $seeder,
-                        '--database' => 'tenant',
-                    ]);
+                if ($seedExit !== 0) {
+                    throw new Exception("Seeder {$seeder} failed with exit code: " . $seedExit);
                 }
-
-                $this->seedDefaultBranchTranslations($center);
-
-                $userData = $center->only(['name', 'email', 'country_code', 'phone', 'currency']);
-                $userData['created_at'] = now();
-                $userData['updated_at'] = now();
-                $userData['password']   = $center->password; // already hashed
-
-                $centerUserId = DB::connection('tenant')
-                    ->table('center_users')
-                    ->insertGetId($userData);
-
-                DB::connection('tenant')->table('model_has_roles')->insert([
-                    'role_id'    => 1,
-                    'model_type' => 'App\Models\CenterUser',
-                    'model_id'   => $centerUserId,
-                ]);
-            } finally {
-                Config::set('database.connections.mysql.database', $originalDb);
-                DB::purge('mysql');
-                DB::reconnect('mysql');
             }
 
+            $this->seedDefaultBranchTranslations($center);
+
+            $userData = $center->only(['name', 'email', 'country_code', 'phone', 'currency']);
+            $userData['created_at'] = now();
+            $userData['updated_at'] = now();
+            $userData['password']   = $center->password; // already hashed
+
+            $centerUserId = DB::connection('tenant')
+                ->table('center_users')
+                ->insertGetId($userData);
+
+            DB::connection('tenant')->table('model_has_roles')->insert([
+                'role_id'    => 1,
+                'model_type' => 'App\Models\CenterUser',
+                'model_id'   => $centerUserId,
+            ]);
+            
             $center->update(['is_setup' => true]);
             \Log::info("Center setup completed successfully: " . $dbName);
+            
+        } finally {
+            Config::set('database.connections.mysql.database', $originalDb);
+            DB::purge('mysql');
+            DB::reconnect('mysql');
         }
     }
-
-    private function seedDefaultBranchTranslations(Center $center): void
-    {
-        $branchId = DB::connection('tenant')
-            ->table('branches')
-            ->orderBy('id')
-            ->value('id');
-
-        if (!$branchId) {
-            return;
-        }
-
-        $centerName = $center->name;
-        $now = now();
-
-        foreach (['en', 'ar'] as $locale) {
-            DB::connection('tenant')->table('branch_translations')->insert([
-                'branch_id'  => $branchId,
-                'name'       => $centerName,
-                'city'       => $centerName,
-                'address'    => $centerName,
-                'locale'     => $locale,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ]);
-        }
-    }
-
 
     public function edit($request)
     {
@@ -1159,10 +1145,6 @@ class CenterService
         try {
             $center = Center::withTrashed()->find($request['id']);
     
-            // === Snapshot BEFORE any mutation ===
-            // Captured so we can diff after commit (inside the transaction, the
-            // notification path would purge/reconnect the connection and silently
-            // break the transaction, so we deliberately defer it to after commit).
             $oldSnapshot = [
                 'name'         => (string) ($center->name ?? ''),
                 'email'        => (string) ($center->email ?? ''),
@@ -1210,18 +1192,7 @@ class CenterService
                 $center->assignRole($request['role']);
             }
 
-            if ($center->status == 'approve' && !$center->is_setup) {
-                $this->setupCenterDatabase($center);
-            }
-    
-            $this->syncTenantCenterUser($center, $oldEmail, $request);
-
             DB::commit();
-    
-            // === Notify AFTER commit (best-effort, never blocks the response) ===
-            $this->notifyCenterEdited($center->fresh(), $oldSnapshot);
-    
-            return $center;
         } catch (Exception $e) {
             DB::rollBack();
             \Log::error('Center update failed', [
@@ -1230,7 +1201,55 @@ class CenterService
             ]);
             throw $e;
         }
+
+        // 🚨 IMPORTANT: Move Setup DB and Sync outside the transaction
+        // Because setupCenterDatabase() purges/reconnects the connection, which breaks active transactions.
+        try {
+            if ($center->status == 'approve' && !$center->is_setup) {
+                $this->setupCenterDatabase($center);
+            }
+            $this->syncTenantCenterUser($center, $oldEmail, $request);
+        } catch (Exception $e) {
+            \Log::error('Center DB setup failed after update', [
+                'error' => $e->getMessage(),
+            ]);
+            throw $e;
+        }
+    
+        $this->notifyCenterEdited($center->fresh(), $oldSnapshot);
+    
+        return $center;
     }
+
+    private function seedDefaultBranchTranslations(Center $center): void
+    {
+        $branchId = DB::connection('tenant')
+            ->table('branches')
+            ->orderBy('id')
+            ->value('id');
+
+        if (!$branchId) {
+            return;
+        }
+
+        $centerName = $center->name;
+        $now = now();
+
+        foreach (['en', 'ar'] as $locale) {
+            DB::connection('tenant')->table('branch_translations')->insert([
+                'branch_id'  => $branchId,
+                'name'       => $centerName,
+                'city'       => $centerName,
+                'address'    => $centerName,
+                'locale'     => $locale,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
+        }
+    }
+
+
+   
 
     /**
      * Mirror center profile onto the tenant center_users row that shares the previous email.
