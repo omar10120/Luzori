@@ -1021,7 +1021,7 @@ class CenterService
 
             return $center;
         } catch (Exception $e) {
-            // 🚨 CRITICAL: If DB creation fails, remove the center record from the central DB
+            // 🚨 CRITICAL: If DB creation or migration fails, remove the center record
             if (isset($center) && $center->exists) {
                 $center->forceDelete();
             }
@@ -1059,7 +1059,6 @@ class CenterService
                 'error'  => $dbError->getMessage(),
                 'code'   => $dbError->getCode(),
             ]);
-            // 🚨 THROW EXCEPTION SO THE ADD() METHOD CAN ROLLBACK
             throw new Exception("Database creation failed: " . $dbError->getMessage());
         }
 
@@ -1080,13 +1079,16 @@ class CenterService
             DB::reconnect('tenant');
             DB::reconnect('mysql');
 
-            $migrateExit = Artisan::call('migrate', [
+            // Run migrations with --force to prevent interactive prompts
+            Artisan::call('migrate', [
                 '--path'     => 'database/migrations/centers',
                 '--database' => 'tenant',
+                '--force'    => true,
             ]);
             
-            if ($migrateExit !== 0) {
-                throw new Exception("Migration failed with exit code: " . $migrateExit);
+            // 🚨 VERIFY MIGRATIONS ACTUALLY RAN: Check if the main table exists
+            if (!\Illuminate\Support\Facades\Schema::connection('tenant')->hasTable('center_users')) {
+                throw new Exception("Migrations ran but no tables were found. The database is empty.");
             }
             
             $seeders = [
@@ -1103,13 +1105,11 @@ class CenterService
             ];
 
             foreach ($seeders as $seeder) {
-                $seedExit = Artisan::call('db:seed', [
+                Artisan::call('db:seed', [
                     '--class'    => $seeder,
                     '--database' => 'tenant',
+                    '--force'    => true,
                 ]);
-                if ($seedExit !== 0) {
-                    throw new Exception("Seeder {$seeder} failed with exit code: " . $seedExit);
-                }
             }
 
             $this->seedDefaultBranchTranslations($center);
@@ -1132,12 +1132,31 @@ class CenterService
             $center->update(['is_setup' => true]);
             \Log::info("Center setup completed successfully: " . $dbName);
             
+        } catch (\Throwable $e) {
+            \Log::error("Center setup failed for {$dbName}: " . $e->getMessage());
+            
+            // 🚨 DROP THE FAILED/EMPTY DATABASE SO IT DOESN'T LEAVE JUNK
+            Config::set('database.connections.mysql.database', $originalDb);
+            DB::purge('mysql');
+            DB::reconnect('mysql');
+            
+            try {
+                DB::statement("DROP DATABASE IF EXISTS `$dbName`");
+                \Log::info("Dropped empty/failed database: {$dbName}");
+            } catch (\Exception $dropEx) {
+                \Log::error("Failed to drop DB {$dbName}: " . $dropEx->getMessage());
+            }
+            
+            throw new Exception("Center DB setup failed: " . $e->getMessage());
+            
         } finally {
+            // Always restore the main database
             Config::set('database.connections.mysql.database', $originalDb);
             DB::purge('mysql');
             DB::reconnect('mysql');
         }
     }
+
 
     public function edit($request)
     {
