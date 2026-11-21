@@ -1098,6 +1098,50 @@ if ($request->action === 'delete') {
 
     \Illuminate\Support\Facades\DB::transaction(function () use ($sale, $branchId, $movementService) {
 
+    
+        // =================================================================
+        // ---- 0. RESTORE WALLET BALANCES ----
+        // =================================================================
+        
+        // 0a. Reverse User Wallet (Coupon) Purchases
+        // If the user bought a coupon in this sale, remove the amount from their wallet balance
+        foreach ($sale->saleItems as $saleItem) {
+            if ($saleItem->item_type === 'user_wallet') {
+                $userWallet = \App\Models\UserWallet::find($saleItem->itemable_id);
+                if ($userWallet) {
+                    $user = \App\Models\User::find($userWallet->user_id);
+                    if ($user) {
+                        // Deduct the amount that was added when the coupon was bought
+                        $user->decrement('wallet', $userWallet->amount);
+                    }
+                    
+                    // Mark the original coupon wallet as unused again
+                    $wallet = \App\Models\Wallet::find($userWallet->wallet_id);
+                    if ($wallet) {
+                        $wallet->update(['used' => false]);
+                    }
+                    
+                    // Optionally delete the UserWallet record if needed
+                    // $userWallet->delete(); 
+                }
+            }
+        }
+
+        // 0b. Refund Wallet Payments
+        // If the user paid for services/products using their wallet balance, refund it
+        $bookingIds = $sale->bookings->pluck('id')->toArray();
+        if (!empty($bookingIds)) {
+            $userUsedWallets = \App\Models\UserUsedWallet::whereIn('booking_id', $bookingIds)->get();
+            foreach ($userUsedWallets as $usedWallet) {
+                $user = \App\Models\User::find($usedWallet->user_id);
+                if ($user) {
+                    $user->increment('wallet', $usedWallet->amount);
+                }
+                // Remove the usage record
+                $usedWallet->delete();
+            }
+        }
+        
         // ---- 1. Restore product stock ----
         if ($branchId) {
             foreach ($sale->buyProducts as $buyProduct) {
