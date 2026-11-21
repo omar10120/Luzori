@@ -200,10 +200,10 @@ class UserWalletController extends Controller
                     'used' => 1
                 ]);
 
-                $user = User::find($request->user_id);
-                $user->update([
-                    'wallet' => $user->wallet + $wallet->amount
-                ]);
+                // $user = User::find($request->user_id);
+                // $user->update([
+                //     'wallet' => $user->wallet + $wallet->amount
+                // ]);
                 return MyHelper::responseJSON('redirect_to_home', Response::HTTP_CREATED, route('center_user.wallets.index'));
             } else {
                 return MyHelper::responseJSON(__('admin.an_error_occurred'), Response::HTTP_INTERNAL_SERVER_ERROR);

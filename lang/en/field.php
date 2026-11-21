@@ -150,6 +150,7 @@ return [
     'auther'                        => 'Auther',
     'footer_text'                   => 'Footer Text',
     'wallet'                        => 'Coupon',
+    'wallet_users_table'            => 'wallet',
     'sales_cash_cp'                 => 'Sales Cash (CP)',
     'sales_visa_cp'                 => 'Sales Visa (CP)',
     'invoice_info'                  => 'Invoice Info',

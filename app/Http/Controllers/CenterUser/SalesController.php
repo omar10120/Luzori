@@ -300,14 +300,14 @@ class SalesController extends Controller
                 'id'              => $wallet->id,
                 'code'            => $wallet->code,
                 'clients'         => $clients,
-                'amount'          => number_format($remainingAmount, 2) . ' ' . $currency, // ✅ Show remaining
+                'amount'          => number_format($remainingAmount, 2) . ' ' . $currency, 
                 'invoiced_amount' => number_format((float) $wallet->invoiced_amount, 2) . ' ' . $currency,
                 'start_at'        => $wallet->start_at ? \Carbon\Carbon::parse($wallet->start_at)->format('Y-m-d') : '-',
                 'end_at'          => $wallet->end_at   ? \Carbon\Carbon::parse($wallet->end_at)->format('Y-m-d')   : '-',
                 'created_by'      => $wallet->created_by_user->name ?? '-',
                 'used'            => (bool) $wallet->used,
                 'raw' => [
-                    'amount'          => $remainingAmount, // ✅ Send remaining amount to the cart JS
+                    'amount'          => $remainingAmount, 
                     'original_amount' => $wallet->amount,
                     'invoiced_amount' => $wallet->invoiced_amount,
                     'start_at'        => $wallet->start_at,

@@ -146,6 +146,8 @@ return [
     'auther'                        => 'الكاتب',
     'footer_text'                   => 'نص الفوتر',
     'wallet'                        => 'الكوبون',
+    'wallet_users_table'            => 'المحفظة',
+    
     'sales_cash_cp'                 => 'Sales Cash (CP)',
     'sales_visa_cp'                 => 'Sales Visa (CP)',
     'invoice_info'                  => 'معلومات الفاتورة',

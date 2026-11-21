@@ -4,6 +4,8 @@ namespace App\Datatables\CenterUser;
 
 use App\Enums\DeleteActionEnum;
 use App\Models\User;
+use App\Models\UserWallet;
+use App\Models\UserUsedWallet;
 use Illuminate\Database\Eloquent\Builder as QueryBuilder;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\Html\Builder as HtmlBuilder;
@@ -42,8 +44,16 @@ class UserDataTable extends DataTable
             ->editColumn('email', function ($row) {
                 return e($row->email ?: '—');
             })
+       
+            ->editColumn('total_wallets', function ($row) {
+                $assigned = (float) ($row->assigned_wallets ?? 0);
+                $used = (float) ($row->used_wallets ?? 0);
+                $remaining = $assigned - $used;
+                
+                return '<span class="lz-wallet-num">' . e(number_format($remaining, 2)) . '</span>';
+            })
             ->editColumn('wallet', function ($row) {
-                return '<span class="lz-wallet-num">' . e($row->wallet ?? 0) . '</span>';
+                return '<span class="lz-wallet-num">' . e(number_format((float) ($row->wallet ?? 0), 2)) . '</span>';
             })
             ->editColumn('status', function ($row) {
                 $checked = $row->deleted_at ? '' : 'checked';
@@ -66,15 +76,28 @@ class UserDataTable extends DataTable
                     ? '<span class="lz-yes-badge">' . e(__('field.yes')) . '</span>'
                     : '<span class="lz-no-badge">' . e(__('field.no')) . '</span>';
             })
-            ->rawColumns(['action', 'status', 'first_name', 'packages', 'is_default', 'wallet'], true)
+            ->rawColumns(['action', 'status', 'first_name', 'packages', 'is_default', 'total_wallets', 'wallet'], true)
             ->setRowId('id');
     }
 
     public function query(User $model): QueryBuilder
     {
-        return $model->query()->withTrashed()->with(['media', 'packages' => function ($q) {
-            $q->where('status', 'active');
-        }])->orderBy($this->plural . '.id', 'DESC');
+        return $model->query()
+            ->withTrashed()
+            // ✅ UPDATED: Subqueries to calculate Assigned and Used wallets separately
+            ->addSelect([
+                'assigned_wallets' => UserWallet::selectRaw('COALESCE(SUM(amount), 0)')
+                    ->whereColumn('user_id', 'users.id')
+                    ->whereNull('deleted_at'), // Ignore soft-deleted assigned wallets
+                    
+                'used_wallets' => UserUsedWallet::selectRaw('COALESCE(SUM(amount), 0)')
+                    ->whereColumn('user_id', 'users.id')
+                    ->whereNull('deleted_at')  // Ignore soft-deleted used records
+            ])
+            ->with(['media', 'packages' => function ($q) {
+                $q->where('status', 'active');
+            }])
+            ->orderBy($this->plural . '.id', 'DESC');
     }
 
     public function html(): HtmlBuilder
@@ -146,7 +169,10 @@ class UserDataTable extends DataTable
             Column::computed('first_name')->searchable(true)->title(__('field.name'))->responsivePriority(1)->addClass('all'),
             Column::make('email')->searchable(true)->title(__('field.email'))->responsivePriority(2)->addClass('all'),
             Column::computed('phone')->searchable(true)->title(__('field.phone'))->responsivePriority(2)->addClass('all'),
-            Column::make('wallet')->searchable(true)->title(__('field.wallet'))->responsivePriority(2)->addClass('all'),
+            
+            Column::computed('total_wallets')->searchable(false)->title(__('field.wallet'))->responsivePriority(2)->addClass('all'),
+            Column::make('wallet')->searchable(true)->title(__('field.wallet_users_table'))->responsivePriority(2)->addClass('all'),
+            
             Column::computed('packages')->searchable(false)->title(__('locale.packages'))->responsivePriority(2)->addClass('all'),
             Column::computed('is_default')->searchable(false)->title(__('field.is_default'))->responsivePriority(3)->addClass('all'),
             Column::computed('status')->searchable(false)->title(__('field.status'))->visible(false),
