@@ -19,7 +19,6 @@ return [
     'code'                          => 'الرمز',
     'question'                      => 'السؤال',
     'answer'                        => 'الجواب',
-    `'status'`                        => 'الحالة',
     'status'                        => 'الحالة',
     'statusWeb'                     => 'حالة اللوحة',
     'statusMobile'                  => 'حالة التطبيق',
