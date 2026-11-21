@@ -149,7 +149,12 @@ class SalesService
             'created_by_user:id,name',
             'users' => function ($q) {
                 $q->select('id', 'wallet_id', 'user_id')
-                ->with(['user:id,first_name,last_name']);
+                ->with([
+                    'user:id,first_name,last_name',
+                    'used' => function($uq) { 
+                        $uq->select('id', 'wallet_id', 'user_id', 'amount');
+                    }
+                ]);
             },
         ])
             ->whereNull('deleted_at')
@@ -1078,9 +1083,9 @@ class SalesService
 
         // Update user's wallet balance (only if UserWallet is newly created)
         $user->refresh();
-        $user->update([
-            'wallet' => ($user->wallet ?? 0) + ($userWallet->amount ?? 0)
-        ]);
+        // $user->update([
+        //     'wallet' => ($user->wallet ?? 0) + ($userWallet->amount ?? 0)
+        // ]);
 
         return $userWallet;
     }

@@ -290,19 +290,25 @@ class SalesController extends Controller
                 ->filter()
                 ->values()
                 ->all();
+                $usedAmount = $wallet->users->sum(function($uw) {
+                    return $uw->used->sum('amount');
+                });
+            $remainingAmount = max(0, (float)$wallet->amount - (float)$usedAmount);
+
     
             return [
                 'id'              => $wallet->id,
                 'code'            => $wallet->code,
                 'clients'         => $clients,
-                'amount'          => number_format((float) $wallet->amount, 2) . ' ' . $currency,
+                'amount'          => number_format($remainingAmount, 2) . ' ' . $currency, // ✅ Show remaining
                 'invoiced_amount' => number_format((float) $wallet->invoiced_amount, 2) . ' ' . $currency,
                 'start_at'        => $wallet->start_at ? \Carbon\Carbon::parse($wallet->start_at)->format('Y-m-d') : '-',
                 'end_at'          => $wallet->end_at   ? \Carbon\Carbon::parse($wallet->end_at)->format('Y-m-d')   : '-',
                 'created_by'      => $wallet->created_by_user->name ?? '-',
                 'used'            => (bool) $wallet->used,
                 'raw' => [
-                    'amount'          => $wallet->amount,
+                    'amount'          => $remainingAmount, // ✅ Send remaining amount to the cart JS
+                    'original_amount' => $wallet->amount,
                     'invoiced_amount' => $wallet->invoiced_amount,
                     'start_at'        => $wallet->start_at,
                     'end_at'          => $wallet->end_at,
@@ -1060,168 +1066,167 @@ class SalesController extends Controller
 // =================================================================
 // DELETE BRANCH (SOFT DELETE)
 // =================================================================
+if ($request->action === 'delete') {
+
+    // Load necessary relationships. We use withTrashed() just in case a relation
+    // was previously deleted, so we can still process stock or notify.
+    $sale->load([
+        'client',
+        'saleItems',
+        'branch',
+        'buyProducts' => function ($q) {
+            $q->withTrashed()->with('details');
+        },
+        'bookings' => function ($q) {
+            $q->withTrashed()->with(['details', 'user']);
+        },
+    ]);
+
+    // Capture everything we need for the notification BEFORE delete
+    $deletedSaleId    = (int) $sale->id;
+    $deletedTotal     = (float) ($sale->total ?? 0);
+    $deletedCustomer  = trim(
+        (string) ($sale->client?->first_name ?? '') . ' ' .
+        (string) ($sale->client?->last_name ?? '')
+    );
+    if ($deletedCustomer === '') {
+        $deletedCustomer = (string) ($sale->client?->name ?? '');
+    }
+    if ($deletedCustomer === '') {
+        $deletedCustomer = (string) ($sale->client?->phone ?? 'Unknown customer');
+    }
+    $deletedItemsCount = (int) $sale->saleItems->count();
+    $deletedBookings   = $sale->bookings->pluck('id')->values()->all();
+    $deletedBuyProds   = $sale->buyProducts->pluck('id')->values()->all();
+
+    $branchId        = (int) ($sale->branch_id ?? 0);
+    $movementService = app(\App\Services\InventoryMovementService::class);
+
+    \Illuminate\Support\Facades\DB::transaction(function () use ($sale, $branchId, $movementService) {
+
+    
         // =================================================================
-        // DELETE BRANCH (SOFT DELETE)
+        // ---- 0. RESTORE WALLET BALANCES ----
         // =================================================================
-        if ($request->action === 'delete') {
-
-            // Load necessary relationships. We use withTrashed() just in case a relation
-            // was previously deleted, so we can still process stock or notify.
-            $sale->load([
-                'client',
-                'saleItems',
-                'branch',
-                'buyProducts' => function ($q) {
-                    $q->withTrashed()->with('details');
-                },
-                'bookings' => function ($q) {
-                    $q->withTrashed()->with(['details', 'user']);
-                },
-            ]);
-
-            // Capture everything we need for the notification BEFORE delete
-            $deletedSaleId    = (int) $sale->id;
-            $deletedTotal     = (float) ($sale->total ?? 0);
-            $deletedCustomer  = trim(
-                (string) ($sale->client?->first_name ?? '') . ' ' .
-                (string) ($sale->client?->last_name ?? '')
-            );
-            if ($deletedCustomer === '') {
-                $deletedCustomer = (string) ($sale->client?->name ?? '');
-            }
-            if ($deletedCustomer === '') {
-                $deletedCustomer = (string) ($sale->client?->phone ?? 'Unknown customer');
-            }
-            $deletedItemsCount = (int) $sale->saleItems->count();
-            $deletedBookings   = $sale->bookings->pluck('id')->values()->all();
-            $deletedBuyProds   = $sale->buyProducts->pluck('id')->values()->all();
-
-            $branchId        = (int) ($sale->branch_id ?? 0);
-            $movementService = app(\App\Services\InventoryMovementService::class);
-
-            \Illuminate\Support\Facades\DB::transaction(function () use ($sale, $branchId, $movementService) {
-
-                // =================================================================
-                // ---- 0. RESTORE WALLET BALANCES & DELETE USED WALLET RECORDS ----
-                // =================================================================
-                
-                // 0a. Reverse User Wallet (Coupon) Purchases
-                // If the customer bought a coupon in this sale, remove the amount from their wallet balance
-                foreach ($sale->saleItems as $saleItem) {
-                    if ($saleItem->item_type === 'user_wallet') {
-                        $userWallet = \App\Models\UserWallet::find($saleItem->itemable_id);
-                        if ($userWallet) {
-                            $user = \App\Models\User::find($userWallet->user_id);
-                            if ($user) {
-                                // Deduct the amount that was added when the coupon was bought
-                                $user->decrement('wallet', $userWallet->amount);
-                            }
-                            
-                            // Mark the original coupon wallet as unused again
-                            $wallet = \App\Models\Wallet::find($userWallet->wallet_id);
-                            if ($wallet) {
-                                $wallet->update(['used' => false]);
-                            }
-                            
-                            // Permanently delete the UserWallet assignment record
-                            $userWallet->forceDelete();
-                        }
-                    }
-                }
-
-                // 0b. Refund Wallet Payments & Delete Used Wallet Logs
-                // If the customer paid using their wallet balance, refund the money and delete the logs
-                $bookingIds = $sale->bookings->pluck('id')->toArray();
-                if (!empty($bookingIds)) {
-                    $userUsedWallets = \App\Models\UserUsedWallet::whereIn('booking_id', $bookingIds)->get();
-                    foreach ($userUsedWallets as $usedWallet) {
-                        $user = \App\Models\User::find($usedWallet->user_id);
-                        if ($user) {
-                            // Add the money back to the user's wallet
-                            $user->increment('wallet', $usedWallet->amount);
-                        }
+        
+        // 0a. Reverse User Wallet (Coupon) Purchases
+        // If the user bought a coupon in this sale, remove the amount from their wallet balance
+        foreach ($sale->saleItems as $saleItem) {
+            if ($saleItem->item_type === 'user_wallet') {
+                $userWallet = \App\Models\UserWallet::find($saleItem->itemable_id);
+                if ($userWallet) {
+                    $user = \App\Models\User::find($userWallet->user_id);
+                    if ($user) {
+                        // Deduct the amount that was added when the coupon was bought
+                        $user->decrement('wallet', $userWallet->amount);
                     }
                     
-                    // Permanently delete the UserUsedWallet records
-                    \App\Models\UserUsedWallet::whereIn('booking_id', $bookingIds)->forceDelete();
-                }
-                // =================================================================
-
-                // ---- 1. Restore product stock ----
-                if ($branchId) {
-                    foreach ($sale->buyProducts as $buyProduct) {
-                        $qtyByProduct = $buyProduct->details->groupBy('product_id')->map->count();
-
-                        foreach ($qtyByProduct as $productId => $qty) {
-                            $productBranch = \App\Models\ProductBranch::where('product_id', $productId)
-                                ->where('branch_id', $branchId)
-                                ->first();
-
-                            if ($productBranch) {
-                                $productBranch->increment('stock_quantity', (int) $qty);
-                            }
-
-                            $movementService->record(
-                                (int) $productId,
-                                $branchId,
-                                (int) $qty,
-                                \App\Models\InventoryMovement::TYPE_SALE_DELETED,
-                                $sale,
-                                null,
-                                'Sale deleted #' . $sale->id . ' — stock restored'
-                            );
-                        }
+                    // Mark the original coupon wallet as unused again
+                    $wallet = \App\Models\Wallet::find($userWallet->wallet_id);
+                    if ($wallet) {
+                        $wallet->update(['used' => false]);
                     }
+                    
+                    // Optionally delete the UserWallet record if needed
+                    // $userWallet->delete(); 
                 }
-
-                // ---- 2. Cascade SOFT-delete buy products ----
-                foreach ($sale->buyProducts as $buyProduct) {
-                    $buyProduct->delete(); 
-                }
-
-                // ---- 3. Cascade SOFT-delete associated bookings ----
-                foreach ($sale->bookings as $booking) {
-                    try {
-                        app(\App\Services\BookingNotificationService::class)
-                            ->notifyStatusChange($booking->fresh(['user', 'details']), 'cancelled');
-                    } catch (\Throwable $e) {
-                        Log::warning('Booking cancel notification failed on sale delete', [
-                            'sale_id'    => $sale->id,
-                            'booking_id' => $booking->id,
-                            'error'      => $e->getMessage(),
-                        ]);
-                    }
-
-                    $booking->delete(); 
-                }
-
-                // ---- 4. SOFT-delete the sale ----
-                $sale->delete();
-            });
-
-            $saleOtpService->clear();
-
-            // ---- 5. Notify the center ----
-            $this->notifySaleDeleted(
-                $deletedSaleId,
-                $deletedTotal,
-                $deletedCustomer,
-                $deletedItemsCount,
-                $deletedBookings,
-                $deletedBuyProds,
-                (string) ($pending['reason'] ?? '')
-            );
-
-            Log::info('Sale soft-deleted after OTP', [
-                'sale_id'              => $deletedSaleId,
-                'reason'               => $pending['reason'] ?? null,
-                'bookings_soft_deleted'=> $deletedBookings,
-                'buy_products_soft_deleted' => $deletedBuyProds,
-                'by'                   => auth('center_user')->id(),
-            ]);
-
-            return MyHelper::responseJSON(__('admin.done_delete_successfully'), Response::HTTP_OK);
+            }
         }
+
+        // 0b. Refund Wallet Payments
+        // If the user paid for services/products using their wallet balance, refund it
+        $bookingIds = $sale->bookings->pluck('id')->toArray();
+        if (!empty($bookingIds)) {
+            $userUsedWallets = \App\Models\UserUsedWallet::whereIn('booking_id', $bookingIds)->get();
+            foreach ($userUsedWallets as $usedWallet) {
+                $user = \App\Models\User::find($usedWallet->user_id);
+                if ($user) {
+                    $user->increment('wallet', $usedWallet->amount);
+                }
+                // Remove the usage record
+                $usedWallet->delete();
+            }
+        }
+        
+        // ---- 1. Restore product stock ----
+        if ($branchId) {
+            foreach ($sale->buyProducts as $buyProduct) {
+                $qtyByProduct = $buyProduct->details->groupBy('product_id')->map->count();
+
+                foreach ($qtyByProduct as $productId => $qty) {
+                    $productBranch = \App\Models\ProductBranch::where('product_id', $productId)
+                        ->where('branch_id', $branchId)
+                        ->first();
+
+                    if ($productBranch) {
+                        $productBranch->increment('stock_quantity', (int) $qty);
+                    }
+
+                    $movementService->record(
+                        (int) $productId,
+                        $branchId,
+                        (int) $qty,
+                        \App\Models\InventoryMovement::TYPE_SALE_DELETED,
+                        $sale,
+                        null,
+                        'Sale deleted #' . $sale->id . ' — stock restored'
+                    );
+                }
+            }
+        }
+
+        // ---- 2. Cascade SOFT-delete buy products ----
+        foreach ($sale->buyProducts as $buyProduct) {
+            // We do NOT delete $buyProduct->details() because they don't have SoftDeletes.
+            // They will stay in the DB untouched, preserving history for potential restoration.
+            $buyProduct->delete(); 
+        }
+
+        // ---- 3. Cascade SOFT-delete associated bookings ----
+        foreach ($sale->bookings as $booking) {
+            try {
+                app(\App\Services\BookingNotificationService::class)
+                    ->notifyStatusChange($booking->fresh(['user', 'details']), 'cancelled');
+            } catch (\Throwable $e) {
+                Log::warning('Booking cancel notification failed on sale delete', [
+                    'sale_id'    => $sale->id,
+                    'booking_id' => $booking->id,
+                    'error'      => $e->getMessage(),
+                ]);
+            }
+
+            // We do NOT delete $booking->details() to preserve history.
+            $booking->delete(); 
+        }
+
+        // ---- 4. SOFT-delete the sale ----
+        // SaleItem does not use SoftDeletes, so these records remain linked to the soft-deleted Sale.
+        $sale->delete();
+    });
+
+    $saleOtpService->clear();
+
+    // ---- 5. Notify the center ----
+    $this->notifySaleDeleted(
+        $deletedSaleId,
+        $deletedTotal,
+        $deletedCustomer,
+        $deletedItemsCount,
+        $deletedBookings,
+        $deletedBuyProds,
+        (string) ($pending['reason'] ?? '')
+    );
+
+    Log::info('Sale soft-deleted after OTP', [
+        'sale_id'              => $deletedSaleId,
+        'reason'               => $pending['reason'] ?? null,
+        'bookings_soft_deleted'=> $deletedBookings,
+        'buy_products_soft_deleted' => $deletedBuyProds,
+        'by'                   => auth('center_user')->id(),
+    ]);
+
+    return MyHelper::responseJSON(__('admin.done_delete_successfully'), Response::HTTP_OK);
+}
 
         
             //   pending (from OTP session or bypass) → request → error
