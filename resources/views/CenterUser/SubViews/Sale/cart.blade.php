@@ -498,7 +498,6 @@
         .lz-sales-cart-page .lz-pick-amount {
             font-weight: 700;
             color: #1a6b5a;
-            color: #1a6b5a;
             white-space: nowrap;
         }
         .lz-sales-cart-page .lz-pick-empty,
@@ -522,6 +521,10 @@
         .lz-sales-cart-page .nav-tabs.nav-fill .nav-link {
             font-size: 0.8rem;
             padding: 0.55rem 0.35rem !important;
+        }
+
+        .lz-sales-cart-page #wallets-table-body .lz-pick-amount {
+            color: #dc3545;
         }
         @media (max-width: 576px) {
             .lz-sales-cart-page .lz-pick-item {
@@ -3850,14 +3853,17 @@
                                 var wallet = item.wallet;
                                 var balance = parseFloat(item.remaining_balance || 0);
                                 var serialNumber = item.serial_number || (wallet && wallet.serial_number) || '';
-                                var walletLabel = (wallet.code || '') + ' [' + balance.toFixed(2) + ' AED]';
+                                var ballance_wallet = ' [' + balance.toFixed(2) + ' AED]';
+                                
+                                var walletLabel = (wallet.code || '') ;
                                 if (serialNumber) {
                                     walletLabel += ' — {{ __('field.serial_number') }}: ' + serialNumber;
                                 }
                                 
                                 walletsElement += `<div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-2">
                                     <div class="form-check wallet-item" style="padding: 10px;color: #fff;background-color: #428bca;border-color: #357ebd;border-radius: 4px;min-height: 50px;display: flex;align-items: center;gap: 10px;font-size: 10px;width: 100%;">
-                                        <label class="form-check-label flex-grow-1 text-start" for="booking-wallets${wallet.id}" style="word-break: break-word;white-space: normal;overflow: hidden;min-width: 0;margin: 0;">
+                                        <label class="form-check-label flex-grow-1 text-start" for="booking-wallets${wallet.id}" style="word-break: break-word;white-space: normal;overflow: hidden;min-width: 0;margin: 0; ">
+                                            <span style="color : #dc3545">${ballance_wallet}</span>
                                             ${walletLabel}
                                         </label>
                                         <input class="form-check-input flex-shrink-0 booking-wallet-radio" type="radio" name="discount_id" data-name="discount_id" value="${wallet.id}" id="booking-wallets${wallet.id}" data-wallet-amount="${balance}" style="margin-top: 0;width: 18px;height: 18px;flex-shrink: 0;">
