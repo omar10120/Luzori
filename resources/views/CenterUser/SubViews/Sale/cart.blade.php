@@ -1970,6 +1970,15 @@
                             $pager.hide();
                             return;
                         }
+                        
+                        const validRows = rows.filter(wallet => parseFloat(wallet.raw?.amount ?? 0) > 0);
+
+                        if (!validRows.length) {
+                            $body.html(`<div class="lz-pick-empty">{{ __('field.no_coupons_available') }}</div>`);
+                            $pager.hide();
+                            return;
+                        }
+
 
                         const html = rows.map((wallet) => `
                             <div class="lz-pick-item">

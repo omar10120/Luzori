@@ -274,10 +274,7 @@ class SalesController extends Controller
             return abort(403);
         }
     
-        // Pick the authenticated user from either guard
         $centerUser = auth('center_api')->user() ?? auth('center_user')->user();
-    
-        // Role 1 = admin / super admin → see ALL wallets (no branch filter)
         $isAdmin = ((int) get_user_role() === 1);
         $perPage = max(1, min(50, (int) $request->input('per_page', 10)));
     
@@ -290,12 +287,13 @@ class SalesController extends Controller
                 ->filter()
                 ->values()
                 ->all();
-                $usedAmount = $wallet->users->sum(function($uw) {
-                    return $uw->used->sum('amount');
-                });
+
+            // Calculate remaining balance
+            $usedAmount = $wallet->users->sum(function($uw) {
+                return $uw->used->sum('amount');
+            });
             $remainingAmount = max(0, (float)$wallet->amount - (float)$usedAmount);
 
-    
             return [
                 'id'              => $wallet->id,
                 'code'            => $wallet->code,
@@ -314,7 +312,13 @@ class SalesController extends Controller
                     'end_at'          => $wallet->end_at,
                 ],
             ];
-        });
+        })->filter(function ($wallet) {
+            // ✅ ADDED: Only keep wallets that have a balance greater than 0
+            return $wallet['raw']['amount'] > 0;
+        })->values();
+
+        // Replace the paginator's collection with the filtered results
+        $wallets->setCollection($rows);
     
         return response()->json([
             'data' => $rows,
