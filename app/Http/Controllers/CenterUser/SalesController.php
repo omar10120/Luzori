@@ -1119,21 +1119,26 @@ if ($request->action === 'delete') {
             if ($saleItem->item_type === 'user_wallet') {
                 $userWallet = \App\Models\UserWallet::find($saleItem->itemable_id);
                 if ($userWallet) {
-                    $user = \App\Models\User::find($userWallet->user_id);
-                    if ($user) {
-                        // Deduct the amount that was added when the coupon was bought
-                        $user->decrement('wallet', $userWallet->amount);
-                    }
-                    
                     // Mark the original coupon wallet as unused again
                     $wallet = \App\Models\Wallet::find($userWallet->wallet_id);
                     if ($wallet) {
                         $wallet->update(['used' => false]);
                     }
                     
-                    // Optionally delete the UserWallet record if needed
-                    // $userWallet->delete(); 
+                    // ✅ Soft delete the UserWallet record so it's excluded from the purchased total
+                    $userWallet->delete(); 
                 }
+            }
+        }
+
+        // 0b. Refund Wallet Payments
+        // If the user paid for services/products using their wallet balance, refund it
+        $bookingIds = $sale->bookings->pluck('id')->toArray();
+        if (!empty($bookingIds)) {
+            $userUsedWallets = \App\Models\UserUsedWallet::whereIn('booking_id', $bookingIds)->get();
+            foreach ($userUsedWallets as $usedWallet) {
+                // ✅ Delete the usage record. This automatically restores the user's dynamic balance.
+                $usedWallet->forceDelete(); 
             }
         }
 
