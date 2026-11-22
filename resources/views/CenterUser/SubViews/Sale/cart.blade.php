@@ -3863,7 +3863,7 @@
                                 walletsElement += `<div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-2">
                                     <div class="form-check wallet-item" style="padding: 10px;color: #fff;background-color: #428bca;border-color: #357ebd;border-radius: 4px;min-height: 50px;display: flex;align-items: center;gap: 10px;font-size: 10px;width: 100%;">
                                         <label class="form-check-label flex-grow-1 text-start" for="booking-wallets${wallet.id}" style="word-break: break-word;white-space: normal;overflow: hidden;min-width: 0;margin: 0; ">
-                                            <span style="color : #dc3545">${ballance_wallet}</span>
+                                            <span style="color : #FFC857">${ballance_wallet}</span>
                                             ${walletLabel}
                                         </label>
                                         <input class="form-check-input flex-shrink-0 booking-wallet-radio" type="radio" name="discount_id" data-name="discount_id" value="${wallet.id}" id="booking-wallets${wallet.id}" data-wallet-amount="${balance}" style="margin-top: 0;width: 18px;height: 18px;flex-shrink: 0;">
