@@ -498,6 +498,7 @@
         .lz-sales-cart-page .lz-pick-amount {
             font-weight: 700;
             color: #1a6b5a;
+            color: #1a6b5a;
             white-space: nowrap;
         }
         .lz-sales-cart-page .lz-pick-empty,
