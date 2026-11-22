@@ -7,8 +7,7 @@
         width: 100%;
         border-collapse: collapse;
         font-size: 10px;
-        font-family: '{{ $fontFamily }}',
-        sans-serif !important;
+        font-family: '{{ $fontFamily }}', sans-serif !important;
     }
 
     .daily-report-table td,
@@ -23,6 +22,41 @@
 
     .table-responsive {
         font-size: 12px;
+        overflow-x: auto; /* Enables horizontal scroll */
+    }
+
+    /* ── Sticky Top Row (Headers) ── */
+    .table-responsive table thead th {
+        position: sticky;
+        top: 0;
+        background-color: #f8f9fa; /* Light background to cover content */
+        z-index: 2;
+        box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.15);
+    }
+
+    /* ── Sticky Top-Left Corner (Date Header) ── */
+    .table-responsive table thead th:first-child {
+        z-index: 4; /* Stays on top of everything */
+        left: 0;
+        background-color: #f8f9fa;
+    }
+
+    /* ── Sticky Left Column (Dates in body) ── */
+    .table-responsive table tbody td:first-child {
+        position: sticky;
+        left: 0;
+        background-color: #ffffff;
+        z-index: 3;
+        box-shadow: 2px 0 5px -2px rgba(0, 0, 0, 0.15);
+    }
+
+    /* ── Sticky Left Column (Dates in footer) ── */
+    .table-responsive table tfoot td:first-child {
+        position: sticky;
+        left: 0;
+        background-color: #666 !important; /* Keeps dark background */
+        z-index: 3;
+        box-shadow: 2px 0 5px -2px rgba(0, 0, 0, 0.15);
     }
 </style>
 <br>
