@@ -88,11 +88,11 @@ class UserDataTable extends DataTable
             ->addSelect([
                 'assigned_wallets' => UserWallet::selectRaw('COALESCE(SUM(amount), 0)')
                     ->whereColumn('user_id', 'users.id')
-                    ->whereNull('deleted_at'), // Ignore soft-deleted assigned wallets
+                    ->whereNull('deleted_at'), 
                     
                 'used_wallets' => UserUsedWallet::selectRaw('COALESCE(SUM(amount), 0)')
                     ->whereColumn('user_id', 'users.id')
-                    ->whereNull('deleted_at')  // Ignore soft-deleted used records
+                    ->whereNull('deleted_at')  
             ])
             ->with(['media', 'packages' => function ($q) {
                 $q->where('status', 'active');
