@@ -292,8 +292,12 @@ class SalesService
 
                 // --- 2. Process Packages ---
                 if (!empty($item['packages']) && is_array($item['packages'])) {
-                    // ✅ FIXED: Use the cart's selected client_id directly
-                    $userId = $cartData['client_id'] ?? null;
+                    $user = null;
+                    if (!empty($item['client_mobile'])) {
+                        $user = User::where('phone', $item['client_mobile'])->first();
+                    }
+                    $userId = $user ? $user->id : ($cartData['client_id'] ?? null);
+
 
                     foreach ($item['packages'] as $pkg) {
                         $userPackage = \App\Models\UserPackage::create([
@@ -722,6 +726,10 @@ class SalesService
             $bookingTotalCalc = (float) ($item['price'] ?? 0);
         }
         $discountAmountAED = max(0, $bookingOriginalTotal - $bookingTotalCalc);
+         // Handle wallet payment - deduct booking amount from wallet balance
+         if (!empty($item['wallet_id'])) {
+            $this->deductWalletBalance($item['wallet_id'], $item['client_mobile'], $bookingTotal, $booking->id, $branchId);
+            }
     
         // Handle wallet payment - deduct booking amount from wallet balance
         if (!empty($item['wallet_id']) && !empty($clientId)) {
@@ -743,8 +751,8 @@ class SalesService
                 UserUsedCard::create([
                     'code' => $membership->membership_no,
                     'amount' => $membership->percent,
-                    // 'user_id' => $userId,
-                    'user_id' => $clientId, 
+                    'user_id' => $userId,
+                    // 'user_id' => $clientId, 
                     'membershipcards_id' => $membership->id,
                     'booking_id' => $booking->id,
                 ]);
@@ -753,7 +761,7 @@ class SalesService
     
         // Handle discount code - create UserUsedDiscount record for daily report tracking
         if (!empty($item['discount_id'])) {
-            $this->recordDiscountUsage($item['discount_id'], $clientId, $booking->id, $discountAmountAED);
+            $this->recordDiscountUsage($item['discount_id'], $item['client_mobile'] ?? null, $booking->id, $discountAmountAED);
         }
     
         return $booking;
@@ -762,18 +770,20 @@ class SalesService
     /**
      * Deduct booking amount from wallet balance
      */
-    private function deductWalletBalance($walletId, $userId, $bookingAmount, $bookingId, $branchId)
+    private function deductWalletBalance($walletId, $clientMobile, $bookingAmount, $bookingId, $branchId)
     {
         $wallet = Wallet::find($walletId);
         if (!$wallet) {
             return; // Wallet not found, skip deduction
         }
 
-        if (empty($userId)) {
-            return; // No user ID, can't find user
+         // Find user by phone number
+         if (empty($clientMobile)) {
+            return; // No mobile number, can't find user
         }
 
-        $user = User::find($userId);
+
+        $user = User::where('phone', $clientMobile)->first();
         if (!$user) {
             return; // User not found, skip deduction
         }
@@ -810,13 +820,21 @@ class SalesService
             return; // Discount not found, skip
         }
 
+        $userId = null;
+        if (!empty($clientMobile)) {
+            $user = User::where('phone', $clientMobile)->first();
+            if ($user) {
+                $userId = $user->id;
+            }
+        }
+
         // ✅ FIXED: Removed the phone lookup that was overwriting the correct $userId
 
         UserUsedDiscount::create([
             'code' => $discount->code,
             'amount' => $discount->amount,
             'type' => $discount->type,
-            'user_id' => $userId, // Now correctly uses $clientId passed from the booking
+            'user_id' => $userId,
             'discountcode_id' => $discount->id,
             'booking_id' => $bookingId,
         ]);
