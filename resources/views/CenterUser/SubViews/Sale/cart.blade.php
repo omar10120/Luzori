@@ -1933,9 +1933,11 @@
 
             // Store service prices from loaded services
             let servicesData = @json($servicesData ?? new \stdClass());
+            
 
             // Initialize Select2
             $('#booking-services, #product-products, #product-sales_worker, #product-worker').select2();
+
 
             // Lazy-load heavy wallet/package tabs only when opened
             let walletsTabLoaded = false;
@@ -1954,12 +1956,8 @@
                 walletsPage = page || walletsPage || 1;
                 const $body = $('#wallets-table-body');
                 const $pager = $('#wallets-pager');
-                $body.html(`
-                    <div class="lz-pick-loading wallets-loading-row">
-                        <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
-                        {{ __('general.loading') ?? 'Loading...' }}
-                    </div>
-                `);
+                $body.html(`<div class="lz-pick-loading wallets-loading-row"><div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>{{ __('general.loading') ?? 'Loading...' }}</div>`);
+
 
                 $.getJSON('{{ route('center_user.sales.cart.wallets') }}', { page: walletsPage, per_page: 10 })
                     .done(function (res) {
@@ -2912,31 +2910,20 @@
                     return false;
                 }
 
-                // name and mobile are already in bookingWizardData from Step 2 transition
-                // But if not set, try to get from global customer variables
-                if (!bookingWizardData.name && selectedCustomerName) {
+                // ✅ FIXED: Always sync bookingWizardData with the latest selected customer from Step 3
+                if (selectedCustomerId && selectedCustomerName) {
                     bookingWizardData.name = selectedCustomerName;
                     bookingWizardData.mobile = selectedCustomerPhone;
+                } else {
+                    alert('Customer information missing. Please select a customer.');
+                    bookingStepper.to(0);
+                    return false;
                 }
                 
                 bookingWizardData.notes = ($('#booking-notes').val() || '').trim();
 
                 var paymentType = $('#booking-payment_type').val();
                 const $paymentTypeField = $('#booking-payment_type');
-
-                // Check both bookingWizardData.name and selectedCustomerName/selectedCustomerId
-                if (!bookingWizardData.name && !selectedCustomerName && !selectedCustomerId) {
-                    alert('Customer information missing. Please select a customer.');
-                    // Redirect to Step 1 (Services) - index 0
-                    bookingStepper.to(0);
-                    return false;
-                }
-                
-                // Ensure bookingWizardData has customer info
-                if (!bookingWizardData.name && selectedCustomerName) {
-                    bookingWizardData.name = selectedCustomerName;
-                    bookingWizardData.mobile = selectedCustomerPhone;
-                }
 
                 if ((!bookingWizardData.services || bookingWizardData.services.length === 0) && (!bookingWizardData.packages || bookingWizardData.packages.length === 0)) {
                     alert('Please complete step 2 (Booking Details) first.');
@@ -3325,12 +3312,12 @@
             });
 
             $('#addProductBtn').on('click', function() {
-                const comment = $('#product-comment').val();
                 const selectedProducts = $('#product-products').val();
                 const discount = $('#product-discount').val();
                 const workerId = $('#product-worker').val();
                 const commission = $('#product-commission').val();
                 const paymentType = $('#product-payment_type').val();
+                const comment = $('#product-comment').val();
                 const $paymentTypeField = $('#product-payment_type');
 
                 // Validation
@@ -3338,6 +3325,16 @@
                     if (typeof toastr !== 'undefined') {
                         toastr.error('{{ __('field.please_select_product') }}');
                     }
+                    return;
+                }
+
+
+                // Commission is required if worker is selected
+                if (workerId && workerId != '' && !commission) {
+                    if (typeof toastr !== 'undefined') {
+                        toastr.error('{{ __('field.commission_is_required_when_worker_selected') }}');
+                    }
+                    $('#product-commission').focus();
                     return;
                 }
 
@@ -3432,13 +3429,12 @@
                         renderCart();
                         // Reset form
                         $('#product-products').val(null).trigger('change');
-                        $('#product-comment').val('');
                         $('#product-discount').val('');
                         $('#product-payment_type').val('');
                         $('#product-sales_worker, #product-worker').val(null).trigger('change');
                         $('#product-commission-div').hide();
                         $('#product-commission').prop('required', false).val('');
-                        
+                        $('#product-comment').val('');
     
                         if (typeof toastr !== 'undefined') {
                             toastr.success(productsAdded + ' {{ __('locale.products') }} added to cart');
@@ -3590,10 +3586,11 @@
                         if (item.commission) {
                             itemHtml += `<br>{{ __('field.commission') }}: ${item.commission}%`;
                         }
-                         // ✅ ADD THIS to show the comment
+                        
                         if (item.comment) {
                             itemHtml += `<br>{{ __('field.comment') }}: ${item.comment}`;
                         }
+                        
                         itemHtml += `</small>`;
                     } else if (item.type === 'user_wallet') {
                         itemHtml += `<small class="text-muted">
@@ -3853,17 +3850,14 @@
                                 var wallet = item.wallet;
                                 var balance = parseFloat(item.remaining_balance || 0);
                                 var serialNumber = item.serial_number || (wallet && wallet.serial_number) || '';
-                                var ballance_wallet = ' [' + balance.toFixed(2) + ' AED]';
-                                
-                                var walletLabel = (wallet.code || '') ;
+                                var walletLabel = (wallet.code || '') + ' [' + balance.toFixed(2) + ' AED]';
                                 if (serialNumber) {
                                     walletLabel += ' — {{ __('field.serial_number') }}: ' + serialNumber;
                                 }
                                 
                                 walletsElement += `<div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-2">
                                     <div class="form-check wallet-item" style="padding: 10px;color: #fff;background-color: #428bca;border-color: #357ebd;border-radius: 4px;min-height: 50px;display: flex;align-items: center;gap: 10px;font-size: 10px;width: 100%;">
-                                        <label class="form-check-label flex-grow-1 text-start" for="booking-wallets${wallet.id}" style="word-break: break-word;white-space: normal;overflow: hidden;min-width: 0;margin: 0; ">
-                                            <span style="color : #FFC857">${ballance_wallet}</span>
+                                        <label class="form-check-label flex-grow-1 text-start" for="booking-wallets${wallet.id}" style="word-break: break-word;white-space: normal;overflow: hidden;min-width: 0;margin: 0;">
                                             ${walletLabel}
                                         </label>
                                         <input class="form-check-input flex-shrink-0 booking-wallet-radio" type="radio" name="discount_id" data-name="discount_id" value="${wallet.id}" id="booking-wallets${wallet.id}" data-wallet-amount="${balance}" style="margin-top: 0;width: 18px;height: 18px;flex-shrink: 0;">
@@ -4970,6 +4964,10 @@
                 selectedCustomerName = userName;
                 selectedCustomerPhone = userPhone;
 
+                // ✅ FIXED: Update the booking wizard data so Step 4 uses the NEW customer
+                bookingWizardData.name = selectedCustomerName;
+                bookingWizardData.mobile = selectedCustomerPhone;
+
                 updateCustomerDisplay(userId, userName, userEmail || userPhone, userImage , userPhone);
                 $('#selectCustomerModal').modal('hide');
                 $('#select-customer-dropdown').val(null).trigger('change');
@@ -5649,6 +5647,7 @@
             $(document).on('click', '#save-quick-coupon-btn', function(e) {
                 e.preventDefault();
                 const $form = $('#quick-add-coupon-form');
+                
                 const $btn = $(this);
                 const originalHtml = $btn.html();
                 
