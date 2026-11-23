@@ -18,7 +18,45 @@ class WalletDataTable extends DataTable
 
     public function dataTable(QueryBuilder $query): EloquentDataTable
     {
-        return (new EloquentDataTable($query))
+        $dataTable = new EloquentDataTable($query);
+        $dataTable->filter(function ($query) {
+            $keyword = trim((string) request()->input('search.value'));
+            if ($keyword === '') {
+                return;
+            }
+
+            $like = '%' . mb_strtolower($keyword) . '%';
+            $digits = preg_replace('/\D+/', '', $keyword);
+
+            $query->where(function ($q) use ($like, $digits) {
+                $q->whereRaw('LOWER(CAST(wallets.id AS CHAR)) LIKE ?', [$like])
+                    ->orWhereRaw('LOWER(wallets.serial_number) LIKE ?', [$like])
+                    ->orWhereRaw('LOWER(wallets.code) LIKE ?', [$like])
+                    ->orWhereRaw('LOWER(CAST(wallets.amount AS CHAR)) LIKE ?', [$like])
+                    ->orWhereHas('users', function ($walletUserQ) use ($like, $digits) {
+                        $walletUserQ->where(function ($inner) use ($like, $digits) {
+                            $inner->whereRaw('LOWER(users_wallets.serial_number) LIKE ?', [$like])
+                                ->orWhereHas('user', function ($userQ) use ($like, $digits) {
+                                    $userQ->whereRaw('LOWER(first_name) LIKE ?', [$like])
+                                        ->orWhereRaw('LOWER(last_name) LIKE ?', [$like])
+                                        ->orWhereRaw('LOWER(CONCAT(IFNULL(first_name, ""), " ", IFNULL(last_name, ""))) LIKE ?', [$like])
+                                        ->orWhereRaw('LOWER(phone) LIKE ?', [$like])
+                                        ->orWhereRaw('LOWER(CONCAT(IFNULL(country_code, ""), IFNULL(phone, ""))) LIKE ?', [$like]);
+
+                                    if ($digits !== '') {
+                                        $userQ->orWhere('phone', 'like', '%' . $digits . '%')
+                                            ->orWhereRaw(
+                                                "CONCAT(IFNULL(REPLACE(country_code, '+', ''), ''), IFNULL(phone, '')) LIKE ?",
+                                                ['%' . $digits . '%']
+                                            );
+                                    }
+                                });
+                        });
+                    });
+            });
+        });
+
+        return $dataTable
             ->editColumn('action', function ($item) {
                 $route = 'center_user.' . $this->plural;
                 $id = $item->id;
