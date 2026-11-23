@@ -8,8 +8,10 @@ use App\Models\Booking;
 use App\Models\Branch;
 use App\Models\Vacation;
 use App\Models\Worker;
+use App\Models\Sale;
 use Illuminate\Support\Facades\DB;
 use niklasravnsborg\LaravelPdf\Facades\Pdf;
+use Carbon\Carbon; 
 
 class StaffReportController extends Controller
 {
@@ -149,24 +151,44 @@ class StaffReportController extends Controller
                                         continue;
                                     }
                                     $price = $detail->price;
-                                    $tip = $detail->tip;
+                         
                                     $result['price'][$booking_date_str][$detail->worker_id] += $price;
-                                    $result['tips'][$booking_date_str][$detail->worker_id] += $tip;
+                                   
                                 }
                             }
                         }
                     }
                 }
+                
+            
+                $temp_sales_tips = Sale::query()
+                    ->whereYear('created_at', $selected_year)
+                    ->whereMonth('created_at', $selected_month)
+                    ->whereNotNull('worker_id')
+                    ->where('tip', '>', 0);
+
+                if ($branch_id_filter) {
+                    $temp_sales_tips->where('branch_id', $branch_id_filter);
+                }
+
+                foreach ($temp_sales_tips->get(['worker_id', 'tip', 'created_at']) as $sale) {
+                    $sale_date_str = Carbon::parse($sale->created_at)->format('Y-m-d');
+                    if (!isset($result['tips'][$sale_date_str][$sale->worker_id])) {
+                        continue;
+                    }
+                    $result['tips'][$sale_date_str][$sale->worker_id] += (float) $sale->tip;
+                }
             }
 
-            if (!empty($result)) {
-                foreach ($result as $date => $workers_list) {
+          
+            if (!empty($result) && isset($result['price'])) {
+                foreach ($result['price'] as $date => $workers_list) {
                     foreach ($workers_list as $worker_id => $price) {
                         if (isset($memberShipCardsUsers[$date][$worker_id])) {
-                            $result[$date][$worker_id] -= $memberShipCardsUsers[$date][$worker_id];
+                            $result['price'][$date][$worker_id] -= $memberShipCardsUsers[$date][$worker_id];
                         }
                         if (isset($discountUsers[$date][$worker_id])) {
-                            $result[$date][$worker_id] -= $discountUsers[$date][$worker_id];
+                            $result['price'][$date][$worker_id] -= $discountUsers[$date][$worker_id];
                         }
                     }
                 }
