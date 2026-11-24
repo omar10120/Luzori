@@ -53,11 +53,19 @@ class InvoiceSettingController extends Controller
         if (!auth('center_user')->user()->can($can, 'center_api')) {
             return abort(403);
         }
-
+    
         $data = $request->validated();
+    
+        if (isset($data['emails']) && is_array($data['emails'])) {
+            $data['emails'] = array_values(array_filter(
+                array_map(fn ($e) => is_string($e) ? trim($e) : '', $data['emails']),
+                fn ($e) => $e !== ''
+            ));
+        }
+    
         if ($data['sms_allow'] && !$this->hasSmsPackage()) {
             session(['pending_invoice_settings' => $data]);
-
+    
             return response()->json([
                 'success' => false,
                 'requires_sms_payment' => true,
@@ -66,9 +74,9 @@ class InvoiceSettingController extends Controller
                 'callback_url' => route('center_user.subscription.sms.callback'),
             ], 402);
         }
-
+    
         $item = $this->invoiceSettingsService->update($data);
-
+    
         if ($item) {
             return MyHelper::responseJSON(
                 'redirect_to_home',
@@ -76,7 +84,7 @@ class InvoiceSettingController extends Controller
                 route('center_user.invoice_settings.index')
             );
         }
-
+    
         return MyHelper::responseJSON(__('admin.an_error_occurred'), Response::HTTP_INTERNAL_SERVER_ERROR);
     }
 

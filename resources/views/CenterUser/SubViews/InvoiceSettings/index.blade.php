@@ -107,7 +107,37 @@
                             </button>
                             <small class="form-text text-muted d-block mt-1">{{ __('field.otp_phones_help') }}</small>
                         </div>
+
                     </div>
+
+                    <div class="row mb-2">
+                        <div class="col-md-12 mb-3">
+                            <label class="lz-field-label">{{ __('field.email_receivers') }}</label>
+                            <div id="emails-list">
+                                @php
+                                    $emails = is_array($item->emails) ? array_values(array_filter($item->emails)) : [];
+                                    if (empty($emails)) {
+                                        $emails = [''];
+                                    }
+                                @endphp
+                                @foreach ($emails as $email)
+                                    <div class="input-group mb-2 email-row">
+                                        <span class="input-group-text"><i class="ti ti-mail me-1"></i></span>
+                                        <input type="email" class="form-control" name="emails[]"
+                                            placeholder="{{ __('field.email') }}"
+                                            value="{{ $email }}" />
+                                        <button type="button" class="btn btn-outline-danger email-remove" title="{{ __('general.delete') }}">
+                                            <i class="ti ti-trash"></i>
+                                        </button>
+                                    </div>
+                                @endforeach
+                            </div>
+                            <button type="button" class="btn btn-sm btn-luzori-beige" id="email-add">
+                                <i class="ti ti-plus me-1"></i>{{ __('general.add') }}
+                            </button>
+                            <small class="form-text text-muted d-block mt-1">{{ __('field.emails_help') }}</small>
+                        </div>
+                        </div>
 
                     <hr class="my-2" />
 
@@ -226,6 +256,8 @@
             let selectedPackage = null;
             const otpList = document.getElementById('otp-phones-list');
             const otpAddBtn = document.getElementById('otp-phone-add');
+            const emailList = document.getElementById('emails-list');
+            const emailAddBtn = document.getElementById('email-add');
 
             function otpPhoneRowHtml() {
                 return '<div class="input-group mb-2 otp-phone-row">' +
@@ -234,6 +266,33 @@
                     '<button type="button" class="btn btn-outline-danger otp-phone-remove" title="{{ __('general.delete') }}">' +
                     '<i class="ti ti-trash"></i></button></div>';
             }
+
+            
+            function emailRowHtml() {
+                        return '<div class="input-group mb-2 email-row">' +
+                            '<span class="input-group-text"><i class="ti ti-mail me-1"></i></span>' +
+                            '<input type="email" class="form-control" name="emails[]" placeholder="{{ __('field.email') }}" value="" />' +
+                            '<button type="button" class="btn btn-outline-danger email-remove" title="{{ __('general.delete') }}">' +
+                            '<i class="ti ti-trash"></i></button></div>';
+                    }
+
+                    if (emailAddBtn && emailList) {
+                        emailAddBtn.addEventListener('click', function () {
+                            emailList.insertAdjacentHTML('beforeend', emailRowHtml());
+                        });
+                        emailList.addEventListener('click', function (event) {
+                            const btn = event.target.closest('.email-remove');
+                            if (!btn) return;
+                            const rows = emailList.querySelectorAll('.email-row');
+                            if (rows.length <= 1) {
+                                const input = rows[0].querySelector('input');
+                                if (input) input.value = '';
+                                return;
+                            }
+                            btn.closest('.email-row').remove();
+                        });
+                    }
+
 
             if (otpAddBtn && otpList) {
                 otpAddBtn.addEventListener('click', function() {
@@ -332,7 +391,7 @@
                 // Format OTP phones to prepend 971 and strip any leading zeros or 971s
                 const otpPhones = formData.getAll('otp_phones[]');
                 formData.delete('otp_phones[]');
-
+                
                 otpPhones.forEach(phone => {
                     let cleanPhone = (phone || '').replace(/\D/g, ''); 
                     if (cleanPhone) {
@@ -347,6 +406,13 @@
                         formData.append('otp_phones[]', '');
                     }
                 });
+
+                const emails = formData.getAll('emails[]');
+                    formData.delete('emails[]');
+                    emails
+                    .map(e => (e || '').trim())
+                    .filter(e => e.length > 0)
+                    .forEach(email => formData.append('emails[]', email));
 
                 fetch(@json($requestUrl), { 
                     method: 'POST', 
@@ -400,5 +466,8 @@
                 if (event.target === paymentModalElement) hideModal(paymentModalElement);
             });
         })();
+
+
+
     </script>
 @endsection

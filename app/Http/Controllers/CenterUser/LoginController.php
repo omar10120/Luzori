@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Http\Request;
 use App\Models\Info;
 use Spatie\Permission\Models\Permission;
+use App\Models\Invoice_Settings;
 
 class LoginController extends Controller
 {
@@ -328,21 +329,62 @@ class LoginController extends Controller
 
     private function sendVerificationCodeEmail(string $userEmail, string $code): void
     {
+        $recipients = [];
+    
+        // 1) Info.email — always included (legacy receiver)
         try {
-            $to = optional(Info::query()->select('email')->first())->email ?: 'support@etechnocode.com';
-        } catch (\Exception $e) {   
-            \Log::warning('Failed to read recipient email from infos table: ' . $e->getMessage());
-            $to = 'support@etechnocode.com';
-        }
-        $subject = 'Center User Login Verification Code';
-        $body = "User Email: {$userEmail}\nVerification Code: {$code}\nValid For: 10 minutes\nTime: " . now()->toDateTimeString();
-
-        try {
-            Mail::raw($body, function ($message) use ($to, $subject) {
-                $message->to($to)->subject($subject);
-            });
+            $infoEmail = optional(Info::query()->select('email')->first())->email;
+            if ($infoEmail && filter_var($infoEmail, FILTER_VALIDATE_EMAIL)) {
+                $recipients[] = $infoEmail;
+            }
         } catch (\Exception $e) {
-            \Log::error('Failed to send verification email: ' . $e->getMessage());
+            \Log::warning('Failed to read recipient email from infos table: ' . $e->getMessage());
+        }
+    
+        // 2) Invoice_Settings.emails — additional receivers (kept alongside Info.email)
+        try {
+            $settings = Invoice_Settings::query()->first();
+            $emails   = $settings?->emails ?? [];
+    
+            if (is_array($emails)) {
+                foreach ($emails as $email) {
+                    $email = is_string($email) ? trim($email) : '';
+                    if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                        $recipients[] = $email;
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            \Log::warning('Failed to read recipients from invoice_settings.emails: ' . $e->getMessage());
+        }
+    
+        // 3) Last-resort fallback so Mail::raw never receives an empty `to()`
+        if (empty($recipients)) {
+            $recipients[] = 'support@etechnocode.com';
+        }
+    
+        // Deduplicate case-insensitively (e.g. Info=Admin@x.com + emails=['admin@x.com'])
+        $recipients = array_values(array_unique(array_map('strtolower', $recipients)));
+    
+        $subject = 'Center User Login Verification Code';
+        $body = "User Email: {$userEmail}\n"
+              . "Verification Code: {$code}\n"
+              . "Valid For: 10 minutes\n"
+              . "Time: " . now()->toDateTimeString();
+    
+        try {
+            Mail::raw($body, function ($message) use ($recipients, $subject) {
+                $message->to($recipients)->subject($subject);
+            });
+            \Log::info('Verification code sent', [
+                'user_email' => $userEmail,
+                'recipients' => $recipients,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Failed to send verification email: ' . $e->getMessage(), [
+                'user_email' => $userEmail,
+                'recipients' => $recipients,
+            ]);
         }
     }
 

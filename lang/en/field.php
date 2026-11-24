@@ -557,5 +557,10 @@ return [
     'comment'                         => 'comment',
     'total_prices_5_percent'          => '5 of total prices',
     'total_tips_7_5_percent'          => '%7.5 of total tips',
+    'email_receivers' => 'Email receivers',
+    'emails_help'     => 'Emails that will receive a copy of every invoice.',
+    'email'           => 'Email address',
+    'add'    => 'Add',
+    'delete' => 'Delete',
 
 ];

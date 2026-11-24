@@ -24,6 +24,8 @@ class InvoiceSettingRequest extends FormRequest
             'auto_print_sale'=> 'boolean',
             'sms_allow'      => 'boolean',
             'allow_notification'      => 'boolean',
+            'emails'       => ['nullable', 'array'],       
+            'emails.*'     => ['nullable', 'email', 'max:255'], 
 
         ];
     }
