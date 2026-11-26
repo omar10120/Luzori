@@ -344,6 +344,13 @@ private function sendVerificationCode(string $userEmail, string $code): void
  *   • every SMS send fails
  *   • the SMS gateway throws
  */
+/**
+ * Send the verification code as an SMS to every configured otp_phones entry.
+ * Falls back to email when:
+ *   • otp_phones is empty / not an array
+ *   • every SMS send fails (either returns success=false, or throws)
+ *   • the SMS gateway class cannot be resolved
+ */
 private function sendVerificationCodeSms(?Invoice_Settings $settings, string $userEmail, string $code): void
 {
     $phones = $settings?->otp_phones ?? [];
@@ -356,15 +363,16 @@ private function sendVerificationCodeSms(?Invoice_Settings $settings, string $us
 
     $message = "Your verification code: {$code}. Valid for 10 minutes. User: {$userEmail}";
 
+    // Match SMSGatewayService's expected lang codes:
+    //   1 = English, 2 = Arabic  (same as SaleOtpService)
+    $lang = app()->getLocale() === 'ar' ? 2 : 1;
+
     try {
-        // ── ADAPT THIS ONE LINE to your SMS gateway ──────────────────────
-        // If your only SMS sender is SaleOtpService, either extract a shared
-        // SmsService out of it, or expose a `sendRaw(string $to, string $msg)`
-        // method on SaleOtpService and call it here.
-        $sms = app(\App\Services\SmsService::class);
-        // ────────────────────────────────────────────────────────────────
+        /** @var \App\Services\SMSGatewayService $smsGateway */
+        $smsGateway = app(\App\Services\SMSGatewayService::class);
 
         $sent = 0;
+
         foreach ($phones as $rawPhone) {
             $to = preg_replace('/\D+/', '', (string) $rawPhone);
             if ($to === '') {
@@ -372,10 +380,21 @@ private function sendVerificationCodeSms(?Invoice_Settings $settings, string $us
             }
 
             try {
-                $sms->send($to, $message);
-                $sent++;
+                $result = $smsGateway->sendSMS($to, $message, $lang);
+
+                if (!empty($result['success'])) {
+                    $sent++;
+                } else {
+                    // API-level failure — no exception thrown, so log explicitly
+                    \Log::warning("SMS OTP to {$to} failed (API error)", [
+                        'user_email' => $userEmail,
+                        'result'     => $result,
+                    ]);
+                }
             } catch (\Throwable $e) {
-                \Log::warning("SMS OTP to {$to} failed: " . $e->getMessage());
+                \Log::warning("SMS OTP to {$to} threw: " . $e->getMessage(), [
+                    'user_email' => $userEmail,
+                ]);
             }
         }
 
@@ -388,7 +407,9 @@ private function sendVerificationCodeSms(?Invoice_Settings $settings, string $us
             'count'      => $sent,
         ]);
     } catch (\Throwable $e) {
-        \Log::error('Login OTP SMS failed, falling back to email: ' . $e->getMessage());
+        \Log::error('Login OTP SMS failed, falling back to email: ' . $e->getMessage(), [
+            'user_email' => $userEmail,
+        ]);
         $this->sendVerificationCodeEmail($settings, $userEmail, $code);
     }
 }
