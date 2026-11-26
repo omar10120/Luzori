@@ -93,7 +93,7 @@ class LoginController extends Controller
                                         'code' => $code,
                                     ],
                                 ]);
-                                $this->sendVerificationCodeEmail($centerUser->email, $code);
+                                $this->sendVerificationCode($centerUser->email, $code);
                                 return redirect()->route('center_user.verify.show');
                             }
 
@@ -209,7 +209,7 @@ class LoginController extends Controller
                         'code' => $code,
                     ],
                 ]);
-                $this->sendVerificationCodeEmail($centerUser->email, $code);
+                $this->sendVerificationCode($centerUser->email, $code);
                 return MyHelper::responseJSON('تم إرسال رمز التحقق إلى بريد المسؤول', 200, [
                     'requires_verification' => true,
                     'redirect_url' => route('center_user.verify.show'),
@@ -285,7 +285,7 @@ class LoginController extends Controller
         $pending['expires'] = now()->addMinutes(10)->timestamp;
         session(['center_user_pending_verification' => $pending]);
 
-        $this->sendVerificationCodeEmail($pending['email'], $code);
+        $this->sendVerificationCode($pending['email'], $code);
 
         return MyHelper::responseJSON('تم إرسال رمز التحقق مرة أخرى', 200);
     }
@@ -321,31 +321,98 @@ class LoginController extends Controller
 
         return true;
     }
+    /**
+ * Dispatch the verification code via whichever channel is configured
+ * in Invoice_Settings (sms | email). Falls back to email on any SMS failure.
+ */
+private function sendVerificationCode(string $userEmail, string $code): void
+{
+    $settings = Invoice_Settings::query()->first();
+    $channel  = $settings?->otp_channel ?? 'email';
 
-    private function generateVerificationCode(): string
-    {
-        return str_pad((string)random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+    if ($channel === 'sms') {
+        $this->sendVerificationCodeSms($settings, $userEmail, $code);
+    } else {
+        $this->sendVerificationCodeEmail($settings, $userEmail, $code);
+    }
+}
+
+/**
+ * Send the verification code as an SMS to every configured otp_phones entry.
+ * Falls back to email when:
+ *   • otp_phones is empty / not an array
+ *   • every SMS send fails
+ *   • the SMS gateway throws
+ */
+private function sendVerificationCodeSms(?Invoice_Settings $settings, string $userEmail, string $code): void
+{
+    $phones = $settings?->otp_phones ?? [];
+
+    if (!is_array($phones) || empty($phones)) {
+        \Log::warning('OTP channel = sms but invoice_settings.otp_phones is empty; falling back to email');
+        $this->sendVerificationCodeEmail($settings, $userEmail, $code);
+        return;
     }
 
-    private function sendVerificationCodeEmail(string $userEmail, string $code): void
+    $message = "Your verification code: {$code}. Valid for 10 minutes. User: {$userEmail}";
+
+    try {
+        // ── ADAPT THIS ONE LINE to your SMS gateway ──────────────────────
+        // If your only SMS sender is SaleOtpService, either extract a shared
+        // SmsService out of it, or expose a `sendRaw(string $to, string $msg)`
+        // method on SaleOtpService and call it here.
+        $sms = app(\App\Services\SmsService::class);
+        // ────────────────────────────────────────────────────────────────
+
+        $sent = 0;
+        foreach ($phones as $rawPhone) {
+            $to = preg_replace('/\D+/', '', (string) $rawPhone);
+            if ($to === '') {
+                continue;
+            }
+
+            try {
+                $sms->send($to, $message);
+                $sent++;
+            } catch (\Throwable $e) {
+                \Log::warning("SMS OTP to {$to} failed: " . $e->getMessage());
+            }
+        }
+
+        if ($sent === 0) {
+            throw new \RuntimeException('No SMS could be delivered');
+        }
+
+        \Log::info('Login OTP sent via SMS', [
+            'user_email' => $userEmail,
+            'count'      => $sent,
+        ]);
+    } catch (\Throwable $e) {
+        \Log::error('Login OTP SMS failed, falling back to email: ' . $e->getMessage());
+        $this->sendVerificationCodeEmail($settings, $userEmail, $code);
+    }
+}
+
+    /**
+     * Send the verification code by email to Info.email + invoice_settings.emails.
+     */
+    private function sendVerificationCodeEmail(?Invoice_Settings $settings, string $userEmail, string $code): void
     {
         $recipients = [];
-    
-        // 1) Info.email — always included (legacy receiver)
+
+        // 1) Info.email — always included
         try {
             $infoEmail = optional(Info::query()->select('email')->first())->email;
             if ($infoEmail && filter_var($infoEmail, FILTER_VALIDATE_EMAIL)) {
                 $recipients[] = $infoEmail;
             }
         } catch (\Exception $e) {
-            \Log::warning('Failed to read recipient email from infos table: ' . $e->getMessage());
+            \Log::warning('Failed to read Info.email: ' . $e->getMessage());
         }
-    
-        // 2) Invoice_Settings.emails — additional receivers (kept alongside Info.email)
+
+        // 2) Invoice_Settings.emails
         try {
-            $settings = Invoice_Settings::query()->first();
-            $emails   = $settings?->emails ?? [];
-    
+            $emails = $settings?->emails ?? [];
             if (is_array($emails)) {
                 foreach ($emails as $email) {
                     $email = is_string($email) ? trim($email) : '';
@@ -355,38 +422,46 @@ class LoginController extends Controller
                 }
             }
         } catch (\Exception $e) {
-            \Log::warning('Failed to read recipients from invoice_settings.emails: ' . $e->getMessage());
+            \Log::warning('Failed to read invoice_settings.emails: ' . $e->getMessage());
         }
-    
-        // 3) Last-resort fallback so Mail::raw never receives an empty `to()`
+
+        // 3) Last-resort fallback
         if (empty($recipients)) {
             $recipients[] = 'support@etechnocode.com';
         }
-    
-        // Deduplicate case-insensitively (e.g. Info=Admin@x.com + emails=['admin@x.com'])
+
         $recipients = array_values(array_unique(array_map('strtolower', $recipients)));
-    
+
         $subject = 'Center User Login Verification Code';
         $body = "User Email: {$userEmail}\n"
-              . "Verification Code: {$code}\n"
-              . "Valid For: 10 minutes\n"
-              . "Time: " . now()->toDateTimeString();
-    
+            . "Verification Code: {$code}\n"
+            . "Valid For: 10 minutes\n"
+            . "Time: " . now()->toDateTimeString();
+
         try {
             Mail::raw($body, function ($message) use ($recipients, $subject) {
                 $message->to($recipients)->subject($subject);
             });
-            \Log::info('Verification code sent', [
+            \Log::info('Login OTP sent via email', [
                 'user_email' => $userEmail,
                 'recipients' => $recipients,
             ]);
         } catch (\Exception $e) {
-            \Log::error('Failed to send verification email: ' . $e->getMessage(), [
+            \Log::error('Login OTP email failed: ' . $e->getMessage(), [
                 'user_email' => $userEmail,
                 'recipients' => $recipients,
             ]);
         }
+}
+
+
+    private function generateVerificationCode(): string
+    {
+        return str_pad((string)random_int(0, 999999), 6, '0', STR_PAD_LEFT);
     }
+
+
+
 
     private function isTwoFactorEnabled(): bool
     {

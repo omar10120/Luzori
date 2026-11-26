@@ -28,7 +28,8 @@ use Illuminate\Support\Str;
 use niklasravnsborg\LaravelPdf\Facades\Pdf;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
-use App\Services\NotifiesCenter; 
+use App\Services\NotifiesCenter;
+
 class SalesController extends Controller
 {
     use CategoryTreeTrait;
@@ -43,7 +44,6 @@ class SalesController extends Controller
     {
         $this->salesService = $salesService;
         $this->indexRoute = 'center_user.' . $this->plural . '.index';
-        
     }
 
     /**
@@ -134,10 +134,10 @@ class SalesController extends Controller
         $centerUser = auth('center_user')->user();
 
         $isAdmin = ((int) get_user_role() === 1);
-        
+
         // Use service to get all dependencies
         $data = $this->salesService->getCartData($cart, $centerUser, $isAdmin);
-        
+
         $services = $data['services'];
         $products = $data['products'];
         $discounts = $data['discounts'];
@@ -168,7 +168,7 @@ class SalesController extends Controller
             $price = $product->retail_price && $product->retail_price > 0
                 ? (float) $product->retail_price
                 : (float) ($product->supply_price ?? 0);
-            
+
             return [
                 $product->id => [
                     'id' => $product->id,
@@ -273,14 +273,14 @@ class SalesController extends Controller
         if (!auth('center_user')->user()->can($can, 'center_api')) {
             return abort(403);
         }
-    
+
         $centerUser = auth('center_api')->user() ?? auth('center_user')->user();
         $isAdmin = ((int) get_user_role() === 1);
         $perPage = max(1, min(50, (int) $request->input('per_page', 10)));
-    
+
         $wallets  = $this->salesService->getCartWallets($centerUser, $isAdmin, $perPage);
         $currency = get_currency();
-    
+
         $rows = $wallets->getCollection()->map(function ($wallet) use ($currency) {
             $clients = $wallet->users
                 ->map(fn ($uw) => $uw->user->name ?? null)
@@ -298,14 +298,14 @@ class SalesController extends Controller
                 'id'              => $wallet->id,
                 'code'            => $wallet->code,
                 'clients'         => $clients,
-                'amount'          => number_format($remainingAmount, 2) . ' ' . $currency, 
+                'amount'          => number_format($remainingAmount, 2) . ' ' . $currency,
                 'invoiced_amount' => number_format((float) $wallet->invoiced_amount, 2) . ' ' . $currency,
                 'start_at'        => $wallet->start_at ? \Carbon\Carbon::parse($wallet->start_at)->format('Y-m-d') : '-',
                 'end_at'          => $wallet->end_at   ? \Carbon\Carbon::parse($wallet->end_at)->format('Y-m-d')   : '-',
                 'created_by'      => $wallet->created_by_user->name ?? '-',
                 'used'            => (bool) $wallet->used,
                 'raw' => [
-                    'amount'          => $remainingAmount, 
+                    'amount'          => $remainingAmount,
                     'original_amount' => $wallet->amount,
                     'invoiced_amount' => $wallet->invoiced_amount,
                     'start_at'        => $wallet->start_at,
@@ -313,13 +313,13 @@ class SalesController extends Controller
                 ],
             ];
         })->filter(function ($wallet) {
-            // ✅ ADDED: Only keep wallets that have a balance greater than 0
+            // Only keep wallets that have a balance greater than 0
             return $wallet['raw']['amount'] > 0;
         })->values();
 
         // Replace the paginator's collection with the filtered results
         $wallets->setCollection($rows);
-    
+
         return response()->json([
             'data' => $rows,
             'meta' => [
@@ -332,6 +332,7 @@ class SalesController extends Controller
             ],
         ]);
     }
+
     /**
      * Lazy-load packages for the cart package tab.
      */
@@ -454,8 +455,8 @@ class SalesController extends Controller
         }
 
         // Get price (retail_price if available, else supply_price)
-        $price = $product->retail_price && $product->retail_price > 0 
-            ? $product->retail_price 
+        $price = $product->retail_price && $product->retail_price > 0
+            ? $product->retail_price
             : ($product->supply_price ?? 0);
 
         $cart['items'][] = [
@@ -529,7 +530,7 @@ class SalesController extends Controller
                 ->orWhereJsonContains('types', 'general');
             })
             ->get();
-        
+
         // Get selected customer if exists
         $selectedCustomer = null;
         $branchId = null;
@@ -539,12 +540,12 @@ class SalesController extends Controller
                 $branchId = $selectedCustomer->branch_id;
             }
         }
-        
+
         // If no customer branch, use logged-in user's branch
         if (!$branchId) {
             $branchId = auth('center_user')->user()->branch_id ?? null;
         }
-        
+
         // Filter workers by branch
         $workers = Worker::when($branchId && get_user_role() != 1, function($query) use ($branchId) {
             return $query->where('branch_id', $branchId);
@@ -618,7 +619,6 @@ class SalesController extends Controller
             ]);
         } catch (\Exception $e) {
             return MyHelper::responseJSON($e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
-            
         }
     }
 
@@ -878,7 +878,7 @@ class SalesController extends Controller
             'bookings',
             'buyProducts',
         ])->findOrFail($id);
-        
+
         // Load relationships based on item type
         foreach ($sale->saleItems as $saleItem) {
             if ($saleItem->item_type === 'booking' && $saleItem->itemable) {
@@ -965,6 +965,9 @@ class SalesController extends Controller
         return $subdomain ? Center::with('media')->where('domain', $subdomain)->first() : null;
     }
 
+    /**
+     * Request a sale OTP — channel-aware (sms | email) based on Invoice_Settings.
+     */
     public function requestOtp(Request $request, SaleOtpService $saleOtpService)
     {
         $canDelete = auth('center_user')->user()->can('DELETE_SALES', 'center_api');
@@ -986,11 +989,18 @@ class SalesController extends Controller
         }
 
         $sale = Sale::withTrashed()->findOrFail($request->sale_id);
+
+        // ── NEW: resolve the configured delivery channel ──────────────────
+        $settings = \App\Models\Invoice_Settings::query()->first();
+        $channel  = $settings?->otp_channel ?? 'sms';
+        // ──────────────────────────────────────────────────────────────────
+
         $result = $saleOtpService->requestOtp(
             $sale,
             $request->action,
             $request->reason,
-            $request->new_date
+            $request->new_date,
+            $channel                    // ← forwarded to the service
         );
 
         if (!$result['success']) {
@@ -998,247 +1008,255 @@ class SalesController extends Controller
         }
 
         return MyHelper::responseJSON($result['message'], Response::HTTP_OK, [
-            'masked_phones' => $result['masked_phones'] ?? [],
+            'channel'         => $channel,
+            // Channel-agnostic key — falls back to the legacy masked_phones for JS parity.
+            'masked_contacts' => $result['masked_contacts']
+                                 ?? $result['masked_phones']
+                                 ?? $result['masked_emails']
+                                 ?? [],
         ]);
     }
 
     public function verifyOtp(Request $request, SaleOtpService $saleOtpService)
-{
-    // new_date is optional here — in the normal flow it is stored inside the
-    // OTP pending record (session), not sent again by the client.
-    $request->validate([
-        'sale_id'  => 'required|exists:sales,id',
-        'action'   => 'required|in:delete,edit',
-        'code'     => 'required|string|min:4|max:8',
-        'new_date' => 'nullable|date',
-    ]);
-
-    $canDelete = auth('center_user')->user()->can('DELETE_SALES', 'center_api');
-    $canUpdate = auth('center_user')->user()->can('UPDATE_SALES', 'center_api')
-        || auth('center_user')->user()->can('SHOW_SALES', 'center_api');
-
-    if ($request->action === 'delete' && !$canDelete) {
-        return abort(403);
-    }
-    if ($request->action === 'edit' && !$canUpdate) {
-        return abort(403);
-    }
-
-    // =====================================================================
-    // TEST-ONLY OTP BYPASS
-    // Falls back gracefully so you don't need to send new_date from tests.
-    // Order: session pending → request input → today.
-    // =====================================================================
-    if (config('app.sale_otp_bypass', false)) {
-        Log::warning('SALE OTP BYPASS USED — OTP verification skipped', [
-            'sale_id' => $request->sale_id,
-            'action'  => $request->action,
-            'user_id' => auth('center_user')->id(),
-            'ip'      => $request->ip(),
+    {
+        // new_date is optional here — in the normal flow it is stored inside the
+        // OTP pending record (session), not sent again by the client.
+        $request->validate([
+            'sale_id'  => 'required|exists:sales,id',
+            'action'   => 'required|in:delete,edit',
+            'code'     => 'required|string|min:4|max:8',
+            'new_date' => 'nullable|date',
         ]);
 
-        // ✅ FIX: if requestOtp already ran, reuse its pending record.
-        $sessionPending = session(\App\Services\SaleOtpService::SESSION_KEY) ?: [];
+        $canDelete = auth('center_user')->user()->can('DELETE_SALES', 'center_api');
+        $canUpdate = auth('center_user')->user()->can('UPDATE_SALES', 'center_api')
+            || auth('center_user')->user()->can('SHOW_SALES', 'center_api');
 
-        $verify = ['success' => true, 'pending' => [
-            'reason'   => $sessionPending['reason'] ?? 'test-bypass',
-            'new_date' => $sessionPending['new_date']
-                       ?? $request->input('new_date')
-                       ?? now()->toDateString(),   // ✅ FIX: final fallback
-        ]];
-    } else {
-        $verify = $saleOtpService->verifyPending(
-            $request->code,
-            (int) $request->sale_id,
-            $request->action
-        );
-    }
-
-    if (!$verify['success']) {
-        return MyHelper::responseJSON($verify['message'], Response::HTTP_BAD_REQUEST);
-    }
-
-    $pending = $verify['pending'];
-    $sale    = Sale::withTrashed()->findOrFail($request->sale_id);
-
-    try {
-
-        // =================================================================
-        // DELETE BRANCH
-        // =================================================================
-      // =================================================================
-// =================================================================
-// DELETE BRANCH (SOFT DELETE)
-// =================================================================
-if ($request->action === 'delete') {
-
-    // Load necessary relationships. We use withTrashed() just in case a relation
-    // was previously deleted, so we can still process stock or notify.
-    $sale->load([
-        'client',
-        'saleItems',
-        'branch',
-        'buyProducts' => function ($q) {
-            $q->withTrashed()->with('details');
-        },
-        'bookings' => function ($q) {
-            $q->withTrashed()->with(['details', 'user']);
-        },
-    ]);
-
-    // Capture everything we need for the notification BEFORE delete
-    $deletedSaleId    = (int) $sale->id;
-    $deletedTotal     = (float) ($sale->total ?? 0);
-    $deletedCustomer  = trim(
-        (string) ($sale->client?->first_name ?? '') . ' ' .
-        (string) ($sale->client?->last_name ?? '')
-    );
-    if ($deletedCustomer === '') {
-        $deletedCustomer = (string) ($sale->client?->name ?? '');
-    }
-    if ($deletedCustomer === '') {
-        $deletedCustomer = (string) ($sale->client?->phone ?? 'Unknown customer');
-    }
-    $deletedItemsCount = (int) $sale->saleItems->count();
-    $deletedBookings   = $sale->bookings->pluck('id')->values()->all();
-    $deletedBuyProds   = $sale->buyProducts->pluck('id')->values()->all();
-
-    $branchId        = (int) ($sale->branch_id ?? 0);
-    $movementService = app(\App\Services\InventoryMovementService::class);
-
-    \Illuminate\Support\Facades\DB::transaction(function () use ($sale, $branchId, $movementService) {
-
-    
-        // =================================================================
-        // ---- 0. RESTORE WALLET BALANCES ----
-        // =================================================================
-        
-        // 0a. Reverse User Wallet (Coupon) Purchases
-        // If the user bought a coupon in this sale, remove the amount from their wallet balance
-        foreach ($sale->saleItems as $saleItem) {
-            if ($saleItem->item_type === 'user_wallet') {
-                $userWallet = \App\Models\UserWallet::find($saleItem->itemable_id);
-                if ($userWallet) {
-                    // Mark the original coupon wallet as unused again
-                    $wallet = \App\Models\Wallet::find($userWallet->wallet_id);
-                    if ($wallet) {
-                        $wallet->update(['used' => false]);
-                    }
-                    
-                    // ✅ Soft delete the UserWallet record so it's excluded from the purchased total
-                    $userWallet->delete(); 
-                }
-            }
+        if ($request->action === 'delete' && !$canDelete) {
+            return abort(403);
+        }
+        if ($request->action === 'edit' && !$canUpdate) {
+            return abort(403);
         }
 
-        // 0b. Refund Wallet Payments
-        // If the user paid for services/products using their wallet balance, refund it
-        $bookingIds = $sale->bookings->pluck('id')->toArray();
-        if (!empty($bookingIds)) {
-            $userUsedWallets = \App\Models\UserUsedWallet::whereIn('booking_id', $bookingIds)->get();
-            foreach ($userUsedWallets as $usedWallet) {
-                // ✅ Delete the usage record. This automatically restores the user's dynamic balance.
-                $usedWallet->forceDelete(); 
-            }
+        // =====================================================================
+        // TEST-ONLY OTP BYPASS
+        // Falls back gracefully so you don't need to send new_date from tests.
+        // Order: session pending → request input → today.
+        // =====================================================================
+        if (config('app.sale_otp_bypass', false)) {
+            Log::warning('SALE OTP BYPASS USED — OTP verification skipped', [
+                'sale_id' => $request->sale_id,
+                'action'  => $request->action,
+                'user_id' => auth('center_user')->id(),
+                'ip'      => $request->ip(),
+            ]);
+
+            $sessionPending = session(\App\Services\SaleOtpService::SESSION_KEY) ?: [];
+
+            $verify = ['success' => true, 'pending' => [
+                'reason'   => $sessionPending['reason'] ?? 'test-bypass',
+                'new_date' => $sessionPending['new_date']
+                           ?? $request->input('new_date')
+                           ?? now()->toDateString(),
+            ]];
+        } else {
+            $verify = $saleOtpService->verifyPending(
+                $request->code,
+                (int) $request->sale_id,
+                $request->action
+            );
         }
 
-        // 0b. Refund Wallet Payments
-        // If the user paid for services/products using their wallet balance, refund it
-        $bookingIds = $sale->bookings->pluck('id')->toArray();
-        if (!empty($bookingIds)) {
-            $userUsedWallets = \App\Models\UserUsedWallet::whereIn('booking_id', $bookingIds)->get();
-            foreach ($userUsedWallets as $usedWallet) {
-                $user = \App\Models\User::find($usedWallet->user_id);
-                if ($user) {
-                    $user->increment('wallet', $usedWallet->amount);
-                }
-                // Remove the usage record
-                $usedWallet->delete();
-            }
-        }
-        
-        // ---- 1. Restore product stock ----
-        if ($branchId) {
-            foreach ($sale->buyProducts as $buyProduct) {
-                $qtyByProduct = $buyProduct->details->groupBy('product_id')->map->count();
-
-                foreach ($qtyByProduct as $productId => $qty) {
-                    $productBranch = \App\Models\ProductBranch::where('product_id', $productId)
-                        ->where('branch_id', $branchId)
-                        ->first();
-
-                    if ($productBranch) {
-                        $productBranch->increment('stock_quantity', (int) $qty);
-                    }
-
-                    $movementService->record(
-                        (int) $productId,
-                        $branchId,
-                        (int) $qty,
-                        \App\Models\InventoryMovement::TYPE_SALE_DELETED,
-                        $sale,
-                        null,
-                        'Sale deleted #' . $sale->id . ' — stock restored'
-                    );
-                }
-            }
+        if (!$verify['success']) {
+            return MyHelper::responseJSON($verify['message'], Response::HTTP_BAD_REQUEST);
         }
 
-        // ---- 2. Cascade SOFT-delete buy products ----
-        foreach ($sale->buyProducts as $buyProduct) {
-            // We do NOT delete $buyProduct->details() because they don't have SoftDeletes.
-            // They will stay in the DB untouched, preserving history for potential restoration.
-            $buyProduct->delete(); 
-        }
+        $pending = $verify['pending'];
+        $sale    = Sale::withTrashed()->findOrFail($request->sale_id);
 
-        // ---- 3. Cascade SOFT-delete associated bookings ----
-        foreach ($sale->bookings as $booking) {
-            try {
-                app(\App\Services\BookingNotificationService::class)
-                    ->notifyStatusChange($booking->fresh(['user', 'details']), 'cancelled');
-            } catch (\Throwable $e) {
-                Log::warning('Booking cancel notification failed on sale delete', [
-                    'sale_id'    => $sale->id,
-                    'booking_id' => $booking->id,
-                    'error'      => $e->getMessage(),
+        // ── NEW: audit trail (which channel was active at verification time) ─
+        $channel = optional(\App\Models\Invoice_Settings::query()->first())->otp_channel ?? 'sms';
+        Log::info('Sale OTP verified', [
+            'sale_id' => $sale->id,
+            'action'  => $request->action,
+            'channel' => $channel,
+            'user_id' => auth('center_user')->id(),
+        ]);
+        // ──────────────────────────────────────────────────────────────────────
+
+        try {
+
+            // =================================================================
+            // DELETE BRANCH (SOFT DELETE)
+            // =================================================================
+            if ($request->action === 'delete') {
+
+                // Load necessary relationships. We use withTrashed() just in case a relation
+                // was previously deleted, so we can still process stock or notify.
+                $sale->load([
+                    'client',
+                    'saleItems',
+                    'branch',
+                    'buyProducts' => function ($q) {
+                        $q->withTrashed()->with('details');
+                    },
+                    'bookings' => function ($q) {
+                        $q->withTrashed()->with(['details', 'user']);
+                    },
                 ]);
+
+                // Capture everything we need for the notification BEFORE delete
+                $deletedSaleId    = (int) $sale->id;
+                $deletedTotal     = (float) ($sale->total ?? 0);
+                $deletedCustomer  = trim(
+                    (string) ($sale->client?->first_name ?? '') . ' ' .
+                    (string) ($sale->client?->last_name ?? '')
+                );
+                if ($deletedCustomer === '') {
+                    $deletedCustomer = (string) ($sale->client?->name ?? '');
+                }
+                if ($deletedCustomer === '') {
+                    $deletedCustomer = (string) ($sale->client?->phone ?? 'Unknown customer');
+                }
+                $deletedItemsCount = (int) $sale->saleItems->count();
+                $deletedBookings   = $sale->bookings->pluck('id')->values()->all();
+                $deletedBuyProds   = $sale->buyProducts->pluck('id')->values()->all();
+
+                $branchId        = (int) ($sale->branch_id ?? 0);
+                $movementService = app(\App\Services\InventoryMovementService::class);
+
+                \Illuminate\Support\Facades\DB::transaction(function () use ($sale, $branchId, $movementService) {
+
+                    // =================================================================
+                    // ---- 0. RESTORE WALLET BALANCES ----
+                    // =================================================================
+
+                    // 0a. Reverse User Wallet (Coupon) Purchases
+                    // If the user bought a coupon in this sale, remove the amount from their wallet balance
+                    foreach ($sale->saleItems as $saleItem) {
+                        if ($saleItem->item_type === 'user_wallet') {
+                            $userWallet = \App\Models\UserWallet::find($saleItem->itemable_id);
+                            if ($userWallet) {
+                                // Mark the original coupon wallet as unused again
+                                $wallet = \App\Models\Wallet::find($userWallet->wallet_id);
+                                if ($wallet) {
+                                    $wallet->update(['used' => false]);
+                                }
+
+                                // Soft delete the UserWallet record so it's excluded from the purchased total
+                                $userWallet->delete();
+                            }
+                        }
+                    }
+
+                    // 0b. Refund Wallet Payments
+                    // If the user paid for services/products using their wallet balance, refund it
+                    $bookingIds = $sale->bookings->pluck('id')->toArray();
+                    if (!empty($bookingIds)) {
+                        $userUsedWallets = \App\Models\UserUsedWallet::whereIn('booking_id', $bookingIds)->get();
+                        foreach ($userUsedWallets as $usedWallet) {
+                            // Delete the usage record. This automatically restores the user's dynamic balance.
+                            $usedWallet->forceDelete();
+                        }
+                    }
+
+                    // 0b. Refund Wallet Payments
+                    // If the user paid for services/products using their wallet balance, refund it
+                    $bookingIds = $sale->bookings->pluck('id')->toArray();
+                    if (!empty($bookingIds)) {
+                        $userUsedWallets = \App\Models\UserUsedWallet::whereIn('booking_id', $bookingIds)->get();
+                        foreach ($userUsedWallets as $usedWallet) {
+                            $user = \App\Models\User::find($usedWallet->user_id);
+                            if ($user) {
+                                $user->increment('wallet', $usedWallet->amount);
+                            }
+                            // Remove the usage record
+                            $usedWallet->delete();
+                        }
+                    }
+
+                    // ---- 1. Restore product stock ----
+                    if ($branchId) {
+                        foreach ($sale->buyProducts as $buyProduct) {
+                            $qtyByProduct = $buyProduct->details->groupBy('product_id')->map->count();
+
+                            foreach ($qtyByProduct as $productId => $qty) {
+                                $productBranch = \App\Models\ProductBranch::where('product_id', $productId)
+                                    ->where('branch_id', $branchId)
+                                    ->first();
+
+                                if ($productBranch) {
+                                    $productBranch->increment('stock_quantity', (int) $qty);
+                                }
+
+                                $movementService->record(
+                                    (int) $productId,
+                                    $branchId,
+                                    (int) $qty,
+                                    \App\Models\InventoryMovement::TYPE_SALE_DELETED,
+                                    $sale,
+                                    null,
+                                    'Sale deleted #' . $sale->id . ' — stock restored'
+                                );
+                            }
+                        }
+                    }
+
+                    // ---- 2. Cascade SOFT-delete buy products ----
+                    foreach ($sale->buyProducts as $buyProduct) {
+                        // We do NOT delete $buyProduct->details() because they don't have SoftDeletes.
+                        // They will stay in the DB untouched, preserving history for potential restoration.
+                        $buyProduct->delete();
+                    }
+
+                    // ---- 3. Cascade SOFT-delete associated bookings ----
+                    foreach ($sale->bookings as $booking) {
+                        try {
+                            app(\App\Services\BookingNotificationService::class)
+                                ->notifyStatusChange($booking->fresh(['user', 'details']), 'cancelled');
+                        } catch (\Throwable $e) {
+                            Log::warning('Booking cancel notification failed on sale delete', [
+                                'sale_id'    => $sale->id,
+                                'booking_id' => $booking->id,
+                                'error'      => $e->getMessage(),
+                            ]);
+                        }
+
+                        // We do NOT delete $booking->details() to preserve history.
+                        $booking->delete();
+                    }
+
+                    // ---- 4. SOFT-delete the sale ----
+                    // SaleItem does not use SoftDeletes, so these records remain linked to the soft-deleted Sale.
+                    $sale->delete();
+                });
+
+                $saleOtpService->clear();
+
+                // ---- 5. Notify the center ----
+                $this->notifySaleDeleted(
+                    $deletedSaleId,
+                    $deletedTotal,
+                    $deletedCustomer,
+                    $deletedItemsCount,
+                    $deletedBookings,
+                    $deletedBuyProds,
+                    (string) ($pending['reason'] ?? '')
+                );
+
+                Log::info('Sale soft-deleted after OTP', [
+                    'sale_id'              => $deletedSaleId,
+                    'reason'               => $pending['reason'] ?? null,
+                    'bookings_soft_deleted'=> $deletedBookings,
+                    'buy_products_soft_deleted' => $deletedBuyProds,
+                    'by'                   => auth('center_user')->id(),
+                ]);
+
+                return MyHelper::responseJSON(__('admin.done_delete_successfully'), Response::HTTP_OK);
             }
 
-            // We do NOT delete $booking->details() to preserve history.
-            $booking->delete(); 
-        }
-
-        // ---- 4. SOFT-delete the sale ----
-        // SaleItem does not use SoftDeletes, so these records remain linked to the soft-deleted Sale.
-        $sale->delete();
-    });
-
-    $saleOtpService->clear();
-
-    // ---- 5. Notify the center ----
-    $this->notifySaleDeleted(
-        $deletedSaleId,
-        $deletedTotal,
-        $deletedCustomer,
-        $deletedItemsCount,
-        $deletedBookings,
-        $deletedBuyProds,
-        (string) ($pending['reason'] ?? '')
-    );
-
-    Log::info('Sale soft-deleted after OTP', [
-        'sale_id'              => $deletedSaleId,
-        'reason'               => $pending['reason'] ?? null,
-        'bookings_soft_deleted'=> $deletedBookings,
-        'buy_products_soft_deleted' => $deletedBuyProds,
-        'by'                   => auth('center_user')->id(),
-    ]);
-
-    return MyHelper::responseJSON(__('admin.done_delete_successfully'), Response::HTTP_OK);
-}
-
-        
-            //   pending (from OTP session or bypass) → request → error
+            // pending (from OTP session or bypass) → request → error
             $newDateRaw = $pending['new_date'] ?? $request->input('new_date');
 
             if (empty($newDateRaw)) {
@@ -1314,16 +1332,9 @@ if ($request->action === 'delete') {
         }
     }
 
-
-/**
- * Notify the active center that a sale was deleted (via OTP flow).
- *
- * Called AFTER the tenant transaction commits and AFTER $sale->forceDelete(),
- * so it works on captured primitives, not on the (now-gone) Eloquent model.
- *
- * Best-effort: the NotifiesCenter trait swallows + logs every error internally,
- * so a push/notification failure can never affect the OTP response.
- */
+    /**
+     * Notify the active center that a sale was deleted (via OTP flow).
+     */
     private function notifySaleDeleted(
         int $saleId,
         float $total,
@@ -1376,76 +1387,70 @@ if ($request->action === 'delete') {
                 ]
             );
         } catch (\Throwable $e) {
-            // The trait already catches its own errors — this is a final safety net.
             Log::warning('notifySaleDeleted failed', [
                 'sale_id' => $saleId,
                 'error'   => $e->getMessage(),
             ]);
         }
     }
+
     /**
- * Notify the active center that a sale's date was edited (via OTP flow).
- *
- * Called AFTER the edit is persisted. Uses captured primitives so the
- * notification doesn't depend on the sale still being mutable.
- *
- * Best-effort: the NotifiesCenter trait swallows + logs every error.
- */
-private function notifySaleDateEdited(
-    int $saleId,
-    ?string $oldDate,
-    string $newDate,
-    int $bookingsCount,
-    array $bookingIds,
-    string $reason = ''
-): void {
-    try {
-        $oldDisplay = $oldDate ?: '—';
+     * Notify the active center that a sale's date was edited (via OTP flow).
+     */
+    private function notifySaleDateEdited(
+        int $saleId,
+        ?string $oldDate,
+        string $newDate,
+        int $bookingsCount,
+        array $bookingIds,
+        string $reason = ''
+    ): void {
+        try {
+            $oldDisplay = $oldDate ?: '—';
 
-        $textEn = sprintf(
-            'Sale #%d date changed from %s to %s%s.',
-            $saleId,
-            $oldDisplay,
-            $newDate,
-            $bookingsCount > 0 ? ' (' . $bookingsCount . ' booking(s) rescheduled)' : ''
-        );
-        if ($reason !== '') {
-            $textEn .= ' Reason: ' . $reason;
+            $textEn = sprintf(
+                'Sale #%d date changed from %s to %s%s.',
+                $saleId,
+                $oldDisplay,
+                $newDate,
+                $bookingsCount > 0 ? ' (' . $bookingsCount . ' booking(s) rescheduled)' : ''
+            );
+            if ($reason !== '') {
+                $textEn .= ' Reason: ' . $reason;
+            }
+
+            $textAr = sprintf(
+                'تم تعديل تاريخ عملية البيع رقم %d من %s إلى %s%s.',
+                $saleId,
+                $oldDisplay,
+                $newDate,
+                $bookingsCount > 0 ? ' (إعادة جدولة ' . $bookingsCount . ' حجز)' : ''
+            );
+            if ($reason !== '') {
+                $textAr .= ' السبب: ' . $reason;
+            }
+
+            $this->notifyCenter(
+                'sale',
+                [
+                    'en' => ['title' => 'Sale Date Edited',     'text' => $textEn],
+                    'ar' => ['title' => 'تم تعديل تاريخ عملية بيع', 'text' => $textAr],
+                ],
+                [
+                    'action'         => 'sale_date_edited',
+                    'sale_id'        => (string) $saleId,
+                    'old_date'       => (string) ($oldDate ?? ''),
+                    'new_date'       => $newDate,
+                    'bookings_count' => (string) $bookingsCount,
+                    'bookings'       => implode(',', array_map('strval', $bookingIds)),
+                    'reason'         => $reason,
+                ]
+            );
+        } catch (\Throwable $e) {
+            Log::warning('notifySaleDateEdited failed', [
+                'sale_id' => $saleId,
+                'error'   => $e->getMessage(),
+            ]);
         }
-
-        $textAr = sprintf(
-            'تم تعديل تاريخ عملية البيع رقم %d من %s إلى %s%s.',
-            $saleId,
-            $oldDisplay,
-            $newDate,
-            $bookingsCount > 0 ? ' (إعادة جدولة ' . $bookingsCount . ' حجز)' : ''
-        );
-        if ($reason !== '') {
-            $textAr .= ' السبب: ' . $reason;
-        }
-
-        $this->notifyCenter(
-            'sale',
-            [
-                'en' => ['title' => 'Sale Date Edited',     'text' => $textEn],
-                'ar' => ['title' => 'تم تعديل تاريخ عملية بيع', 'text' => $textAr],
-            ],
-            [
-                'action'         => 'sale_date_edited',
-                'sale_id'        => (string) $saleId,
-                'old_date'       => (string) ($oldDate ?? ''),
-                'new_date'       => $newDate,
-                'bookings_count' => (string) $bookingsCount,
-                'bookings'       => implode(',', array_map('strval', $bookingIds)),
-                'reason'         => $reason,
-            ]
-        );
-    } catch (\Throwable $e) {
-        Log::warning('notifySaleDateEdited failed', [
-            'sale_id' => $saleId,
-            'error'   => $e->getMessage(),
-        ]);
     }
 }
-}
-
