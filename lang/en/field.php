@@ -562,5 +562,9 @@ return [
     'email'           => 'Email address',
     'add'    => 'Add',
     'delete' => 'Delete',
+    'otp_channel' => 'OTP Delivery Channel',
+    'via_sms'     => 'Via SMS',
+    'via_email'   => 'Via Email',   
+    'otp_channel_help' => 'otp channel help'
 
 ];

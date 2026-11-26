@@ -24,6 +24,7 @@ class Invoice_Settings extends Model
 		'sms_allow',
 		'allow_notification',
 		'emails',  
+		'otp_channel', 
 	];
 
 	protected $casts = [
