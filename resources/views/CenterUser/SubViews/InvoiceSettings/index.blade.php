@@ -449,41 +449,39 @@
                 button.disabled = true;
 
                 const formData = new FormData(form);
-                const activeChannel = getActiveChannel();
 
-                // OTP phones: only send if SMS channel is active
-                if (activeChannel === 'sms') {
-                    const otpPhones = formData.getAll('otp_phones[]');
-                    formData.delete('otp_phones[]');
-                    otpPhones.forEach(phone => {
-                        let cleanPhone = (phone || '').replace(/\D/g, '');
-                        if (cleanPhone) {
-                            if (cleanPhone.startsWith('971')) {
-                                cleanPhone = cleanPhone.substring(3);
-                            }
-                            if (cleanPhone.startsWith('0')) {
-                                cleanPhone = cleanPhone.substring(1);
-                            }
-                            formData.append('otp_phones[]', '971' + cleanPhone);
-                        } else {
-                            formData.append('otp_phones[]', '');
+                // ─────────────────────────────────────────────────────────────
+                // Always submit BOTH lists so switching the channel never
+                // wipes the inactive one. The server-side validator only
+                // enforces the ACTIVE channel; the other is saved verbatim.
+                // ─────────────────────────────────────────────────────────────
+
+                // OTP phones — sanitize + prefix every entry (active or not)
+                const otpPhones = formData.getAll('otp_phones[]');
+                formData.delete('otp_phones[]');
+                otpPhones.forEach(phone => {
+                    let cleanPhone = (phone || '').replace(/\D/g, '');
+                    if (cleanPhone) {
+                        if (cleanPhone.startsWith('971')) {
+                            cleanPhone = cleanPhone.substring(3);
                         }
-                    });
-                } else {
-                    formData.delete('otp_phones[]');
-                }
+                        if (cleanPhone.startsWith('0')) {
+                            cleanPhone = cleanPhone.substring(1);
+                        }
+                        formData.append('otp_phones[]', '971' + cleanPhone);
+                    } else {
+                        // Keep the empty placeholder — prepareForValidation() filters it
+                        formData.append('otp_phones[]', '');
+                    }
+                });
 
-                // Emails: only send if email channel is active
-                if (activeChannel === 'email') {
-                    const emails = formData.getAll('emails[]');
-                    formData.delete('emails[]');
-                    emails
-                        .map(e => (e || '').trim())
-                        .filter(e => e.length > 0)
-                        .forEach(email => formData.append('emails[]', email));
-                } else {
-                    formData.delete('emails[]');
-                }
+                // Emails — trim + drop empties (server also does this)
+                const emails = formData.getAll('emails[]');
+                formData.delete('emails[]');
+                emails
+                    .map(e => (e || '').trim())
+                    .filter(e => e.length > 0)
+                    .forEach(email => formData.append('emails[]', email));
 
                 fetch(@json($requestUrl), {
                     method: 'POST',
