@@ -52,6 +52,7 @@ use App\Http\Controllers\CenterUser\CenterController;
 use App\Http\Controllers\CenterUser\GetBanksController;
 use App\Http\Controllers\CenterUser\InvoiceSettingController;
 use App\Http\Controllers\CenterUser\MainSettingsController;
+use App\Http\Controllers\CenterUser\TrustedDeviceController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -78,7 +79,7 @@ Route::get('verify', [LoginController::class, 'showVerifyForm'])->name('verify.s
 Route::post('verify', [LoginController::class, 'verifyCode'])->name('verify');
 Route::post('verify/resend', [LoginController::class, 'resendCode'])->name('verify.resend');
 
-Route::group(['middleware' => 'auth_center_user:center_user'], function () {
+Route::group(['middleware' => ['auth_center_user:center_user', 'trusted_device']], function () {
     Route::get('logout', [LoginController::class, 'logout'])->name('logout');
     Route::match(['get', 'post'], 'cp', [HomeController::class, 'cp'])->name('cp');
     Route::get('cp/stats', [HomeController::class, 'dashboardStats'])->name('cp.stats');
@@ -429,6 +430,15 @@ Route::group(['middleware' => 'auth_center_user:center_user'], function () {
     Route::group(['prefix' => 'mainsettings', 'as' => 'mainsettings.'], function () {
         Route::controller(MainSettingsController::class)->group(function () {
             Route::get('index', 'index')->name('index');
+        });
+    });
+
+    Route::group(['prefix' => 'trusted-devices', 'as' => 'trusted-devices.'], function () {
+        Route::controller(TrustedDeviceController::class)->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::put('extra-emails', 'updateExtraEmails')->name('extra-emails');
+            Route::delete('{id}', 'destroy')->name('destroy');
+            Route::post('{id}/block', 'block')->name('block');
         });
     });
 

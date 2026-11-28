@@ -547,14 +547,26 @@ return [
     'comment'                         => 'التعليق',
     'total_prices_5_percent'          => '5 مجموع الأسعار',
     'total_tips_7_5_percent'          => '%7.5 مجموع البقشيش',
-    
-    
-
-    
-    
-    
-    
-    
-    
-
+    'trusted_devices'                 => 'الأجهزة الموثوقة',
+    'trusted_devices_desc'            => 'عرض الأجهزة الموثوقة والتي بحاجة لتوثيق، مع إمكانية الحذف والحظر.',
+    'device_name'                     => 'اسم الجهاز',
+    'device_type'                     => 'نوع الجهاز',
+    'last_used_at'                    => 'آخر استخدام',
+    'blocked'                         => 'محظور',
+    'trusted'                         => 'موثوق',
+    'block'                           => 'حظر',
+    'pending_verification'            => 'بحاجة لتوثيق',
+    'active_sessions'                 => 'الجلسات الحالية',
+    'auth_logs'                       => 'سجل النشاط',
+    'center_device_limit'              => 'العدد الكلي للأجهزة المسموحة',
+    'center_device_limit_hint'         => 'اتركه فارغاً أو 0 لعدم تحديد حد. عند بلوغ الحد يظهر طلب ترقية الخطة.',
+    'device_otp_extra_emails'         => 'إيميلات إضافية لاستلام رمز OTP',
+    'device_otp_extra_emails_hint'    => 'يُرسل رمز التحقق أيضاً لهذه الإيميلات مع إيميل أدمن السنتر (افصل بينها بفاصلة).',
+    'device_limit_reached'            => 'عدد الأجهزة المسموحة انتهى يرجى ترقية خطتك',
+    'device_blocked_login'            => 'هذا الجهاز محظور ولا يمكن تسجيل الدخول منه',
+    'device_removed_login_again'      => 'تم حذف الجهاز، يرجى تسجيل الدخول وإدخال رمز التحقق مرة أخرى',
+    'expires_at'                      => 'ينتهي في',
+    'started_at'                      => 'بدأت في',
+    'action'                          => 'الإجراء',
+    'notes'                           => 'ملاحظات',
 ];

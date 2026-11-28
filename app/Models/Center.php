@@ -46,6 +46,8 @@ class Center extends Authenticatable implements HasMedia
         'admin_discount',
         'expire_date',
         'sms_request_package',
+        'center_device_limit',
+        'device_otp_extra_emails',
         // Supplier (MyFatoorah)
         'supplier_code',
         'supplier_email',
@@ -73,6 +75,7 @@ class Center extends Authenticatable implements HasMedia
         'is_supplier'   => 'boolean',
         'supplier_code' => 'integer',
         'sms_request_package' => 'integer',
+        'center_device_limit' => 'integer',
  
         
     ];

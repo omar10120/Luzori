@@ -179,6 +179,24 @@
                                 </div>
                             </div>
                         </div>
+                        @if ($item)
+                        <div class="row my-3 py-3">
+                            <div class="col-md-4">
+                                <div class="mb-1">
+                                    <label class="form-label">{{ __('field.center_device_limit') }}</label>
+                                    <input type="number" min="0" class="form-control" name="center_device_limit"
+                                        placeholder="{{ __('field.center_device_limit') }}"
+                                        value="{{ $item->center_device_limit }}" />
+                                    <small class="text-muted">{{ __('field.center_device_limit_hint') }}</small>
+                                </div>
+                            </div>
+                            <div class="col-12 mt-2">
+                                <a href="{{ route('admin.centers.devices.index', $item->id) }}" class="btn btn-outline-primary btn-sm">
+                                    <i class="ti ti-devices"></i> {{ __('field.trusted_devices') }}
+                                </a>
+                            </div>
+                        </div>
+                        @endif
                         <div class="row my-3 py-3">
                             <div class="col-12">
                                 <label class="form-label d-block mb-3">{{ __('locale.support_settings') }}</label>

@@ -389,8 +389,29 @@
                 $('.submitFrom').prop('disabled', false);
             }
 
+            (function ensureDeviceUuid() {
+                var key = 'luzori_device_uuid';
+                var uuid = localStorage.getItem(key);
+                if (!uuid) {
+                    if (window.crypto && crypto.randomUUID) {
+                        uuid = crypto.randomUUID();
+                    } else {
+                        uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                            var r = Math.random() * 16 | 0;
+                            var v = c === 'x' ? r : (r & 0x3 | 0x8);
+                            return v.toString(16);
+                        });
+                    }
+                    localStorage.setItem(key, uuid);
+                }
+                $('#device_uuid').val(uuid);
+            })();
+
             $("#frmLogin").on("submit", function(event) {
                 event.preventDefault();
+                if (!$('#device_uuid').val()) {
+                    (function(){ var key='luzori_device_uuid'; var u=localStorage.getItem(key); if(u) $('#device_uuid').val(u); })();
+                }
 
                 $.ajax({
                     url: postUrl,
@@ -502,6 +523,7 @@
 
             <form id="frmLogin" class="mb-3" enctype="multipart/form-data" novalidate>
                 @csrf
+                <input type="hidden" name="device_uuid" id="device_uuid" value="">
                 <div class="row g-3">
                     <div class="col-12">
                         <!-- Email -->

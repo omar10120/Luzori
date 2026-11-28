@@ -183,6 +183,27 @@
                 </div>
             </div>
 
+            {{-- Trusted Devices --}}
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="card lz-settings-card">
+                    <div class="card-body d-flex flex-column">
+                        <div class="lz-settings-icon">
+                            <i class="ti ti-devices" style="font-size: 24px; color: #002b26;"></i>
+                        </div>
+                        <h5 class="lz-settings-title">{{ __('field.trusted_devices') }}</h5>
+                        <p class="lz-settings-desc">
+                            {{ __('field.trusted_devices_desc') }}
+                        </p>
+                        <div class="mt-auto">
+                            <a href="{{ route('center_user.trusted-devices.index') }}" class="btn btn-luzori-manage">
+                                {{ __('general.manage') ?? 'Manage' }}
+                                <i class="ti {{ $arrowClass }}"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {{-- Invoice Settings --}}
             <div class="col-12 col-md-6 col-lg-4">
                 <div class="card lz-settings-card">

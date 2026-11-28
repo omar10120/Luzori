@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\AdminRoleController;
 use App\Http\Controllers\Admin\CenterController;
+use App\Http\Controllers\Admin\TrustedDeviceController;
 use App\Http\Controllers\Admin\CenterRoleController;
 use App\Http\Controllers\Admin\DeleteController;
 
@@ -71,6 +72,13 @@ Route::group(['middleware' => 'auth:admin'], function () {
             Route::post('update-permissions', 'updatePermissions')->name('update.permissions');
             Route::get('{id}/download-database', 'downloadDatabase')->name('download-database')->can('VIEW_CENTERS');
             Route::post('{id}/create-supplier', 'createSupplier')->name('create-supplier');
+        });
+
+        Route::controller(TrustedDeviceController::class)->group(function () {
+            Route::get('{id}/devices', 'index')->name('devices.index')->can('VIEW_CENTERS');
+            Route::delete('{id}/devices/{deviceId}', 'destroy')->name('devices.destroy')->can('UPDATE_CENTERS');
+            Route::post('{id}/devices/{deviceId}/block', 'block')->name('devices.block')->can('UPDATE_CENTERS');
+            Route::put('{id}/device-limit', 'updateLimit')->name('devices.limit')->can('UPDATE_CENTERS');
         });
     });
 

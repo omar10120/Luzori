@@ -63,6 +63,7 @@ class CenterRequest extends FormRequest
                 'BusinessName' => 'nullable|string',
                 'BankAccount' => 'nullable|string',
                 'BankId' => 'nullable|string',
+                'center_device_limit' => 'nullable|integer|min:0|max:1000',
             ];
         } else {
             return [
