@@ -7,12 +7,16 @@ use App\Http\Requests\CenterUser\AuthRequest;
 use App\Helpers\MyHelper;
 use App\Models\CenterUser;
 use App\Models\Center;
+use App\Models\Info;
+use App\Models\Invoice_Settings;
 use App\Services\TrustedDeviceService;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Config;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cookie;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Http\Request;
+use Spatie\Permission\Models\Permission;
 
 class LoginController extends Controller
 {
@@ -88,16 +92,26 @@ class LoginController extends Controller
 
                         if ($centerUser && $center) {
                             session(['active_center_domain' => $center->domain]);
-                            $result = $this->handleDeviceGate($center, $centerUser, request(), $userData);
 
-                            if ($result['status'] === 'login') {
-                                return redirect()->route('center_user.cp');
+                            if ($this->isTrustedDevicesEnabled($center)) {
+                                $result = $this->handleDeviceGate($center, $centerUser, request(), $userData);
+                                if ($result['status'] === 'login') {
+                                    return redirect()->route('center_user.cp');
+                                }
+                                if ($result['status'] === 'otp') {
+                                    return redirect()->route('center_user.verify.show');
+                                }
+
+                                return view('CenterUser.login')->with('error', $result['message']);
                             }
-                            if ($result['status'] === 'otp') {
+
+                            if ($this->isTwoFactorEnabled()) {
+                                $this->startLegacyOtp($centerUser);
                                 return redirect()->route('center_user.verify.show');
                             }
 
-                            return view('CenterUser.login')->with('error', $result['message']);
+                            auth('center_user')->login($centerUser);
+                            return redirect()->route('center_user.cp');
                         }
                     }
                 }
@@ -141,10 +155,12 @@ class LoginController extends Controller
                             return MyHelper::responseJSON('انتهت فترة صلاحية هذا المركز. يرجى التواصل مع الدعم الفني.', 400);
                         }
 
-                        $gate = $this->evaluateDeviceGate($center, $centerUser, $request, $deviceUuid);
-                        if ($gate['status'] === 'blocked' || $gate['status'] === 'limit') {
-                            $this->switchTenantDatabase($originalDatabase);
-                            return MyHelper::responseJSON($gate['message'], 400);
+                        if ($this->isTrustedDevicesEnabled($center)) {
+                            $gate = $this->evaluateDeviceGate($center, $centerUser, $request, $deviceUuid);
+                            if ($gate['status'] === 'blocked' || $gate['status'] === 'limit') {
+                                $this->switchTenantDatabase($originalDatabase);
+                                return MyHelper::responseJSON($gate['message'], 400);
+                            }
                         }
 
                         $userData = [
@@ -193,24 +209,40 @@ class LoginController extends Controller
             }
             session(['active_center_domain' => $center->domain]);
 
-            $result = $this->handleDeviceGate($center, $centerUser, $request, ['device_uuid' => $deviceUuid]);
-            if ($result['status'] === 'login') {
-                return MyHelper::responseJSON('تم تسجيل الدخول بنجاح', 200, [
-                    'requires_verification' => false,
-                    'redirect_url' => route('center_user.cp'),
-                ]);
+            if ($this->isTrustedDevicesEnabled($center)) {
+                $result = $this->handleDeviceGate($center, $centerUser, $request, ['device_uuid' => $deviceUuid]);
+                if ($result['status'] === 'login') {
+                    return MyHelper::responseJSON('تم تسجيل الدخول بنجاح', 200, [
+                        'requires_verification' => false,
+                        'redirect_url' => route('center_user.cp'),
+                    ]);
+                }
+                if ($result['status'] === 'otp') {
+                    return MyHelper::responseJSON('تم إرسال رمز التحقق إلى بريد المسؤول', 200, [
+                        'requires_verification' => true,
+                        'redirect_url' => route('center_user.verify.show'),
+                    ]);
+                }
+
+                return MyHelper::responseJSON($result['message'], 400);
             }
-            if ($result['status'] === 'otp') {
+
+            if ($this->isTwoFactorEnabled()) {
+                $this->startLegacyOtp($centerUser);
                 return MyHelper::responseJSON('تم إرسال رمز التحقق إلى بريد المسؤول', 200, [
                     'requires_verification' => true,
                     'redirect_url' => route('center_user.verify.show'),
                 ]);
             }
 
-            return MyHelper::responseJSON($result['message'], 400);
+            auth('center_user')->login($centerUser);
+            return MyHelper::responseJSON('تم تسجيل الدخول بنجاح', 200, [
+                'requires_verification' => false,
+                'redirect_url' => route('center_user.cp'),
+            ]);
         }
 
-        if ($center) {
+        if ($center && $this->isTrustedDevicesEnabled($center)) {
             $this->devices->log(
                 (int) $center->id,
                 'login_failed',
@@ -251,8 +283,70 @@ class LoginController extends Controller
             return redirect()->route('center_user.login.view')->withErrors(['code' => 'انتهت صلاحية رمز التحقق، يرجى تسجيل الدخول مرة أخرى']);
         }
 
+        $mode = $pending['mode'] ?? 'legacy';
+
+        if ($mode === 'trusted') {
+            return $this->verifyTrustedOtp($request, $pending);
+        }
+
+        if (trim($request->code) !== (string) ($pending['code'] ?? '')) {
+            return back()->withErrors(['code' => 'رمز التحقق غير صحيح'])->withInput();
+        }
+
+        $centerUser = CenterUser::withTrashed()
+            ->where('id', $pending['id'])
+            ->where('email', $pending['email'])
+            ->where('statusWeb', 1)
+            ->first();
+
+        if (!$centerUser) {
+            session()->forget('center_user_pending_verification');
+            return redirect()->route('center_user.login.view')->withErrors(['code' => 'تعذر إتمام تسجيل الدخول']);
+        }
+
+        auth('center_user')->login($centerUser);
+        session()->forget('center_user_pending_verification');
+
+        return redirect()->route('center_user.cp');
+    }
+
+    public function resendCode(Request $request)
+    {
+        $pending = session('center_user_pending_verification');
+        if (!$pending) {
+            return MyHelper::responseJSON('لا توجد عملية تحقق قيد الانتظار', 400);
+        }
+
+        $mode = $pending['mode'] ?? 'legacy';
+
+        if ($mode === 'trusted') {
+            $center = Center::find($pending['center_id'] ?? null);
+            if (!$center) {
+                return MyHelper::responseJSON('تعذر إرسال الرمز', 400);
+            }
+
+            $deviceUuid = (string) ($pending['device_uuid'] ?? $this->devices->resolveDeviceUuid($request));
+            $this->devices->createAndSendOtp($center, (int) $pending['id'], (string) $pending['email'], $deviceUuid, $request);
+            $pending['expires'] = now()->addMinutes(10)->timestamp;
+            $pending['device_uuid'] = $deviceUuid;
+            session(['center_user_pending_verification' => $pending]);
+
+            return MyHelper::responseJSON('تم إرسال رمز التحقق مرة أخرى', 200);
+        }
+
+        $code = $this->generateVerificationCode();
+        $pending['code'] = $code;
+        $pending['expires'] = now()->addMinutes(10)->timestamp;
+        session(['center_user_pending_verification' => $pending]);
+        $this->sendVerificationCode($pending['email'], $code);
+
+        return MyHelper::responseJSON('تم إرسال رمز التحقق مرة أخرى', 200);
+    }
+
+    private function verifyTrustedOtp(Request $request, array $pending)
+    {
         $center = Center::find($pending['center_id'] ?? null);
-        if (!$center) {
+        if (!$center || !$this->isTrustedDevicesEnabled($center)) {
             session()->forget('center_user_pending_verification');
             return redirect()->route('center_user.login.view')->withErrors(['code' => 'تعذر إتمام تسجيل الدخول']);
         }
@@ -319,27 +413,6 @@ class LoginController extends Controller
         return redirect()->route('center_user.cp');
     }
 
-    public function resendCode(Request $request)
-    {
-        $pending = session('center_user_pending_verification');
-        if (!$pending) {
-            return MyHelper::responseJSON('لا توجد عملية تحقق قيد الانتظار', 400);
-        }
-
-        $center = Center::find($pending['center_id'] ?? null);
-        if (!$center) {
-            return MyHelper::responseJSON('تعذر إرسال الرمز', 400);
-        }
-
-        $deviceUuid = (string) ($pending['device_uuid'] ?? $this->devices->resolveDeviceUuid($request));
-        $this->devices->createAndSendOtp($center, (int) $pending['id'], (string) $pending['email'], $deviceUuid, $request);
-        $pending['expires'] = now()->addMinutes(10)->timestamp;
-        $pending['device_uuid'] = $deviceUuid;
-        session(['center_user_pending_verification' => $pending]);
-
-        return MyHelper::responseJSON('تم إرسال رمز التحقق مرة أخرى', 200);
-    }
-
     private function handleDeviceGate(Center $center, CenterUser $centerUser, Request $request, array $payload = []): array
     {
         $deviceUuid = $this->devices->resolveDeviceUuid($request, $payload);
@@ -371,6 +444,7 @@ class LoginController extends Controller
         $this->devices->createAndSendOtp($center, (int) $centerUser->id, (string) $centerUser->email, $deviceUuid, $request);
         session([
             'center_user_pending_verification' => [
+                'mode' => 'trusted',
                 'id' => $centerUser->id,
                 'email' => $centerUser->email,
                 'center_id' => $center->id,
@@ -439,6 +513,26 @@ class LoginController extends Controller
         ]);
     }
 
+    private function startLegacyOtp(CenterUser $centerUser): void
+    {
+        $code = $this->generateVerificationCode();
+        session([
+            'center_user_pending_verification' => [
+                'mode' => 'legacy',
+                'id' => $centerUser->id,
+                'email' => $centerUser->email,
+                'expires' => now()->addMinutes(10)->timestamp,
+                'code' => $code,
+            ],
+        ]);
+        $this->sendVerificationCode($centerUser->email, $code);
+    }
+
+    private function isTrustedDevicesEnabled(?Center $center): bool
+    {
+        return (bool) ($center?->trusted_devices_enabled ?? false);
+    }
+
     private function switchTenantDatabase(?string $database): bool
     {
         if (!is_string($database) || $database === '') {
@@ -466,5 +560,138 @@ class LoginController extends Controller
         $connection->setDatabaseName($database);
 
         return true;
+    }
+
+    private function sendVerificationCode(string $userEmail, string $code): void
+    {
+        $settings = Invoice_Settings::query()->first();
+        $channel = $settings?->otp_channel ?? 'email';
+
+        if ($channel === 'sms') {
+            $this->sendVerificationCodeSms($settings, $userEmail, $code);
+        } else {
+            $this->sendVerificationCodeEmail($settings, $userEmail, $code);
+        }
+    }
+
+    private function sendVerificationCodeSms(?Invoice_Settings $settings, string $userEmail, string $code): void
+    {
+        $phones = $settings?->otp_phones ?? [];
+
+        if (!is_array($phones) || empty($phones)) {
+            \Log::warning('OTP channel = sms but invoice_settings.otp_phones is empty; falling back to email');
+            $this->sendVerificationCodeEmail($settings, $userEmail, $code);
+            return;
+        }
+
+        $message = "Your verification code: {$code}. Valid for 10 minutes. User: {$userEmail}";
+        $lang = app()->getLocale() === 'ar' ? 2 : 1;
+
+        try {
+            $smsGateway = app(\App\Services\SMSGatewayService::class);
+            $sent = 0;
+
+            foreach ($phones as $rawPhone) {
+                $to = preg_replace('/\D+/', '', (string) $rawPhone);
+                if ($to === '') {
+                    continue;
+                }
+
+                try {
+                    $result = $smsGateway->sendSMS($to, $message, $lang);
+                    if (!empty($result['success'])) {
+                        $sent++;
+                    } else {
+                        \Log::warning("SMS OTP to {$to} failed (API error)", [
+                            'user_email' => $userEmail,
+                            'result' => $result,
+                        ]);
+                    }
+                } catch (\Throwable $e) {
+                    \Log::warning("SMS OTP to {$to} threw: " . $e->getMessage(), [
+                        'user_email' => $userEmail,
+                    ]);
+                }
+            }
+
+            if ($sent === 0) {
+                throw new \RuntimeException('No SMS could be delivered');
+            }
+        } catch (\Throwable $e) {
+            \Log::error('Login OTP SMS failed, falling back to email: ' . $e->getMessage(), [
+                'user_email' => $userEmail,
+            ]);
+            $this->sendVerificationCodeEmail($settings, $userEmail, $code);
+        }
+    }
+
+    private function sendVerificationCodeEmail(?Invoice_Settings $settings, string $userEmail, string $code): void
+    {
+        $recipients = [];
+
+        try {
+            $infoEmail = optional(Info::query()->select('email')->first())->email;
+            if ($infoEmail && filter_var($infoEmail, FILTER_VALIDATE_EMAIL)) {
+                $recipients[] = $infoEmail;
+            }
+        } catch (\Exception $e) {
+            \Log::warning('Failed to read Info.email: ' . $e->getMessage());
+        }
+
+        try {
+            $emails = $settings?->emails ?? [];
+            if (is_array($emails)) {
+                foreach ($emails as $email) {
+                    $email = is_string($email) ? trim($email) : '';
+                    if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                        $recipients[] = $email;
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            \Log::warning('Failed to read invoice_settings.emails: ' . $e->getMessage());
+        }
+
+        if (empty($recipients)) {
+            $recipients[] = 'support@etechnocode.com';
+        }
+
+        $recipients = array_values(array_unique(array_map('strtolower', $recipients)));
+        $subject = 'Center User Login Verification Code';
+        $body = "User Email: {$userEmail}\n"
+            . "Verification Code: {$code}\n"
+            . "Valid For: 10 minutes\n"
+            . "Time: " . now()->toDateTimeString();
+
+        try {
+            Mail::raw($body, function ($message) use ($recipients, $subject) {
+                $message->to($recipients)->subject($subject);
+            });
+        } catch (\Exception $e) {
+            \Log::error('Login OTP email failed: ' . $e->getMessage(), [
+                'user_email' => $userEmail,
+                'recipients' => $recipients,
+            ]);
+        }
+    }
+
+    private function generateVerificationCode(): string
+    {
+        return str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+    }
+
+    private function isTwoFactorEnabled(): bool
+    {
+        try {
+            $permission = Permission::where('name', 'VIEW_TWO_FACTOR_AUTH')->first();
+            if (!$permission) {
+                return false;
+            }
+
+            return DB::table('role_has_permissions')->where('permission_id', $permission->id)->exists();
+        } catch (\Exception $e) {
+            \Log::error('2FA permission check failed: ' . $e->getMessage());
+            return false;
+        }
     }
 }

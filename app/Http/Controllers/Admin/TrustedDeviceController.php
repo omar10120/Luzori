@@ -19,6 +19,8 @@ class TrustedDeviceController extends Controller
     public function index($id)
     {
         $center = Center::withTrashed()->findOrFail($id);
+        abort_unless($center->trusted_devices_enabled ?? false, 404);
+
         $devices = TrustedDevice::query()
             ->where('center_id', $center->id)
             ->orderByDesc('last_used_at')

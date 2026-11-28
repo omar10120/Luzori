@@ -181,7 +181,17 @@
                         </div>
                         @if ($item)
                         <div class="row my-3 py-3">
-                            <div class="col-md-4">
+                            <div class="col-12 mb-3">
+                                <label class="form-label d-block mb-2">{{ __('field.trusted_devices') }}</label>
+                                <div class="form-check form-switch mb-2">
+                                    <input type="hidden" name="trusted_devices_enabled" value="0">
+                                    <input class="form-check-input" type="checkbox" id="trusted_devices_enabled" name="trusted_devices_enabled" value="1"
+                                        {{ ($item->trusted_devices_enabled ?? false) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="trusted_devices_enabled">{{ __('field.trusted_devices_enabled') }}</label>
+                                </div>
+                                <small class="text-muted d-block">{{ __('field.trusted_devices_enabled_hint') }}</small>
+                            </div>
+                            <div class="col-md-4" id="trusted_devices_limit_wrap" style="display: {{ ($item->trusted_devices_enabled ?? false) ? 'block' : 'none' }};">
                                 <div class="mb-1">
                                     <label class="form-label">{{ __('field.center_device_limit') }}</label>
                                     <input type="number" min="0" class="form-control" name="center_device_limit"
@@ -190,7 +200,7 @@
                                     <small class="text-muted">{{ __('field.center_device_limit_hint') }}</small>
                                 </div>
                             </div>
-                            <div class="col-12 mt-2">
+                            <div class="col-12 mt-2" id="trusted_devices_manage_wrap" style="display: {{ ($item->trusted_devices_enabled ?? false) ? 'block' : 'none' }};">
                                 <a href="{{ route('admin.centers.devices.index', $item->id) }}" class="btn btn-outline-primary btn-sm">
                                     <i class="ti ti-devices"></i> {{ __('field.trusted_devices') }}
                                 </a>
@@ -349,6 +359,20 @@
     @vite('resources/assets/js/forms-selects.js')
 
     <script>
+        (function () {
+            var toggle = document.getElementById('trusted_devices_enabled');
+            var limitWrap = document.getElementById('trusted_devices_limit_wrap');
+            var manageWrap = document.getElementById('trusted_devices_manage_wrap');
+            if (!toggle) return;
+            function syncTrustedDevicesUi() {
+                var show = toggle.checked ? 'block' : 'none';
+                if (limitWrap) limitWrap.style.display = show;
+                if (manageWrap) manageWrap.style.display = show;
+            }
+            toggle.addEventListener('change', syncTrustedDevicesUi);
+            syncTrustedDevicesUi();
+        })();
+
         image.onchange = evt => {
             const [file] = image.files
             if (file) {

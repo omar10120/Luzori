@@ -25,6 +25,9 @@ class CenterRequest extends FormRequest
         if ($this->has('support_tickets_enabled')) {
             $this->merge(['support_tickets_enabled' => $this->boolean('support_tickets_enabled')]);
         }
+        if ($this->has('trusted_devices_enabled')) {
+            $this->merge(['trusted_devices_enabled' => $this->boolean('trusted_devices_enabled')]);
+        }
     }
 
     /**
@@ -64,6 +67,7 @@ class CenterRequest extends FormRequest
                 'BankAccount' => 'nullable|string',
                 'BankId' => 'nullable|string',
                 'center_device_limit' => 'nullable|integer|min:0|max:1000',
+                'trusted_devices_enabled' => 'nullable|boolean',
             ];
         } else {
             return [

@@ -183,6 +183,14 @@
                 </div>
             </div>
 
+            @php
+                $activeCenter = null;
+                if (session('active_center_domain')) {
+                    $activeCenter = \App\Models\Center::where('domain', session('active_center_domain'))->first();
+                }
+                $trustedDevicesEnabled = (bool) ($activeCenter?->trusted_devices_enabled ?? false);
+            @endphp
+            @if ($trustedDevicesEnabled)
             {{-- Trusted Devices --}}
             <div class="col-12 col-md-6 col-lg-4">
                 <div class="card lz-settings-card">
@@ -203,6 +211,7 @@
                     </div>
                 </div>
             </div>
+            @endif
 
             {{-- Invoice Settings --}}
             <div class="col-12 col-md-6 col-lg-4">

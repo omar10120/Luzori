@@ -12,8 +12,11 @@ return new class extends Migration
             if (!Schema::connection('central')->hasColumn('centers', 'center_device_limit')) {
                 $table->unsignedInteger('center_device_limit')->nullable()->after('sms_request_package');
             }
+            if (!Schema::connection('central')->hasColumn('centers', 'trusted_devices_enabled')) {
+                $table->boolean('trusted_devices_enabled')->default(false)->after('center_device_limit');
+            }
             if (!Schema::connection('central')->hasColumn('centers', 'device_otp_extra_emails')) {
-                $table->text('device_otp_extra_emails')->nullable()->after('center_device_limit');
+                $table->text('device_otp_extra_emails')->nullable()->after('trusted_devices_enabled');
             }
         });
 
@@ -105,6 +108,9 @@ return new class extends Migration
         Schema::connection('central')->table('centers', function (Blueprint $table) {
             if (Schema::connection('central')->hasColumn('centers', 'device_otp_extra_emails')) {
                 $table->dropColumn('device_otp_extra_emails');
+            }
+            if (Schema::connection('central')->hasColumn('centers', 'trusted_devices_enabled')) {
+                $table->dropColumn('trusted_devices_enabled');
             }
             if (Schema::connection('central')->hasColumn('centers', 'center_device_limit')) {
                 $table->dropColumn('center_device_limit');

@@ -559,6 +559,8 @@ return [
     'total_tips_7_5_percent'          => '%7.5 of total tips',
 
     'trusted_devices'                 => 'Trusted Devices',
+    'trusted_devices_enabled'         => 'Enable trusted devices feature',
+    'trusted_devices_enabled_hint'    => 'When disabled, the old system stays: OTP is sent on every login (based on two-factor permission).',
     'trusted_devices_desc'            => 'View trusted and pending devices, with delete and block actions.',
     'device_name'                     => 'Device name',
     'device_type'                     => 'Device type',

@@ -21,7 +21,7 @@ class TrustedDeviceController extends Controller
     public function index()
     {
         $center = $this->currentCenter();
-        abort_unless($center, 404);
+        abort_unless($center && ($center->trusted_devices_enabled ?? false), 404);
 
         $devices = TrustedDevice::query()
             ->where('center_id', $center->id)
@@ -73,7 +73,7 @@ class TrustedDeviceController extends Controller
     public function destroy($id)
     {
         $center = $this->currentCenter();
-        abort_unless($center, 404);
+        abort_unless($center && ($center->trusted_devices_enabled ?? false), 404);
 
         $device = TrustedDevice::query()
             ->where('center_id', $center->id)
@@ -88,7 +88,7 @@ class TrustedDeviceController extends Controller
     public function block($id)
     {
         $center = $this->currentCenter();
-        abort_unless($center, 404);
+        abort_unless($center && ($center->trusted_devices_enabled ?? false), 404);
 
         $device = TrustedDevice::query()
             ->where('center_id', $center->id)
@@ -103,7 +103,7 @@ class TrustedDeviceController extends Controller
     public function updateExtraEmails(Request $request)
     {
         $center = $this->currentCenter();
-        abort_unless($center, 404);
+        abort_unless($center && ($center->trusted_devices_enabled ?? false), 404);
 
         $request->validate([
             'device_otp_extra_emails' => 'nullable|string|max:2000',

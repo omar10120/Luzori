@@ -19,14 +19,21 @@ class CheckTrustedDevice
             return $next($request);
         }
 
-        $deviceUuid = session('trusted_device_uuid') ?: $request->cookie('luzori_device_uuid');
         $centerId = session('trusted_center_id');
+        $center = $centerId
+            ? Center::query()->find($centerId)
+            : $this->resolveCenterFromSession();
 
-        if (!$deviceUuid || !$centerId) {
+        if (!$center || !($center->trusted_devices_enabled ?? false)) {
             return $next($request);
         }
 
-        $device = $this->devices->findDevice((int) $centerId, (string) $deviceUuid);
+        $deviceUuid = session('trusted_device_uuid') ?: $request->cookie('luzori_device_uuid');
+        if (!$deviceUuid) {
+            return $next($request);
+        }
+
+        $device = $this->devices->findDevice((int) $center->id, (string) $deviceUuid);
         if (!$device) {
             auth('center_user')->logout();
             session()->forget(['trusted_device_uuid', 'trusted_center_id', 'trusted_device_id', 'active_center_domain']);
@@ -46,5 +53,15 @@ class CheckTrustedDevice
         $device->update(['last_used_at' => now()]);
 
         return $next($request);
+    }
+
+    private function resolveCenterFromSession(): ?Center
+    {
+        $domain = session('active_center_domain');
+        if ($domain) {
+            return Center::query()->where('domain', $domain)->first();
+        }
+
+        return null;
     }
 }
