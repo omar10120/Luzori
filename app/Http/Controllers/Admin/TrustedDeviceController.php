@@ -98,6 +98,35 @@ class TrustedDeviceController extends Controller
         return back()->with('success', __('admin.operation_done_successfully'));
     }
 
+    public function resolveLocation(Request $request)
+    {
+        $lat = $request->input('latitude');
+        $lng = $request->input('longitude');
+        if (is_numeric($lat) && is_numeric($lng)) {
+            return response()->json([
+                'success' => true,
+                'latitude' => (float) $lat,
+                'longitude' => (float) $lng,
+            ]);
+        }
+
+        $ip = (string) $request->input('ip', '');
+        $geo = $this->devices->resolveGeoFromIp($ip !== '' ? $ip : null);
+
+        if ($geo['latitude'] === null || $geo['longitude'] === null) {
+            return response()->json([
+                'success' => false,
+                'message' => __('field.no_location'),
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'latitude' => $geo['latitude'],
+            'longitude' => $geo['longitude'],
+        ]);
+    }
+
     public function updateLimit(Request $request, $id)
     {
         $center = Center::withTrashed()->findOrFail($id);

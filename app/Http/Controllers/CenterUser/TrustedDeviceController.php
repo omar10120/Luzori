@@ -9,6 +9,7 @@ use App\Models\CenterUser;
 use App\Models\DeviceSession;
 use App\Models\TrustedDevice;
 use App\Services\TrustedDeviceService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Config;
 
 class TrustedDeviceController extends Controller
@@ -123,6 +124,38 @@ class TrustedDeviceController extends Controller
         $this->devices->unblockDevice($device);
 
         return back()->with('success', __('admin.operation_done_successfully'));
+    }
+
+    public function resolveLocation(Request $request)
+    {
+        $center = $this->currentCenter();
+        abort_unless($center && ($center->trusted_devices_enabled ?? false), 404);
+
+        $lat = $request->input('latitude');
+        $lng = $request->input('longitude');
+        if (is_numeric($lat) && is_numeric($lng)) {
+            return response()->json([
+                'success' => true,
+                'latitude' => (float) $lat,
+                'longitude' => (float) $lng,
+            ]);
+        }
+
+        $ip = (string) $request->input('ip', '');
+        $geo = $this->devices->resolveGeoFromIp($ip !== '' ? $ip : null);
+
+        if ($geo['latitude'] === null || $geo['longitude'] === null) {
+            return response()->json([
+                'success' => false,
+                'message' => __('field.no_location'),
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'latitude' => $geo['latitude'],
+            'longitude' => $geo['longitude'],
+        ]);
     }
 
     private function currentCenter(): ?Center

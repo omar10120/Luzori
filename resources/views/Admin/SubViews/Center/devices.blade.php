@@ -93,11 +93,12 @@
                                     @endif
                                 </td>
                                 <td>
-                                    @if ($device->hasLocation())
+                                    @if ($device->hasLocation() || $device->ip_address)
                                         <button type="button" class="btn btn-sm btn-outline-primary"
                                             data-show-location
                                             data-lat="{{ $device->latitude }}"
-                                            data-lng="{{ $device->longitude }}">
+                                            data-lng="{{ $device->longitude }}"
+                                            data-ip="{{ $device->ip_address }}">
                                             {{ __('field.show_location') }}
                                         </button>
                                     @else
@@ -173,7 +174,7 @@
                             <th>{{ __('field.device_id') }}</th>
                             <th>{{ __('field.location') }}</th>
                             <th>{{ __('field.user') }}</th>
-                            <th></th>
+                            <th>{{ __('field.show_location') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -184,6 +185,7 @@
                                     : null;
                                 $lat = $log->latitude ?? $device?->latitude;
                                 $lng = $log->longitude ?? $device?->longitude;
+                                $canShowMap = ($lat !== null && $lng !== null) || !empty($log->ip_address) || !empty($device?->ip_address);
                             @endphp
                             <tr>
                                 <td>{{ optional($log->created_at)->format('Y-m-d H:i') }}</td>
@@ -207,13 +209,16 @@
                                 <td>{{ $log->ip_address ?: '—' }}</td>
                                 <td>{{ $log->user_id ? '#'.$log->user_id : '—' }}</td>
                                 <td>
-                                    @if ($lat !== null && $lng !== null)
+                                    @if ($canShowMap)
                                         <button type="button" class="btn btn-sm btn-outline-primary"
                                             data-show-location
                                             data-lat="{{ $lat }}"
-                                            data-lng="{{ $lng }}">
+                                            data-lng="{{ $lng }}"
+                                            data-ip="{{ $log->ip_address ?: ($device?->ip_address ?: '') }}">
                                             {{ __('field.show_location') }}
                                         </button>
+                                    @else
+                                        <span class="text-muted">—</span>
                                     @endif
                                 </td>
                             </tr>
@@ -226,5 +231,7 @@
         </div>
     </div>
 
-    @include('CenterUser.Components.device_map_modal')
+    @include('CenterUser.Components.device_map_modal', [
+        'resolveLocationUrl' => route('admin.centers.devices.resolve-location'),
+    ])
 @endsection

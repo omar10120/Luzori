@@ -103,7 +103,7 @@ class TrustedDeviceService
         return $this->trustedCount((int) $center->id) >= (int) $limit;
     }
 
-    public function resolveGeo(Request $request, ?array $payload = null): array
+    public function resolveGeo(Request $request, ?array $payload = null, ?string $ip = null): array
     {
         $lat = $request->input('latitude', $payload['latitude'] ?? null);
         $lng = $request->input('longitude', $payload['longitude'] ?? null);
@@ -111,14 +111,55 @@ class TrustedDeviceService
         $lat = is_numeric($lat) ? (float) $lat : null;
         $lng = is_numeric($lng) ? (float) $lng : null;
 
-        if ($lat === null || $lng === null || abs($lat) > 90 || abs($lng) > 180) {
-            return ['latitude' => null, 'longitude' => null];
+        if ($lat !== null && $lng !== null && abs($lat) <= 90 && abs($lng) <= 180) {
+            return [
+                'latitude' => round($lat, 7),
+                'longitude' => round($lng, 7),
+            ];
         }
 
-        return [
-            'latitude' => round($lat, 7),
-            'longitude' => round($lng, 7),
-        ];
+        $ip = $ip ?: $request->ip();
+
+        return $this->resolveGeoFromIp($ip);
+    }
+
+    public function resolveGeoFromIp(?string $ip): array
+    {
+        $empty = ['latitude' => null, 'longitude' => null];
+        if (!$ip || in_array($ip, ['127.0.0.1', '::1'], true)) {
+            return $empty;
+        }
+
+        try {
+            $response = \Illuminate\Support\Facades\Http::timeout(3)
+                ->get('http://ip-api.com/json/'.urlencode($ip), [
+                    'fields' => 'status,lat,lon',
+                ]);
+
+            if (!$response->ok()) {
+                return $empty;
+            }
+
+            $data = $response->json();
+            if (($data['status'] ?? null) !== 'success') {
+                return $empty;
+            }
+
+            $lat = isset($data['lat']) && is_numeric($data['lat']) ? (float) $data['lat'] : null;
+            $lng = isset($data['lon']) && is_numeric($data['lon']) ? (float) $data['lon'] : null;
+            if ($lat === null || $lng === null) {
+                return $empty;
+            }
+
+            return [
+                'latitude' => round($lat, 7),
+                'longitude' => round($lng, 7),
+            ];
+        } catch (\Throwable $e) {
+            \Log::warning('IP geolocation failed: '.$e->getMessage());
+
+            return $empty;
+        }
     }
 
     public function log(
@@ -132,24 +173,39 @@ class TrustedDeviceService
         ?float $latitude = null,
         ?float $longitude = null
     ): void {
-        if (($latitude === null || $longitude === null) && request()) {
-            $geo = $this->resolveGeo(request());
+        if ($latitude === null || $longitude === null) {
+            $geo = $this->resolveGeo(request(), null, $ip);
             $latitude = $latitude ?? $geo['latitude'];
             $longitude = $longitude ?? $geo['longitude'];
         }
 
-        AuthLog::query()->create([
-            'center_id' => $centerId,
-            'user_id' => $userId,
-            'device_uuid' => $deviceUuid,
-            'action' => $action,
-            'ip_address' => $ip,
-            'latitude' => $latitude,
-            'longitude' => $longitude,
-            'user_agent' => $userAgent,
-            'notes' => $notes,
-            'created_at' => now(),
-        ]);
+        try {
+            AuthLog::query()->create([
+                'center_id' => $centerId,
+                'user_id' => $userId,
+                'device_uuid' => $deviceUuid,
+                'action' => $action,
+                'ip_address' => $ip,
+                'latitude' => $latitude,
+                'longitude' => $longitude,
+                'user_agent' => $userAgent,
+                'notes' => $notes,
+                'created_at' => now(),
+            ]);
+        } catch (\Throwable $e) {
+            // Fallback if geo columns are not migrated yet
+            \Log::warning('AuthLog create with geo failed, retrying without geo: '.$e->getMessage());
+            AuthLog::query()->create([
+                'center_id' => $centerId,
+                'user_id' => $userId,
+                'device_uuid' => $deviceUuid,
+                'action' => $action,
+                'ip_address' => $ip,
+                'user_agent' => $userAgent,
+                'notes' => $notes,
+                'created_at' => now(),
+            ]);
+        }
     }
 
     public function otpEmailRecipients(Center $center, ?Invoice_Settings $settings = null): array

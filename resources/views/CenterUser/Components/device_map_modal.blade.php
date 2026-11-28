@@ -25,8 +25,9 @@
 (function () {
     var map = null;
     var marker = null;
+    var resolveUrl = @json($resolveLocationUrl ?? route('center_user.trusted-devices.resolve-location'));
 
-    function openDeviceLocation(lat, lng) {
+    function renderMap(lat, lng) {
         lat = parseFloat(lat);
         lng = parseFloat(lng);
         if (!isFinite(lat) || !isFinite(lng)) {
@@ -59,11 +60,49 @@
         }, 250);
     }
 
+    function openDeviceLocation(lat, lng, ip) {
+        if (lat && lng && isFinite(parseFloat(lat)) && isFinite(parseFloat(lng))) {
+            renderMap(lat, lng);
+            return;
+        }
+
+        if (!ip) {
+            alert(@json(__('field.no_location')));
+            return;
+        }
+
+        var token = document.querySelector('meta[name="csrf-token"]');
+        fetch(resolveUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': token ? token.getAttribute('content') : '',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ ip: ip })
+        })
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+            if (!data || !data.success) {
+                alert((data && data.message) ? data.message : @json(__('field.no_location')));
+                return;
+            }
+            renderMap(data.latitude, data.longitude);
+        })
+        .catch(function () {
+            alert(@json(__('field.no_location')));
+        });
+    }
+
     document.addEventListener('click', function (e) {
         var btn = e.target.closest('[data-show-location]');
         if (!btn) return;
         e.preventDefault();
-        openDeviceLocation(btn.getAttribute('data-lat'), btn.getAttribute('data-lng'));
+        openDeviceLocation(
+            btn.getAttribute('data-lat'),
+            btn.getAttribute('data-lng'),
+            btn.getAttribute('data-ip')
+        );
     });
 
     window.openDeviceLocation = openDeviceLocation;

@@ -436,6 +436,7 @@ Route::group(['middleware' => ['auth_center_user:center_user', 'trusted_device']
     Route::group(['prefix' => 'trusted-devices', 'as' => 'trusted-devices.'], function () {
         Route::controller(TrustedDeviceController::class)->group(function () {
             Route::get('/', 'index')->name('index');
+            Route::post('resolve-location', 'resolveLocation')->name('resolve-location');
             Route::delete('{id}', 'destroy')->name('destroy');
             Route::post('{id}/block', 'block')->name('block');
             Route::post('{id}/unblock', 'unblock')->name('unblock');
