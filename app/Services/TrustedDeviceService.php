@@ -6,6 +6,7 @@ use App\Models\AuthLog;
 use App\Models\Center;
 use App\Models\DeviceOtpCode;
 use App\Models\DeviceSession;
+use App\Models\Invoice_Settings;
 use App\Models\TrustedDevice;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -123,7 +124,7 @@ class TrustedDeviceService
         ]);
     }
 
-    public function otpRecipients(Center $center): array
+    public function otpEmailRecipients(Center $center, ?Invoice_Settings $settings = null): array
     {
         $emails = [];
 
@@ -131,7 +132,45 @@ class TrustedDeviceService
             $emails[] = strtolower(trim((string) $center->email));
         }
 
+        $extra = $settings?->emails ?? [];
+        if (is_array($extra)) {
+            foreach ($extra as $email) {
+                $email = is_string($email) ? strtolower(trim($email)) : '';
+                if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                    $emails[] = $email;
+                }
+            }
+        }
+
         return array_values(array_unique($emails));
+    }
+
+    public function otpPhoneRecipients(?Invoice_Settings $settings = null): array
+    {
+        $phones = [];
+
+        foreach ([
+            $settings?->phone_number_1,
+            $settings?->phone_number_2,
+            $settings?->phone_number_3,
+        ] as $raw) {
+            $digits = preg_replace('/\D+/', '', (string) $raw);
+            if ($digits !== '') {
+                $phones[] = $digits;
+            }
+        }
+
+        $extra = $settings?->otp_phones ?? [];
+        if (is_array($extra)) {
+            foreach ($extra as $raw) {
+                $digits = preg_replace('/\D+/', '', (string) $raw);
+                if ($digits !== '') {
+                    $phones[] = $digits;
+                }
+            }
+        }
+
+        return array_values(array_unique($phones));
     }
 
     public function createAndSendOtp(Center $center, int $userId, string $userEmail, string $deviceUuid, Request $request): string
@@ -148,19 +187,17 @@ class TrustedDeviceService
             'created_at' => now(),
         ]);
 
-        $recipients = $this->otpRecipients($center);
-        $subject = 'Luzori device verification code';
-        $body = "Staff email: {$userEmail}\nCenter: {$center->name}\nOTP: {$code}\nValid for 10 minutes\nTime: " . now()->toDateTimeString();
-
-        foreach ($recipients as $to) {
-            try {
-                Mail::raw($body, function ($message) use ($to, $subject) {
-                    $message->to($to)->subject($subject);
-                });
-            } catch (\Throwable $e) {
-                \Log::error('Trusted device OTP email failed: ' . $e->getMessage());
-            }
+        $settings = null;
+        try {
+            $settings = Invoice_Settings::query()->first();
+        } catch (\Throwable $e) {
+            \Log::warning('Trusted device OTP: failed to read invoice_settings: '.$e->getMessage());
         }
+
+        $channel = $settings?->otp_channel ?? 'email';
+        $notes = $channel === 'sms'
+            ? $this->sendOtpViaSms($center, $settings, $userEmail, $code)
+            : $this->sendOtpViaEmail($center, $settings, $userEmail, $code);
 
         $this->log(
             (int) $center->id,
@@ -169,10 +206,77 @@ class TrustedDeviceService
             $deviceUuid,
             $request->ip(),
             $request->userAgent(),
-            'Recipients: ' . implode(', ', $recipients)
+            $notes
         );
 
         return $code;
+    }
+
+    private function sendOtpViaEmail(Center $center, ?Invoice_Settings $settings, string $userEmail, string $code): string
+    {
+        $recipients = $this->otpEmailRecipients($center, $settings);
+        if (empty($recipients)) {
+            \Log::warning('Trusted device OTP email: no recipients configured');
+            return 'email: no recipients';
+        }
+
+        $subject = 'Luzori device verification code';
+        $body = "Staff email: {$userEmail}\nCenter: {$center->name}\nOTP: {$code}\nValid for 10 minutes\nTime: " . now()->toDateTimeString();
+
+        try {
+            Mail::raw($body, function ($message) use ($recipients, $subject) {
+                $message->to($recipients)->subject($subject);
+            });
+            \Log::info('Trusted device OTP sent via email', ['recipients' => $recipients]);
+        } catch (\Throwable $e) {
+            \Log::error('Trusted device OTP email failed: '.$e->getMessage(), [
+                'recipients' => $recipients,
+            ]);
+        }
+
+        return 'email: '.implode(', ', $recipients);
+    }
+
+    private function sendOtpViaSms(Center $center, ?Invoice_Settings $settings, string $userEmail, string $code): string
+    {
+        $phones = $this->otpPhoneRecipients($settings);
+        if (empty($phones)) {
+            \Log::warning('Trusted device OTP SMS: no phones configured; falling back to email');
+            return $this->sendOtpViaEmail($center, $settings, $userEmail, $code);
+        }
+
+        $message = "Your verification code: {$code}. Valid for 10 minutes. User: {$userEmail}";
+        $lang = app()->getLocale() === 'ar' ? 2 : 1;
+        $sent = 0;
+
+        try {
+            /** @var SMSGatewayService $smsGateway */
+            $smsGateway = app(SMSGatewayService::class);
+
+            foreach ($phones as $to) {
+                try {
+                    $result = $smsGateway->sendSMS($to, $message, $lang);
+                    if (!empty($result['success'])) {
+                        $sent++;
+                    } else {
+                        \Log::warning("Trusted device OTP SMS to {$to} failed", ['result' => $result]);
+                    }
+                } catch (\Throwable $e) {
+                    \Log::warning("Trusted device OTP SMS to {$to} threw: ".$e->getMessage());
+                }
+            }
+        } catch (\Throwable $e) {
+            \Log::error('Trusted device OTP SMS gateway failed: '.$e->getMessage());
+        }
+
+        if ($sent === 0) {
+            \Log::error('Trusted device OTP SMS: none delivered; falling back to email');
+            return $this->sendOtpViaEmail($center, $settings, $userEmail, $code);
+        }
+
+        \Log::info('Trusted device OTP sent via SMS', ['count' => $sent, 'phones' => $phones]);
+
+        return 'sms: '.$sent.' phone(s)';
     }
 
     public function verifyOtp(Center $center, int $userId, string $deviceUuid, string $code): bool
