@@ -17,14 +17,23 @@ class AuthLog extends Model
         'device_uuid',
         'action',
         'ip_address',
+        'latitude',
+        'longitude',
         'user_agent',
         'notes',
         'created_at',
     ];
 
     protected $casts = [
+        'latitude' => 'float',
+        'longitude' => 'float',
         'created_at' => 'datetime',
     ];
+
+    public function hasLocation(): bool
+    {
+        return $this->latitude !== null && $this->longitude !== null;
+    }
 
     public function center(): BelongsTo
     {

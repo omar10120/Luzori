@@ -78,6 +78,7 @@ Route::group(['middleware' => 'auth:admin'], function () {
             Route::get('{id}/devices', 'index')->name('devices.index')->can('VIEW_CENTERS');
             Route::delete('{id}/devices/{deviceId}', 'destroy')->name('devices.destroy')->can('UPDATE_CENTERS');
             Route::post('{id}/devices/{deviceId}/block', 'block')->name('devices.block')->can('UPDATE_CENTERS');
+            Route::post('{id}/devices/{deviceId}/unblock', 'unblock')->name('devices.unblock')->can('UPDATE_CENTERS');
             Route::put('{id}/device-limit', 'updateLimit')->name('devices.limit')->can('UPDATE_CENTERS');
         });
     });

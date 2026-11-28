@@ -37,8 +37,6 @@ class TrustedDeviceController extends Controller
             ->unique(fn ($row) => $row->device_uuid . ':' . $row->user_id)
             ->values();
 
-        $userNames = $this->userNames($devices->pluck('user_id')->merge($pendingOtps->pluck('user_id'))->unique()->all());
-
         $sessions = DeviceSession::query()
             ->with('device')
             ->where('center_id', $center->id)
@@ -48,9 +46,21 @@ class TrustedDeviceController extends Controller
 
         $logs = AuthLog::query()
             ->where('center_id', $center->id)
+            ->whereIn('action', ['login_success', 'login_failed'])
             ->orderByDesc('id')
             ->limit(100)
             ->get();
+
+        $devicesByUuid = $devices->keyBy('device_uuid');
+        $userNames = $this->userNames(
+            $devices->pluck('user_id')
+                ->merge($pendingOtps->pluck('user_id'))
+                ->merge($sessions->pluck('user_id'))
+                ->merge($logs->pluck('user_id'))
+                ->unique()
+                ->filter()
+                ->all()
+        );
 
         $title = __('field.trusted_devices');
         $menu = __('locale.mainsettings');
@@ -63,6 +73,7 @@ class TrustedDeviceController extends Controller
             'userNames',
             'sessions',
             'logs',
+            'devicesByUuid',
             'title',
             'menu',
             'menu_link'
@@ -95,6 +106,21 @@ class TrustedDeviceController extends Controller
             ->firstOrFail();
 
         $this->devices->blockDevice($device, 'Blocked from center settings');
+
+        return back()->with('success', __('admin.operation_done_successfully'));
+    }
+
+    public function unblock($id)
+    {
+        $center = $this->currentCenter();
+        abort_unless($center && ($center->trusted_devices_enabled ?? false), 404);
+
+        $device = TrustedDevice::query()
+            ->where('center_id', $center->id)
+            ->where('id', $id)
+            ->firstOrFail();
+
+        $this->devices->unblockDevice($device);
 
         return back()->with('success', __('admin.operation_done_successfully'));
     }

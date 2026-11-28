@@ -36,9 +36,12 @@ class TrustedDeviceController extends Controller
 
         $logs = AuthLog::query()
             ->where('center_id', $center->id)
+            ->whereIn('action', ['login_success', 'login_failed'])
             ->orderByDesc('id')
             ->limit(150)
             ->get();
+
+        $devicesByUuid = $devices->keyBy('device_uuid');
 
         $title = __('field.trusted_devices') . ' — ' . $center->name;
         $menu = __('locale.centers');
@@ -49,6 +52,7 @@ class TrustedDeviceController extends Controller
             'devices',
             'sessions',
             'logs',
+            'devicesByUuid',
             'title',
             'menu',
             'menu_link'
@@ -77,6 +81,19 @@ class TrustedDeviceController extends Controller
             ->firstOrFail();
 
         $this->devices->blockDevice($device, 'Blocked by super admin');
+
+        return back()->with('success', __('admin.operation_done_successfully'));
+    }
+
+    public function unblock($id, $deviceId)
+    {
+        $center = Center::withTrashed()->findOrFail($id);
+        $device = TrustedDevice::query()
+            ->where('center_id', $center->id)
+            ->where('id', $deviceId)
+            ->firstOrFail();
+
+        $this->devices->unblockDevice($device);
 
         return back()->with('success', __('admin.operation_done_successfully'));
     }

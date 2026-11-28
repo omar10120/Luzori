@@ -19,14 +19,23 @@ class TrustedDevice extends Model
         'platform',
         'browser',
         'ip_address',
+        'latitude',
+        'longitude',
         'is_blocked',
         'last_used_at',
     ];
 
     protected $casts = [
         'is_blocked' => 'boolean',
+        'latitude' => 'float',
+        'longitude' => 'float',
         'last_used_at' => 'datetime',
     ];
+
+    public function hasLocation(): bool
+    {
+        return $this->latitude !== null && $this->longitude !== null;
+    }
 
     public function center(): BelongsTo
     {

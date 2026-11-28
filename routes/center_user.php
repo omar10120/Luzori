@@ -438,6 +438,7 @@ Route::group(['middleware' => ['auth_center_user:center_user', 'trusted_device']
             Route::get('/', 'index')->name('index');
             Route::delete('{id}', 'destroy')->name('destroy');
             Route::post('{id}/block', 'block')->name('block');
+            Route::post('{id}/unblock', 'unblock')->name('unblock');
         });
     });
 

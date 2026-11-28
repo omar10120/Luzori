@@ -163,11 +163,14 @@ class LoginController extends Controller
                             }
                         }
 
+                        $geo = $this->devices->resolveGeo($request);
                         $userData = [
                             'id' => $centerUser->id,
                             'email' => $centerUser->email,
                             'center_domain' => $center->domain,
                             'device_uuid' => $deviceUuid,
+                            'latitude' => $geo['latitude'],
+                            'longitude' => $geo['longitude'],
                             'expires' => now()->addMinutes(10)->timestamp,
                         ];
 
@@ -210,7 +213,12 @@ class LoginController extends Controller
             session(['active_center_domain' => $center->domain]);
 
             if ($this->isTrustedDevicesEnabled($center)) {
-                $result = $this->handleDeviceGate($center, $centerUser, $request, ['device_uuid' => $deviceUuid]);
+                $geo = $this->devices->resolveGeo($request);
+            $result = $this->handleDeviceGate($center, $centerUser, $request, [
+                'device_uuid' => $deviceUuid,
+                'latitude' => $geo['latitude'],
+                'longitude' => $geo['longitude'],
+            ]);
                 if ($result['status'] === 'login') {
                     return MyHelper::responseJSON('تم تسجيل الدخول بنجاح', 200, [
                         'requires_verification' => false,
@@ -395,8 +403,9 @@ class LoginController extends Controller
             return redirect()->route('center_user.login.view')->withErrors(['code' => 'تعذر إتمام تسجيل الدخول']);
         }
 
-        $device = $this->devices->trustDevice($center, (int) $centerUser->id, $deviceUuid, $request);
-        $this->devices->startSession($device, $request);
+        $geo = $this->devices->resolveGeo($request, $pending);
+        $device = $this->devices->trustDevice($center, (int) $centerUser->id, $deviceUuid, $request, $pending);
+        $this->devices->startSession($device, $request, $pending);
         $this->rememberTrustedSession($center, $device);
         auth('center_user')->login($centerUser);
         session(['active_center_domain' => $center->domain]);
@@ -407,7 +416,10 @@ class LoginController extends Controller
             (int) $centerUser->id,
             $deviceUuid,
             $request->ip(),
-            $request->userAgent()
+            $request->userAgent(),
+            null,
+            $geo['latitude'],
+            $geo['longitude']
         );
 
         return redirect()->route('center_user.cp');
@@ -416,12 +428,13 @@ class LoginController extends Controller
     private function handleDeviceGate(Center $center, CenterUser $centerUser, Request $request, array $payload = []): array
     {
         $deviceUuid = $this->devices->resolveDeviceUuid($request, $payload);
+        $geo = $this->devices->resolveGeo($request, $payload);
         Cookie::queue(cookie('luzori_device_uuid', $deviceUuid, 60 * 24 * 365));
 
         $gate = $this->evaluateDeviceGate($center, $centerUser, $request, $deviceUuid);
         if ($gate['status'] === 'login') {
             $device = $gate['device'];
-            $this->devices->startSession($device, $request);
+            $this->devices->startSession($device, $request, $payload);
             $this->rememberTrustedSession($center, $device);
             auth('center_user')->login($centerUser);
             $this->devices->log(
@@ -431,7 +444,9 @@ class LoginController extends Controller
                 $deviceUuid,
                 $request->ip(),
                 $request->userAgent(),
-                'Trusted device'
+                'Trusted device',
+                $geo['latitude'],
+                $geo['longitude']
             );
 
             return ['status' => 'login'];
@@ -449,6 +464,8 @@ class LoginController extends Controller
                 'email' => $centerUser->email,
                 'center_id' => $center->id,
                 'device_uuid' => $deviceUuid,
+                'latitude' => $geo['latitude'],
+                'longitude' => $geo['longitude'],
                 'expires' => now()->addMinutes(10)->timestamp,
             ],
         ]);

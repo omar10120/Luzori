@@ -103,6 +103,24 @@ class TrustedDeviceService
         return $this->trustedCount((int) $center->id) >= (int) $limit;
     }
 
+    public function resolveGeo(Request $request, ?array $payload = null): array
+    {
+        $lat = $request->input('latitude', $payload['latitude'] ?? null);
+        $lng = $request->input('longitude', $payload['longitude'] ?? null);
+
+        $lat = is_numeric($lat) ? (float) $lat : null;
+        $lng = is_numeric($lng) ? (float) $lng : null;
+
+        if ($lat === null || $lng === null || abs($lat) > 90 || abs($lng) > 180) {
+            return ['latitude' => null, 'longitude' => null];
+        }
+
+        return [
+            'latitude' => round($lat, 7),
+            'longitude' => round($lng, 7),
+        ];
+    }
+
     public function log(
         int $centerId,
         string $action,
@@ -110,14 +128,24 @@ class TrustedDeviceService
         ?string $deviceUuid = null,
         ?string $ip = null,
         ?string $userAgent = null,
-        ?string $notes = null
+        ?string $notes = null,
+        ?float $latitude = null,
+        ?float $longitude = null
     ): void {
+        if (($latitude === null || $longitude === null) && request()) {
+            $geo = $this->resolveGeo(request());
+            $latitude = $latitude ?? $geo['latitude'];
+            $longitude = $longitude ?? $geo['longitude'];
+        }
+
         AuthLog::query()->create([
             'center_id' => $centerId,
             'user_id' => $userId,
             'device_uuid' => $deviceUuid,
             'action' => $action,
             'ip_address' => $ip,
+            'latitude' => $latitude,
+            'longitude' => $longitude,
             'user_agent' => $userAgent,
             'notes' => $notes,
             'created_at' => now(),
@@ -299,43 +327,53 @@ class TrustedDeviceService
         return true;
     }
 
-    public function trustDevice(Center $center, int $userId, string $deviceUuid, Request $request): TrustedDevice
+    public function trustDevice(Center $center, int $userId, string $deviceUuid, Request $request, ?array $payload = null): TrustedDevice
     {
         $meta = $this->parseAgent($request);
+        $geo = $this->resolveGeo($request, $payload);
         $device = $this->findDevice((int) $center->id, $deviceUuid);
 
-        if ($device) {
-            $device->update([
-                'user_id' => $userId,
-                'device_name' => $meta['device_name'],
-                'device_type' => $meta['device_type'],
-                'platform' => $meta['platform'],
-                'browser' => $meta['browser'],
-                'ip_address' => $meta['ip_address'],
-                'is_blocked' => false,
-                'last_used_at' => now(),
-            ]);
-        } else {
-            $device = TrustedDevice::query()->create([
-                'center_id' => $center->id,
-                'user_id' => $userId,
-                'device_uuid' => $deviceUuid,
-                'device_name' => $meta['device_name'],
-                'device_type' => $meta['device_type'],
-                'platform' => $meta['platform'],
-                'browser' => $meta['browser'],
-                'ip_address' => $meta['ip_address'],
-                'is_blocked' => false,
-                'last_used_at' => now(),
-            ]);
+        $data = [
+            'user_id' => $userId,
+            'device_name' => $meta['device_name'],
+            'device_type' => $meta['device_type'],
+            'platform' => $meta['platform'],
+            'browser' => $meta['browser'],
+            'ip_address' => $meta['ip_address'],
+            'is_blocked' => false,
+            'last_used_at' => now(),
+        ];
+
+        if ($geo['latitude'] !== null && $geo['longitude'] !== null) {
+            $data['latitude'] = $geo['latitude'];
+            $data['longitude'] = $geo['longitude'];
         }
 
-        $this->log((int) $center->id, 'device_trusted', $userId, $deviceUuid, $request->ip(), $request->userAgent());
+        if ($device) {
+            $device->update($data);
+        } else {
+            $device = TrustedDevice::query()->create(array_merge($data, [
+                'center_id' => $center->id,
+                'device_uuid' => $deviceUuid,
+            ]));
+        }
+
+        $this->log(
+            (int) $center->id,
+            'device_trusted',
+            $userId,
+            $deviceUuid,
+            $request->ip(),
+            $request->userAgent(),
+            null,
+            $geo['latitude'],
+            $geo['longitude']
+        );
 
         return $device->fresh();
     }
 
-    public function startSession(TrustedDevice $device, Request $request): DeviceSession
+    public function startSession(TrustedDevice $device, Request $request, ?array $payload = null): DeviceSession
     {
         DeviceSession::query()
             ->where('device_id', $device->id)
@@ -345,7 +383,13 @@ class TrustedDeviceService
                 'ended_at' => now(),
             ]);
 
-        $device->update(['last_used_at' => now()]);
+        $geo = $this->resolveGeo($request, $payload);
+        $deviceUpdate = ['last_used_at' => now()];
+        if ($geo['latitude'] !== null && $geo['longitude'] !== null) {
+            $deviceUpdate['latitude'] = $geo['latitude'];
+            $deviceUpdate['longitude'] = $geo['longitude'];
+        }
+        $device->update($deviceUpdate);
 
         return DeviceSession::query()->create([
             'center_id' => $device->center_id,
@@ -418,5 +462,10 @@ class TrustedDeviceService
             request()->userAgent(),
             $notes
         );
+    }
+
+    public function unblockDevice(TrustedDevice $device, ?string $notes = null): void
+    {
+        $device->update(['is_blocked' => false]);
     }
 }

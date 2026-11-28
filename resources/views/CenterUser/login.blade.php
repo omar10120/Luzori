@@ -407,24 +407,51 @@
                 $('#device_uuid').val(uuid);
             })();
 
+            function captureLocation(done) {
+                if (!navigator.geolocation) {
+                    done();
+                    return;
+                }
+                var finished = false;
+                var finish = function() {
+                    if (finished) return;
+                    finished = true;
+                    done();
+                };
+                navigator.geolocation.getCurrentPosition(
+                    function(pos) {
+                        $('#latitude').val(pos.coords.latitude);
+                        $('#longitude').val(pos.coords.longitude);
+                        finish();
+                    },
+                    function() { finish(); },
+                    { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
+                );
+                setTimeout(finish, 8500);
+            }
+
+            // Ask for location early so login is faster
+            captureLocation(function() {});
+
             $("#frmLogin").on("submit", function(event) {
                 event.preventDefault();
+                var formEl = this;
                 if (!$('#device_uuid').val()) {
                     (function(){ var key='luzori_device_uuid'; var u=localStorage.getItem(key); if(u) $('#device_uuid').val(u); })();
                 }
 
+                hideLoginError();
+                $(".submitFrom span").html('{{ __('center_login.logining') }}');
+                $('.submitFrom').prop('disabled', true);
+
+                captureLocation(function() {
                 $.ajax({
                     url: postUrl,
                     type: "POST",
-                    data: new FormData(this),
+                    data: new FormData(formEl),
                     contentType: false,
                     processData: false,
                     headers: domainParam ? { 'domain': domainParam } : {},
-                    beforeSend: function() {
-                        hideLoginError();
-                        $(".submitFrom span").html('{{ __('center_login.logining') }}');
-                        $('.submitFrom').prop('disabled', true);
-                    },
                     success: function(response, textStatus, xhr) {
                         $('#debug-response').text(JSON.stringify(response));
 
@@ -465,6 +492,7 @@
                         $("html, body").animate({ scrollTop: 0 }, { duration: 400 });
                         resetLoginButton();
                     }
+                });
                 });
             });
         });
@@ -524,6 +552,8 @@
             <form id="frmLogin" class="mb-3" enctype="multipart/form-data" novalidate>
                 @csrf
                 <input type="hidden" name="device_uuid" id="device_uuid" value="">
+                <input type="hidden" name="latitude" id="latitude" value="">
+                <input type="hidden" name="longitude" id="longitude" value="">
                 <div class="row g-3">
                     <div class="col-12">
                         <!-- Email -->
