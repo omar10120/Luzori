@@ -547,6 +547,7 @@ return [
     'comment'                         => 'التعليق',
     'total_prices_5_percent'          => '5 مجموع الأسعار',
     'total_tips_7_5_percent'          => '%7.5 مجموع البقشيش',
+
     'trusted_devices'                 => 'الأجهزة الموثوقة',
     'trusted_devices_desc'            => 'عرض الأجهزة الموثوقة والتي بحاجة لتوثيق، مع إمكانية الحذف والحظر.',
     'device_name'                     => 'اسم الجهاز',
@@ -569,4 +570,25 @@ return [
     'started_at'                      => 'بدأت في',
     'action'                          => 'الإجراء',
     'notes'                           => 'ملاحظات',
+
+    'email_receivers' => 'Email receivers',
+    'emails_help'     => 'Emails that will receive a copy of every invoice.',
+    'email'           => 'Email address',
+    'add'    => 'Add',
+    'delete' => 'Delete',
+    'otp_channel' => 'OTP Delivery Channel',
+    'via_sms'     => 'Via SMS',
+    'via_email'   => 'Via Email',
+    'otp_channel_help' => 'otp channel help'
+    
+    
+
+    
+    
+    
+    
+    
+    
+
+
 ];

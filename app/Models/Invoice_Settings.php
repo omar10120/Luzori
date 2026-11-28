@@ -22,12 +22,15 @@ class Invoice_Settings extends Model
 		'tax_number',
 		'auto_print_sale',
 		'sms_allow',
-		'allow_notification'	
+		'allow_notification',
+		'emails',  
+		'otp_channel', 
 	];
 
 	protected $casts = [
 		'otp_phones' => 'array',
 		'auto_print_sale' => 'boolean',
 		'sms_allow' => 'boolean',
+		'emails'     => 'array'
 	];
 }

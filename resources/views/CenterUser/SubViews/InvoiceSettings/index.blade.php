@@ -34,8 +34,40 @@
                 </div>
 
                 <div class="card-body">
-                    {{-- Section: Phone Numbers --}}
+
+                    {{-- Section: OTP Delivery Channel --}}
                     <div class="lz-section-label">
+                        <i class="ti ti-send"></i>
+                        <span>{{ __('field.otp_channel') ?? 'OTP Delivery Channel' }}</span>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="otp_channel"
+                                       id="otp_channel_sms" value="sms"
+                                       @checked(($item->otp_channel ?? 'sms') === 'sms')>
+                                <label class="form-check-label" for="otp_channel_sms">
+                                    <i class="ti ti-phone me-1"></i>{{ __('field.via_sms') ?? 'Via SMS' }}
+                                </label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="otp_channel"
+                                       id="otp_channel_email" value="email"
+                                       @checked(($item->otp_channel ?? 'sms') === 'email')>
+                                <label class="form-check-label" for="otp_channel_email">
+                                    <i class="ti ti-mail me-1"></i>{{ __('field.via_email') ?? 'Via Email' }}
+                                </label>
+                            </div>
+                            <small class="form-text text-muted d-block mt-1">
+                                {{ __('field.otp_channel_help') ?? 'Choose how one-time passwords are delivered to your customers.' }}
+                            </small>
+                        </div>
+                    </div>
+
+                    <hr class="my-2" />
+
+                    {{-- Section: Phone Numbers --}}
+                    <div class="lz-section-label mt-3">
                         <i class="ti ti-phone"></i>
                         <span>{{ __('field.phone_number') ?? 'Phone Numbers' }}</span>
                     </div>
@@ -80,7 +112,9 @@
                             </div>
                         </div>
                     </div>
-                    <div class="row mb-2">
+
+                    {{-- Section: OTP phones (shown when otp_channel = sms) --}}
+                    <div class="row mb-2" id="otp-phones-section">
                         <div class="col-md-12 mb-3">
                             <label class="lz-field-label">{{ __('field.otp_phones') }}</label>
                             <div id="otp-phones-list">
@@ -106,6 +140,36 @@
                                 <i class="ti ti-plus me-1"></i>{{ __('general.add') }}
                             </button>
                             <small class="form-text text-muted d-block mt-1">{{ __('field.otp_phones_help') }}</small>
+                        </div>
+                    </div>
+
+                    {{-- Section: Emails (shown when otp_channel = email) --}}
+                    <div class="row mb-2" id="emails-section">
+                        <div class="col-md-12 mb-3">
+                            <label class="lz-field-label">{{ __('field.email_receivers') }}</label>
+                            <div id="emails-list">
+                                @php
+                                    $emails = is_array($item->emails) ? array_values(array_filter($item->emails)) : [];
+                                    if (empty($emails)) {
+                                        $emails = [''];
+                                    }
+                                @endphp
+                                @foreach ($emails as $email)
+                                    <div class="input-group mb-2 email-row">
+                                        <span class="input-group-text"><i class="ti ti-mail me-1"></i></span>
+                                        <input type="email" class="form-control" name="emails[]"
+                                            placeholder="{{ __('field.email') }}"
+                                            value="{{ $email }}" />
+                                        <button type="button" class="btn btn-outline-danger email-remove" title="{{ __('general.delete') }}">
+                                            <i class="ti ti-trash"></i>
+                                        </button>
+                                    </div>
+                                @endforeach
+                            </div>
+                            <button type="button" class="btn btn-sm btn-luzori-beige" id="email-add">
+                                <i class="ti ti-plus me-1"></i>{{ __('general.add') }}
+                            </button>
+                            <small class="form-text text-muted d-block mt-1">{{ __('field.emails_help') }}</small>
                         </div>
                     </div>
 
@@ -160,7 +224,7 @@
                             {{ __('general.auto_print_sale_after_payment') ?? 'Print the sale invoice automatically after payment' }}
                         </label>
                     </div>
-                    
+
                     <div class="alert alert-secondary border-0 mb-3" style="background:#f7f2ea;color:#002b26;">
                         <div class="d-flex flex-wrap align-items-start gap-2">
                             <i class="ti ti-info-circle mt-1"></i>
@@ -224,9 +288,37 @@
             let scriptPromise = null;
             let encryptionKey = null;
             let selectedPackage = null;
-            const otpList = document.getElementById('otp-phones-list');
-            const otpAddBtn = document.getElementById('otp-phone-add');
 
+            const otpList            = document.getElementById('otp-phones-list');
+            const otpAddBtn          = document.getElementById('otp-phone-add');
+            const otpPhonesSection   = document.getElementById('otp-phones-section');
+
+            const emailList          = document.getElementById('emails-list');
+            const emailAddBtn        = document.getElementById('email-add');
+            const emailsSection      = document.getElementById('emails-section');
+
+            const channelRadios      = document.querySelectorAll('input[name="otp_channel"]');
+
+            // ---- OTP channel toggle ----
+            function getActiveChannel() {
+                return document.querySelector('input[name="otp_channel"]:checked')?.value || 'sms';
+            }
+
+            function toggleOtpChannel() {
+                const channel = getActiveChannel();
+                if (channel === 'email') {
+                    otpPhonesSection?.classList.add('d-none');
+                    emailsSection?.classList.remove('d-none');
+                } else {
+                    otpPhonesSection?.classList.remove('d-none');
+                    emailsSection?.classList.add('d-none');
+                }
+            }
+
+            channelRadios.forEach(function(r) { r.addEventListener('change', toggleOtpChannel); });
+            toggleOtpChannel();
+
+            // ---- Row templates ----
             function otpPhoneRowHtml() {
                 return '<div class="input-group mb-2 otp-phone-row">' +
                     '<span class="input-group-text"><i class="ti ti-phone me-1"></i> +971</span>' +
@@ -235,6 +327,33 @@
                     '<i class="ti ti-trash"></i></button></div>';
             }
 
+            function emailRowHtml() {
+                return '<div class="input-group mb-2 email-row">' +
+                    '<span class="input-group-text"><i class="ti ti-mail me-1"></i></span>' +
+                    '<input type="email" class="form-control" name="emails[]" placeholder="{{ __('field.email') }}" value="" />' +
+                    '<button type="button" class="btn btn-outline-danger email-remove" title="{{ __('general.delete') }}">' +
+                    '<i class="ti ti-trash"></i></button></div>';
+            }
+
+            // ---- Email list add/remove ----
+            if (emailAddBtn && emailList) {
+                emailAddBtn.addEventListener('click', function () {
+                    emailList.insertAdjacentHTML('beforeend', emailRowHtml());
+                });
+                emailList.addEventListener('click', function (event) {
+                    const btn = event.target.closest('.email-remove');
+                    if (!btn) return;
+                    const rows = emailList.querySelectorAll('.email-row');
+                    if (rows.length <= 1) {
+                        const input = rows[0].querySelector('input');
+                        if (input) input.value = '';
+                        return;
+                    }
+                    btn.closest('.email-row').remove();
+                });
+            }
+
+            // ---- OTP phone list add/remove ----
             if (otpAddBtn && otpList) {
                 otpAddBtn.addEventListener('click', function() {
                     otpList.insertAdjacentHTML('beforeend', otpPhoneRowHtml());
@@ -252,6 +371,7 @@
                 });
             }
 
+            // ---- Modals ----
             function showModal(element) {
                 element.classList.add('is-visible', 'show');
                 element.setAttribute('aria-hidden', 'false');
@@ -322,6 +442,7 @@
                     });
             }
 
+            // ---- Submit ----
             form.addEventListener('submit', function(event) {
                 event.preventDefault();
                 const button = form.querySelector('.submitFrom');
@@ -329,12 +450,17 @@
 
                 const formData = new FormData(form);
 
-                // Format OTP phones to prepend 971 and strip any leading zeros or 971s
+                // ─────────────────────────────────────────────────────────────
+                // Always submit BOTH lists so switching the channel never
+                // wipes the inactive one. The server-side validator only
+                // enforces the ACTIVE channel; the other is saved verbatim.
+                // ─────────────────────────────────────────────────────────────
+
+                // OTP phones — sanitize + prefix every entry (active or not)
                 const otpPhones = formData.getAll('otp_phones[]');
                 formData.delete('otp_phones[]');
-
                 otpPhones.forEach(phone => {
-                    let cleanPhone = (phone || '').replace(/\D/g, ''); 
+                    let cleanPhone = (phone || '').replace(/\D/g, '');
                     if (cleanPhone) {
                         if (cleanPhone.startsWith('971')) {
                             cleanPhone = cleanPhone.substring(3);
@@ -344,17 +470,26 @@
                         }
                         formData.append('otp_phones[]', '971' + cleanPhone);
                     } else {
+                        // Keep the empty placeholder — prepareForValidation() filters it
                         formData.append('otp_phones[]', '');
                     }
                 });
 
-                fetch(@json($requestUrl), { 
-                    method: 'POST', 
-                    headers: { 
-                        'Accept': 'application/json', 
-                        'X-CSRF-TOKEN': csrfToken 
-                    }, 
-                    body: formData 
+                // Emails — trim + drop empties (server also does this)
+                const emails = formData.getAll('emails[]');
+                formData.delete('emails[]');
+                emails
+                    .map(e => (e || '').trim())
+                    .filter(e => e.length > 0)
+                    .forEach(email => formData.append('emails[]', email));
+
+                fetch(@json($requestUrl), {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    body: formData
                 })
                     .then(function(result) { return result.json().then(function(data) { return { result: result, data: data }; }); })
                     .then(function(response) {
@@ -362,13 +497,22 @@
                             showModal(packageModalElement);
                             return;
                         }
-                        if (!response.result.ok) throw new Error(response.data.message || 'Unable to save settings.');
+                        if (!response.result.ok) {
+                            // Surface Laravel validation errors if present
+                            const errors = response.data?.errors;
+                            if (errors) {
+                                const first = Object.values(errors)[0];
+                                throw new Error(Array.isArray(first) ? first[0] : first);
+                            }
+                            throw new Error(response.data.message || 'Unable to save settings.');
+                        }
                         window.location.href = response.data.data;
                     }).catch(function(error) {
                         if (typeof toastr !== 'undefined') toastr.error(error.message);
                     }).finally(function() { button.disabled = false; });
             });
 
+            // ---- SMS package modal ----
             document.querySelectorAll('.sms-package-option').forEach(function(option) {
                 option.addEventListener('click', function() {
                     selectedPackage = this.dataset.package;

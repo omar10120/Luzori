@@ -557,6 +557,7 @@ return [
     'comment'                         => 'comment',
     'total_prices_5_percent'          => '5 of total prices',
     'total_tips_7_5_percent'          => '%7.5 of total tips',
+
     'trusted_devices'                 => 'Trusted Devices',
     'trusted_devices_desc'            => 'View trusted and pending devices, with delete and block actions.',
     'device_name'                     => 'Device name',
@@ -579,5 +580,16 @@ return [
     'started_at'                      => 'Started at',
     'action'                          => 'Action',
     'notes'                           => 'Notes',
+
+    'email_receivers' => 'Email receivers',
+    'emails_help'     => 'Emails that will receive a copy of every invoice.',
+    'email'           => 'Email address',
+    'add'    => 'Add',
+    'delete' => 'Delete',
+    'otp_channel' => 'OTP Delivery Channel',
+    'via_sms'     => 'Via SMS',
+    'via_email'   => 'Via Email',   
+    'otp_channel_help' => 'otp channel help'
+
 
 ];
