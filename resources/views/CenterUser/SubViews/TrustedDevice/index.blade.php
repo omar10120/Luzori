@@ -18,25 +18,6 @@
         </div>
 
         <div class="card mb-4">
-            <div class="card-header"><strong>{{ __('field.device_otp_extra_emails') }}</strong></div>
-            <div class="card-body">
-                <form method="POST" action="{{ route('center_user.trusted-devices.extra-emails') }}" class="row g-3">
-                    @csrf
-                    @method('PUT')
-                    <div class="col-md-9">
-                        <input type="text" class="form-control" name="device_otp_extra_emails"
-                            value="{{ $center->device_otp_extra_emails }}"
-                            placeholder="admin2@example.com, security@example.com">
-                        <small class="text-muted">{{ __('field.device_otp_extra_emails_hint') }}</small>
-                    </div>
-                    <div class="col-md-3">
-                        <button class="btn btn-primary w-100">{{ __('general.save') }}</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <div class="card mb-4">
             <div class="card-header"><strong>{{ __('field.trusted_devices') }}</strong></div>
             <div class="card-body table-responsive">
                 <table class="table table-hover">

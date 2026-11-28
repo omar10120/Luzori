@@ -32,17 +32,16 @@ class TrustedDevicesFeatureFlagTest extends TestCase
         $this->assertFalse($method->invoke($controller, null));
     }
 
-    public function test_otp_recipients_only_use_center_emails(): void
+    public function test_otp_recipients_use_center_admin_email(): void
     {
         $service = new TrustedDeviceService();
         $center = new Center([
             'email' => 'admin@center.test',
-            'device_otp_extra_emails' => 'sec@center.test, bad-email, ops@center.test',
         ]);
 
         $recipients = $service->otpRecipients($center);
 
-        $this->assertSame(['admin@center.test', 'sec@center.test', 'ops@center.test'], $recipients);
+        $this->assertSame(['admin@center.test'], $recipients);
     }
 
     public function test_limit_reached_respects_null_and_zero_as_unlimited(): void

@@ -127,19 +127,11 @@ class TrustedDeviceService
     {
         $emails = [];
 
-        if (!empty($center->email)) {
+        if (!empty($center->email) && filter_var($center->email, FILTER_VALIDATE_EMAIL)) {
             $emails[] = strtolower(trim((string) $center->email));
         }
 
-        $extra = (string) ($center->device_otp_extra_emails ?? '');
-        foreach (preg_split('/[\s,;]+/', $extra) ?: [] as $email) {
-            $email = strtolower(trim($email));
-            if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                $emails[] = $email;
-            }
-        }
-
-        return array_values(array_unique(array_filter($emails)));
+        return array_values(array_unique($emails));
     }
 
     public function createAndSendOtp(Center $center, int $userId, string $userEmail, string $deviceUuid, Request $request): string

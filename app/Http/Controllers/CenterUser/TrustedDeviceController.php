@@ -9,7 +9,6 @@ use App\Models\CenterUser;
 use App\Models\DeviceSession;
 use App\Models\TrustedDevice;
 use App\Services\TrustedDeviceService;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Config;
 
 class TrustedDeviceController extends Controller
@@ -96,22 +95,6 @@ class TrustedDeviceController extends Controller
             ->firstOrFail();
 
         $this->devices->blockDevice($device, 'Blocked from center settings');
-
-        return back()->with('success', __('admin.operation_done_successfully'));
-    }
-
-    public function updateExtraEmails(Request $request)
-    {
-        $center = $this->currentCenter();
-        abort_unless($center && ($center->trusted_devices_enabled ?? false), 404);
-
-        $request->validate([
-            'device_otp_extra_emails' => 'nullable|string|max:2000',
-        ]);
-
-        $center->update([
-            'device_otp_extra_emails' => $request->input('device_otp_extra_emails'),
-        ]);
 
         return back()->with('success', __('admin.operation_done_successfully'));
     }
